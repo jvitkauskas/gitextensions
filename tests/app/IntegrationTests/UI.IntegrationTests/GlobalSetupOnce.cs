@@ -9,6 +9,9 @@ public class GlobalSetupOnce
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+
+        // Existing tests exercise the WinForms forms; AvaloniaHostingTests opt in to the Avalonia ports.
+        Environment.SetEnvironmentVariable(GitUI.Avalonia.Hosting.AvaloniaUi.EnvironmentVariable, "none");
     }
 
     [OneTimeTearDown]

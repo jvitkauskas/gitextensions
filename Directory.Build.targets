@@ -21,4 +21,15 @@
     <!-- Stop transitive consumption of JetBrains annotations -->
     <PackageReference Update="JetBrains.Annotations" PrivateAssets="all" />
   </ItemGroup>
+
+  <!--
+    Avalonia port (docs/avalonia-port/PLAN.md): projects that only reach Avalonia transitively (e.g. through GitUI)
+    receive its analyzers and XAML source generator, which fail without Avalonia's build props. Only projects that
+    reference Avalonia directly (and therefore import its props) keep them.
+  -->
+  <Target Name="RemoveTransitiveAvaloniaAnalyzers" BeforeTargets="CoreCompile" Condition="'$(AvaloniaNameGeneratorIsEnabled)' == ''">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(Analyzer.Filename)').StartsWith('Avalonia.'))" />
+    </ItemGroup>
+  </Target>
 </Project>

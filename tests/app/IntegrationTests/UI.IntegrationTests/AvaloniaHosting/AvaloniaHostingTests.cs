@@ -1,0 +1,252 @@
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using Avalonia.Threading;
+using CommonTestUtils;
+using GitCommands;
+using GitExtensions.Extensibility;
+using GitUI;
+using GitUI.Avalonia.Hosting;
+using GitUI.AvaloniaHosting;
+using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.CommandsDialogs.CommitDialog;
+
+namespace GitExtensions.UITests.AvaloniaHosting;
+
+/// <summary>
+///  Exercises the hybrid process of the Avalonia port (docs/avalonia-port/PLAN.md, phase 1): Avalonia dialogs shown
+///  modally over WinForms owners, WinForms dialogs shown over Avalonia dialogs, and real git operations.
+/// </summary>
+/// <remarks>
+///  Screenshots of the real (not headless) windows are written to <c>&lt;test work dir&gt;/avalonia-hosting</c>.
+/// </remarks>
+// Avalonia binds to a single UI thread per process, hence one thread for all tests of this fixture.
+[Apartment(ApartmentState.STA)]
+[SingleThreaded]
+public sealed class AvaloniaHostingTests
+{
+    private const int WM_KEYDOWN = 0x0100;
+    private const int WM_KEYUP = 0x0101;
+    private const int VK_ESCAPE = 0x1B;
+
+    private ReferenceRepository _referenceRepository = null!;
+    private GitUICommands _commands = null!;
+    private Form _owner = null!;
+    private Exception? _driveFailure;
+
+    [SetUp]
+    public void SetUp()
+    {
+        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all");
+        UserEnvironmentInformation.Initialise("0123456789012345678901234567890123456789", isDirty: false);
+
+        _referenceRepository = new ReferenceRepository();
+        _commands = new GitUICommands(GlobalServiceContainer.CreateDefaultMockServiceContainer(), _referenceRepository.Module);
+
+        _owner = new Form { Text = "WinForms owner", Width = 900, Height = 600, StartPosition = FormStartPosition.CenterScreen };
+        _owner.Show();
+        Application.DoEvents();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Exception? driveFailure = _driveFailure;
+        _driveFailure = null;
+        AvaloniaDialogHost.DialogShowingForTests = null;
+        _owner.Dispose();
+        _referenceRepository.Dispose();
+        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "none");
+
+        if (driveFailure is not null)
+        {
+            throw new AssertionException($"Driving the dialog failed: {driveFailure}", driveFailure);
+        }
+    }
+
+    [Test]
+    public void About_is_modal_over_its_WinForms_owner()
+    {
+        bool ownerDisabledWhileOpen = false;
+        string? productName = null;
+
+        DriveNextDialog(window =>
+        {
+            ownerDisabledWhileOpen = !IsWindowEnabled(_owner.Handle);
+            AboutViewModel viewModel = (AboutViewModel)window.DataContext!;
+            productName = viewModel.ProductName;
+            viewModel.ThanksToText.Should().StartWith("Thanks to over");
+            Capture(window, "about");
+            viewModel.CloseDialogCommand.Execute(null);
+        });
+
+        AvaloniaDialogs.TryShowAbout(_owner).Should().BeTrue();
+
+        ownerDisabledWhileOpen.Should().BeTrue();
+        IsWindowEnabled(_owner.Handle).Should().BeTrue("the owner is re-enabled when the dialog closes");
+        productName.Should().Be(AppSettings.ApplicationName);
+    }
+
+    [Test]
+    public void Escape_key_closes_the_dialog_without_saving()
+    {
+        int maxLineLength = AppSettings.CommitValidationMaxCntCharsPerLine;
+        bool closed = false;
+
+        DriveNextDialog(window =>
+        {
+            window.Closed += (_, _) => closed = true;
+            ((CommitTemplateSettingsViewModel)window.DataContext!).MaxLineLength = maxLineLength + 1;
+
+            // Real input path: a native key message processed by Avalonia inside the nested message loop.
+            PostMessage(window.NativeHandle, WM_KEYDOWN, VK_ESCAPE, 1);
+            PostMessage(window.NativeHandle, WM_KEYUP, VK_ESCAPE, unchecked((nint)0xC0000001));
+        });
+
+        AvaloniaDialogs.TryShowCommitTemplateSettings(_owner).Should().BeTrue();
+
+        closed.Should().BeTrue();
+        AppSettings.CommitValidationMaxCntCharsPerLine.Should().Be(maxLineLength);
+    }
+
+    [Test]
+    public void Commit_template_settings_are_saved_to_AppSettings()
+    {
+        int originalMaxFirstLineLength = AppSettings.CommitValidationMaxCntCharsFirstLine;
+        string? originalTemplates = AppSettings.CommitTemplates;
+        try
+        {
+            DriveNextDialog(window =>
+            {
+                CommitTemplateSettingsViewModel viewModel = (CommitTemplateSettingsViewModel)window.DataContext!;
+                viewModel.MaxFirstLineLength = 72;
+                viewModel.SelectedTemplate = viewModel.Templates[1];
+                viewModel.SelectedTemplate.Name = "Ticket";
+                viewModel.SelectedTemplate.Text = "{{([A-Z]+-\\d+)}}: ";
+                viewModel.SelectedTemplate.IsRegex = true;
+
+                // Let the check box animation finish before capturing.
+                DispatcherTimer.RunOnce(
+                    () =>
+                    {
+                        Capture(window, "commit-template-settings");
+                        viewModel.SaveCommand.Execute(null);
+                    },
+                    TimeSpan.FromMilliseconds(500));
+            });
+
+            AvaloniaDialogs.TryShowCommitTemplateSettings(_owner).Should().BeTrue();
+
+            AppSettings.CommitValidationMaxCntCharsFirstLine.Should().Be(72);
+            CommitTemplateItem[] templates = CommitTemplateItem.LoadFromSettings()!;
+            templates.Should().HaveCount(CommitTemplateSettingsViewModel.TemplateSlotCount);
+            templates[1].Name.Should().Be("Ticket");
+            templates[1].IsRegex.Should().BeTrue();
+        }
+        finally
+        {
+            AppSettings.CommitValidationMaxCntCharsFirstLine = originalMaxFirstLineLength;
+            AppSettings.CommitTemplates = originalTemplates!;
+        }
+    }
+
+    [Test]
+    public void StartRenameDialog_renames_the_branch_through_the_WinForms_progress_dialog()
+    {
+        _referenceRepository.CreateBranch("feature/old", _referenceRepository.CommitHash!);
+        bool closeProcessDialog = AppSettings.CloseProcessDialog;
+        AppSettings.CloseProcessDialog = true;
+        try
+        {
+            DriveNextDialog(window =>
+            {
+                RenameBranchViewModel viewModel = (RenameBranchViewModel)window.DataContext!;
+                viewModel.NewName.Should().Be("feature/old");
+                viewModel.NewName = "feature/new";
+                Capture(window, "rename-branch");
+
+                // Runs `git branch -m` in FormProcess (WinForms), owned by the Avalonia dialog.
+                viewModel.RenameCommand.Execute(null);
+            });
+
+            bool renamed = _commands.StartRenameDialog(_owner, "feature/old");
+
+            renamed.Should().BeTrue();
+            IEnumerable<string> branches = _referenceRepository.Module.GetRefs(RefsFilter.Heads).Select(r => r.Name);
+            branches.Should().Contain("feature/new").And.NotContain("feature/old");
+        }
+        finally
+        {
+            AppSettings.CloseProcessDialog = closeProcessDialog;
+        }
+    }
+
+    /// <summary>
+    ///  Runs <paramref name="drive"/> once the next Avalonia dialog has been shown and rendered.
+    ///  The dialog is modal, so this is the only way to act on it while the <c>TryShow*</c> call blocks.
+    /// </summary>
+    private void DriveNextDialog(Action<DialogWindow> drive)
+    {
+        AvaloniaDialogHost.DialogShowingForTests = window =>
+        {
+            AvaloniaDialogHost.DialogShowingForTests = null;
+            window.Opened += (_, _) => DispatcherTimer.RunOnce(
+                () =>
+                {
+                    try
+                    {
+                        drive(window);
+                    }
+                    catch (Exception ex)
+                    {
+                        _driveFailure = ex;
+                        window.Close();
+                    }
+                },
+                TimeSpan.FromMilliseconds(500));
+        };
+    }
+
+    private static void Capture(DialogWindow window, string name)
+    {
+        string directory = Path.Combine(TestContext.CurrentContext.WorkDirectory, "avalonia-hosting");
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, $"{name}.png");
+
+        GetWindowRect(window.NativeHandle, out RECT rect);
+        using Bitmap bitmap = new(rect.Right - rect.Left, rect.Bottom - rect.Top);
+        using (Graphics graphics = Graphics.FromImage(bitmap))
+        {
+            nint hdc = graphics.GetHdc();
+            PrintWindow(window.NativeHandle, hdc, 2 /* PW_RENDERFULLCONTENT */);
+            graphics.ReleaseHdc(hdc);
+        }
+
+        bitmap.Save(path, ImageFormat.Png);
+        TestContext.AddTestAttachment(path);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowEnabled(nint handle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PostMessage(nint handle, int msg, nint wordParameter, nint longParameter);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(nint handle, out RECT rect);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PrintWindow(nint handle, nint deviceContext, uint flags);
+}

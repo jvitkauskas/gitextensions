@@ -2588,8 +2588,11 @@ public sealed partial class FormCommit : GitModuleForm
                 ToolStripMenuItem settingsItem = new(_commitMessageSettings.Text, Images.Settings);
                 settingsItem.Click += delegate
                 {
-                    using FormCommitTemplateSettings frm = new(UICommands);
-                    frm.ShowDialog(this);
+                    if (!AvaloniaHosting.AvaloniaDialogs.TryShowCommitTemplateSettings(this))
+                    {
+                        using FormCommitTemplateSettings frm = new(UICommands);
+                        frm.ShowDialog(this);
+                    }
 
                     _shouldReloadCommitTemplates = true;
                 };

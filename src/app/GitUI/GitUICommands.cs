@@ -1181,6 +1181,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowRenameBranch(owner, this, branch, out bool renamed))
+            {
+                return renamed;
+            }
+
             using FormRenameBranch form = new(this, branch);
             return form.ShowDialog(owner) == DialogResult.OK;
         }
@@ -1569,6 +1574,11 @@ public sealed class GitUICommands : IGitUICommands
         switch (command)
         {
             case "about":
+                if (AvaloniaHosting.AvaloniaDialogs.TryShowAbout(owner: null))
+                {
+                    return true;
+                }
+
                 Application.Run(new FormAbout
                 {
                     StartPosition = FormStartPosition.CenterScreen

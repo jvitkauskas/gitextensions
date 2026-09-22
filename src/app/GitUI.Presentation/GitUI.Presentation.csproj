@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    UI-toolkit-agnostic view models and their translatable strings for the Avalonia port
+    (docs/avalonia-port/PLAN.md). Must not reference Avalonia or use WinForms types.
+  -->
+  <PropertyGroup>
+    <UseWindowsForms>false</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GitCommands\GitCommands.csproj" />
+    <ProjectReference Include="..\GitExtensions.Extensibility\GitExtensions.Extensibility.csproj" />
+    <ProjectReference Include="..\ResourceManager\ResourceManager.csproj" />
+  </ItemGroup>
+</Project>

@@ -97,6 +97,8 @@
     </Project>
     <Project Path="src/app/GitExtUtils/GitExtUtils.csproj" />
     <Project Path="src/app/GitUI/GitUI.csproj" />
+    <Project Path="src/app/GitUI.Avalonia/GitUI.Avalonia.csproj" />
+    <Project Path="src/app/GitUI.Presentation/GitUI.Presentation.csproj" />
     <Project Path="src/app/ResourceManager/ResourceManager.csproj" />
   </Folder>
   <Folder Name="/src/plugins/">
@@ -143,6 +145,7 @@
     <Project Path="tests/app/UnitTests/GitCommands.Tests/GitCommands.Tests.csproj" />
     <Project Path="tests/app/UnitTests/GitExtensions.Extensibility.Tests/GitExtensions.Extensibility.Tests.csproj" />
     <Project Path="tests/app/UnitTests/GitExtUtils.Tests/GitExtUtils.Tests.csproj" />
+    <Project Path="tests/app/UnitTests/GitUI.Avalonia.Tests/GitUI.Avalonia.Tests.csproj" />
     <Project Path="tests/app/UnitTests/GitUI.Tests/GitUI.Tests.csproj" />
     <Project Path="tests/app/UnitTests/ResourceManager.Tests/ResourceManager.Tests.csproj" />
   </Folder>

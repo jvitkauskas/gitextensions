@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Avalonia views, controls and the WinForms/Avalonia hosting bridge (docs/avalonia-port/PLAN.md).
+    Deliberately WinForms-free: interop with WinForms happens through native window handles only.
+  -->
+  <PropertyGroup>
+    <UseWindowsForms>false</UseWindowsForms>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.HarfBuzz" />
+    <PackageReference Include="Avalonia.Skia" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Win32" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GitUI.Presentation\GitUI.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared with the WinForms UI rather than copied, so upstream asset updates apply to both. -->
+    <AvaloniaResource Include="..\..\..\setup\assets\Logo\git-extensions-logo-256px.png" Link="Assets\git-extensions-logo-256px.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Donate.png" Link="Assets\Donate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CopyToClipboard.png" Link="Assets\CopyToClipboard.png" />
+  </ItemGroup>
+</Project>

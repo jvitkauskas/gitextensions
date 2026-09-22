@@ -38,6 +38,7 @@
     <ProjectReference Include="..\BugReporter\BugReporter.csproj" />
     <ProjectReference Include="..\GitCommands\GitCommands.csproj" />
     <ProjectReference Include="..\GitExtUtils\GitExtUtils.csproj" />
+    <ProjectReference Include="..\GitUI.Avalonia\GitUI.Avalonia.csproj" />
     <ProjectReference Include="..\ResourceManager\ResourceManager.csproj" />
     <ProjectReference Include="..\..\plugins\GitUIPluginInterfaces\GitUIPluginInterfaces.csproj" />
   </ItemGroup>

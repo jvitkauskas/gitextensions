@@ -1,0 +1,60 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.AboutWindow"
+                x:DataType="vm:AboutViewModel"
+                Title=" "
+                Width="601"
+                SizeToContent="Height"
+                CanResize="False">
+  <Grid ColumnDefinitions="176,*" Margin="0,0,12,12">
+
+    <!-- Left: logo, call to action, donation badge -->
+    <StackPanel Spacing="12" Margin="12">
+      <Image Source="avares://GitUI.Avalonia/Assets/git-extensions-logo-256px.png"
+             Width="128" Height="128" HorizontalAlignment="Center" />
+      <TextBlock Text="{Binding Strings.GetInvolved.Text}"
+                 TextWrapping="Wrap" TextAlignment="Center" />
+      <Button Name="donateButton" Classes="link" HorizontalAlignment="Center"
+              Command="{Binding DonateCommand}"
+              AutomationProperties.Name="Donate">
+        <Image Source="avares://GitUI.Avalonia/Assets/Donate.png" Width="150" />
+      </Button>
+    </StackPanel>
+
+    <!-- Right: product, credits, environment, warranty -->
+    <StackPanel Grid.Column="1" Margin="0,24,0,0" Spacing="2">
+      <Button Name="productNameLink" Classes="link" HorizontalAlignment="Center"
+              Command="{Binding OpenHomepageCommand}">
+        <TextBlock Text="{Binding ProductName}" FontSize="16" FontWeight="Bold" />
+      </Button>
+      <TextBlock Text="{Binding Strings.ProductDescription}" FontWeight="Bold" HorizontalAlignment="Center" />
+
+      <TextBlock Text="{Binding Strings.PresentedBy}" Margin="0,8,0,0" />
+      <Button Name="thanksToLink" Classes="link" HorizontalAlignment="Left"
+              Command="{Binding ShowContributorsCommand}">
+        <TextBlock Text="{Binding ThanksToText}" TextTrimming="CharacterEllipsis" />
+      </Button>
+      <Button Name="iconsLink" Classes="link" HorizontalAlignment="Left"
+              Command="{Binding OpenIconsAuthorCommand}">
+        <TextBlock Text="{Binding Strings.IconsCredit.Text}" />
+      </Button>
+
+      <Separator Margin="0,8" />
+      <Grid ColumnDefinitions="*,Auto">
+        <SelectableTextBlock Name="environmentInfo" Text="{Binding EnvironmentInfo}" TextWrapping="Wrap" />
+        <Button Name="copyEnvironmentButton" Grid.Column="1" VerticalAlignment="Top" Padding="4"
+                Command="{Binding CopyEnvironmentInfoCommand}"
+                ToolTip.Tip="{Binding Strings.CopyTooltip.Text}"
+                AutomationProperties.Name="{Binding Strings.CopyTooltip.Text}">
+          <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+        </Button>
+      </Grid>
+      <Separator Margin="0,8" />
+
+      <TextBlock Text="{Binding Strings.Warranty.Text}" TextWrapping="Wrap"
+                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+    </StackPanel>
+  </Grid>
+</h:DialogWindow>

@@ -1,0 +1,94 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.CommitDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CommitDialog.CommitTemplateSettingsWindow"
+                x:DataType="vm:CommitTemplateSettingsViewModel"
+                Title="{Binding Strings.Title.Text}"
+                Width="698" Height="380"
+                MinWidth="550" MinHeight="330">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="buttonOk" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.Text}" Command="{Binding SaveCommand}" />
+        <Button Name="buttonCancel" IsCancel="True"
+                Content="{Binding Strings.Cancel.Text}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+
+    <TabControl Name="tabControl" Margin="9,4,9,9" Padding="0,6,0,0">
+
+      <TabItem Header="{Binding Strings.CommitTemplatesTab.Text}">
+        <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto"
+              ColumnSpacing="8" RowSpacing="6">
+
+          <ComboBox Name="comboBoxCommitTemplates" Grid.ColumnSpan="2" HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding Templates}"
+                    SelectedItem="{Binding SelectedTemplate}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:CommitTemplateSlotViewModel">
+                <TextBlock Text="{Binding DisplayName}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <Label Grid.Row="1" Content="{Binding Strings.TemplateName.Text}" Target="textBoxCommitTemplateName" />
+          <TextBox Name="textBoxCommitTemplateName" Grid.Row="1" Grid.Column="1"
+                   Text="{Binding SelectedTemplate.Name}"
+                   MaxLength="{x:Static vm:CommitTemplateSlotViewModel.MaxNameLength}" />
+
+          <Label Grid.Row="2" Content="{Binding Strings.TemplateText.Text}" Target="textCommitTemplateText"
+                 VerticalAlignment="Top" Margin="0,6,0,0" />
+          <TextBox Name="textCommitTemplateText" Grid.Row="2" Grid.RowSpan="2" Grid.Column="1"
+                   Text="{Binding SelectedTemplate.Text}"
+                   AcceptsReturn="True" TextWrapping="Wrap"
+                   VerticalAlignment="Stretch" VerticalContentAlignment="Top"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+          <CheckBox Name="checkBoxRegexEnabled" Grid.Row="3" VerticalAlignment="Bottom"
+                    Classes="captionFirst"
+                    Content="{Binding Strings.EnableRegex.Text}"
+                    IsChecked="{Binding SelectedTemplate.IsRegex}"
+                    ToolTip.ShowDelay="500">
+            <ToolTip.Tip>
+              <TextBlock FlowDirection="LeftToRight" Text="{Binding Strings.EnableRegexTooltip.Text}" />
+            </ToolTip.Tip>
+          </CheckBox>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="{Binding Strings.CommitValidationTab.Text}">
+        <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+              ColumnSpacing="12" RowSpacing="6" VerticalAlignment="Top">
+
+          <!-- WinForms NumericUpDown defaults to a 0..100 range; kept for parity. -->
+          <Label Grid.Row="0" Target="numericMaxFirstLineLength" Content="{Binding Strings.MaxFirstLineLength.Text}" />
+          <NumericUpDown Name="numericMaxFirstLineLength" Grid.Row="0" Grid.Column="1"
+                         Width="110" HorizontalAlignment="Left"
+                         Minimum="0" Maximum="100" Increment="1" FormatString="0" ParsingNumberStyle="Integer"
+                         Value="{Binding MaxFirstLineLength}" />
+
+          <Label Grid.Row="1" Target="numericMaxLineLength" Content="{Binding Strings.MaxLineLength.Text}" />
+          <NumericUpDown Name="numericMaxLineLength" Grid.Row="1" Grid.Column="1"
+                         Width="110" HorizontalAlignment="Left"
+                         Minimum="0" Maximum="100" Increment="1" FormatString="0" ParsingNumberStyle="Integer"
+                         Value="{Binding MaxLineLength}" />
+
+          <Label Grid.Row="2" Target="checkBoxAutoWrap" Content="{Binding Strings.AutoWrap.Text}" />
+          <CheckBox Name="checkBoxAutoWrap" Grid.Row="2" Grid.Column="1" IsChecked="{Binding AutoWrap}" />
+
+          <Label Grid.Row="3" Target="textBoxCommitValidationRegex" Content="{Binding Strings.ValidationRegex.Text}" />
+          <TextBox Name="textBoxCommitValidationRegex" Grid.Row="3" Grid.Column="1" Text="{Binding ValidationRegex}" />
+
+          <Label Grid.Row="4" Target="checkBoxUseIndent" Content="{Binding Strings.IndentAfterFirstLine.Text}" />
+          <CheckBox Name="checkBoxUseIndent" Grid.Row="4" Grid.Column="1" IsChecked="{Binding IndentAfterFirstLine}" />
+
+          <Label Grid.Row="5" Target="checkBoxSecondLineEmpty" Content="{Binding Strings.SecondLineMustBeEmpty.Text}" />
+          <CheckBox Name="checkBoxSecondLineEmpty" Grid.Row="5" Grid.Column="1" IsChecked="{Binding SecondLineMustBeEmpty}" />
+        </Grid>
+      </TabItem>
+
+    </TabControl>
+  </DockPanel>
+</h:DialogWindow>

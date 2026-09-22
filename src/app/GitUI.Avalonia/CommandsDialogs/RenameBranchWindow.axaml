@@ -1,0 +1,21 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RenameBranchWindow"
+                x:DataType="vm:RenameBranchViewModel"
+                Title="{Binding Strings.Title.Text}"
+                Width="484" MinWidth="400"
+                SizeToContent="Height"
+                CanMaximize="False">
+  <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="8">
+    <Label Content="{Binding Strings.NewName.Text}" Target="branchNameTextBox" />
+    <TextBox Name="branchNameTextBox" Grid.Column="1"
+             Text="{Binding NewName}"
+             LostFocus="BranchNameTextBox_LostFocus" />
+    <Button Name="renameButton" Grid.Column="2" MinWidth="59"
+            Classes="accent" IsDefault="True"
+            Content="{Binding Strings.Rename.Text}"
+            Command="{Binding RenameCommand}" />
+  </Grid>
+</h:DialogWindow>

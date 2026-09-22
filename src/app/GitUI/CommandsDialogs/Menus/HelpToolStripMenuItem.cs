@@ -20,6 +20,11 @@ internal partial class HelpToolStripMenuItem : ToolStripMenuItemEx
 
     private void AboutToolStripMenuItemClick(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowAbout(OwnerForm))
+        {
+            return;
+        }
+
         using FormAbout frm = new();
         frm.ShowDialog(OwnerForm);
     }

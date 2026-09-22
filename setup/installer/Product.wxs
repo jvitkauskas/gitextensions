@@ -36,6 +36,15 @@
           <Directory Id="DiffScriptsDir" Name="Diff-Scripts" />
           <Directory Id="DirConEmu" Name="ConEmu" />
           <Directory Id="ThemesDir" Name="Themes" />
+          <!-- Avalonia UI native libraries (docs/avalonia-port/PLAN.md), see Component.AvaloniaUI -->
+          <Directory Id="RuntimesDir" Name="runtimes">
+            <Directory Id="RuntimesWinX64Dir" Name="win-x64">
+              <Directory Id="RuntimesWinX64NativeDir" Name="native" />
+            </Directory>
+            <Directory Id="RuntimesWinArm64Dir" Name="win-arm64">
+              <Directory Id="RuntimesWinArm64NativeDir" Name="native" />
+            </Directory>
+          </Directory>
         </Directory>
       </Directory>
       <Directory Id="LocalAppDataFolder">
@@ -815,6 +824,131 @@
       <ComponentRef Id="English.xlf" />
       <ComponentRef Id="English.Plugins.xlf" />
     </ComponentGroup>
+    <!-- Avalonia UI (docs/avalonia-port/PLAN.md) -->
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="Avalonia.Base.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Base.dll" />
+      </Component>
+      <Component Id="Avalonia.Controls.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Controls.dll" />
+      </Component>
+      <Component Id="Avalonia.DesignerSupport.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.DesignerSupport.dll" />
+      </Component>
+      <Component Id="Avalonia.Dialogs.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Dialogs.dll" />
+      </Component>
+      <Component Id="Avalonia.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.dll" />
+      </Component>
+      <Component Id="Avalonia.HarfBuzz.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.HarfBuzz.dll" />
+      </Component>
+      <Component Id="Avalonia.Markup.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Markup.dll" />
+      </Component>
+      <Component Id="Avalonia.Markup.Xaml.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Markup.Xaml.dll" />
+      </Component>
+      <Component Id="Avalonia.Metal.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Metal.dll" />
+      </Component>
+      <Component Id="Avalonia.MicroCom.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.MicroCom.dll" />
+      </Component>
+      <Component Id="Avalonia.OpenGL.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.OpenGL.dll" />
+      </Component>
+      <Component Id="Avalonia.Remote.Protocol.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Remote.Protocol.dll" />
+      </Component>
+      <Component Id="Avalonia.Skia.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Skia.dll" />
+      </Component>
+      <Component Id="Avalonia.Themes.Fluent.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Themes.Fluent.dll" />
+      </Component>
+      <Component Id="Avalonia.Vulkan.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Vulkan.dll" />
+      </Component>
+      <Component Id="Avalonia.Win32.Automation.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Win32.Automation.dll" />
+      </Component>
+      <Component Id="Avalonia.Win32.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Win32.dll" />
+      </Component>
+      <Component Id="CommunityToolkit.Mvvm.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\CommunityToolkit.Mvvm.dll" />
+      </Component>
+      <Component Id="GitUI.Avalonia.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\GitUI.Avalonia.dll" />
+      </Component>
+      <Component Id="GitUI.Presentation.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\GitUI.Presentation.dll" />
+      </Component>
+      <Component Id="HarfBuzzSharp.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\HarfBuzzSharp.dll" />
+      </Component>
+      <Component Id="MicroCom.Runtime.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\MicroCom.Runtime.dll" />
+      </Component>
+      <Component Id="SkiaSharp.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\SkiaSharp.dll" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="RuntimesWinX64NativeDir">
+      <Component Id="native.win_x64.av_libglesv2.dll" Guid="*">
+        <File Id="native.win_x64.av_libglesv2.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\av_libglesv2.dll" />
+      </Component>
+      <Component Id="native.win_x64.libHarfBuzzSharp.dll" Guid="*">
+        <File Id="native.win_x64.libHarfBuzzSharp.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\libHarfBuzzSharp.dll" />
+      </Component>
+      <Component Id="native.win_x64.libSkiaSharp.dll" Guid="*">
+        <File Id="native.win_x64.libSkiaSharp.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\libSkiaSharp.dll" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="RuntimesWinArm64NativeDir">
+      <Component Id="native.win_arm64.av_libglesv2.dll" Guid="*">
+        <File Id="native.win_arm64.av_libglesv2.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\av_libglesv2.dll" />
+      </Component>
+      <Component Id="native.win_arm64.libHarfBuzzSharp.dll" Guid="*">
+        <File Id="native.win_arm64.libHarfBuzzSharp.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\libHarfBuzzSharp.dll" />
+      </Component>
+      <Component Id="native.win_arm64.libSkiaSharp.dll" Guid="*">
+        <File Id="native.win_arm64.libSkiaSharp.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\libSkiaSharp.dll" />
+      </Component>
+    </DirectoryRef>
+    <ComponentGroup Id="Component.AvaloniaUI">
+      <ComponentRef Id="Avalonia.Base.dll" />
+      <ComponentRef Id="Avalonia.Controls.dll" />
+      <ComponentRef Id="Avalonia.DesignerSupport.dll" />
+      <ComponentRef Id="Avalonia.Dialogs.dll" />
+      <ComponentRef Id="Avalonia.dll" />
+      <ComponentRef Id="Avalonia.HarfBuzz.dll" />
+      <ComponentRef Id="Avalonia.Markup.dll" />
+      <ComponentRef Id="Avalonia.Markup.Xaml.dll" />
+      <ComponentRef Id="Avalonia.Metal.dll" />
+      <ComponentRef Id="Avalonia.MicroCom.dll" />
+      <ComponentRef Id="Avalonia.OpenGL.dll" />
+      <ComponentRef Id="Avalonia.Remote.Protocol.dll" />
+      <ComponentRef Id="Avalonia.Skia.dll" />
+      <ComponentRef Id="Avalonia.Themes.Fluent.dll" />
+      <ComponentRef Id="Avalonia.Vulkan.dll" />
+      <ComponentRef Id="Avalonia.Win32.Automation.dll" />
+      <ComponentRef Id="Avalonia.Win32.dll" />
+      <ComponentRef Id="CommunityToolkit.Mvvm.dll" />
+      <ComponentRef Id="GitUI.Avalonia.dll" />
+      <ComponentRef Id="GitUI.Presentation.dll" />
+      <ComponentRef Id="HarfBuzzSharp.dll" />
+      <ComponentRef Id="MicroCom.Runtime.dll" />
+      <ComponentRef Id="SkiaSharp.dll" />
+      <ComponentRef Id="native.win_x64.av_libglesv2.dll" />
+      <ComponentRef Id="native.win_x64.libHarfBuzzSharp.dll" />
+      <ComponentRef Id="native.win_x64.libSkiaSharp.dll" />
+      <ComponentRef Id="native.win_arm64.av_libglesv2.dll" />
+      <ComponentRef Id="native.win_arm64.libHarfBuzzSharp.dll" />
+      <ComponentRef Id="native.win_arm64.libSkiaSharp.dll" />
+    </ComponentGroup>
     <ComponentGroup Id="Component.PluginResources" />
     <DirectoryRef Id="ProgramMenuFolder">
       <Component Id="GitExtensions.newstartmenu" Guid="*">
@@ -842,6 +976,7 @@
       <ComponentGroupRef Id="Component.ConEmuFiles" />
       <ComponentGroupRef Id="Component.Themes" />
       <ComponentGroupRef Id="Component.Translation" />
+      <ComponentGroupRef Id="Component.AvaloniaUI" />
       <ComponentRef Id="AdysTech.CredentialManager.dll" />
       <ComponentRef Id="AppInsights.WindowsDesktop.dll" />
       <ComponentRef Id="Ben.Demystifier.dll" />
