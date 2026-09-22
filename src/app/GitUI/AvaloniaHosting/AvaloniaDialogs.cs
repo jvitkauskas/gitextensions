@@ -139,6 +139,11 @@ internal static partial class AvaloniaDialogs
 
         public void ShowContributors() => AvaloniaUi.RunInHostContext(() =>
         {
+            if (TryShowContributors(new NativeWindowOwner(window)))
+            {
+                return;
+            }
+
             using FormContributors formContributors = new();
             formContributors.ShowDialog(new NativeWindowOwner(window));
         });

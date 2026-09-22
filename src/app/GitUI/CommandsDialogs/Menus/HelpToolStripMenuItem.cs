@@ -43,6 +43,11 @@ internal partial class HelpToolStripMenuItem : ToolStripMenuItemEx
 
     private void DonateToolStripMenuItemClick(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowDonate(OwnerForm))
+        {
+            return;
+        }
+
         using FormDonate frm = new();
         frm.ShowDialog(OwnerForm);
     }

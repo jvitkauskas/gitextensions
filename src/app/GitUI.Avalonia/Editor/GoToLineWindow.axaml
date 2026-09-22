@@ -1,0 +1,25 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.Editor.GoToLineWindow"
+                x:DataType="vm:GoToLineViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="260" SizeToContent="Height" CanResize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" IsCancel="True"
+                Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <StackPanel Margin="12,9" Spacing="4">
+      <Label Content="{Binding Label}" Target="lineNumberUpDown" Padding="0" />
+      <NumericUpDown Name="lineNumberUpDown" Minimum="1" Maximum="{Binding MaxLineNumber}"
+                     Increment="1" FormatString="0" ParsingNumberStyle="Integer"
+                     Value="{Binding LineNumber}" />
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

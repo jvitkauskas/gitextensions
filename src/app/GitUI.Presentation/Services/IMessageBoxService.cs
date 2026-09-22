@@ -8,6 +8,8 @@ public interface IMessageBoxService
 {
     void ShowError(string text, string caption);
 
+    void ShowInformation(string text, string caption);
+
     /// <summary>Asks a yes/no question; returns <see langword="true"/> for yes.</summary>
     bool Confirm(string text, string caption);
 }

@@ -1,0 +1,18 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.ScriptsEngine"
+                x:Class="GitUI.Avalonia.ScriptsEngine.FilePromptWindow"
+                x:DataType="vm:FilePromptViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="540" MinWidth="450" MaxWidth="800" SizeToContent="Height" CanMaximize="False">
+  <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto"
+        ColumnSpacing="8" RowSpacing="6" Margin="8">
+    <Label Content="{Binding Strings.SelectFiles.AccessKeyText}" Target="filePathTextBox" />
+    <TextBox Name="filePathTextBox" Grid.Column="1" Text="{Binding FilePath}" />
+    <Button Name="browseButton" Grid.Column="2" MinWidth="100"
+            Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+    <Button Name="okButton" Grid.Row="1" Grid.Column="2" MinWidth="100" Classes="accent" IsDefault="True"
+            Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+  </Grid>
+</h:DialogWindow>

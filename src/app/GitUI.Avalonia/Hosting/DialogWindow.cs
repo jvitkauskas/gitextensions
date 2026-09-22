@@ -151,10 +151,11 @@ public class DialogWindow : Window
             return;
         }
 
-        if (CanResize)
+        // Only dialogs that do not size to their content restore their size: a size saved by the WinForms form
+        // (or for other content) would crop a layout sized to content.
+        if (CanResize && SizeToContent == SizeToContent.Manual)
         {
             // Stored in pixels at the DPI of the time; device-independent units are pixels * 96 / DPI.
-            SizeToContent = SizeToContent.Manual;
             Width = Math.Max(MinWidth, (placement.Width * 96.0 / placement.Dpi) - _frameThickness.Width);
             Height = Math.Max(MinHeight, (placement.Height * 96.0 / placement.Dpi) - _frameThickness.Height);
         }

@@ -538,6 +538,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowAddFiles(owner, this, addFiles))
+            {
+                return true;
+            }
+
             using FormAddFiles form = new(this, addFiles);
             form.ShowDialog(owner);
             return true;
@@ -706,6 +711,11 @@ public sealed class GitUICommands : IGitUICommands
         bool Action()
         {
             dir ??= Module.IsValidGitWorkingDir() ? Module.WorkingDir : string.Empty;
+
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowInit(owner, this, dir, gitModuleChanged))
+            {
+                return true;
+            }
 
             using FormInit frm = new(this, dir, gitModuleChanged);
             frm.ShowDialog(owner);
@@ -1021,6 +1031,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowDeleteTag(owner, this, tag, out bool deleted))
+            {
+                return deleted;
+            }
+
             using FormDeleteTag form = new(this, tag);
             return form.ShowDialog(owner) == DialogResult.OK;
         }
@@ -1700,6 +1715,11 @@ public sealed class GitUICommands : IGitUICommands
                 break;
         }
 #pragma warning restore SA1025 // Code should not contain multiple whitespace in a row
+
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowCommandlineHelp())
+        {
+            return true;
+        }
 
         Application.Run(new FormCommandlineHelp { StartPosition = FormStartPosition.CenterScreen });
         return true;

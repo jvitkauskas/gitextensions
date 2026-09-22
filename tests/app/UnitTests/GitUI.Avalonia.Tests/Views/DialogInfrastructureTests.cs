@@ -57,6 +57,27 @@ public sealed class DialogInfrastructureTests : HeadlessTest
     });
 
     [Test]
+    public Task Size_of_a_dialog_sized_to_content_is_not_restored() => OnUiThreadAsync(() =>
+    {
+        // E.g. a height saved by the WinForms form, which would crop the Avalonia layout.
+        InMemoryPositionStore store = new();
+        store.Save("FormAddFiles", new WindowPlacement(40, 30, 700, 40, Dpi: 96, IsMaximized: false));
+        GitUI.Avalonia.CommandsDialogs.AddFilesWindow window = new()
+        {
+            DataContext = new GitUI.Presentation.CommandsDialogs.AddFilesViewModel(new GitUI.Presentation.CommandsDialogs.AddFilesStrings(), ".", _ => true),
+            PositionName = "FormAddFiles",
+            PositionStore = store,
+        };
+
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        window.ClientSize.Height.Should().BeGreaterThan(60, "the height stays sized to the content");
+        window.SizeToContent.Should().Be(SizeToContent.Height);
+        window.Close();
+    });
+
+    [Test]
     public Task Configured_hotkey_reaches_the_view_model() => OnUiThreadAsync(() =>
     {
         HotkeyViewModel viewModel = new();

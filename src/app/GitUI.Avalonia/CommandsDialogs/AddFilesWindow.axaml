@@ -1,0 +1,20 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.AddFilesWindow"
+                x:DataType="vm:AddFilesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="550" MinWidth="450" SizeToContent="Height" CanMaximize="False">
+  <Grid Classes="form" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto"
+        ColumnSpacing="8" RowSpacing="6" Margin="12">
+    <Label Content="{Binding Strings.Filter.AccessKeyText}" Target="filterTextBox" />
+    <TextBox Name="filterTextBox" Grid.Column="1" Text="{Binding Filter}" />
+    <Button Name="showFilesButton" Grid.Column="2" MinWidth="94"
+            Content="{Binding Strings.ShowFiles.AccessKeyText}" Command="{Binding ShowFilesCommand}" />
+    <Button Name="addFilesButton" Grid.Column="3" MinWidth="94" Classes="accent" IsDefault="True"
+            Content="{Binding Strings.AddFiles.AccessKeyText}" Command="{Binding AddFilesCommand}" />
+    <CheckBox Name="forceCheckBox" Grid.Row="1" Grid.Column="1"
+              Content="{Binding Strings.Force.AccessKeyText}" IsChecked="{Binding Force}" />
+  </Grid>
+</h:DialogWindow>

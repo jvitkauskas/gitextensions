@@ -1,0 +1,30 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.ResetChangesWindow"
+                x:DataType="vm:ResetChangesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                MinWidth="468" SizeToContent="WidthAndHeight" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="resetButton" MinWidth="95"
+                Content="{Binding Strings.Reset.AccessKeyText}" Command="{Binding ResetCommand}" />
+        <!-- As in FormResetChanges, Enter cancels: resetting is destructive. -->
+        <Button Name="cancelButton" MinWidth="95" Classes="accent" IsDefault="True" IsCancel="True"
+                Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <StackPanel Margin="8" Spacing="8">
+      <ScrollViewer Name="messageScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <SelectableTextBlock Name="messageText" Text="{Binding Message}" />
+      </ScrollViewer>
+      <TextBlock Text="{Binding Strings.DeleteHint.Text}" />
+      <CheckBox Name="deleteNewFilesCheckBox"
+                Content="{Binding Strings.DeleteNewFiles.AccessKeyText}"
+                IsChecked="{Binding DeleteNewFiles}"
+                IsEnabled="{Binding CanChooseDeleteNewFiles}" />
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

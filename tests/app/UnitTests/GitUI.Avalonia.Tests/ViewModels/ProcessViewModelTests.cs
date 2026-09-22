@@ -308,6 +308,10 @@ public sealed class ProcessViewModelTests
 
         public void ShowError(string text, string caption) => Errors.Add(text);
 
+        public List<string> Informations { get; } = [];
+
+        public void ShowInformation(string text, string caption) => Informations.Add(text);
+
         public bool Confirm(string text, string caption) => true;
     }
 }

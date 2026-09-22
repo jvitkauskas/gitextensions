@@ -2087,6 +2087,16 @@ public partial class FileViewer : GitModuleControl
 
     private void goToLineToolStripMenuItem_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowGoToLine(this, internalFileViewer.MaxLineNumber, out int? line))
+        {
+            if (line is int lineNumber)
+            {
+                GoToLine(lineNumber);
+            }
+
+            return;
+        }
+
         using FormGoToLine formGoToLine = new();
         formGoToLine.SetMaxLineNumber(internalFileViewer.MaxLineNumber);
         if (formGoToLine.ShowDialog(this) == DialogResult.OK)

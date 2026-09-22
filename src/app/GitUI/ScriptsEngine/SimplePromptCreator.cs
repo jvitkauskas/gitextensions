@@ -9,6 +9,6 @@ internal sealed class SimplePromptCreator : ISimplePromptCreator
 {
     public IUserInputPrompt Create(string? title, string? label, string? defaultValue)
     {
-        return new SimplePrompt(title, label, defaultValue);
+        return AvaloniaHosting.AvaloniaDialogs.CreateSimplePrompt(title, label, defaultValue) ?? new SimplePrompt(title, label, defaultValue);
     }
 }

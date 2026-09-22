@@ -1,0 +1,16 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.ScriptsEngine"
+                x:Class="GitUI.Avalonia.ScriptsEngine.SimplePromptWindow"
+                x:DataType="vm:SimplePromptViewModel"
+                Title="{Binding Title}"
+                Width="334" MinWidth="300" SizeToContent="Height" CanMaximize="False">
+  <StackPanel Margin="12,6,12,8" Spacing="4">
+    <Label Content="{Binding Label}" Target="inputTextBox" Padding="0" />
+    <TextBox Name="inputTextBox" Text="{Binding Input}" />
+    <Button Name="okButton" HorizontalAlignment="Right" MinWidth="75" Margin="0,4,0,0"
+            Classes="accent" IsDefault="True"
+            Content="{Binding OkText}" Command="{Binding OkCommand}" />
+  </StackPanel>
+</h:DialogWindow>

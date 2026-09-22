@@ -4,13 +4,16 @@ using Avalonia.Threading;
 using CommonTestUtils;
 using GitCommands;
 using GitExtensions.Extensibility;
+using GitExtensions.Extensibility.Git;
 using GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.AvaloniaHosting;
+using GitUI.CommandsDialogs;
 using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.HelperDialogs;
+using GitUI.Presentation.ScriptsEngine;
 
 namespace GitExtensions.UITests.AvaloniaHosting;
 
@@ -254,6 +257,175 @@ public sealed class AvaloniaHostingTests
         title.Should().Be("Something failed");
     }
 
+    [Test]
+    public void StartAddFilesDialog_adds_files_through_the_progress_dialog()
+    {
+        File.WriteAllText(Path.Combine(_referenceRepository.Module.WorkingDir, "new-file.txt"), "content");
+
+        DriveDialogs(
+            window =>
+            {
+                AddFilesViewModel viewModel = (AddFilesViewModel)window.DataContext!;
+                viewModel.Filter = "new-file.txt";
+                Capture(window, "add-files");
+                viewModel.AddFilesCommand.Execute(null);
+            },
+            AcknowledgeWhenDone);
+
+        _commands.StartAddFilesDialog(_owner).Should().BeTrue();
+
+        _referenceRepository.Module.GetIndexFiles().Select(f => f.Name).Should().Contain("new-file.txt");
+    }
+
+    [Test]
+    public void StartDeleteTagDialog_deletes_the_tag()
+    {
+        _referenceRepository.CreateTag("v1.0", _referenceRepository.CommitHash!);
+
+        DriveNextDialog(window =>
+        {
+            DeleteTagViewModel viewModel = (DeleteTagViewModel)window.DataContext!;
+            viewModel.TagName.Should().Be("v1.0");
+            viewModel.Tags.Should().Contain("v1.0");
+            Capture(window, "delete-tag");
+            viewModel.DeleteCommand.Execute(null);
+        });
+
+        _commands.StartDeleteTagDialog(_owner, "v1.0").Should().BeTrue();
+
+        _referenceRepository.Module.GetRefs(RefsFilter.Tags).Should().BeEmpty();
+    }
+
+    [Test]
+    public void StartInitializeDialog_creates_a_repository()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"ge-avalonia-init-{Guid.NewGuid():N}");
+        GitModuleEventArgs? created = null;
+        try
+        {
+            DriveNextDialog(window =>
+            {
+                InitViewModel viewModel = (InitViewModel)window.DataContext!;
+                viewModel.Directory = directory;
+                Capture(window, "init");
+
+                // Git's output is reported in a (WinForms) message box; dismiss it.
+                DispatcherTimer.RunOnce(() => CloseTopLevelWindow("Create new repository", except: window.NativeHandle), TimeSpan.FromMilliseconds(1500));
+                viewModel.CreateCommand.Execute(null);
+            });
+
+            _commands.StartInitializeDialog(_owner, dir: null, (_, e) => created = e).Should().BeTrue();
+
+            Directory.Exists(Path.Combine(directory, ".git")).Should().BeTrue();
+            created!.GitModule.WorkingDir.Should().Be(directory.EnsureTrailingPathSeparator());
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Test]
+    public void ShowResetDialog_returns_the_choice()
+    {
+        DriveNextDialog(window =>
+        {
+            ResetChangesViewModel viewModel = (ResetChangesViewModel)window.DataContext!;
+            viewModel.CanChooseDeleteNewFiles.Should().BeTrue();
+            Capture(window, "reset-changes");
+            viewModel.DeleteNewFiles = true;
+            viewModel.ResetCommand.Execute(null);
+        });
+
+        FormResetChanges.ShowResetDialog(_owner, hasExistingFiles: true, hasNewFiles: true)
+            .Should().Be(FormResetChanges.ActionEnum.ResetAndDelete);
+    }
+
+    [Test]
+    public void Script_input_prompt_returns_the_input()
+    {
+        DriveNextDialog(window =>
+        {
+            SimplePromptViewModel viewModel = (SimplePromptViewModel)window.DataContext!;
+            viewModel.Input = "ABC-123";
+            Capture(window, "simple-prompt");
+            viewModel.OkCommand.Execute(null);
+        });
+
+        using GitUI.ScriptsEngine.IUserInputPrompt prompt = new GitUI.ScriptsEngine.SimplePromptCreator().Create("Script", "Ticket", "");
+
+        prompt.ShowDialog(_owner).Should().Be(DialogResult.OK);
+        prompt.UserInput.Should().Be("ABC-123");
+    }
+
+    [Test]
+    public void Small_dialogs_open_from_their_entry_points()
+    {
+        DriveNextDialog(window =>
+        {
+            ((CommandlineHelpViewModel)window.DataContext!).Commands.Should().Contain("browse");
+            Capture(window, "commandline-help");
+            window.Close();
+        });
+        AvaloniaDialogs.TryShowCommandlineHelp().Should().BeTrue();
+
+        DriveNextDialog(window =>
+        {
+            GoToLineViewModel viewModel = (GoToLineViewModel)window.DataContext!;
+            viewModel.LineNumber = 7;
+            viewModel.OkCommand.Execute(null);
+        });
+        AvaloniaDialogs.TryShowGoToLine(_owner, 100, out int? line).Should().BeTrue();
+        line.Should().Be(7);
+
+        DriveNextDialog(window =>
+        {
+            Capture(window, "contributors");
+            window.Close();
+        });
+        AvaloniaDialogs.TryShowContributors(_owner).Should().BeTrue();
+    }
+
+    private void AcknowledgeWhenDone(DialogWindow window)
+    {
+        ProcessViewModel viewModel = (ProcessViewModel)window.DataContext!;
+        WhenDone(viewModel, () => viewModel.AcknowledgeCommand.Execute(null));
+    }
+
+    /// <summary>Closes the top-level window of this thread with the given title (e.g. a message box).</summary>
+    private static void CloseTopLevelWindow(string title, nint except)
+    {
+        EnumThreadWindows(
+            GetCurrentThreadId(),
+            (handle, _) =>
+            {
+                System.Text.StringBuilder text = new(256);
+                GetWindowText(handle, text, text.Capacity);
+                if (handle != except && text.ToString() == title)
+                {
+                    PostMessage(handle, 0x0010 /* WM_CLOSE */, 0, 0);
+                }
+
+                return true;
+            },
+            0);
+    }
+
+    private delegate bool EnumWindowsProc(nint handle, nint parameter);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumThreadWindows(uint threadId, EnumWindowsProc callback, nint parameter);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(nint handle, System.Text.StringBuilder text, int maxCount);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
+
     /// <summary>Runs <paramref name="action"/> once the process of the dialog has finished (and the UI settled).</summary>
     private void WhenDone(ProcessViewModel viewModel, Action action)
     {
@@ -292,11 +464,20 @@ public sealed class AvaloniaHostingTests
     ///  Runs <paramref name="drive"/> once the next Avalonia dialog has been shown and rendered.
     ///  The dialog is modal, so this is the only way to act on it while the <c>TryShow*</c> call blocks.
     /// </summary>
-    private void DriveNextDialog(Action<DialogWindow> drive)
+    private void DriveNextDialog(Action<DialogWindow> drive) => DriveDialogs(drive);
+
+    /// <summary>Drives the next Avalonia dialogs in order, e.g. a dialog and the progress dialog it opens.</summary>
+    private void DriveDialogs(params Action<DialogWindow>[] drivers)
     {
+        Queue<Action<DialogWindow>> queue = new(drivers);
         AvaloniaDialogHost.DialogShowingForTests = window =>
         {
-            AvaloniaDialogHost.DialogShowingForTests = null;
+            Action<DialogWindow> drive = queue.Dequeue();
+            if (queue.Count == 0)
+            {
+                AvaloniaDialogHost.DialogShowingForTests = null;
+            }
+
             window.Opened += (_, _) => DispatcherTimer.RunOnce(
                 () =>
                 {

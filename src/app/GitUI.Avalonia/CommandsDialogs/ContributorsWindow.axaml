@@ -1,0 +1,29 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.ContributorsWindow"
+                x:DataType="vm:ContributorsViewModel"
+                Title="{Binding Title}"
+                Width="624" Height="442" CanResize="False">
+  <Window.Styles>
+    <Style Selector="TextBox.contributors">
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="VerticalContentAlignment" Value="Top" />
+      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+  </Window.Styles>
+  <TabControl Name="tabControl" Margin="4,0,4,4">
+    <TabItem Header="{Binding DevelopersTab}">
+      <TextBox Classes="contributors" Text="{Binding DevelopersText, Mode=OneWay}" />
+    </TabItem>
+    <TabItem Header="{Binding TranslatorsTab}">
+      <TextBox Classes="contributors" Text="{Binding TranslatorsText, Mode=OneWay}" />
+    </TabItem>
+    <TabItem Header="{Binding DesignersTab}">
+      <TextBox Classes="contributors" Text="{Binding DesignersText, Mode=OneWay}" />
+    </TabItem>
+  </TabControl>
+</h:DialogWindow>

@@ -6,7 +6,7 @@
 |---|---|
 | 0: Foundations | **Done** except `ThreadHelper` overloads for Avalonia controls, which will be added when a ported view needs them. Done so far: new projects, packages, installer/publish, translation reuse (with access-key conversion), dialog base window, window position restore/save (shared `WindowPositions.xml`), hotkeys, `IMessageBoxService`, theme bridge (Fluent palette from the Git Extensions theme, `AppColor` brushes), embedding of native WinForms controls. |
 | 1: Hybrid spike | **Done, go.** Approach (A) works: Avalonia windows are modal over WinForms owners. Ported: `FormAbout`, `FormRenameBranch`, `FormCommitTemplateSettings`. |
-| 2: Lightweight dialogs | **Started.** The progress dialog (`FormStatus`/`FormProcess`) is ported, and routing it covers the ~70 `FormProcess.ShowDialog`/`ReadDialog` and `FormStatus.ShowErrorDialog` call sites. `FormRemoteProcess` stays WinForms until Push/Pull/Clone are ported (phase 5). See the [ledger](ledger.md). |
+| 2: Lightweight dialogs | **In progress: 11 of ~40 done.** The progress dialog (`FormStatus`/`FormProcess`) covers the ~70 `FormProcess.ShowDialog`/`ReadDialog` and `FormStatus.ShowErrorDialog` call sites. Batch 1 adds command line help, add files, donate, contributors, reset changes, delete tag, init, go to line, and the script input and file prompts. `FormRemoteProcess` stays WinForms until Push/Pull/Clone are ported (phase 5). See the [ledger](ledger.md). |
 | 3+ | Not started. |
 
 Using the port:
@@ -51,6 +51,11 @@ Code layout:
 14. **Window sizes are outer bounds.** WinForms persists outer bounds, while Avalonia's `Width`/`Height` are the client size. `DialogWindow` measures the frame thickness when it opens and converts in both directions.
 15. **Inside `GitUI.*` namespaces, `Avalonia.X` resolves to `GitUI.Avalonia.X`.** Use top-level `using Avalonia...;` directives and plain type names.
 16. **ConEmu fails on ARM64 Windows** with "Can't load library, ErrCode=193" (its helper DLL is x64-only). The WinForms dialog fails the same way, so this is an existing limitation, not caused by the port.
+17. **Positions are shared with the WinForms forms, but sizes are only restored for dialogs that don't size to their content.** A WinForms-saved height would crop an Avalonia layout that sizes itself to its content.
+18. **Event scripts need a host form.** `IScriptsRunner.RunEventScripts` requires `IGitModuleForm` + `IScriptOptionsForm` + `IWin32Window`; `AvaloniaDialogs.ScriptHost` provides that for an Avalonia dialog.
+19. **File and folder pickers** go through `IFileDialogService` (Avalonia `StorageProvider`), not `OpenFileDialog` / `OsShellUtil.PickFolder`.
+20. **Compute application-level values lazily in view models**, like the user-manual URL, which needs `AppSettings.DocumentationBaseUrl` (set at startup but not in tests). The WinForms controls did the same.
+21. **WinForms forms whose strings never reached `English.xlf`** (`FormContributors`, `SimplePrompt`) show English. Their ports use constants, so the XLIFF test still holds.
 
 ## Context
 

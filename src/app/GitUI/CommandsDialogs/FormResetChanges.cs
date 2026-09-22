@@ -66,6 +66,11 @@ public partial class FormResetChanges : GitExtensionsForm
     /// <param name="confirmationMessage">Optional confirmation message replacing the default.</param>
     public static ActionEnum ShowResetDialog(IWin32Window? owner, bool hasExistingFiles, bool hasNewFiles, string? confirmationMessage = null)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowResetChanges(owner, hasExistingFiles, hasNewFiles, confirmationMessage, out ActionEnum action))
+        {
+            return action;
+        }
+
         using FormResetChanges form = new(hasExistingFiles, hasNewFiles, confirmationMessage);
         form.ShowDialog(owner);
         return form.SelectedAction;
