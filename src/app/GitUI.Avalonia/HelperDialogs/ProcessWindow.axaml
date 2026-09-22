@@ -1,0 +1,60 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.HelperDialogs"
+                x:Class="GitUI.Avalonia.HelperDialogs.ProcessWindow"
+                x:DataType="vm:ProcessViewModel"
+                Title="{Binding Title}"
+                Width="549" Height="327"
+                MinWidth="400" MinHeight="200">
+  <DockPanel>
+    <!-- Equivalent of GitExtensionsDialog.ControlsPanel -->
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <CheckBox Name="showPasswordCheckBox" IsThreeState="True" VerticalAlignment="Center"
+                  IsVisible="{Binding IsShowPasswordVisible}"
+                  IsChecked="{Binding ShowPasswordState}"
+                  Content="{Binding Strings.ShowPassword.AccessKeyText}" />
+        <CheckBox Name="keepDialogOpenCheckBox" VerticalAlignment="Center"
+                  IsVisible="{Binding IsKeepDialogOpenVisible}"
+                  IsChecked="{Binding KeepDialogOpen}"
+                  Content="{Binding Strings.KeepDialogOpen.AccessKeyText}" />
+        <Button Name="okButton" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding AcknowledgeCommand}" />
+        <Button Name="abortButton"
+                IsVisible="{Binding IsAbortVisible}"
+                Content="{Binding Strings.Abort.AccessKeyText}" Command="{Binding AbortCommand}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Equivalent of the PasswordInput user control -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="8"
+          IsVisible="{Binding IsPasswordInputVisible}">
+      <TextBox Name="passwordTextBox" PasswordChar="●" RevealPassword="{Binding #revealPasswordButton.IsChecked}"
+               Text="{Binding PasswordText}">
+        <TextBox.KeyBindings>
+          <KeyBinding Gesture="Enter" Command="{Binding SendInputCommand}" />
+        </TextBox.KeyBindings>
+      </TextBox>
+      <ToggleButton Name="revealPasswordButton" Grid.Column="1" Padding="4" VerticalAlignment="Stretch">
+        <Panel>
+          <Image Source="avares://GitUI.Avalonia/Assets/EyeClosed.png" Width="16" Height="16"
+                 IsVisible="{Binding !#revealPasswordButton.IsChecked}" />
+          <Image Source="avares://GitUI.Avalonia/Assets/EyeOpened.png" Width="16" Height="16"
+                 IsVisible="{Binding #revealPasswordButton.IsChecked}" />
+        </Panel>
+      </ToggleButton>
+      <Button Name="sendInputButton" Grid.Column="2"
+              Content="{Binding Strings.SendInput.AccessKeyText}" Command="{Binding SendInputCommand}" />
+    </Grid>
+
+    <ProgressBar Name="progressBar" DockPanel.Dock="Bottom" Height="3" MinHeight="3" CornerRadius="0"
+                 IsVisible="{Binding IsProgressVisible}"
+                 IsIndeterminate="{Binding ProgressValue, Converter={x:Static ObjectConverters.IsNull}}"
+                 Value="{Binding ProgressValue, FallbackValue=0, TargetNullValue=0}" Maximum="100" />
+
+    <!-- The console (ConEmu, Mintty or plain text) is the existing WinForms control, embedded as a child window. -->
+    <c:EmbeddedNativeViewHost Name="consoleHost" Margin="12" View="{Binding ConsoleView}" />
+  </DockPanel>
+</h:DialogWindow>

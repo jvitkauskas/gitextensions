@@ -7,8 +7,10 @@ using GitExtensions.Extensibility;
 using GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.AvaloniaHosting;
+using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
+using GitUI.Presentation.HelperDialogs;
 
 namespace GitExtensions.UITests.AvaloniaHosting;
 
@@ -164,7 +166,7 @@ public sealed class AvaloniaHostingTests
                 viewModel.NewName = "feature/new";
                 Capture(window, "rename-branch");
 
-                // Runs `git branch -m` in FormProcess (WinForms), owned by the Avalonia dialog.
+                // Runs `git branch -m` in the progress dialog (Avalonia too since phase 2, nested in this one).
                 viewModel.RenameCommand.Execute(null);
             });
 
@@ -177,6 +179,112 @@ public sealed class AvaloniaHostingTests
         finally
         {
             AppSettings.CloseProcessDialog = closeProcessDialog;
+        }
+    }
+
+    [Test]
+    public void Process_dialog_runs_git_and_shows_the_embedded_console()
+    {
+        bool closeProcessDialog = AppSettings.CloseProcessDialog;
+        AppSettings.CloseProcessDialog = false;
+        try
+        {
+            ProcessStatus? status = null;
+            DriveNextDialog(window =>
+            {
+                ProcessViewModel viewModel = (ProcessViewModel)window.DataContext!;
+                WhenDone(viewModel, () =>
+                {
+                    status = viewModel.Status;
+                    viewModel.KeepDialogOpen.Should().BeTrue();
+                    viewModel.AcknowledgeCommand.CanExecute(null).Should().BeTrue();
+                    Capture(window, "process-success");
+                    viewModel.AcknowledgeCommand.Execute(null);
+                });
+            });
+
+            bool success = FormProcess.ShowDialog(_owner, _commands, arguments: "status", _referenceRepository.Module.WorkingDir, input: null, useDialogSettings: true, out string output);
+
+            success.Should().BeTrue();
+            status.Should().Be(ProcessStatus.Succeeded);
+            output.Should().Contain("On branch");
+        }
+        finally
+        {
+            AppSettings.CloseProcessDialog = closeProcessDialog;
+        }
+    }
+
+    [Test]
+    public void Process_dialog_reports_a_failing_command()
+    {
+        DriveNextDialog(window =>
+        {
+            ProcessViewModel viewModel = (ProcessViewModel)window.DataContext!;
+            WhenDone(viewModel, () =>
+            {
+                viewModel.Status.Should().Be(ProcessStatus.Failed);
+                Capture(window, "process-failure");
+                viewModel.AcknowledgeCommand.Execute(null);
+            });
+        });
+
+        bool success = FormProcess.ShowDialog(_owner, _commands, arguments: "no-such-git-command", _referenceRepository.Module.WorkingDir, input: null, useDialogSettings: true, out string output);
+
+        success.Should().BeFalse();
+        output.Should().Contain("no-such-git-command");
+    }
+
+    [Test]
+    public void Error_dialog_shows_the_given_output()
+    {
+        string? title = null;
+        DriveNextDialog(window =>
+        {
+            ProcessViewModel viewModel = (ProcessViewModel)window.DataContext!;
+            title = viewModel.Title;
+            viewModel.IsDone.Should().BeTrue();
+            viewModel.IsAbortVisible.Should().BeFalse();
+            Capture(window, "error-dialog");
+            viewModel.AcknowledgeCommand.Execute(null);
+        });
+
+        FormStatus.ShowErrorDialog(_owner, _commands, "Something failed", "first line\n", "second line\n");
+
+        title.Should().Be("Something failed");
+    }
+
+    /// <summary>Runs <paramref name="action"/> once the process of the dialog has finished (and the UI settled).</summary>
+    private void WhenDone(ProcessViewModel viewModel, Action action)
+    {
+        if (viewModel.IsDone)
+        {
+            DispatcherTimer.RunOnce(Guarded, TimeSpan.FromMilliseconds(300));
+            return;
+        }
+
+        void OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ProcessViewModel.IsDone) && viewModel.IsDone)
+            {
+                viewModel.PropertyChanged -= OnPropertyChanged;
+                DispatcherTimer.RunOnce(Guarded, TimeSpan.FromMilliseconds(300));
+            }
+        }
+
+        viewModel.PropertyChanged += OnPropertyChanged;
+
+        void Guarded()
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                _driveFailure = ex;
+                viewModel.AcknowledgeCommand.Execute(null);
+            }
         }
     }
 

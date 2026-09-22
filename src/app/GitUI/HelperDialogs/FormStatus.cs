@@ -116,6 +116,11 @@ public partial class FormStatus : GitExtensionsDialog
 
     public static void ShowErrorDialog(IWin32Window owner, IGitUICommands commands, string text, params string[] output)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowErrorDialog(owner, commands, text, output))
+        {
+            return;
+        }
+
         using FormStatus form = new(commands, consoleEmulatorsRegistry: PlainTextConsoleEmulatorsRegistry.Instance, useDialogSettings: true);
         form.Text = text;
         if (output?.Length > 0)

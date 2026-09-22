@@ -4,9 +4,10 @@
 
 | Phase | State |
 |---|---|
-| 0: Foundations | **Partly done:** new projects, packages, installer/publish, translation reuse, dialog shell (basic). **Still to do:** theme bridge beyond light/dark, window position restore, hotkeys, `IMessageBoxService`, `ThreadHelper` overloads. |
-| 1: Hybrid spike | **Done, go.** Approach (A) works: Avalonia windows are modal over WinForms owners. Ported: `FormAbout`, `FormRenameBranch`, `FormCommitTemplateSettings` (see [ledger](ledger.md)). |
-| 2+ | Not started. |
+| 0: Foundations | **Done** except `ThreadHelper` overloads for Avalonia controls, which will be added when a ported view needs them. Done so far: new projects, packages, installer/publish, translation reuse (with access-key conversion), dialog base window, window position restore/save (shared `WindowPositions.xml`), hotkeys, `IMessageBoxService`, theme bridge (Fluent palette from the Git Extensions theme, `AppColor` brushes), embedding of native WinForms controls. |
+| 1: Hybrid spike | **Done, go.** Approach (A) works: Avalonia windows are modal over WinForms owners. Ported: `FormAbout`, `FormRenameBranch`, `FormCommitTemplateSettings`. |
+| 2: Lightweight dialogs | **Started.** The progress dialog (`FormStatus`/`FormProcess`) is ported, and routing it covers the ~70 `FormProcess.ShowDialog`/`ReadDialog` and `FormStatus.ShowErrorDialog` call sites. `FormRemoteProcess` stays WinForms until Push/Pull/Clone are ported (phase 5). See the [ledger](ledger.md). |
+| 3+ | Not started. |
 
 Using the port:
 - Ported dialogs are on by default.
@@ -16,7 +17,7 @@ Using the port:
 Code layout:
 - `src/app/GitUI.Presentation`: view models and strings.
 - `src/app/GitUI.Avalonia`: views and hosting.
-- `src/app/GitUI/AvaloniaHosting/AvaloniaDialogs.cs`: routing and composition.
+- `src/app/GitUI/AvaloniaHosting/`: routing and composition (`AvaloniaDialogs*.cs`) and host services (`AvaloniaHostServices.cs`).
 
 ### Phase 1 findings (rules for all further porting)
 
@@ -41,6 +42,15 @@ Code layout:
    - `Project.Avalonia.targets` strips the other operating systems' natives and the native `.pdb` files (over 100 MB) before packing.
    - Plugins that reference `GitUI` also copy Avalonia natives into their build output. Publish does not ship those.
 10. **Known behaviour differences.** Avalonia's `CheckBox` handles Enter itself (it toggles). WinForms instead triggers the dialog's OK button when Enter is pressed on a check box.
+
+### Phase 2 findings
+
+11. **WinForms controls that aren't ported yet can be embedded.** `EmbeddedNativeViewHost` (a `NativeControlHost`) parents a WinForms control's window into an Avalonia window. The progress dialog embeds the existing console control this way (ConEmu, Mintty or plain text, whichever is configured), so terminal emulation keeps working unchanged. On close, the control is parked under `HWND_MESSAGE` before being disposed, so Windows doesn't destroy it underneath WinForms.
+12. **Pass a "post to UI thread" delegate to view models** that react to background events. The repo's threading analyzers forbid raw `SynchronizationContext.Post`. In the app the delegate is JoinableTaskFactory-based (`InvokeAndForget`), and in tests it runs the action synchronously.
+13. **Translate WinForms access keys.** XLIFF texts carry WinForms mnemonics (`&Abort`). Bind `TranslatedText.AccessKeyText` (`_Abort`) for controls, and `PlainText` for titles.
+14. **Window sizes are outer bounds.** WinForms persists outer bounds, while Avalonia's `Width`/`Height` are the client size. `DialogWindow` measures the frame thickness when it opens and converts in both directions.
+15. **Inside `GitUI.*` namespaces, `Avalonia.X` resolves to `GitUI.Avalonia.X`.** Use top-level `using Avalonia...;` directives and plain type names.
+16. **ConEmu fails on ARM64 Windows** with "Can't load library, ErrCode=193" (its helper DLL is x64-only). The WinForms dialog fails the same way, so this is an existing limitation, not caused by the port.
 
 ## Context
 

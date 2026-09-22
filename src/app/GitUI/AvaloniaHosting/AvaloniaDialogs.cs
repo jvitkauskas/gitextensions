@@ -26,7 +26,7 @@ namespace GitUI.AvaloniaHosting;
 ///  This is the composition side of the port: it lives in GitUI because it gathers data and services from the
 ///  WinForms application (settings, environment info, progress dialogs) and hands them to the view models.
 /// </remarks>
-internal static class AvaloniaDialogs
+internal static partial class AvaloniaDialogs
 {
     public static bool TryShowAbout(IWin32Window? owner)
     {
@@ -87,7 +87,8 @@ internal static class AvaloniaDialogs
                         useDialogSettings: true)));
                 return window;
             },
-            owner);
+            owner,
+            positionName: nameof(FormRenameBranch));
         return true;
     }
 
@@ -109,10 +110,17 @@ internal static class AvaloniaDialogs
         return true;
     }
 
-    private static bool ShowDialog(Func<DialogWindow> createWindow, IWin32Window? owner)
+    /// <param name="positionName">
+    ///  The name under which the WinForms form persisted its position (its type name), if it did
+    ///  (<c>enablePositionRestore</c>); the Avalonia dialog shares it.
+    /// </param>
+    private static bool ShowDialog(Func<DialogWindow> createWindow, IWin32Window? owner, string? positionName = null)
     {
         AvaloniaUi.EnsureInitialized(GetOptions);
-        return AvaloniaDialogHost.ShowDialog(createWindow(), owner?.Handle ?? 0);
+        DialogWindow window = createWindow();
+        window.PositionName = positionName;
+        window.PositionStore = WindowPositionStore.Instance;
+        return AvaloniaDialogHost.ShowDialog(window, owner?.Handle ?? 0);
     }
 
     private static AvaloniaUiOptions GetOptions()
@@ -121,13 +129,8 @@ internal static class AvaloniaDialogs
         return new AvaloniaUiOptions(
             IsDarkTheme: Application.IsDarkModeEnabled,
             FontFamily: font.FontFamily.Name,
-            FontSize: font.SizeInPoints * 96 / 72);
-    }
-
-    /// <summary>Lets an Avalonia window own WinForms dialogs (e.g. progress or message boxes it opens).</summary>
-    private sealed class NativeWindowOwner(DialogWindow window) : IWin32Window
-    {
-        public nint Handle => window.NativeHandle;
+            FontSize: font.SizeInPoints * 96 / 72,
+            Colors: GetThemeColors());
     }
 
     private sealed class AboutDialogHost(DialogWindow window) : IAboutDialogHost

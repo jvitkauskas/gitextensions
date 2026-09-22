@@ -25,5 +25,10 @@
     <AvaloniaResource Include="..\..\..\setup\assets\Logo\git-extensions-logo-256px.png" Link="Assets\git-extensions-logo-256px.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Donate.png" Link="Assets\Donate.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CopyToClipboard.png" Link="Assets\CopyToClipboard.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StatusBadgeWaiting.png" Link="Assets\StatusBadgeWaiting.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StatusBadgeSuccess.png" Link="Assets\StatusBadgeSuccess.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StatusBadgeError.png" Link="Assets\StatusBadgeError.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\EyeClosed.png" Link="Assets\EyeClosed.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\EyeOpened.png" Link="Assets\EyeOpened.png" />
   </ItemGroup>
 </Project>

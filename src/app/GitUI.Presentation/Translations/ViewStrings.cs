@@ -1,3 +1,4 @@
+using System.Text;
 using GitCommands;
 using GitExtensions.Extensibility.Translations;
 
@@ -20,7 +21,7 @@ namespace GitUI.Presentation.Translations;
 public abstract class ViewStrings : ITranslate
 {
     private readonly string _category;
-    private readonly List<(string Item, string Property, TranslatedText Text)> _entries = [];
+    private readonly List<(string Category, string Item, string Property, TranslatedText Text)> _entries = [];
 
     protected ViewStrings(string category)
     {
@@ -41,30 +42,34 @@ public abstract class ViewStrings : ITranslate
     /// <summary>
     ///  Declares a translatable entry, e.g. <c>Add("label1", "Text", "New name")</c> or <c>Add("$this", "Text", "Rename branch")</c> for the title.
     /// </summary>
-    protected TranslatedText Add(string item, string property, string neutralText)
+    /// <param name="category">
+    ///  The XLIFF category, if the entry belongs to another form or user control than the view's own category
+    ///  (e.g. a user control the WinForms form embedded).
+    /// </param>
+    protected TranslatedText Add(string item, string property, string neutralText, string? category = null)
     {
         TranslatedText text = new(neutralText);
-        _entries.Add((item, property, text));
+        _entries.Add((category ?? _category, item, property, text));
         return text;
     }
 
     void ITranslate.AddTranslationItems(ITranslation translation)
     {
-        foreach ((string item, string property, TranslatedText text) in _entries)
+        foreach ((string category, string item, string property, TranslatedText text) in _entries)
         {
             // Same filter as TranslationUtil.AllowTranslateProperty: strings without letters are not translatable.
             if (text.NeutralText.Any(char.IsLetter))
             {
-                translation.AddTranslationItem(_category, item, property, text.NeutralText);
+                translation.AddTranslationItem(category, item, property, text.NeutralText);
             }
         }
     }
 
     void ITranslate.TranslateItems(ITranslation translation)
     {
-        foreach ((string item, string property, TranslatedText text) in _entries)
+        foreach ((string category, string item, string property, TranslatedText text) in _entries)
         {
-            text.Text = translation.TranslateItem(_category, item, property, () => text.NeutralText) ?? text.NeutralText;
+            text.Text = translation.TranslateItem(category, item, property, () => text.NeutralText) ?? text.NeutralText;
         }
     }
 
@@ -88,8 +93,51 @@ public sealed class TranslatedText
     /// <summary>The untranslated (English) text.</summary>
     public string NeutralText { get; }
 
-    /// <summary>The text in the current UI language.</summary>
+    /// <summary>The text in the current UI language, as stored in the translation (WinForms access keys: <c>&amp;Abort</c>).</summary>
     public string Text { get; internal set; }
 
+    /// <summary>
+    ///  <see cref="Text"/> with its access key in Avalonia syntax (<c>_Abort</c>), for buttons, check boxes and labels.
+    /// </summary>
+    public string AccessKeyText => ToAccessKeyText(Text);
+
+    /// <summary><see cref="Text"/> without the access key marker (<c>Abort</c>), for titles and tooltips.</summary>
+    public string PlainText => ToAccessKeyText(Text).Replace("__", "\0").Replace("_", "").Replace('\0', '_');
+
     public override string ToString() => Text;
+
+    /// <summary>
+    ///  Converts WinForms mnemonics (<c>&amp;</c> marks the access key, <c>&amp;&amp;</c> is a literal ampersand) to
+    ///  Avalonia's (<c>_</c> marks the access key, <c>__</c> is a literal underscore).
+    /// </summary>
+    internal static string ToAccessKeyText(string text)
+    {
+        StringBuilder result = new(text.Length + 2);
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            if (c == '&')
+            {
+                if (i + 1 < text.Length && text[i + 1] == '&')
+                {
+                    result.Append('&');
+                    i++;
+                }
+                else
+                {
+                    result.Append('_');
+                }
+            }
+            else if (c == '_')
+            {
+                result.Append("__");
+            }
+            else
+            {
+                result.Append(c);
+            }
+        }
+
+        return result.ToString();
+    }
 }

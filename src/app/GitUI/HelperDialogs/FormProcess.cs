@@ -74,6 +74,11 @@ public partial class FormProcess : FormStatus
     {
         DebugHelpers.Assert(owner is not null, "Progress window must be owned by another window! This is a bug, please correct and send a pull request with a fix.");
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowProcess(owner, commands, arguments, workingDirectory, input, useDialogSettings, process, out bool success, out output))
+        {
+            return success;
+        }
+
         using FormProcess formProcess = new(commands, arguments, workingDirectory, input, useDialogSettings, process);
         formProcess.ShowDialog(owner);
         output = formProcess.GetOutputString();
@@ -84,6 +89,11 @@ public partial class FormProcess : FormStatus
     public static string ReadDialog(IWin32Window? owner, IGitUICommands commands, ArgumentString arguments, string workingDirectory, string? input, bool useDialogSettings)
     {
         DebugHelpers.Assert(owner is not null, "Progress window must be owned by another window! This is a bug, please correct and send a pull request with a fix.");
+
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowProcess(owner, commands, arguments, workingDirectory, input, useDialogSettings, process: null, out _, out string avaloniaOutput))
+        {
+            return avaloniaOutput;
+        }
 
         using FormProcess formProcess = new(commands, arguments, workingDirectory, input, useDialogSettings);
         formProcess.ShowDialog(owner);

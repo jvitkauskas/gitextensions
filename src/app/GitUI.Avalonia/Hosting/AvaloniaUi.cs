@@ -9,7 +9,27 @@ namespace GitUI.Avalonia.Hosting;
 /// <param name="IsDarkTheme">Whether the Git Extensions theme is dark.</param>
 /// <param name="FontFamily">The application font family (<c>AppSettings.Font</c>).</param>
 /// <param name="FontSize">The application font size in device-independent pixels (1/96 inch).</param>
-public sealed record AvaloniaUiOptions(bool IsDarkTheme, string? FontFamily, double FontSize);
+/// <param name="Colors">
+///  Theme colors as ARGB: the system colors <see cref="ThemeColors.Control"/>, <see cref="ThemeColors.Highlight"/> etc.
+///  (as the Git Extensions theme defines them) and every <c>AppColor</c> under <c>"AppColor.&lt;name&gt;"</c>.
+/// </param>
+public sealed record AvaloniaUiOptions(bool IsDarkTheme, string? FontFamily, double FontSize, IReadOnlyDictionary<string, uint>? Colors = null);
+
+/// <summary>Keys of <see cref="AvaloniaUiOptions.Colors"/>.</summary>
+public static class ThemeColors
+{
+    public const string Control = nameof(Control);
+    public const string ControlText = nameof(ControlText);
+    public const string Window = nameof(Window);
+    public const string WindowText = nameof(WindowText);
+    public const string Highlight = nameof(Highlight);
+    public const string HighlightText = nameof(HighlightText);
+    public const string GrayText = nameof(GrayText);
+    public const string HotTrack = nameof(HotTrack);
+
+    /// <summary>Prefix of the keys of <c>AppColor</c> values; they become brush resources with the same key.</summary>
+    public const string AppColorPrefix = "AppColor.";
+}
 
 /// <summary>
 ///  Runs Avalonia inside the WinForms process, on the same UI thread (docs/avalonia-port/PLAN.md, "hybrid process").

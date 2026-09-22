@@ -12,5 +12,11 @@ public abstract class DialogViewModel : ObservableObject
     /// </summary>
     public event EventHandler<bool>? CloseRequested;
 
+    /// <summary>
+    ///  Executes a configured hotkey command (see <c>HotkeyCommand.CommandCode</c>);
+    ///  returns <see langword="true"/> if the command was handled.
+    /// </summary>
+    public virtual bool ExecuteHotkeyCommand(int commandCode) => false;
+
     protected void Close(bool accepted) => CloseRequested?.Invoke(this, accepted);
 }

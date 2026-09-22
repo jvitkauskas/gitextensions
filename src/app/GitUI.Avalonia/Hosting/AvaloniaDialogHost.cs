@@ -42,6 +42,7 @@ public static class AvaloniaDialogHost
             NativeMethods.SetWindowLongPtr(dialog, NativeMethods.GWLP_HWNDPARENT, owner);
             window.ShowInTaskbar = false;
             window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.IsCenteredOnOwner = true;
             CenterOver(window, owner);
         }
         else

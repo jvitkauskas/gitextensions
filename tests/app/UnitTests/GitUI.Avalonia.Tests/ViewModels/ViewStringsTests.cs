@@ -2,6 +2,7 @@ using System.Xml.Linq;
 using GitExtensions.Extensibility.Translations;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
+using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 
 namespace GitUI.AvaloniaTests.ViewModels;
@@ -20,6 +21,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new AboutStrings()).SetArgDisplayNames(nameof(AboutStrings));
         yield return new TestCaseData(new RenameBranchStrings()).SetArgDisplayNames(nameof(RenameBranchStrings));
         yield return new TestCaseData(new CommitTemplateSettingsStrings()).SetArgDisplayNames(nameof(CommitTemplateSettingsStrings));
+        yield return new TestCaseData(new ProcessStrings()).SetArgDisplayNames(nameof(ProcessStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]
