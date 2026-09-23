@@ -42,6 +42,7 @@ public sealed partial class CommitDiffViewModel : DialogViewModel
     private readonly ICommitDiffHost _host;
     private readonly ObjectId _objectId;
     private readonly string? _fileToSelect;
+    private CancellationTokenSource? _loading;
 
     public CommitDiffViewModel(
         CommitDiffStrings strings,
@@ -76,22 +77,46 @@ public sealed partial class CommitDiffViewModel : DialogViewModel
     [ObservableProperty]
     public partial string Title { get; private set; }
 
-    /// <summary>As <c>CommitDiff.SetRevision</c>.</summary>
-    public async Task InitializeAsync()
+    /// <summary>Shows the commit of the dialog.</summary>
+    public Task InitializeAsync() => SetRevisionAsync(_objectId, _fileToSelect);
+
+    /// <summary>As <c>CommitDiff.SetRevision</c>: shows the commit, with <paramref name="fileToSelect"/> selected if it changed.</summary>
+    public async Task SetRevisionAsync(ObjectId objectId, string? fileToSelect)
     {
-        if (_host.GetRevision(_objectId) is not { } revision)
+#pragma warning disable VSTHRD103 // CancelAsync may resume off the UI thread.
+        _loading?.Cancel();
+#pragma warning restore VSTHRD103
+        _loading = new CancellationTokenSource();
+        CancellationToken cancellationToken = _loading.Token;
+        if (_host.GetRevision(objectId) is not { } revision)
         {
+            CommitInfo.SetRevision(null);
+            Files.SetGroups([]);
             return;
         }
 
         Title = $"{Strings.Title.PlainText} - {revision.ObjectId.ToShortString()} - {revision.AuthorDate} - {revision.Author} - {_host.WorkingDirectory}";
         CommitInfo.SetRevision(revision);
         Files.SetLoading();
-        IReadOnlyList<FileStatusGroup> groups = await _host.GetDiffsAsync(revision, CancellationToken.None);
-        Files.SetGroups(groups);
-        if (_fileToSelect is not null && Files.AllEntries.Any(entry => entry.Item.Name == _fileToSelect))
+        IReadOnlyList<FileStatusGroup> groups;
+        try
         {
-            Files.Select(entry => entry.Item.Name == _fileToSelect);
+            groups = await _host.GetDiffsAsync(revision, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        Files.SetGroups(groups);
+        if (fileToSelect is not null && Files.AllEntries.Any(entry => entry.Item.Name == fileToSelect))
+        {
+            Files.Select(entry => entry.Item.Name == fileToSelect);
         }
     }
 }

@@ -110,7 +110,7 @@ public sealed class TranslatedText
     ///  Converts WinForms mnemonics (<c>&amp;</c> marks the access key, <c>&amp;&amp;</c> is a literal ampersand) to
     ///  Avalonia's (<c>_</c> marks the access key, <c>__</c> is a literal underscore).
     /// </summary>
-    internal static string ToAccessKeyText(string text)
+    public static string ToAccessKeyText(string text)
     {
         StringBuilder result = new(text.Length + 2);
         for (int i = 0; i < text.Length; i++)

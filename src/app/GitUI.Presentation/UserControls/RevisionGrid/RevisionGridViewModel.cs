@@ -169,6 +169,20 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         return [.. (descending ? rows.OrderByDescending(r => r.Index) : rows.OrderBy(r => r.Index)).Select(r => r.Revision)];
     }
 
+    /// <summary>
+    ///  The selected revisions, the latest selected first, as <c>RevisionGridControl.GetSelectedRevisions()</c> without a
+    ///  direction returns the selected rows of the WinForms grid.
+    /// </summary>
+    public IReadOnlyList<GitRevision> GetSelectedRevisionsLatestSelectedFirst()
+    {
+        IEnumerable<RevisionGridRow> rows = SelectedRows.Count > 0 ? SelectedRows.Reverse() : SelectedRow is { } row ? [row] : [];
+        return [.. rows.Select(r => r.Revision)];
+    }
+
+    /// <summary>The revision if it is listed (<c>RevisionGridControl.GetRevision</c>).</summary>
+    public GitRevision? GetRevision(ObjectId objectId)
+        => Graph.TryGetNode(objectId, out RevisionGraphRevision? node) ? node.GitRevision : null;
+
     [ObservableProperty]
     public partial bool IsLoading { get; private set; }
 

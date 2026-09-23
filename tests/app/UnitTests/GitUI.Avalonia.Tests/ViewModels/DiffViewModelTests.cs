@@ -147,5 +147,12 @@ public sealed class DiffViewModelTests
             _shown.TrySetResult();
             return Task.FromResult(new FileViewContent(FileViewKind.Diff, $"diff of {entry.Item.Name}"));
         }
+
+        public Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, CancellationToken cancellationToken)
+        {
+            Requested.Add($"{file.Name}@{objectId.ToShortString()}");
+            _shown.TrySetResult();
+            return Task.FromResult(new FileViewContent(FileViewKind.Text, $"{file.Name} in {objectId.ToShortString()}", file.Name));
+        }
     }
 }

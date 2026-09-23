@@ -42,6 +42,14 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
         return content;
     }
 
+    public async Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, CancellationToken cancellationToken)
+    {
+        await TaskScheduler.Default;
+        FileViewContent content = GetGitItem(file, objectId, cancellationToken);
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        return content;
+    }
+
     /// <summary>As <c>ViewChangesAsync</c>.</summary>
     private FileViewContent GetChanges(FileStatusEntry entry, CancellationToken cancellationToken)
     {

@@ -113,5 +113,11 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ViewFile.png" Link="Assets\ViewFile.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchCheckout.png" Link="Assets\BranchCheckout.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Renamed.png" Link="Assets\Renamed.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Blame.png" Link="Assets\Blame.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileHistory.png" Link="Assets\FileHistory.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GitCommandLog.png" Link="Assets\GitCommandLog.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CherryPick.png" Link="Assets\CherryPick.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RevertCommit.png" Link="Assets\RevertCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CommitSummary.png" Link="Assets\CommitSummary.png" />
   </ItemGroup>
 </Project>

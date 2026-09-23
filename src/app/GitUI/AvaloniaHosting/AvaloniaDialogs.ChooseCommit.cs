@@ -129,7 +129,8 @@ internal static partial class AvaloniaDialogs
 
     /// <summary>Loads the revisions for the Avalonia revision grid, as <c>RevisionGridControl.PerformRefreshRevisions</c> does.</summary>
     /// <param name="showArtificial">Whether to show the working directory and index changes (<c>ShowUncommittedChangesIfPossible</c>).</param>
-    private sealed class RevisionGridHost(IGitUICommands commands, Func<ObjectId, ArgumentString> getRevisionFilter, bool showArtificial) : IRevisionGridHost
+    /// <param name="getPathFilter">The path arguments of git log, in the background (as <c>BuildPathFilter</c>); none if <see langword="null"/>.</param>
+    private sealed class RevisionGridHost(IGitUICommands commands, Func<ObjectId, ArgumentString> getRevisionFilter, bool showArtificial, Func<CancellationToken, string>? getPathFilter = null) : IRevisionGridHost
     {
         private readonly GitRevisionTester _revisionTester = new(new FullPathResolver(() => commands.Module.WorkingDir));
 
@@ -179,7 +180,7 @@ internal static partial class AvaloniaDialogs
                     new RevisionReader(module).GetLog(
                         observer,
                         getRevisionFilter(currentCheckout),
-                        pathFilter: "",
+                        pathFilter: getPathFilter?.Invoke(cancellationToken) ?? "",
                         hasNotes: false,
                         ResourceManager.TranslatedStrings.Autostash,
                         cancellationToken);

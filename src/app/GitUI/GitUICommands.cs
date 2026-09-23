@@ -2088,6 +2088,11 @@ public sealed class GitUICommands : IGitUICommands
         {
             // NOTE: fileHistoryFileName must be quoted.
 
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowFileHistory(this, fileHistoryFileName, revision, filterByRevision, showBlame))
+            {
+                return true;
+            }
+
             ShowModelessForm(owner: null, requiresValidWorkingDir: true, preEvent: null, postEvent: null,
                              () => new FormFileHistory(this, fileHistoryFileName.QuoteNE(), revision, filterByRevision, showBlame));
         }

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
 
@@ -50,6 +51,9 @@ public interface IFileViewerHost
     /// <summary>The changes of the file between its revisions, if possible as a diff.</summary>
     Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, CancellationToken cancellationToken);
 
+    /// <summary>The file in the revision, or in the working directory (as <c>FileViewer.ViewGitItemAsync</c>).</summary>
+    Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, CancellationToken cancellationToken);
+
     /// <summary>The theme colors git's colors are shown with.</summary>
     IThemeColors ThemeColors { get; }
 
@@ -79,7 +83,15 @@ public sealed partial class FileViewerViewModel : ObservableObject
     public partial byte[]? Image { get; private set; }
 
     /// <summary>The file shown (as <c>ViewChangesAsync</c>), <see langword="null"/> to clear.</summary>
-    public async Task ShowChangesAsync(FileStatusEntry? entry)
+    /// <param name="defaultText">The text shown if there are no changes (the <c>defaultText</c> of <c>ViewChangesAsync</c>).</param>
+    public Task ShowChangesAsync(FileStatusEntry? entry, string? defaultText = null)
+        => LoadAsync(entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, cancellationToken), defaultText);
+
+    /// <summary>The file in the revision, or in the working directory for the artificial commits (as <c>ViewGitItemAsync</c>).</summary>
+    public Task ShowFileAsync(GitItemStatus file, ObjectId objectId)
+        => LoadAsync(cancellationToken => _host.GetFileAsync(file, objectId, cancellationToken), defaultText: null);
+
+    private async Task LoadAsync(Func<CancellationToken, Task<FileViewContent>>? getContent, string? defaultText)
     {
         // As the CancellationTokenSequence of the WinForms dialogs: the previous file stops loading.
         CancellationTokenSource? previous = _loading;
@@ -93,7 +105,7 @@ public sealed partial class FileViewerViewModel : ObservableObject
             previous.Dispose();
         }
 
-        if (entry is null)
+        if (getContent is null)
         {
             Show(FileViewContent.Empty);
             return;
@@ -104,7 +116,7 @@ public sealed partial class FileViewerViewModel : ObservableObject
         FileViewContent content;
         try
         {
-            content = await _host.GetChangesAsync(entry, loading.Token);
+            content = await getContent(loading.Token);
         }
         catch (OperationCanceledException)
         {
@@ -114,6 +126,11 @@ public sealed partial class FileViewerViewModel : ObservableObject
         {
             // As the exception handler of FileViewer.
             content = new FileViewContent(FileViewKind.Text, "Unsupported file: \n\n" + ex);
+        }
+
+        if (defaultText is not null && content.Kind != FileViewKind.Image && string.IsNullOrEmpty(content.Text))
+        {
+            content = new FileViewContent(FileViewKind.Text, defaultText);
         }
 
         if (!loading.IsCancellationRequested)
