@@ -60,6 +60,7 @@ The WinForms forms are kept (not deleted) until phase 8, so upstream merges appl
 | `FormGoToCommit` | `src/app/GitUI/CommandsDialogs/BrowseDialog/FormGoToCommit*.cs` | `66050831e` | `GoToCommitWindow.axaml`, `GoToCommitViewModel` | `RevisionGridMenuCommands.GotoCommitExecute` | Branches and tags are listed before the dialog opens (the WinForms form loaded them in the background). |
 | `FormDashboardCategoryTitle` | `src/app/GitUI/CommandsDialogs/BrowseDialog/DashboardControl/FormDashboardCategoryTitle*.cs` | `66050831e` | `DashboardCategoryTitleWindow.axaml`, `DashboardCategoryTitleViewModel` | `UserRepositoriesList` | An invalid name keeps the dialog open (the WinForms OK button closed it regardless). |
 | `FormAddToGitIgnore` | `src/app/GitUI/CommandsDialogs/FormAddToGitIgnore*.cs` | `66050831e` | `AddToGitIgnoreWindow.axaml`, `AddToGitIgnoreViewModel` | `GitUICommands.StartAddToGitIgnoreDialog` | File writing duplicated in `AddToGitIgnoreHost.AddPatterns`. |
+| `FormCheckoutBranch` | `src/app/GitUI/CommandsDialogs/FormCheckoutBranch*.cs` | `66050831e` | `CheckoutBranchWindow.axaml`, `CheckoutBranchViewModel` | `GitUICommands.StartCheckoutBranch` (all checkout entry points) | The checkout without the dialog (`DoDefaultActionOrShow`) runs the same view model without a window. An unknown branch is highlighted instead of keeping the focus in the list (`Validating`). The auto stash prompt is duplicated in `CheckoutBranchHost`. |
 
 ## Translations
 

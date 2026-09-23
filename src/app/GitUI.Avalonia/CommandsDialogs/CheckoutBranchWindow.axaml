@@ -1,0 +1,70 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CheckoutBranchWindow"
+                x:DataType="vm:CheckoutBranchViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="520" MinWidth="460" SizeToContent="Height" CanMaximize="False">
+  <Window.Styles>
+    <Style Selector="ComboBox.invalid">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="checkoutButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Checkout.AccessKeyText}" Command="{Binding CheckoutCommand}" />
+    </Border>
+    <StackPanel Margin="14" Spacing="8">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <RadioButton Name="localRadioButton" GroupName="branchType" Content="{Binding Strings.LocalBranch.AccessKeyText}" IsChecked="{Binding IsLocal}" />
+        <RadioButton Name="remoteRadioButton" GroupName="branchType" Content="{Binding Strings.RemoteBranch.AccessKeyText}" IsChecked="{Binding IsRemote}" />
+      </StackPanel>
+      <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+        <Label Content="{Binding Strings.SelectBranch.AccessKeyText}" Target="branchesComboBox" />
+        <ComboBox Name="branchesComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                  ItemsSource="{Binding Branches}" Text="{Binding Branch}" Classes.invalid="{Binding IsBranchInvalid}">
+          <ToolTip.Tip>
+            <TextBlock Text="{Binding Strings.InvalidBranchName.Text}" IsVisible="{Binding IsBranchInvalid}" />
+          </ToolTip.Tip>
+        </ComboBox>
+        <TextBlock Name="commitCountText" Grid.Row="1" Grid.Column="1" Text="{Binding CommitCountText}"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+      </Grid>
+      <!-- The options of a remote branch -->
+      <StackPanel Name="remoteOptions" Spacing="4" IsVisible="{Binding IsRemote}">
+        <Separator />
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+          <RadioButton Name="resetBranchRadioButton" GroupName="remoteOption" IsChecked="{Binding IsResetBranch}">
+            <AccessText Text="{Binding ResetBranchText}" />
+          </RadioButton>
+          <TextBlock Name="localBranchNameText" Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                     Text="{Binding LocalBranchNameText}" />
+          <RadioButton Name="customNameRadioButton" Grid.Row="1" GroupName="remoteOption"
+                       Content="{Binding Strings.CreateBranchWithCustomName.AccessKeyText}" IsChecked="{Binding IsCreateBranchWithCustomName}" />
+          <TextBox Name="customBranchNameTextBox" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"
+                   Text="{Binding CustomBranchName}" IsEnabled="{Binding IsCreateBranchWithCustomName}"
+                   LostFocus="CustomBranchNameTextBox_LostFocus" />
+          <RadioButton Name="dontCreateRadioButton" Grid.Row="2" Grid.ColumnSpan="2" GroupName="remoteOption"
+                       Content="{Binding Strings.DontCreate.AccessKeyText}" IsChecked="{Binding IsDontCreate}" />
+        </Grid>
+      </StackPanel>
+      <!-- Equivalent of the "Local changes" group box, only shown if there may be changes -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8" IsVisible="{Binding HasUncommittedChanges}"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding Strings.LocalChanges.Text}" FontWeight="SemiBold" />
+          <WrapPanel ItemSpacing="12">
+            <RadioButton Name="dontChangeRadioButton" GroupName="localChanges" Content="{Binding Strings.DontChange.AccessKeyText}" IsChecked="{Binding IsDontChange}" />
+            <RadioButton Name="mergeRadioButton" GroupName="localChanges" Content="{Binding Strings.Merge.AccessKeyText}" IsChecked="{Binding IsMerge}" />
+            <RadioButton Name="stashRadioButton" GroupName="localChanges" Content="{Binding Strings.Stash.AccessKeyText}" IsChecked="{Binding IsStash}" />
+            <RadioButton Name="resetRadioButton" GroupName="localChanges" Content="{Binding Strings.Reset.AccessKeyText}" IsChecked="{Binding IsReset}" />
+          </WrapPanel>
+          <CheckBox Name="setAsDefaultCheckBox" Content="{Binding Strings.SetAsDefault.AccessKeyText}"
+                    IsChecked="{Binding SetAsDefault}" IsEnabled="{Binding CanSetAsDefault}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

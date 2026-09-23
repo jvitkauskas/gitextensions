@@ -494,6 +494,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCheckoutBranch(owner, this, branch, remote, containObjectIds, out bool notCancelled))
+            {
+                return notCancelled;
+            }
+
             using FormCheckoutBranch form = new(this, branch, remote, containObjectIds);
             return form.DoDefaultActionOrShow(owner) != DialogResult.Cancel;
         }, preEvent: PreCheckoutBranch, postEvent: PostCheckoutBranch);
