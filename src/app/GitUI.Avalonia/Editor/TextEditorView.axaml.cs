@@ -21,7 +21,10 @@ public partial class TextEditorView : UserControl
     private bool _updatingText;
     private readonly DarkThemeHighlightingAdapter _darkThemeAdapter = new();
     private readonly DiffLineNumberMargin _diffLineNumbers = new();
+    private readonly DiffColorizer _diffColorizer = new();
+    private DiffBrushes? _diffBrushes;
     private DiffBackgroundRenderer? _diffBackground;
+    private DiffAnchorRenderer? _diffAnchors;
 
     public TextEditorView()
     {
@@ -122,64 +125,87 @@ public partial class TextEditorView : UserControl
         }
     }
 
-    /// <summary>A diff shows its line numbers in the old and new file, and its added and removed lines colored.</summary>
+    /// <summary>
+    ///  A diff shows its line numbers in the old and new file, its added and removed lines colored (by git, or as
+    ///  <c>DiffHighlightService.HighlightAddedAndDeletedLines</c>) and the in-line differences of the matching lines.
+    /// </summary>
     private void ShowDiff(IReadOnlyList<DiffLine>? lines)
     {
         TextView textView = editor.TextArea.TextView;
         bool isDiff = lines is not null;
         editor.ShowLineNumbers = !isDiff;
+        editor.TextArea.LeftMargins.Remove(_diffLineNumbers);
+        if (_diffBackground is not null)
+        {
+            textView.BackgroundRenderers.Remove(_diffBackground);
+        }
+
+        if (_diffAnchors is not null)
+        {
+            textView.BackgroundRenderers.Remove(_diffAnchors);
+        }
+
+        textView.LineTransformers.Remove(_diffColorizer);
         if (!isDiff)
         {
-            editor.TextArea.LeftMargins.Remove(_diffLineNumbers);
-            if (_diffBackground is not null)
-            {
-                textView.BackgroundRenderers.Remove(_diffBackground);
-                _diffBackground = null;
-            }
-
             return;
         }
 
-        if (!editor.TextArea.LeftMargins.Contains(_diffLineNumbers))
-        {
-            editor.TextArea.LeftMargins.Insert(0, _diffLineNumbers);
-        }
+        TextEditorViewModel viewModel = _viewModel!;
+        editor.TextArea.LeftMargins.Insert(0, _diffLineNumbers);
+        _diffLineNumbers.Lines = lines!;
 
-        if (_diffBackground is null)
+        _diffBrushes ??= CreateDiffBrushes();
+        _diffBackground ??= new DiffBackgroundRenderer(_diffBrushes.Added, _diffBrushes.Removed, _diffBrushes.Header);
+        _diffAnchors ??= new DiffAnchorRenderer(_diffBrushes.AddedAnchor, _diffBrushes.RemovedAnchor);
+        if (viewModel.GitColoring is null)
         {
-            _diffBackground = new DiffBackgroundRenderer(CreateDiffBrushes());
+            _diffBackground.Lines = lines!;
             textView.BackgroundRenderers.Add(_diffBackground);
         }
 
-        _diffLineNumbers.Lines = lines!;
-        _diffBackground.Lines = lines!;
-        _diffBackground.Markers = _viewModel!.InlineDiffMarkers;
-        textView.InvalidateLayer(KnownLayer.Background);
+        // As DiffHighlightService.AddInlineDifferenceMarkers: git's colors on the text are dimmed unless git colors the background.
+        bool dimBackground = viewModel.GitColoring is not { Reverse: false };
+        _diffColorizer.Update(viewModel.GitColoring, viewModel.InlineDiffMarkers, dimBackground ? _diffBrushes.DimmedBack : _diffBrushes.DimmedFore);
+        textView.LineTransformers.Add(_diffColorizer);
+        _diffAnchors.Markers = viewModel.InlineDiffMarkers;
+        textView.BackgroundRenderers.Add(_diffAnchors);
+        textView.Redraw();
     }
 
     /// <summary>
-    ///  The colors of a patch without git's colors, as <c>DiffHighlightService</c>: the lines (<c>HighlightAddedAndDeletedLines</c>),
-    ///  their identical parts twice dimmed and the anchors of insertions and deletions (<c>AddInlineDifferenceMarkers</c>).
+    ///  The colors of a diff, as <c>DiffHighlightService</c>: the lines without git's colors (<c>HighlightAddedAndDeletedLines</c>),
+    ///  and their identical parts twice dimmed on the background, or once dimmed on the text (<c>CreateDimmedMarker</c>).
     /// </summary>
     private DiffBrushes CreateDiffBrushes()
     {
-        Color? added = AppColorResources.GetColor(this, AppColor.AnsiTerminalGreenBackNormal);
-        Color? removed = AppColorResources.GetColor(this, AppColor.AnsiTerminalRedBackNormal);
+        Color? addedBack = AppColorResources.GetColor(this, AppColor.AnsiTerminalGreenBackNormal);
+        Color? removedBack = AppColorResources.GetColor(this, AppColor.AnsiTerminalRedBackNormal);
+        Color? addedFore = AppColorResources.GetColor(this, AppColor.AnsiTerminalGreenForeBold);
+        Color? removedFore = AppColorResources.GetColor(this, AppColor.AnsiTerminalRedForeBold);
         Color background = AppColorResources.GetColor(this, AppColor.EditorBackground) ?? Colors.White;
         return new DiffBrushes(
-            Added: ToBrush(added),
-            Removed: ToBrush(removed),
+            Added: ToBrush(addedBack),
+            Removed: ToBrush(removedBack),
             Header: AppColorResources.GetBrush(this, AppColor.DiffSection),
-            DimmedAdded: ToBrush(Dim(added)),
-            DimmedRemoved: ToBrush(Dim(removed)),
-            AddedAnchor: AppColorResources.GetBrush(this, AppColor.AnsiTerminalGreenForeBold),
-            RemovedAnchor: AppColorResources.GetBrush(this, AppColor.AnsiTerminalRedForeBold));
+            DimmedBack: new InlineDiffBrushes(ToBrush(Dim(Dim(addedBack))), ToBrush(Dim(Dim(removedBack))), AddedFore: null, RemovedFore: null),
+            DimmedFore: new InlineDiffBrushes(new SolidColorBrush(background), new SolidColorBrush(background), ToBrush(Dim(addedFore)), ToBrush(Dim(removedFore))),
+            AddedAnchor: ToBrush(addedFore),
+            RemovedAnchor: ToBrush(removedFore));
 
-        Color? Dim(Color? color)
-            => color is { } c ? AppColorResources.Dim(AppColorResources.Dim(c, background), background) : null;
+        Color? Dim(Color? color) => color is { } c ? AppColorResources.Dim(c, background) : null;
 
         static IBrush? ToBrush(Color? color) => color is { } c ? new SolidColorBrush(c) : null;
     }
+
+    private sealed record DiffBrushes(
+        IBrush? Added,
+        IBrush? Removed,
+        IBrush? Header,
+        InlineDiffBrushes DimmedBack,
+        InlineDiffBrushes DimmedFore,
+        IBrush? AddedAnchor,
+        IBrush? RemovedAnchor);
 
     private void SetText(string text)
     {

@@ -85,6 +85,35 @@ public sealed class TextEditorViewTests : HeadlessTest
     });
 
     [Test]
+    public Task Diff_mode_shows_git_colors([Values] bool reverse) => OnUiThreadAsync(() =>
+    {
+        string old = reverse ? "7;31" : "31";
+        string @new = reverse ? "7;32" : "32";
+        string coloredDiff = "\u001b[1mdiff --git a/a.cs b/a.cs\u001b[m\n"
+            + "\u001b[36m@@ -1,4 +1,4 @@\u001b[m\n"
+            + " public int Compute(int value)\u001b[m\n"
+            + $"\u001b[{old}m-    return value * 2 + Offset;\u001b[m\n"
+            + $"\u001b[{old}m-    // deprecated\u001b[m\n"
+            + $"\u001b[{@new}m+\u001b[m\u001b[{@new}m    return value * 3 + Offset;\u001b[m\n"
+            + $"\u001b[{@new}m+\u001b[m\u001b[{@new}m    // deprecated since 5.0\u001b[m\n"
+            + " }\u001b[m\n";
+        TextEditorViewModel viewModel = new();
+        TextEditorView view = new() { DataContext = viewModel };
+        Window window = new() { Content = view, Width = 600, Height = 200 };
+        window.Show();
+
+        viewModel.LoadDiff(coloredDiff, DefaultThemeColors.Instance, reverse);
+        Dispatcher.UIThread.RunJobs();
+
+        view.Editor.Text.Should().NotContain("\u001b").And.StartWith("diff --git a/a.cs b/a.cs\n@@ -1,4 +1,4 @@\n");
+        viewModel.GitColoring!.Segments.Should().NotBeEmpty();
+        viewModel.InlineDiffMarkers.Should().NotBeEmpty();
+        DiffParts(view).Should().Be((1, 0), "git colors the lines, not the full-width backgrounds");
+        SaveScreenshot(window.CaptureRenderedFrame(), $"diff-view-git-colors{(reverse ? "-reverse" : "")}");
+        window.Close();
+    });
+
+    [Test]
     public Task Shows_the_loaded_text_with_highlighting_and_reports_edits() => OnUiThreadAsync(() =>
     {
         FileEditorViewModel viewModel = CreateFileEditor(showWarning: false);

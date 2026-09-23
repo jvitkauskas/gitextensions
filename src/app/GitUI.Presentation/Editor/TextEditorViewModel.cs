@@ -42,11 +42,27 @@ public sealed partial class TextEditorViewModel : ObservableObject
     /// <summary>The in-line differences of the matching removed and added lines of the diff shown; empty for a plain text.</summary>
     public IReadOnlyList<InlineDiffMarker> InlineDiffMarkers { get; private set; } = [];
 
-    /// <summary>Shows a diff, read-only, with the added and removed lines colored (as <c>FileViewer.ViewFixedPatch</c>).</summary>
-    public void LoadDiff(string text)
+    /// <summary>The colors of git's output of the diff shown, or <see langword="null"/> if the diff is not colored by git.</summary>
+    public GitColoring? GitColoring { get; private set; }
+
+    /// <summary>
+    ///  Shows a diff, read-only, with the added and removed lines colored and their in-line differences marked
+    ///  (as <c>FileViewer.ViewFixedPatch</c> and <c>ViewPatch</c>).
+    /// </summary>
+    /// <param name="gitColors">The theme colors if the text is git's colored output (with ANSI escape sequences).</param>
+    /// <param name="reverseGitColoring">Whether git colors the background (<c>AppSettings.ReverseGitColoring</c>).</param>
+    public void LoadDiff(string text, IThemeColors? gitColors = null, bool reverseGitColoring = true)
     {
         IsReadOnly = true;
-        IReadOnlyList<DiffLine> diffLines = DiffLinesAnalyzer.Analyze(text);
+        GitColoring? gitColoring = null;
+        if (gitColors is not null)
+        {
+            (text, IReadOnlyList<ColoredSegment> segments) = AnsiEscapeParser.Parse(text, gitColors);
+            gitColoring = new GitColoring(segments, gitColors, reverseGitColoring);
+        }
+
+        IReadOnlyList<DiffLine> diffLines = DiffLinesAnalyzer.Analyze(text, gitColoring);
+        GitColoring = gitColoring;
         InlineDiffMarkers = InlineDiffAnalyzer.Analyze(text, diffLines);
         LoadText(text, fileName: null, line: null, diffLines);
     }
@@ -54,6 +70,7 @@ public sealed partial class TextEditorViewModel : ObservableObject
     /// <summary>Loads a text, which is unchanged afterwards (as <c>FileViewer.TextLoaded</c>).</summary>
     public void Load(string text, string? fileName = null, int? line = null)
     {
+        GitColoring = null;
         InlineDiffMarkers = [];
         LoadText(text, fileName, line, diffLines: null);
     }

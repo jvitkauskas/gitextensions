@@ -130,6 +130,13 @@ public static class InlineDiffAnalyzer
             }
 
             gapLines = 0;
+            if (diffLine.IsMovedLine)
+            {
+                // Ignore this line, seem to be moved
+                continue;
+            }
+
+            // In block, continue to add
             found = true;
             result.Add(segments[diffLine.LineNumInDiff - 1]);
         }

@@ -7,27 +7,13 @@ using GitUI.Presentation.Editor;
 
 namespace GitUI.Avalonia.Editor;
 
-/// <summary>The brushes of a diff without git's colors.</summary>
-internal sealed record DiffBrushes(
-    IBrush? Added,
-    IBrush? Removed,
-    IBrush? Header,
-    IBrush? DimmedAdded,
-    IBrush? DimmedRemoved,
-    IBrush? AddedAnchor,
-    IBrush? RemovedAnchor);
-
 /// <summary>
-///  Colors the added, removed and header lines of a diff and dims the identical parts of matching removed and added lines,
-///  as the WinForms <c>DiffHighlightService</c> does for a patch without git's colors (<c>HighlightAddedAndDeletedLines</c>
-///  and <c>AddInlineDifferenceMarkers</c>).
+///  Colors the added, removed and header lines of a diff without git's colors, as the WinForms <c>DiffHighlightService</c>
+///  does (<c>HighlightAddedAndDeletedLines</c>).
 /// </summary>
-internal sealed class DiffBackgroundRenderer(DiffBrushes brushes) : IBackgroundRenderer
+internal sealed class DiffBackgroundRenderer(IBrush? addedBrush, IBrush? removedBrush, IBrush? headerBrush) : IBackgroundRenderer
 {
-    private const double AnchorWidth = 2;
-
     private IReadOnlyDictionary<int, DiffLine> _linesByNumber = new Dictionary<int, DiffLine>();
-    private InlineDiffMarker[] _markers = [];
 
     public KnownLayer Layer => KnownLayer.Background;
 
@@ -36,22 +22,12 @@ internal sealed class DiffBackgroundRenderer(DiffBrushes brushes) : IBackgroundR
         set => _linesByNumber = value.ToDictionary(line => line.LineNumInDiff);
     }
 
-    public IReadOnlyList<InlineDiffMarker> Markers
-    {
-        set => _markers = [.. value.OrderBy(marker => marker.Offset)];
-    }
-
     public void Draw(TextView textView, DrawingContext drawingContext)
     {
-        if (textView.VisualLines.Count == 0)
-        {
-            return;
-        }
-
         foreach (VisualLine visualLine in textView.VisualLines)
         {
             if (!_linesByNumber.TryGetValue(visualLine.FirstDocumentLine.LineNumber, out DiffLine? line)
-                || GetLineBrush(line.Kind) is not { } brush)
+                || GetBrush(line.Kind) is not { } brush)
             {
                 continue;
             }
@@ -59,80 +35,62 @@ internal sealed class DiffBackgroundRenderer(DiffBrushes brushes) : IBackgroundR
             double top = visualLine.VisualTop - textView.VerticalOffset;
             drawingContext.FillRectangle(brush, new Rect(0, top, textView.Bounds.Width, visualLine.Height));
         }
-
-        DrawMarkers(textView, drawingContext);
     }
 
-    private void DrawMarkers(TextView textView, DrawingContext drawingContext)
+    private IBrush? GetBrush(DiffLineKind kind) => kind switch
+    {
+        DiffLineKind.Plus => addedBrush,
+        DiffLineKind.Minus => removedBrush,
+        DiffLineKind.Header => headerBrush,
+        _ => null,
+    };
+}
+
+/// <summary>
+///  Draws the anchors of insertions and deletions (as ICSharpCode's <c>InterChar</c> markers of <c>DiffHighlightService</c>):
+///  a bar between two characters, above the colors of the text.
+/// </summary>
+internal sealed class DiffAnchorRenderer(IBrush? addedBrush, IBrush? removedBrush) : IBackgroundRenderer
+{
+    private const double AnchorWidth = 2;
+
+    private InlineDiffMarker[] _anchors = [];
+
+    // Above the backgrounds of the text elements (drawn by the text view itself), below the text.
+    public KnownLayer Layer => KnownLayer.Selection;
+
+    public IReadOnlyList<InlineDiffMarker> Markers
+    {
+        set => _anchors = [.. value.Where(m => m.Kind is InlineDiffMarkerKind.InsertionAnchor or InlineDiffMarkerKind.DeletionAnchor).OrderBy(m => m.Offset)];
+    }
+
+    public void Draw(TextView textView, DrawingContext drawingContext)
     {
         TextDocument? document = textView.Document;
-        if (document is null || _markers.Length == 0)
+        if (document is null || _anchors.Length == 0 || textView.VisualLines.Count == 0)
         {
             return;
         }
 
         int visibleStart = textView.VisualLines[0].FirstDocumentLine.Offset;
         int visibleEnd = textView.VisualLines[^1].LastDocumentLine.EndOffset;
-        for (int i = FindFirstMarkerAtOrAfter(visibleStart); i < _markers.Length && _markers[i].Offset <= visibleEnd; i++)
+        foreach (InlineDiffMarker anchor in _anchors)
         {
-            InlineDiffMarker marker = _markers[i];
-            if (marker.Offset + marker.Length > document.TextLength || GetMarkerBrush(marker.Kind) is not { } brush)
+            if (anchor.Offset < visibleStart || anchor.Offset > visibleEnd || anchor.Offset > document.TextLength)
             {
                 continue;
             }
 
-            if (marker.Length == 0)
+            IBrush? brush = anchor.Kind == InlineDiffMarkerKind.InsertionAnchor ? addedBrush : removedBrush;
+            if (brush is null)
             {
-                // As an ICSharpCode InterChar marker: a bar between two characters.
-                TextViewPosition position = new(document.GetLocation(marker.Offset));
-                Point lineTop = textView.GetVisualPosition(position, VisualYPosition.LineTop) - textView.ScrollOffset;
-                Point lineBottom = textView.GetVisualPosition(position, VisualYPosition.LineBottom) - textView.ScrollOffset;
-                drawingContext.FillRectangle(brush, new Rect(lineTop.X - (AnchorWidth / 2), lineTop.Y, AnchorWidth, lineBottom.Y - lineTop.Y));
                 continue;
             }
 
-            TextSegment segment = new() { StartOffset = marker.Offset, Length = marker.Length };
-            foreach (Rect rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
-            {
-                drawingContext.FillRectangle(brush, rect);
-            }
+            TextViewPosition position = new(document.GetLocation(anchor.Offset));
+            Point top = textView.GetVisualPosition(position, VisualYPosition.LineTop) - textView.ScrollOffset;
+            Point bottom = textView.GetVisualPosition(position, VisualYPosition.LineBottom) - textView.ScrollOffset;
+            drawingContext.FillRectangle(brush, new Rect(top.X - (AnchorWidth / 2), top.Y, AnchorWidth, bottom.Y - top.Y));
         }
     }
-
-    private int FindFirstMarkerAtOrAfter(int offset)
-    {
-        int low = 0;
-        int high = _markers.Length;
-        while (low < high)
-        {
-            int middle = (low + high) / 2;
-            if (_markers[middle].Offset < offset)
-            {
-                low = middle + 1;
-            }
-            else
-            {
-                high = middle;
-            }
-        }
-
-        return low;
-    }
-
-    private IBrush? GetLineBrush(DiffLineKind kind) => kind switch
-    {
-        DiffLineKind.Plus => brushes.Added,
-        DiffLineKind.Minus => brushes.Removed,
-        DiffLineKind.Header => brushes.Header,
-        _ => null,
-    };
-
-    private IBrush? GetMarkerBrush(InlineDiffMarkerKind kind) => kind switch
-    {
-        InlineDiffMarkerKind.DimmedAdded => brushes.DimmedAdded,
-        InlineDiffMarkerKind.DimmedRemoved => brushes.DimmedRemoved,
-        InlineDiffMarkerKind.InsertionAnchor => brushes.AddedAnchor,
-        InlineDiffMarkerKind.DeletionAnchor => brushes.RemovedAnchor,
-        _ => null,
-    };
 }
