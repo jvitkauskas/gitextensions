@@ -111,6 +111,12 @@ public partial class FormReflog : GitModuleForm
 
         UICommands.DoActionOnRepo(() =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateBranch(
+                this, UICommands, GetShaOfRefLine(), new(BranchName: null, CheckoutAfterCreation: false, UserAbleToChangeRevision: false, CouldBeOrphan: false), out bool created))
+            {
+                return created;
+            }
+
             using FormCreateBranch form = new(UICommands, GetShaOfRefLine());
             form.CheckoutAfterCreation = false;
             form.UserAbleToChangeRevision = false;

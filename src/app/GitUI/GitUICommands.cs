@@ -596,6 +596,11 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateBranch(owner, this, objectId, new(newBranchNamePrefix), out bool created))
+            {
+                return created;
+            }
+
             using FormCreateBranch form = new(this, objectId, newBranchNamePrefix);
             return form.ShowDialog(owner) == DialogResult.OK;
         }
@@ -1071,6 +1076,11 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateTag(owner, this, revision?.ObjectId ?? default, out bool created))
+            {
+                return created;
+            }
+
             using FormCreateTag form = new(this, revision?.ObjectId ?? default);
             return form.ShowDialog(owner) == DialogResult.OK;
         }

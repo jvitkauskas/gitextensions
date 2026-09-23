@@ -166,6 +166,16 @@ public sealed partial class FormVerify : GitModuleForm
 
     private void mnuLostObjectsCreateTag_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateTag(this, UICommands, GetCurrentGitRevision(), out bool created))
+        {
+            if (created)
+            {
+                UpdateLostObjects();
+            }
+
+            return;
+        }
+
         using FormCreateTag frm = new(UICommands, GetCurrentGitRevision());
         DialogResult dialogResult = frm.ShowDialog(this);
         if (dialogResult == DialogResult.OK)
@@ -176,6 +186,16 @@ public sealed partial class FormVerify : GitModuleForm
 
     private void mnuLostObjectsCreateBranch_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateBranch(this, UICommands, GetCurrentGitRevision(), new(BranchName: null), out bool created))
+        {
+            if (created)
+            {
+                UpdateLostObjects();
+            }
+
+            return;
+        }
+
         using FormCreateBranch frm = new(UICommands, GetCurrentGitRevision());
         DialogResult dialogResult = frm.ShowDialog(this);
         if (dialogResult == DialogResult.OK)

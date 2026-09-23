@@ -44,6 +44,8 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SelectRevision.png" Link="Assets\SelectRevision.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SaveAs.png" Link="Assets\SaveAs.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Warning.png" Link="Assets\Warning.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchCreate.png" Link="Assets\BranchCreate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\TagCreate.png" Link="Assets\TagCreate.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMerge.png" Link="Assets\Help\HelpCommandMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMergeFastForward.png" Link="Assets\Help\HelpCommandMergeFastForward.png" />
   </ItemGroup>

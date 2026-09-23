@@ -2101,6 +2101,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
         UICommands.DoActionOnRepo(() =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateTag(ParentForm, UICommands, revision?.ObjectId ?? default, out bool created))
+            {
+                return created;
+            }
+
             using FormCreateTag form = new(UICommands, revision?.ObjectId ?? default);
             return form.ShowDialog(ParentForm) == DialogResult.OK;
         });
@@ -2161,6 +2166,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
         UICommands.DoActionOnRepo(() =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateBranch(ParentForm, UICommands, revision?.ObjectId ?? default, new(BranchName: null), out bool created))
+            {
+                return created;
+            }
+
             using FormCreateBranch form = new(UICommands, revision?.ObjectId ?? default);
             return form.ShowDialog(ParentForm) == DialogResult.OK;
         });
