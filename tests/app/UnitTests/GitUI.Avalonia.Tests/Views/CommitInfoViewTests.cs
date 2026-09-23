@@ -80,9 +80,61 @@ public sealed class CommitInfoViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task The_menu_copies_the_link_and_toggles_the_settings() => OnUiThreadAsync(() =>
+    {
+        FakeHost host = new() { ShowAvatar = true };
+        CommitInfoViewModel viewModel = new(host);
+        CommitInfoView view = new() { DataContext = viewModel };
+        Window window = new() { Content = view, Width = 400, Height = 300 };
+        window.Show();
+        viewModel.SetRevision(Revision);
+        Dispatcher.UIThread.RunJobs();
+
+        view.FindControl<Image>("avatar")!.Source.Should().NotBeNull();
+
+        view.OpenMenuFor("https://example.org/issues/42");
+        MenuItem copyLink = view.Menu.Items.OfType<MenuItem>().First();
+        copyLink.IsVisible.Should().BeTrue();
+        copyLink.Header.Should().Be("Copy _link (https://example.org/issues/42)");
+        copyLink.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        host.Copied.Should().Equal("https://example.org/issues/42");
+
+        MenuItem tags = view.Menu.Items.OfType<MenuItem>().Single(i => Equals(i.Header, "Show tags containing this commit"));
+        tags.IsChecked.Should().BeTrue();
+        tags.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        host.Options.ShowContainedInTags.Should().BeFalse();
+
+        view.OpenMenuFor(null);
+        copyLink.IsVisible.Should().BeFalse();
+        window.Close();
+    });
     internal sealed class FakeHost : ICommitInfoHost
     {
         public List<string> Executed { get; } = [];
+
+        public List<string> Copied { get; } = [];
+
+        public List<ObjectId> EditedNotes { get; } = [];
+
+        public CommitInfoDisplayOptions Options { get; set; } = new();
+
+        public CommitInfoStrings Strings { get; } = new();
+
+        public bool ShowAvatar { get; set; }
+
+        public int AvatarSize => 80;
+
+        // A 1x1 PNG.
+        public static byte[] AvatarImage { get; } = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+
+        public Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken) => Task.FromResult<byte[]?>(AvatarImage);
+
+        public void EditNotes(ObjectId objectId) => EditedNotes.Add(objectId);
+
+        public string GetCopyText(string header, string message) => $"{header}\n\n{message}";
+
+        public void CopyToClipboard(string text) => Copied.Add(text);
 
         public CommitInfoContent Render(GitRevision revision, IReadOnlyList<ObjectId>? children, bool showRevisionsAsLinks)
             => new(

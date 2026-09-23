@@ -4,23 +4,47 @@
              xmlns:vm="using:GitUI.Presentation.UserControls"
              x:Class="GitUI.Avalonia.Controls.CommitInfoView"
              x:DataType="vm:CommitInfoViewModel">
-  <ScrollViewer HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasRevision}">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasRevision}" Background="Transparent">
+    <ScrollViewer.ContextMenu>
+      <!-- Equivalent of commitInfoContextMenuStrip. -->
+      <ContextMenu Name="menu">
+        <MenuItem Name="copyLinkItem" />
+        <MenuItem Name="copyCommitInfoItem">
+          <MenuItem.Icon>
+            <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+          </MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem Name="showContainedInBranchesLocalItem" ToggleType="CheckBox" />
+        <MenuItem Name="showContainedInBranchesRemoteItem" ToggleType="CheckBox" />
+        <MenuItem Name="showContainedInBranchesRemoteIfNoLocalItem" ToggleType="CheckBox" />
+        <MenuItem Name="showContainedInTagsItem" ToggleType="CheckBox" />
+        <MenuItem Name="showAnnotatedTagsMessagesItem" ToggleType="CheckBox" />
+        <MenuItem Name="showTagThisCommitDerivesFromItem" ToggleType="CheckBox" />
+        <Separator />
+        <MenuItem Name="addNotesItem" />
+      </ContextMenu>
+    </ScrollViewer.ContextMenu>
     <StackPanel Spacing="8" Margin="6">
-      <!-- Equivalent of CommitInfoHeader: the labels aligned as the tab stops of the RichTextBox. -->
-      <ItemsControl Name="header" ItemsSource="{Binding Header}" Grid.IsSharedSizeScope="True">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:CommitInfoHeaderLine">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <TextBlock Text="{Binding Label}" Margin="0,0,12,0" />
-              <c:XhtmlTextBlock Grid.Column="1" Xhtml="{Binding ValueXhtml}" />
-            </Grid>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+      <!-- Equivalent of CommitInfoHeader: the avatar, and the labels aligned as the tab stops of the RichTextBox. -->
+      <Grid ColumnDefinitions="Auto,*">
+        <Image Name="avatar" Margin="0,0,8,0" VerticalAlignment="Top" IsVisible="{Binding ShowAvatar}"
+               Width="{Binding AvatarSize}" Height="{Binding AvatarSize}" />
+        <ItemsControl Name="header" Grid.Column="1" ItemsSource="{Binding Header}" Grid.IsSharedSizeScope="True">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:CommitInfoHeaderLine">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}" Margin="0,0,12,0" />
+                <c:XhtmlTextBlock Grid.Column="1" Xhtml="{Binding ValueXhtml}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
       <!-- Equivalent of pnlCommitMessage: the message on a slightly darker background. -->
       <Border Name="messagePanel" Padding="6" CornerRadius="2" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
         <c:XhtmlTextBlock Name="message" Xhtml="{Binding Message}" />

@@ -65,6 +65,12 @@ public sealed class XhtmlTextBlock : SelectableTextBlock
         return false;
     }
 
+    /// <summary>The link at the position (in this control's coordinates), if any.</summary>
+    public string? GetLinkAt(Point position)
+        => GetTextPosition(position) is int textPosition
+            ? _links.FirstOrDefault(link => textPosition >= link.Start && textPosition < link.End).Uri
+            : null;
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);

@@ -56,4 +56,72 @@ public sealed class CommitInfoViewModelTests
         viewModel.OnLinkClicked("gitext://gotocommit/a1a1a1a1");
         commands.Should().Equal(("gotocommit", "a1a1a1a1"));
     }
+
+    [Test]
+    public void The_commit_info_is_copied_as_text()
+    {
+        FakeHost host = new();
+        CommitInfoViewModel viewModel = new(host);
+        viewModel.SetRevision(Revision);
+
+        viewModel.CopyCommitInfo();
+
+        host.Copied.Should().ContainSingle().Which.Should().StartWith("Author:\tAlice <alice@example.org>\nDate:\t2 days ago").And.EndWith("\n\nFix the bug\n\nSee #42 for the details.");
+
+        viewModel.CopyLink("https://example.org/issues/42");
+        host.Copied[^1].Should().Be("https://example.org/issues/42");
+    }
+
+    [Test]
+    public void The_menu_settings_are_saved_and_reload_the_refs()
+    {
+        FakeHost host = new();
+        CommitInfoViewModel viewModel = new(host);
+        viewModel.SetRevision(Revision);
+        List<string?> changed = [];
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        viewModel.SetOptions(viewModel.Options with { ShowContainedInTags = false });
+
+        host.Options.ShowContainedInTags.Should().BeFalse();
+        changed.Should().Contain([nameof(CommitInfoViewModel.Options), nameof(CommitInfoViewModel.RevisionInfo)]);
+    }
+
+    [Test]
+    public void Notes_are_edited_then_reloaded()
+    {
+        FakeHost host = new();
+        GitRevision revision = new(Revision.ObjectId) { Subject = "Fix the bug", Body = "Fix the bug", Notes = "old notes" };
+        CommitInfoViewModel viewModel = new(host);
+        viewModel.SetRevision(revision);
+
+        viewModel.AddNotes();
+
+        host.EditedNotes.Should().Equal(revision.ObjectId);
+        revision.Notes.Should().BeNull("reloaded with the message");
+    }
+
+    [Test]
+    public void The_avatar_is_loaded_if_shown()
+    {
+        FakeHost host = new();
+        CommitInfoViewModel viewModel = new(host);
+        viewModel.SetRevision(Revision);
+        viewModel.ShowAvatar.Should().BeFalse();
+        viewModel.Avatar.Should().BeNull();
+
+        host.ShowAvatar = true;
+        viewModel.SetRevision(Revision);
+
+        viewModel.ShowAvatar.Should().BeTrue();
+        viewModel.Avatar.Should().Equal(FakeHost.AvatarImage);
+        viewModel.AvatarSize.Should().Be(80);
+    }
+
+    [Test]
+    public void Xhtml_is_converted_to_text()
+    {
+        XhtmlText.ToPlainText("Author: <a href='mailto:a@b'>A &lt;a@b&gt;</a><br/>Line<p>para</p>").Should().Be("Author: A <a@b>\nLine\npara");
+        XhtmlText.ToPlainText("a <b>b & c").Should().Be("a b & c", "malformed");
+    }
 }

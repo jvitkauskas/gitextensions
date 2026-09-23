@@ -8,6 +8,7 @@ using GitCommands.Settings;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
+using GitExtUtils.GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommitInfo;
 using GitUI.Presentation.Translations;
@@ -28,6 +29,8 @@ internal sealed class CommitInfoHost : ICommitInfoHost
 {
     private readonly IGitUICommands _commands;
     private readonly CommitInfoStrings _strings = ViewStrings.Load<CommitInfoStrings>();
+
+    public CommitInfoStrings Strings => _strings;
     private readonly ILinkFactory _linkFactory;
     private readonly ICommitDataManager _commitDataManager;
     private readonly ICommitDataHeaderRenderer _commitDataHeaderRenderer;
@@ -154,6 +157,55 @@ internal sealed class CommitInfoHost : ICommitInfoHost
     }
 
     /// <summary>As <c>CommitInfo.GetSortedTags</c> (a broken ref gives no order rather than the message box).</summary>
+    public CommitInfoDisplayOptions Options
+    {
+        get => new(
+            AppSettings.CommitInfoShowContainedInBranchesLocal,
+            AppSettings.CommitInfoShowContainedInBranchesRemote,
+            AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal,
+            AppSettings.CommitInfoShowContainedInTags,
+            AppSettings.ShowAnnotatedTagsMessages,
+            AppSettings.CommitInfoShowTagThisCommitDerivesFrom);
+        set
+        {
+            AppSettings.CommitInfoShowContainedInBranchesLocal = value.ShowContainedInBranchesLocal;
+            AppSettings.CommitInfoShowContainedInBranchesRemote = value.ShowContainedInBranchesRemote;
+            AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal = value.ShowContainedInBranchesRemoteIfNoLocal;
+            AppSettings.CommitInfoShowContainedInTags = value.ShowContainedInTags;
+            AppSettings.ShowAnnotatedTagsMessages = value.ShowAnnotatedTagsMessages;
+            AppSettings.CommitInfoShowTagThisCommitDerivesFrom = value.ShowTagThisCommitDerivesFrom;
+        }
+    }
+
+    public bool ShowAvatar => AppSettings.ShowAuthorAvatarInCommitInfo;
+
+    public int AvatarSize => AppSettings.AuthorImageSizeInCommitInfo;
+
+    /// <summary>As <c>AvatarControl.UpdateAvatarAsync</c>: the avatar of the provider, or the default image.</summary>
+    public async Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken)
+    {
+        Image? image = null;
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            int size = DpiUtil.Scale(AvatarSize);
+            image = await GitUI.Avatars.AvatarService.DefaultProvider.GetAvatarAsync(email, name, size);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        image ??= Properties.Images.User80;
+        using MemoryStream stream = new();
+        image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+        return stream.ToArray();
+    }
+
+    public void EditNotes(ObjectId objectId) => Module.EditNotes(objectId);
+
+    /// <summary>As <c>copyCommitInfoToolStripMenuItem_Click</c> (with <c>CommitInfoHeader.GetPlainText</c>).</summary>
+    public string GetCopyText(string header, string message)
+        => $"{_commitDataHeaderRenderer.GetPlainText(header)}{Environment.NewLine}{Environment.NewLine}{message}";
+
+    public void CopyToClipboard(string text) => ClipboardUtil.TrySetText(text);
+
     private Dictionary<string, int> GetSortedTags()
     {
         GitArgumentBuilder args = new("for-each-ref")

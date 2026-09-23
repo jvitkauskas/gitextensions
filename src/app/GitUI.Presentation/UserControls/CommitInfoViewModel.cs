@@ -18,6 +18,14 @@ public sealed class CommitInfoStrings : ViewStrings
         RepoFailure = Add("_repoFailure", "Text", "Repository failure");
         LinksRelatedToRevision = Add("_trsLinksRelatedToRevision", "Text", "Related links:");
         CopyCommitInfo = Add("copyCommitInfoToolStripMenuItem", "Text", "&Copy commit info");
+        CopyLink = Add("_copyLink", "Text", "Copy &link ({0})");
+        AddNotes = Add("addNoteToolStripMenuItem", "Text", "Add &notes");
+        ShowContainedInBranchesLocal = Add("showContainedInBranchesToolStripMenuItem", "Text", "Show local branches containing this commit");
+        ShowContainedInBranchesRemote = Add("showContainedInBranchesRemoteToolStripMenuItem", "Text", "Show remote branches containing this commit");
+        ShowContainedInBranchesRemoteIfNoLocal = Add("showContainedInBranchesRemoteIfNoLocalToolStripMenuItem", "Text", "Show remote branches only when no local branch contains this commit");
+        ShowContainedInTags = Add("showContainedInTagsToolStripMenuItem", "Text", "Show tags containing this commit");
+        ShowAnnotatedTagsMessages = Add("showMessagesOfAnnotatedTagsToolStripMenuItem", "Text", "Show messages of annotated tags");
+        ShowTagThisCommitDerivesFrom = Add("showTagThisCommitDerivesFromMenuItem", "Text", "Show the most recent tag this commit derives from");
     }
 
     public TranslatedText BrokenRefs { get; }
@@ -33,6 +41,22 @@ public sealed class CommitInfoStrings : ViewStrings
     public TranslatedText LinksRelatedToRevision { get; }
 
     public TranslatedText CopyCommitInfo { get; }
+
+    public TranslatedText CopyLink { get; }
+
+    public TranslatedText AddNotes { get; }
+
+    public TranslatedText ShowContainedInBranchesLocal { get; }
+
+    public TranslatedText ShowContainedInBranchesRemote { get; }
+
+    public TranslatedText ShowContainedInBranchesRemoteIfNoLocal { get; }
+
+    public TranslatedText ShowContainedInTags { get; }
+
+    public TranslatedText ShowAnnotatedTagsMessages { get; }
+
+    public TranslatedText ShowTagThisCommitDerivesFrom { get; }
 }
 
 /// <summary>A line of the commit header: its label and its value as XHTML (e.g. a link to the author's e-mail).</summary>
@@ -40,6 +64,15 @@ public sealed record CommitInfoHeaderLine(string Label, string ValueXhtml);
 
 /// <summary>What the commit info shows at once (as <c>CommitInfoHeader.ShowCommitInfo</c> and the fixed commit message).</summary>
 public sealed record CommitInfoContent(IReadOnlyList<CommitInfoHeaderLine> Header, string MessageXhtml);
+
+/// <summary>What the commit info shows below the message (the settings of its context menu).</summary>
+public sealed record CommitInfoDisplayOptions(
+    bool ShowContainedInBranchesLocal = true,
+    bool ShowContainedInBranchesRemote = false,
+    bool ShowContainedInBranchesRemoteIfNoLocal = false,
+    bool ShowContainedInTags = true,
+    bool ShowAnnotatedTagsMessages = true,
+    bool ShowTagThisCommitDerivesFrom = true);
 
 /// <summary>Renders the commit info with the WinForms renderers (<c>CommitDataHeaderRenderer</c>, <c>RefsFormatter</c>, ...).</summary>
 public interface ICommitInfoHost
@@ -62,6 +95,29 @@ public interface ICommitInfoHost
     ///  internal link (<c>gitext://</c>) or <paramref name="showAll"/> for a "show all" link.
     /// </summary>
     void ExecuteLink(string uri, Action<string, string?>? internalCommand, Action<string?> showAll);
+
+    /// <summary>The settings of the context menu (<c>AppSettings.CommitInfoShow*</c>); setting them saves them.</summary>
+    CommitInfoDisplayOptions Options { get; set; }
+
+    /// <summary>The strings of the commit info (its context menu).</summary>
+    CommitInfoStrings Strings { get; }
+
+    /// <summary>Whether the author's avatar is shown (<c>AppSettings.ShowAuthorAvatarInCommitInfo</c>).</summary>
+    bool ShowAvatar { get; }
+
+    /// <summary>The size of the avatar (<c>AppSettings.AuthorImageSizeInCommitInfo</c>).</summary>
+    int AvatarSize { get; }
+
+    /// <summary>The avatar of the author as an image file, or the default one (as <c>AvatarControl.UpdateAvatarAsync</c>).</summary>
+    Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken);
+
+    /// <summary>As <c>addNoteToolStripMenuItem_Click</c>: edits the notes of the commit (<c>GitModule.EditNotes</c>).</summary>
+    void EditNotes(ObjectId objectId);
+
+    /// <summary>The copied commit info from the texts of the header and the message (as <c>copyCommitInfoToolStripMenuItem_Click</c>).</summary>
+    string GetCopyText(string header, string message);
+
+    void CopyToClipboard(string text);
 }
 
 /// <summary>
@@ -96,6 +152,53 @@ public sealed partial class CommitInfoViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HasRevision { get; private set; }
 
+    /// <summary>The author's avatar as an image file, if shown (<c>CommitInfoHeader.LoadAuthorImage</c>).</summary>
+    [ObservableProperty]
+    public partial byte[]? Avatar { get; private set; }
+
+    [ObservableProperty]
+    public partial bool ShowAvatar { get; private set; }
+
+    /// <summary>The size of the avatar (in device-independent pixels).</summary>
+    public int AvatarSize => _host.AvatarSize;
+
+    /// <summary>The settings of the context menu, as its check boxes.</summary>
+    public CommitInfoDisplayOptions Options => _host.Options;
+
+    public CommitInfoStrings Strings => _host.Strings;
+
+    /// <summary>Saves the settings of the context menu and reloads the commit (as their click handlers and <c>ReloadCommitInfo</c>).</summary>
+    public void SetOptions(CommitInfoDisplayOptions options)
+    {
+        _host.Options = options;
+        OnPropertyChanged(nameof(Options));
+        SetRevision(_revision, _children);
+    }
+
+    /// <summary>As <c>copyCommitInfoToolStripMenuItem_Click</c>: the header and the message as text.</summary>
+    public void CopyCommitInfo()
+    {
+        string header = string.Join("\n", Header.Select(line => $"{line.Label}\t{XhtmlText.ToPlainText(line.ValueXhtml)}"));
+        _host.CopyToClipboard(_host.GetCopyText(header, XhtmlText.ToPlainText(Message)));
+    }
+
+    /// <summary>As <c>copyLinkToolStripMenuItem_Click</c>.</summary>
+    public void CopyLink(string uri) => _host.CopyToClipboard(uri);
+
+    /// <summary>As <c>addNoteToolStripMenuItem_Click</c>: the notes are edited, then the commit is reloaded with them.</summary>
+    public void AddNotes()
+    {
+        if (_revision is null)
+        {
+            return;
+        }
+
+        _host.EditNotes(_revision.ObjectId);
+        _revision.Body = null;
+        _revision.Notes = null;
+        SetRevision(_revision, _children);
+    }
+
     /// <summary>
     ///  Raised for an internal link, with its command and data (as <c>CommitInfo.CommandClicked</c>); commit hashes are links
     ///  only if handled.
@@ -123,6 +226,45 @@ public sealed partial class CommitInfoViewModel : ObservableObject
         Message = content.MessageXhtml;
         RevisionInfo = "";
         _ = LoadAsync(revision, loadMessage: !revision.IsArtificial && !revision.IsAutostash);
+        _ = LoadAvatarAsync(revision);
+    }
+
+    private CancellationTokenSource? _loadingAvatar;
+
+    /// <summary>As <c>CommitInfoHeader.LoadAuthorImage</c> and <c>AvatarControl.UpdateAvatarAsync</c>.</summary>
+    private async Task LoadAvatarAsync(GitRevision revision)
+    {
+        ShowAvatar = _host.ShowAvatar;
+#pragma warning disable VSTHRD103 // CancelAsync may resume off the UI thread.
+        _loadingAvatar?.Cancel();
+#pragma warning restore VSTHRD103
+        if (!ShowAvatar)
+        {
+            Avatar = null;
+            return;
+        }
+
+        CancellationTokenSource loading = new();
+        _loadingAvatar = loading;
+        try
+        {
+            byte[]? avatar = await _host.GetAvatarAsync(revision.AuthorEmail ?? revision.CommitterEmail, revision.Author ?? revision.Committer, loading.Token);
+            if (!loading.IsCancellationRequested)
+            {
+                Avatar = avatar;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception)
+        {
+            // As AvatarControl: no avatar if it cannot be loaded.
+            if (!loading.IsCancellationRequested)
+            {
+                Avatar = null;
+            }
+        }
     }
 
     /// <summary>A click on a link (as <c>LinkClicked</c>).</summary>
