@@ -1,0 +1,74 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CloneWindow"
+                x:DataType="vm:CloneViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="640" MinWidth="520" SizeToContent="Height" CanMaximize="False">
+  <Window.Styles>
+    <Style Selector="SelectableTextBlock.warning">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Name="loadSshKeyButton" IsVisible="{Binding CanLoadSshKey}" Command="{Binding LoadSshKeyCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/Putty.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.LoadSshKey.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Button Name="cloneButton" Grid.Column="2" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.CloneButton.AccessKeyText}" Command="{Binding CloneCommand}" />
+      </Grid>
+    </Border>
+    <StackPanel Margin="12" Spacing="8">
+      <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+        <Label Content="{Binding Strings.RepositoryToClone.AccessKeyText}" Target="fromComboBox" />
+        <ComboBox Name="fromComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                  ItemsSource="{Binding RecentRepositories}" Text="{Binding From}" />
+        <Button Name="fromBrowseButton" Grid.Column="2" MinWidth="100" Command="{Binding BrowseFromCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.FromBrowse.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Label Grid.Row="1" Content="{Binding Strings.Destination.AccessKeyText}" Target="destinationComboBox" />
+        <ComboBox Name="destinationComboBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                  ItemsSource="{Binding RecentDestinations}" Text="{Binding Destination}" />
+        <Button Name="destinationBrowseButton" Grid.Row="1" Grid.Column="2" MinWidth="100" Command="{Binding BrowseDestinationCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.ToBrowse.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Label Grid.Row="2" Content="{Binding Strings.Subdirectory.AccessKeyText}" Target="newDirectoryTextBox" />
+        <TextBox Name="newDirectoryTextBox" Grid.Row="2" Grid.Column="1" Text="{Binding NewDirectory}" />
+        <Label Grid.Row="3" Content="{Binding Strings.Branch.AccessKeyText}" Target="branchComboBox" />
+        <!-- The branches of the repository are listed (git ls-remote) when the list drops down. -->
+        <ComboBox Name="branchComboBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                  ItemsSource="{Binding Branches}" Text="{Binding Branch}" DropDownOpened="BranchComboBox_DropDownOpened" />
+      </Grid>
+      <SelectableTextBlock Name="infoText" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding InfoText}"
+                           Classes.warning="{Binding IsInfoWarning}" />
+      <!-- Equivalent of the "Repository type" group box -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding Strings.RepositoryType.Text}" FontWeight="SemiBold" />
+          <RadioButton Name="personalRadioButton" GroupName="repositoryType"
+                       Content="{Binding Strings.PersonalRepository.AccessKeyText}" IsChecked="{Binding !IsCentral, Mode=OneWay}" />
+          <RadioButton Name="centralRadioButton" GroupName="repositoryType"
+                       Content="{Binding Strings.CentralRepository.AccessKeyText}" IsChecked="{Binding IsCentral}" />
+        </StackPanel>
+      </Border>
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <CheckBox Name="submodulesCheckBox" Content="{Binding Strings.InitializeAllSubmodules.AccessKeyText}" IsChecked="{Binding InitializeSubmodules}" />
+        <CheckBox Name="fullHistoryCheckBox" Content="{Binding Strings.DownloadFullHistory.AccessKeyText}" IsChecked="{Binding DownloadFullHistory}"
+                  ToolTip.Tip="{Binding Strings.DownloadFullHistoryHint.Text}" />
+      </StackPanel>
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

@@ -481,7 +481,7 @@ public partial class FormClone : GitExtensionsDialog
     /// <param name="contents">A string to attempt to extract URLs from.</param>
     /// <param name="url">A <see cref="string"/> that contains the URL, if any, extracted from <paramref name="contents"/>.</param>
     /// <returns><see langword="true"/> if a URL was extracted; otherwise <see langword="false"/>.</returns>
-    private static bool TryExtractUrl(string contents, out string url)
+    internal static bool TryExtractUrl(string contents, out string url)
     {
         url = "";
 

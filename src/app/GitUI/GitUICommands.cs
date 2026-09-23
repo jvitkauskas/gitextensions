@@ -622,6 +622,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowClone(owner, this, url, openedFromProtocolHandler, gitModuleChanged))
+            {
+                return true;
+            }
+
             using FormClone form = new(this, url, openedFromProtocolHandler, gitModuleChanged);
             form.ShowDialog(owner);
             return true;

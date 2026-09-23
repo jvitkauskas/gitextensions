@@ -62,6 +62,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new DashboardCategoryTitleStrings()).SetArgDisplayNames(nameof(DashboardCategoryTitleStrings));
         yield return new TestCaseData(new AddToGitIgnoreStrings()).SetArgDisplayNames(nameof(AddToGitIgnoreStrings));
         yield return new TestCaseData(new CheckoutBranchStrings()).SetArgDisplayNames(nameof(CheckoutBranchStrings));
+        yield return new TestCaseData(new CloneStrings()).SetArgDisplayNames(nameof(CloneStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]
