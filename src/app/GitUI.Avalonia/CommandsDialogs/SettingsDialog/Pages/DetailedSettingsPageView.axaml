@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.DetailedSettingsPageView"
+             x:DataType="vm:DetailedSettingsPageViewModel">
+  <!-- Equivalent of DetailedSettingsPage: PushWindowGB, mergeWindowGroup and gbRevisionGraph (global only). -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.PushWindow.PlainText}">
+      <CheckBox Name="remotesFromServer" Content="{Binding Strings.RemotesFromServer.AccessKeyText}"
+                IsThreeState="{Binding RemotesFromServer.IsThreeState}" IsChecked="{Binding RemotesFromServer.Value}" />
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.MergeWindow.PlainText}">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <CheckBox Name="addLogMessages" Content="{Binding Strings.AddLogMessages.AccessKeyText}"
+                  IsThreeState="{Binding AddLogMessages.IsThreeState}" IsChecked="{Binding AddLogMessages.Value}" />
+        <TextBox Name="messagesCount" Width="80" Text="{Binding MessagesCount.Text}" Classes.invalid="{Binding !MessagesCount.IsValid}" />
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.RevisionGraph.PlainText}" IsEnabled="{Binding IsRevisionGraphEnabled}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="mergeGraphLanesHavingCommonParent" Content="{Binding Strings.MergeGraphLanesHavingCommonParent.AccessKeyText}" IsChecked="{Binding MergeGraphLanesHavingCommonParent}" />
+        <CheckBox Name="renderGraphWithDiagonals" Content="{Binding Strings.RenderGraphWithDiagonals.AccessKeyText}" IsChecked="{Binding RenderGraphWithDiagonals}" />
+        <CheckBox Name="straightenGraphDiagonals" Content="{Binding Strings.StraightenGraphDiagonals.AccessKeyText}" IsChecked="{Binding StraightenGraphDiagonals}" />
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+  <UserControl.Styles>
+    <!-- As OnTextChanged of NumberSettingTextBoxBinding: an invalid number is shown in red. -->
+    <Style Selector="TextBox.invalid">
+      <Setter Property="Background" Value="#FFFF5050" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

@@ -1208,6 +1208,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowSettings(owner, this, initialPage, out bool saved))
+            {
+                return saved;
+            }
+
             return FormSettings.ShowSettingsDialog(this, owner, initialPage)
                 is DialogResult.OK;
         }

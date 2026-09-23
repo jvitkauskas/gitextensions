@@ -142,6 +142,9 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateClean.png" Link="Assets\RepoStateClean.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Key.png" Link="Assets\Key.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Push.png" Link="Assets\Push.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GitLogo16.png" Link="Assets\GitLogo16.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Plugin.png" Link="Assets\Plugin.png" />
+    <AvaloniaResource Include="..\..\..\setup\assets\Logo\git-extensions-logo-16px.png" Link="Assets\GitExtensionsLogo16.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ArrowUp.png" Link="Assets\ArrowUp.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetCurrentBranchToHere.png" Link="Assets\ResetCurrentBranchToHere.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\stash.png" Link="Assets\Stash.png" />

@@ -1,0 +1,99 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:local="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.SettingsWindow"
+                x:DataType="vm:SettingsDialogViewModel"
+                Title="{Binding Title}"
+                ShowInTaskbar="True"
+                Width="1000" Height="680" MinWidth="700" MinHeight="450">
+  <Window.Styles>
+    <!-- The group boxes of the pages. -->
+    <Style Selector="HeaderedContentControl.groupBox">
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border BorderThickness="1" CornerRadius="4" Padding="10,6,10,10" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <StackPanel Spacing="4">
+              <ContentPresenter Content="{TemplateBinding Header}" TextElement.FontWeight="SemiBold" />
+              <ContentPresenter Content="{TemplateBinding Content}" />
+            </StackPanel>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="TreeViewItem.highlighted /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+    </Style>
+  </Window.Styles>
+  <Window.DataTemplates>
+    <local:SettingsPageLocator />
+  </Window.DataTemplates>
+  <!-- Equivalent of FormSettings: the tree (settingsTreeView) on the left, the page on the right, the buttons below. -->
+  <DockPanel Margin="8">
+    <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom">
+        <Button Name="discardButton" MinWidth="88" Content="{Binding Strings.Discard.AccessKeyText}" Command="{Binding DiscardCommand}" IsVisible="False" />
+        <Button Name="okButton" MinWidth="88" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" MinWidth="88" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+        <Button Name="applyButton" MinWidth="88" Content="{Binding Strings.Apply.AccessKeyText}" Command="{Binding ApplyCommand}" />
+      </StackPanel>
+      <!-- Equivalent of labelInstantSaveNotice. -->
+      <TextBlock Name="instantSaveNotice" Text="{Binding Strings.InstantSaveNotice.Text}" IsVisible="{Binding IsInstantSavePage}"
+                 TextWrapping="Wrap" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}" VerticalAlignment="Center" />
+    </DockPanel>
+    <Grid ColumnDefinitions="260,5,*">
+      <!-- Equivalent of SettingsTreeViewUserControl: the filter and the tree of the pages. -->
+      <DockPanel>
+        <TextBox Name="filter" DockPanel.Dock="Top" Margin="0,0,0,4" Watermark="{Binding Strings.TypeToFind.Text}" Text="{Binding Filter}" />
+        <TreeView Name="pagesTree" ItemsSource="{Binding Nodes}" SelectedItem="{Binding SelectedNode}"
+                  BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <TreeView.ItemContainerTheme>
+            <ControlTheme TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}" x:DataType="vm:SettingsTreeNode">
+              <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            </ControlTheme>
+          </TreeView.ItemContainerTheme>
+          <TreeView.ItemTemplate>
+            <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="vm:SettingsTreeNode">
+              <StackPanel Orientation="Horizontal" Spacing="4" Classes.highlighted="{Binding IsHighlighted}">
+                <Image Width="16" Height="16" Source="{Binding Icon, Converter={x:Static local:SettingsIconConverter.Instance}}" />
+                <TextBlock Text="{Binding Title}" FontWeight="{Binding IsHighlighted, Converter={x:Static local:SettingsIconConverter.BoldWhenTrue}}" />
+              </StackPanel>
+            </TreeDataTemplate>
+          </TreeView.ItemTemplate>
+        </TreeView>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+      <!-- Equivalent of panelCurrentSettingsPage with the header of the page (SettingsPageHeader). -->
+      <DockPanel Grid.Column="2" DataContext="{Binding SelectedPage}" x:DataType="vm:SettingsPageViewModel">
+        <Border DockPanel.Dock="Top" Name="pageHeader" IsVisible="{Binding HasHeader}" Margin="0,0,0,8" Padding="8,4"
+                BorderThickness="0,0,0,1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{Binding $parent[local:SettingsWindow].((vm:SettingsDialogViewModel)DataContext).Strings.SettingsSource.Text}" FontWeight="Bold" />
+            <ItemsControl ItemsSource="{Binding Levels}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SettingsLevelChoice">
+                  <StackPanel Orientation="Horizontal">
+                    <!-- The arrows show the levels combined into the effective settings. -->
+                    <TextBlock Text="⇐" Margin="4,0" VerticalAlignment="Center" IsVisible="{Binding ShowsArrow}"
+                               Opacity="{Binding $parent[DockPanel].((vm:SettingsPageViewModel)DataContext).IsEffective, Converter={x:Static local:SettingsIconConverter.VisibleWhenTrue}}" />
+                    <RadioButton GroupName="settingsLevel" Content="{Binding Text}" IsChecked="{Binding IsSelected}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <ContentControl Name="pageContent" Content="{Binding}" IsEnabled="{Binding !IsReadOnly}" />
+        </ScrollViewer>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

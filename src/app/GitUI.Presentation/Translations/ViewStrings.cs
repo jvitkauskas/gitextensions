@@ -53,6 +53,12 @@ public abstract class ViewStrings : ITranslate
         return text;
     }
 
+    /// <summary>
+    ///  The translated texts of the view, without access key markers (e.g. the search keywords of a settings page, as
+    ///  <c>SettingsPageBase.GetSearchKeywords</c> collects the texts of its controls).
+    /// </summary>
+    public IEnumerable<string> Texts => _entries.Select(e => e.Text.PlainText).Where(t => !string.IsNullOrWhiteSpace(t));
+
     void ITranslate.AddTranslationItems(ITranslation translation)
     {
         foreach ((string category, string item, string property, TranslatedText text) in _entries)

@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.IntroductionSettingsPageView"
+             x:DataType="vm:IntroductionSettingsPageViewModel">
+  <!-- Equivalent of GitRootIntroductionPage and PluginRootIntroductionPage. -->
+  <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="4" />
+</UserControl>

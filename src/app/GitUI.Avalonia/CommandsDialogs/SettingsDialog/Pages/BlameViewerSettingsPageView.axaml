@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.BlameViewerSettingsPageView"
+             x:DataType="vm:BlameViewerSettingsPageViewModel">
+  <!-- Equivalent of BlameViewerSettingsPage: groupBoxBlameSettings, then groupBoxDisplayResult. -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.BlameSettings.Text}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="ignoreWhitespace" Content="{Binding Strings.IgnoreWhitespace.AccessKeyText}" IsChecked="{Binding IgnoreWhitespace}" />
+        <CheckBox Name="detectMoveAndCopyInThisFile" Content="{Binding Strings.DetectMoveAndCopyInThisFile.AccessKeyText}" IsChecked="{Binding DetectMoveAndCopyInThisFile}"
+                  ToolTip.Tip="{Binding Strings.BlameWarningTooltip.Text}" />
+        <CheckBox Name="detectMoveAndCopyInAllFiles" Content="{Binding Strings.DetectMoveAndCopyInAllFiles.AccessKeyText}" IsChecked="{Binding DetectMoveAndCopyInAllFiles}"
+                  ToolTip.Tip="{Binding Strings.BlameWarningTooltip.Text}" />
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.DisplayResult.Text}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="displayAuthorFirst" Content="{Binding Strings.DisplayAuthorFirst.AccessKeyText}" IsChecked="{Binding DisplayAuthorFirst}" />
+        <CheckBox Name="showAuthor" Content="{Binding Strings.ShowAuthor.AccessKeyText}" IsChecked="{Binding ShowAuthor}" />
+        <CheckBox Name="showAuthorDate" Content="{Binding Strings.ShowAuthorDate.AccessKeyText}" IsChecked="{Binding ShowAuthorDate}" />
+        <CheckBox Name="showAuthorTime" Content="{Binding Strings.ShowAuthorTime.AccessKeyText}" IsChecked="{Binding ShowAuthorTime}" />
+        <CheckBox Name="showLineNumbers" Content="{Binding Strings.ShowLineNumbers.AccessKeyText}" IsChecked="{Binding ShowLineNumbers}" />
+        <CheckBox Name="showOriginalFilePath" Content="{Binding Strings.ShowOriginalFilePath.AccessKeyText}" IsChecked="{Binding ShowOriginalFilePath}" />
+        <CheckBox Name="showAuthorAvatar" Content="{Binding Strings.ShowAuthorAvatar.AccessKeyText}" IsChecked="{Binding ShowAuthorAvatar}" />
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

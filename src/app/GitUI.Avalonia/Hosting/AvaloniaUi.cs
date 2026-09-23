@@ -103,6 +103,12 @@ public static class AvaloniaUi
         => ParseEnabledDialogs() is not { } enabled || enabled.Contains(winFormsFormName);
 
     /// <summary>
+    ///  Whether an unfinished port is enabled: only when named in the environment variable (e.g.
+    ///  <c>GE_AVALONIA=all,FormSettings</c> for all the ports with it), not by default.
+    /// </summary>
+    public static bool IsExplicitlyEnabledFor(string winFormsFormName) => IsNamed(winFormsFormName);
+
+    /// <summary>
     ///  Sets up Avalonia on the current (UI) thread on first use. Initialising lazily keeps startup unchanged
     ///  while no ported dialog has been opened.
     /// </summary>
@@ -146,8 +152,14 @@ public static class AvaloniaUi
             return [];
         }
 
-        return [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+        HashSet<string> names = [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+        // "all,FormSettings": all the ports, and the unfinished ones named.
+        return names.Contains("all", StringComparer.OrdinalIgnoreCase) ? null : names;
     }
+
+    private static bool IsNamed(string winFormsFormName)
+        => Environment.GetEnvironmentVariable(EnvironmentVariable)?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Contains(winFormsFormName) == true;
 
     internal static void VerifyUiThread() => Dispatcher.UIThread.VerifyAccess();
 
