@@ -79,6 +79,10 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new FileEditorStrings()).SetArgDisplayNames(nameof(FileEditorStrings));
         yield return new TestCaseData(new ViewPatchStrings()).SetArgDisplayNames(nameof(ViewPatchStrings));
         yield return new TestCaseData(new SparseWorkingCopyStrings()).SetArgDisplayNames(nameof(SparseWorkingCopyStrings));
+        yield return new TestCaseData(new GitIgnoreStrings()).SetArgDisplayNames(nameof(GitIgnoreStrings));
+        yield return new TestCaseData(new GitIgnoreModelStrings()).SetArgDisplayNames(nameof(GitIgnoreModelStrings));
+        yield return new TestCaseData(new GitLocalExcludeModelStrings()).SetArgDisplayNames(nameof(GitLocalExcludeModelStrings));
+        yield return new TestCaseData(new ChangeLogStrings()).SetArgDisplayNames(nameof(ChangeLogStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

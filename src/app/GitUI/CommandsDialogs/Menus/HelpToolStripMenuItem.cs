@@ -31,6 +31,11 @@ internal partial class HelpToolStripMenuItem : ToolStripMenuItemEx
 
     private void ChangelogToolStripMenuItemClick(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowChangeLog(OwnerForm))
+        {
+            return;
+        }
+
         using FormChangeLog frm = new();
         frm.ShowDialog(OwnerForm);
     }

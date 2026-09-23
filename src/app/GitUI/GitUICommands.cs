@@ -1138,6 +1138,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowGitIgnore(owner, this, localExcludes))
+            {
+                return true;
+            }
+
             using FormGitIgnore form = new(this, localExcludes);
             form.ShowDialog(owner);
             return true;

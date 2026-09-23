@@ -1,0 +1,39 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.GitIgnoreEditorWindow"
+                x:DataType="vm:GitIgnoreEditorViewModel"
+                Title="{Binding FileStrings.Title.PlainText}"
+                Width="634" Height="623" MinWidth="450" MinHeight="350">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="cancelButton" HorizontalAlignment="Right"
+              Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+    </Border>
+    <Grid ColumnDefinitions="352*,Auto,280*">
+      <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+      <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+      <DockPanel Grid.Column="2" Margin="6">
+        <StackPanel DockPanel.Dock="Bottom" Spacing="6">
+          <Button Name="patternsLink" Classes="link" Command="{Binding OpenPatternsCommand}">
+            <TextBlock Text="{Binding Strings.PatternsLink.Text}" />
+          </Button>
+          <Button Name="generateLink" Classes="link" Command="{Binding OpenGeneratorCommand}">
+            <TextBlock Text="{Binding Strings.GenerateLink.Text}" />
+          </Button>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,6,0,0">
+            <Button Name="addDefaultButton" Content="{Binding Strings.AddDefault.AccessKeyText}" Command="{Binding AddDefaultCommand}" />
+            <Button Name="addPatternButton" Content="{Binding Strings.AddPattern.AccessKeyText}" Command="{Binding AddPatternCommand}" />
+            <Button Name="saveButton" Classes="accent" MinWidth="75" HorizontalContentAlignment="Center"
+                    Content="{Binding Strings.Save.AccessKeyText}" Command="{Binding SaveCommand}" />
+          </StackPanel>
+        </StackPanel>
+        <ScrollViewer>
+          <TextBlock Name="helpText" Text="{Binding Strings.Help.Text}" TextWrapping="Wrap" />
+        </ScrollViewer>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>
