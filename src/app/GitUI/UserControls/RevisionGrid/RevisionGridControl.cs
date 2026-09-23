@@ -3273,6 +3273,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
     private void ShowFormDiff(ObjectId baseCommitSha, ObjectId headCommitSha, string baseCommitDisplayStr, string headCommitDisplayStr)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowDiff(UICommands, baseCommitSha, headCommitSha, baseCommitDisplayStr, headCommitDisplayStr))
+        {
+            return;
+        }
+
         FormDiff diffForm = new(UICommands, baseCommitSha, headCommitSha, baseCommitDisplayStr, headCommitDisplayStr)
         {
             ShowInTaskbar = true

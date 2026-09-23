@@ -1,0 +1,67 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.DiffWindow"
+                x:DataType="vm:DiffViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                ShowInTaskbar="True"
+                Width="1042" Height="685" MinWidth="600" MinHeight="400">
+  <Window.Styles>
+    <Style Selector="Button.pick">
+      <Setter Property="Padding" Value="4" />
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+  </Window.Styles>
+  <DockPanel Margin="6">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4" Margin="0,0,0,6">
+      <!-- Equivalent of firstCommitGroup -->
+      <HeaderedContentControl Header="{Binding Strings.FirstCommit.Text}">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+          <Border Name="firstCommitBorder" Padding="4,2" CornerRadius="2">
+            <TextBlock Name="firstCommitText" Text="{Binding FirstDisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="Black" />
+          </Border>
+          <Button Name="firstBranchButton" Grid.Column="1" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherBranchToolTip.Text}" Command="{Binding PickFirstBranchCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
+          </Button>
+          <Button Name="firstCommitButton" Grid.Column="2" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherCommitToolTip.Text}" Command="{Binding PickFirstCommitCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
+          </Button>
+        </Grid>
+      </HeaderedContentControl>
+      <Button Name="swapButton" Grid.Column="1" VerticalAlignment="Bottom" Classes="pick" ToolTip.Tip="{Binding Strings.SwapToolTip.Text}" Command="{Binding SwapCommand}">
+        <Image Source="avares://GitUI.Avalonia/Assets/Renamed.png" Width="16" Height="16" />
+      </Button>
+      <!-- Equivalent of secondCommitGroup -->
+      <HeaderedContentControl Grid.Column="2" Header="{Binding Strings.SecondCommit.Text}">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+          <Border Name="secondCommitBorder" Padding="4,2" CornerRadius="2">
+            <TextBlock Name="secondCommitText" Text="{Binding SecondDisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="Black" />
+          </Border>
+          <Button Name="secondBranchButton" Grid.Column="1" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherBranchToolTip.Text}" Command="{Binding PickSecondBranchCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
+          </Button>
+          <Button Name="secondCommitButton" Grid.Column="2" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherCommitToolTip.Text}" Command="{Binding PickSecondCommitCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
+          </Button>
+        </Grid>
+      </HeaderedContentControl>
+      <!-- Equivalent of diffOptionsPanel -->
+      <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="12">
+        <CheckBox Name="compareToMergeBaseCheckBox" IsChecked="{Binding CompareToMergeBase}" IsEnabled="{Binding HasMergeBase}"
+                  Content="{Binding CompareToMergeBaseText}" />
+        <Button Name="directoryDiffButton" Content="{Binding Strings.CompareDirectoriesWithDiffTool.AccessKeyText}"
+                Command="{Binding CompareDirectoriesCommand}" IsEnabled="{Binding CanCompareDirectories}" />
+      </StackPanel>
+    </Grid>
+    <Grid ColumnDefinitions="345,Auto,*">
+      <fs:FileStatusListView Name="diffFiles" DataContext="{Binding Files}" />
+      <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+      <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <ed:FileViewerView Name="diffText" DataContext="{Binding Viewer}" />
+      </Border>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ed="using:GitUI.Avalonia.Editor"
+             xmlns:vm="using:GitUI.Presentation.Editor"
+             x:Class="GitUI.Avalonia.Editor.FileViewerView"
+             x:DataType="vm:FileViewerViewModel">
+  <Panel>
+    <ed:TextEditorView Name="textView" DataContext="{Binding Editor}" />
+    <ScrollViewer Name="imageViewer" IsVisible="False" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+      <Image Name="image" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top" />
+    </ScrollViewer>
+  </Panel>
+</UserControl>

@@ -111,5 +111,7 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesSync.png" Link="Assets\SubmodulesSync.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesUpdate.png" Link="Assets\SubmodulesUpdate.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ViewFile.png" Link="Assets\ViewFile.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchCheckout.png" Link="Assets\BranchCheckout.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Renamed.png" Link="Assets\Renamed.png" />
   </ItemGroup>
 </Project>

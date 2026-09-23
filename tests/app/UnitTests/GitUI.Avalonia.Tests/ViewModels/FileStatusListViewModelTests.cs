@@ -9,8 +9,8 @@ namespace GitUI.AvaloniaTests.ViewModels;
 [TestFixture]
 public sealed class FileStatusListViewModelTests
 {
-    internal static readonly GitRevision First = new(ObjectId.Parse("1111111111111111111111111111111111111111"));
-    internal static readonly GitRevision Second = new(ObjectId.Parse("2222222222222222222222222222222222222222"));
+    internal static readonly GitRevision First = new(ObjectId.Parse("a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"));
+    internal static readonly GitRevision Second = new(ObjectId.Parse("b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"));
 
     internal static List<GitItemStatus> CreateStatuses() =>
     [

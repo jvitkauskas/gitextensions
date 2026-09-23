@@ -49,6 +49,11 @@ public sealed class FileStatusListViewTests : HeadlessTest
         viewModel.SelectNextItem(backwards: false);
         Dispatcher.UIThread.RunJobs();
         view.Tree.SelectedItem.Should().BeSameAs(viewModel.Nodes[2]);
+        viewModel.SelectedEntry.Should().BeSameAs(viewModel.Nodes[2].Entry, "the tree keeps the selection of the view model");
+        viewModel.Select(entry => entry.Item.Name == "src/Program.cs");
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
+        view.Tree.SelectedItems.Cast<FileStatusNode>().Select(n => n.Entry!.Item.Name).Should().Equal("src/Program.cs");
         window.Close();
     });
 

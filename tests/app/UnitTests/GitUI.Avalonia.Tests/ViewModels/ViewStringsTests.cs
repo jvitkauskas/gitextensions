@@ -4,6 +4,7 @@ using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
+using GitUI.Presentation.Editor;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
@@ -87,6 +88,8 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new VerifyStrings()).SetArgDisplayNames(nameof(VerifyStrings));
         yield return new TestCaseData(new TextViewerStrings()).SetArgDisplayNames(nameof(TextViewerStrings));
         yield return new TestCaseData(new FileStatusListStrings()).SetArgDisplayNames(nameof(FileStatusListStrings));
+        yield return new TestCaseData(new DiffStrings()).SetArgDisplayNames(nameof(DiffStrings));
+        yield return new TestCaseData(new FileViewerStrings()).SetArgDisplayNames(nameof(FileViewerStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]
