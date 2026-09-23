@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fs="using:GitUI.Presentation.UserControls.FileStatusList"
+             xmlns:local="using:GitUI.Avalonia.Controls.FileStatusList"
+             xmlns:gc="using:GitCommands"
+             x:Class="GitUI.Avalonia.Controls.FileStatusList.FileStatusListView"
+             x:DataType="fs:FileStatusListViewModel">
+  <UserControl.Styles>
+    <Style Selector="TreeViewItem" x:DataType="fs:FileStatusNode">
+      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+      <Setter Property="MinHeight" Value="20" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <!-- As FileStatusList._activeInputColor / _invalidInputColor, translucent to suit both themes. -->
+    <Style Selector="TextBox.active">
+      <Setter Property="Background" Value="#4000C800" />
+    </Style>
+    <Style Selector="TextBox.invalid">
+      <Setter Property="Background" Value="#40FF0000" />
+    </Style>
+    <Style Selector="Button.toolbar, ToggleButton.toolbar">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </UserControl.Styles>
+  <DockPanel>
+    <!-- Equivalent of the toolbar and the filter box of FileStatusList. -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="2" Margin="0,0,0,2">
+      <TextBox Name="filterTextBox" Text="{Binding Filter}" PlaceholderText="{Binding Strings.FilterWatermark.Text}"
+               ToolTip.Tip="{Binding FilterError}" Classes.active="{Binding IsFilterActive}" Classes.invalid="{Binding FilterError, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBox.InnerRightContent>
+          <Button Name="clearFilterButton" Classes="toolbar" Content="✕" Command="{Binding ClearFilterCommand}"
+                  IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </TextBox.InnerRightContent>
+      </TextBox>
+      <Button Name="byPathButton" Grid.Column="1" Classes="toolbar" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
+              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
+        <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="byExtensionButton" Grid.Column="2" Classes="toolbar" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
+              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
+        <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="byStatusButton" Grid.Column="3" Classes="toolbar" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
+              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
+        <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
+      </Button>
+      <ToggleButton Name="flatListButton" Grid.Column="4" Classes="toolbar" ToolTip.Tip="{Binding Strings.AsTreeToolTip.Text}"
+                    IsChecked="{Binding IsFlatList, Mode=OneWay}" Command="{Binding ToggleFlatListCommand}">
+        <Image Source="avares://GitUI.Avalonia/Assets/DocumentTree.png" Width="16" Height="16" />
+      </ToggleButton>
+    </Grid>
+    <Panel>
+      <TreeView Name="filesTree" ItemsSource="{Binding Nodes}" SelectionMode="Multiple"
+                IsVisible="{Binding !ShowNoFiles}">
+        <TreeView.ContextMenu>
+          <ContextMenu Name="treeMenu">
+            <MenuItem Name="expandAllMenuItem" Header="{Binding Strings.ExpandAll.AccessKeyText}" Command="{Binding ExpandAllCommand}" />
+            <MenuItem Name="collapseAllMenuItem" Header="{Binding Strings.CollapseAll.AccessKeyText}" Command="{Binding CollapseAllCommand}" />
+          </ContextMenu>
+        </TreeView.ContextMenu>
+        <TreeView.ItemTemplate>
+          <TreeDataTemplate DataType="fs:FileStatusNode" ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Width="16" Height="16" Source="{Binding IconKey, Converter={x:Static local:FileStatusIconConverter.Instance}}" />
+              <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding OldName}" VerticalAlignment="Center" IsVisible="{Binding OldName, Converter={x:Static ObjectConverters.IsNotNull}}"
+                         Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            </StackPanel>
+          </TreeDataTemplate>
+        </TreeView.ItemTemplate>
+      </TreeView>
+      <TextBlock Name="noFilesText" Text="{Binding Strings.NoFiles.Text}" IsVisible="{Binding ShowNoFiles}" Margin="6"
+                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+      <TextBlock Name="loadingText" Text="{Binding Strings.LoadingFiles.Text}" IsVisible="{Binding IsLoading}" Margin="6"
+                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Panel>
+  </DockPanel>
+</UserControl>

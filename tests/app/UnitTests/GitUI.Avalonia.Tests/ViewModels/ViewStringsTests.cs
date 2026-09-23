@@ -7,6 +7,7 @@ using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
+using GitUI.Presentation.UserControls.FileStatusList;
 
 namespace GitUI.AvaloniaTests.ViewModels;
 
@@ -85,6 +86,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new ChangeLogStrings()).SetArgDisplayNames(nameof(ChangeLogStrings));
         yield return new TestCaseData(new VerifyStrings()).SetArgDisplayNames(nameof(VerifyStrings));
         yield return new TestCaseData(new TextViewerStrings()).SetArgDisplayNames(nameof(TextViewerStrings));
+        yield return new TestCaseData(new FileStatusListStrings()).SetArgDisplayNames(nameof(FileStatusListStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

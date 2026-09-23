@@ -63,5 +63,53 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetCurrentBranchToHere.png" Link="Assets\ResetCurrentBranchToHere.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMerge.png" Link="Assets\Help\HelpCommandMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMergeFastForward.png" Link="Assets\Help\HelpCommandMergeFastForward.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Diff.png" Link="Assets\Diff.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffA.png" Link="Assets\DiffA.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffB.png" Link="Assets\DiffB.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffC.png" Link="Assets\DiffC.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffR.png" Link="Assets\DiffR.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DocumentTree.png" Link="Assets\DocumentTree.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\File.png" Link="Assets\File.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusAddedOnlyA.png" Link="Assets\FileStatusAddedOnlyA.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusAddedOnlyB.png" Link="Assets\FileStatusAddedOnlyB.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusAddedSame.png" Link="Assets\FileStatusAddedSame.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusAddedUnequal.png" Link="Assets\FileStatusAddedUnequal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusCopied.png" Link="Assets\FileStatusCopied.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusCopiedOnlyA.png" Link="Assets\FileStatusCopiedOnlyA.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusCopiedOnlyB.png" Link="Assets\FileStatusCopiedOnlyB.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusCopiedSame.png" Link="Assets\FileStatusCopiedSame.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusCopiedUnequal.png" Link="Assets\FileStatusCopiedUnequal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusModified.png" Link="Assets\FileStatusModified.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusModifiedOnlyA.png" Link="Assets\FileStatusModifiedOnlyA.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusModifiedOnlyB.png" Link="Assets\FileStatusModifiedOnlyB.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusModifiedSame.png" Link="Assets\FileStatusModifiedSame.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusModifiedUnequal.png" Link="Assets\FileStatusModifiedUnequal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRemoved.png" Link="Assets\FileStatusRemoved.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRemovedOnlyA.png" Link="Assets\FileStatusRemovedOnlyA.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRemovedOnlyB.png" Link="Assets\FileStatusRemovedOnlyB.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRemovedSame.png" Link="Assets\FileStatusRemovedSame.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRemovedUnequal.png" Link="Assets\FileStatusRemovedUnequal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRenamed.png" Link="Assets\FileStatusRenamed.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRenamedOnlyA.png" Link="Assets\FileStatusRenamedOnlyA.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRenamedOnlyB.png" Link="Assets\FileStatusRenamedOnlyB.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRenamedSame.png" Link="Assets\FileStatusRenamedSame.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusRenamedUnequal.png" Link="Assets\FileStatusRenamedUnequal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusUnknown.png" Link="Assets\FileStatusUnknown.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileTree.png" Link="Assets\FileTree.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FolderClosed.png" Link="Assets\FolderClosed.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FolderOpen.png" Link="Assets\FolderOpen.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleDirty.png" Link="Assets\SubmoduleDirty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionDown.png" Link="Assets\SubmoduleRevisionDown.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionDownDirty.png" Link="Assets\SubmoduleRevisionDownDirty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionSemiDown.png" Link="Assets\SubmoduleRevisionSemiDown.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionSemiDownDirty.png" Link="Assets\SubmoduleRevisionSemiDownDirty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionSemiUp.png" Link="Assets\SubmoduleRevisionSemiUp.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionSemiUpDirty.png" Link="Assets\SubmoduleRevisionSemiUpDirty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionUp.png" Link="Assets\SubmoduleRevisionUp.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmoduleRevisionUpDirty.png" Link="Assets\SubmoduleRevisionUpDirty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesManage.png" Link="Assets\SubmodulesManage.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesSync.png" Link="Assets\SubmodulesSync.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesUpdate.png" Link="Assets\SubmodulesUpdate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ViewFile.png" Link="Assets\ViewFile.png" />
   </ItemGroup>
 </Project>
