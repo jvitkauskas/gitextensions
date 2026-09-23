@@ -15,27 +15,28 @@
   </Window.Styles>
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+      <Grid ColumnDefinitions="Auto,*,Auto">
         <Button Name="pruneButton" Content="{Binding Strings.Prune.AccessKeyText}" Command="{Binding PruneCommand}" />
-        <Button Name="createButton" Command="{Binding CreateCommand}">
+        <Button Name="createButton" Grid.Column="2" Command="{Binding CreateCommand}">
           <StackPanel Orientation="Horizontal" Spacing="4">
             <Image Source="avares://GitUI.Avalonia/Assets/FileStatusAdded.png" Width="16" Height="16" />
             <AccessText Text="{Binding Strings.Create.AccessKeyText}" />
           </StackPanel>
         </Button>
-      </StackPanel>
+      </Grid>
     </Border>
+    <!-- Equivalent of flowLayoutPanel1 (right to left: Open selected, then Delete selected). -->
     <StackPanel DockPanel.Dock="Bottom" Margin="9,0,9,6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
-      <Button Name="openButton" Command="{Binding OpenCommand}">
-        <StackPanel Orientation="Horizontal" Spacing="4">
-          <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
-          <AccessText Text="{Binding Strings.Open.AccessKeyText}" />
-        </StackPanel>
-      </Button>
       <Button Name="deleteButton" Command="{Binding DeleteCommand}">
         <StackPanel Orientation="Horizontal" Spacing="4">
           <Image Source="avares://GitUI.Avalonia/Assets/DeleteFile.png" Width="16" Height="16" />
           <AccessText Text="{Binding Strings.Delete.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+      <Button Name="openButton" Command="{Binding OpenCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Open.AccessKeyText}" />
         </StackPanel>
       </Button>
     </StackPanel>

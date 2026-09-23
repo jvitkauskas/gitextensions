@@ -8,27 +8,39 @@
                 Title="{Binding FileStrings.Title.PlainText}"
                 Width="634" Height="623" MinWidth="450" MinHeight="350">
   <DockPanel>
+    <!-- Equivalent of flowLayoutPanel1 (right to left: Save, then Cancel). -->
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Button Name="cancelButton" HorizontalAlignment="Right"
-              Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="cancelButton" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+        <Button Name="saveButton" Classes="accent" MinWidth="160" Command="{Binding SaveCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/Save.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Save.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
     </Border>
     <Grid ColumnDefinitions="352*,Auto,280*">
-      <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+      <DockPanel>
+        <!-- Equivalent of flowLayoutPanel2 at the bottom of the editor pane. -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="3">
+          <Button Name="addDefaultButton" MinWidth="160" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.AddDefault.AccessKeyText}" Command="{Binding AddDefaultCommand}" />
+          <Button Name="addPatternButton" MinWidth="160" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.AddPattern.AccessKeyText}" Command="{Binding AddPatternCommand}" />
+        </StackPanel>
+        <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+      </DockPanel>
       <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
       <DockPanel Grid.Column="2" Margin="6">
-        <StackPanel DockPanel.Dock="Bottom" Spacing="6">
-          <Button Name="patternsLink" Classes="link" Command="{Binding OpenPatternsCommand}">
-            <TextBlock Text="{Binding Strings.PatternsLink.Text}" />
-          </Button>
-          <Button Name="generateLink" Classes="link" Command="{Binding OpenGeneratorCommand}">
+        <!-- Equivalent of panel1 (right to left, one link per line). -->
+        <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="0,6,8,4">
+          <Button Name="generateLink" Classes="link" HorizontalAlignment="Right" Command="{Binding OpenGeneratorCommand}">
             <TextBlock Text="{Binding Strings.GenerateLink.Text}" />
           </Button>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,6,0,0">
-            <Button Name="addDefaultButton" Content="{Binding Strings.AddDefault.AccessKeyText}" Command="{Binding AddDefaultCommand}" />
-            <Button Name="addPatternButton" Content="{Binding Strings.AddPattern.AccessKeyText}" Command="{Binding AddPatternCommand}" />
-            <Button Name="saveButton" Classes="accent" MinWidth="75" HorizontalContentAlignment="Center"
-                    Content="{Binding Strings.Save.AccessKeyText}" Command="{Binding SaveCommand}" />
-          </StackPanel>
+          <Button Name="patternsLink" Classes="link" HorizontalAlignment="Right" Command="{Binding OpenPatternsCommand}">
+            <TextBlock Text="{Binding Strings.PatternsLink.Text}" />
+          </Button>
         </StackPanel>
         <ScrollViewer>
           <TextBlock Name="helpText" Text="{Binding Strings.Help.Text}" TextWrapping="Wrap" />

@@ -5,35 +5,29 @@
                 x:Class="GitUI.Avalonia.CommandsDialogs.GoToCommitWindow"
                 x:DataType="vm:GoToCommitViewModel"
                 Title="{Binding Strings.Title.PlainText}"
-                Width="560" MinWidth="460" SizeToContent="Height" CanMaximize="False">
-  <DockPanel>
-    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Button Name="goButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
-              Content="{Binding Strings.Go.AccessKeyText}" Command="{Binding GoCommand}" />
+                Width="604" MinWidth="460" SizeToContent="Height" CanMaximize="False">
+  <!-- The input last focused supplies the revision, as in FormGoToCommit. -->
+  <Grid Classes="form" Margin="12" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+    <Label Content="{Binding Strings.CommitExpression.AccessKeyText}" Target="commitExpressionTextBox" />
+    <TextBox Name="commitExpressionTextBox" Grid.Column="1" Text="{Binding CommitExpression}" />
+    <Button Name="goButton" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center" Classes="accent" IsDefault="True"
+            Content="{Binding Strings.Go.AccessKeyText}" Command="{Binding GoCommand}" />
+    <!-- Equivalent of the "Help" group box -->
+    <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="33,0,0,16" BorderThickness="1" CornerRadius="4" Padding="12,8"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <StackPanel Spacing="6">
+        <TextBlock Text="{Binding Strings.Help.Text}" FontWeight="SemiBold" />
+        <SelectableTextBlock Text="{Binding Strings.Examples.Text}" TextWrapping="Wrap" />
+        <Button Name="revParseLink" Classes="link" Command="{Binding OpenRevParseHelpCommand}">
+          <TextBlock Text="{Binding Strings.RevParseLink.PlainText}" />
+        </Button>
+      </StackPanel>
     </Border>
-    <StackPanel Margin="12" Spacing="8">
-      <!-- The input last focused supplies the revision, as in FormGoToCommit. -->
-      <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-        <Label Content="{Binding Strings.CommitExpression.AccessKeyText}" Target="commitExpressionTextBox" />
-        <TextBox Name="commitExpressionTextBox" Grid.Column="1" Text="{Binding CommitExpression}" />
-        <Label Grid.Row="1" Content="{Binding Strings.GoToTag.AccessKeyText}" Target="tagsComboBox" />
-        <ComboBox Name="tagsComboBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
-                  ItemsSource="{Binding Tags}" Text="{Binding TagText}" />
-        <Label Grid.Row="2" Content="{Binding Strings.GoToBranch.AccessKeyText}" Target="branchesComboBox" />
-        <ComboBox Name="branchesComboBox" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
-                  ItemsSource="{Binding Branches}" Text="{Binding BranchText}" />
-      </Grid>
-      <!-- Equivalent of the "Help" group box -->
-      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
-              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-        <StackPanel Spacing="6">
-          <TextBlock Text="{Binding Strings.Help.Text}" FontWeight="SemiBold" />
-          <SelectableTextBlock Text="{Binding Strings.Examples.Text}" TextWrapping="Wrap" />
-          <Button Name="revParseLink" Classes="link" Command="{Binding OpenRevParseHelpCommand}">
-            <TextBlock Text="{Binding Strings.RevParseLink.PlainText}" />
-          </Button>
-        </StackPanel>
-      </Border>
-    </StackPanel>
-  </DockPanel>
+    <Label Grid.Row="2" Content="{Binding Strings.GoToTag.AccessKeyText}" Target="tagsComboBox" />
+    <ComboBox Name="tagsComboBox" Grid.Row="2" Grid.Column="1" Margin="0,0,73,0" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding Tags}" Text="{Binding TagText}" />
+    <Label Grid.Row="3" Content="{Binding Strings.GoToBranch.AccessKeyText}" Target="branchesComboBox" />
+    <ComboBox Name="branchesComboBox" Grid.Row="3" Grid.Column="1" Margin="0,0,73,0" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding Branches}" Text="{Binding BranchText}" />
+  </Grid>
 </h:DialogWindow>

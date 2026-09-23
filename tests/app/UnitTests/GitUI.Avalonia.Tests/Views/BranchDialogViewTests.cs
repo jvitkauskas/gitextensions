@@ -49,7 +49,7 @@ public sealed class BranchDialogViewTests : HeadlessTest
     {
         MergeBranchViewModel viewModel = BranchDialogViewModelTests.CreateMerge(new BranchDialogViewModelTests.FakeMergeBranchHost(), new MergeBranchOptions(false, false, false, 20, ShowAdvanced: false));
         MergeBranchWindow window = Show(new MergeBranchWindow { DataContext = viewModel });
-        StackPanel advanced = window.FindControl<StackPanel>("advancedPanel")!;
+        Grid advanced = window.FindControl<Grid>("advancedPanel")!;
 
         advanced.IsVisible.Should().BeFalse();
         window.FindControl<CheckBox>("advancedCheckBox")!.IsChecked = true;

@@ -11,48 +11,69 @@
       <Button Name="okButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
               Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
     </Border>
-    <StackPanel Margin="12" Spacing="8">
-      <!-- Each filter is turned on by its check box, which enables its input. -->
-      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
-        <CheckBox Name="sinceCheckBox" Content="{Binding Strings.Since.AccessKeyText}" IsChecked="{Binding ByDateFrom}" />
-        <CalendarDatePicker Name="sinceDatePicker" Grid.Column="1" HorizontalAlignment="Stretch"
-                            SelectedDate="{Binding DateFrom}" IsEnabled="{Binding ByDateFrom}" />
-        <CheckBox Name="untilCheckBox" Grid.Row="1" Content="{Binding Strings.Until.AccessKeyText}" IsChecked="{Binding ByDateTo}" />
-        <CalendarDatePicker Name="untilDatePicker" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"
-                            SelectedDate="{Binding DateTo}" IsEnabled="{Binding ByDateTo}" />
-        <CheckBox Name="authorCheckBox" Grid.Row="2" Content="{Binding Strings.Author.AccessKeyText}" IsChecked="{Binding ByAuthor}" />
-        <TextBox Name="authorTextBox" Grid.Row="2" Grid.Column="1" Text="{Binding Author}" IsEnabled="{Binding ByAuthor}" />
-        <CheckBox Name="committerCheckBox" Grid.Row="3" Content="{Binding Strings.Committer.AccessKeyText}" IsChecked="{Binding ByCommitter}" />
-        <TextBox Name="committerTextBox" Grid.Row="3" Grid.Column="1" Text="{Binding Committer}" IsEnabled="{Binding ByCommitter}" />
-        <CheckBox Name="messageCheckBox" Grid.Row="4" Content="{Binding Strings.Message.AccessKeyText}" IsChecked="{Binding ByMessage}" />
-        <TextBox Name="messageTextBox" Grid.Row="4" Grid.Column="1" Text="{Binding Message}" IsEnabled="{Binding ByMessage}" />
-        <CheckBox Name="diffContentCheckBox" Grid.Row="5" Content="{Binding Strings.DiffContent.AccessKeyText}" IsChecked="{Binding ByDiffContent}"
-                  ToolTip.Tip="{Binding Strings.DiffContentToolTip.Text}" />
-        <TextBox Name="diffContentTextBox" Grid.Row="5" Grid.Column="1" Text="{Binding DiffContent}" IsEnabled="{Binding ByDiffContent}"
-                 ToolTip.Tip="{Binding Strings.DiffContentToolTip.Text}" />
-        <CheckBox Name="ignoreCaseCheckBox" Grid.Row="6" Grid.Column="1" Content="{Binding Strings.IgnoreCase.AccessKeyText}"
-                  IsChecked="{Binding IgnoreCase}" IsEnabled="{Binding CanIgnoreCase}" />
-        <CheckBox Name="limitCheckBox" Grid.Row="7" Content="{Binding Strings.Limit.AccessKeyText}" IsChecked="{Binding ByCommitsLimit}" />
-        <NumericUpDown Name="limitUpDown" Grid.Row="7" Grid.Column="1" HorizontalAlignment="Left" Width="160"
-                       Minimum="0" Maximum="1000000" Increment="10000" FormatString="0"
-                       Value="{Binding CommitsLimit}" IsEnabled="{Binding ByCommitsLimit}" />
-        <CheckBox Name="pathFilterCheckBox" Grid.Row="8" Content="{Binding Strings.PathFilter.AccessKeyText}" IsChecked="{Binding ByPathFilter}" />
-        <TextBox Name="pathFilterTextBox" Grid.Row="8" Grid.Column="1" Text="{Binding PathFilter}" IsEnabled="{Binding ByPathFilter}" />
-        <CheckBox Name="branchFilterCheckBox" Grid.Row="9" Content="{Binding Strings.Branches.AccessKeyText}"
-                  IsChecked="{Binding ByBranchFilter}" IsEnabled="{Binding CanFilterBranches}" />
-        <TextBox Name="branchFilterTextBox" Grid.Row="9" Grid.Column="1" Text="{Binding BranchFilter}" IsEnabled="{Binding ByBranchFilter}" />
-      </Grid>
-      <WrapPanel ItemSpacing="16" LineSpacing="4">
-        <CheckBox Name="currentBranchOnlyCheckBox" Content="{Binding Strings.CurrentBranchOnly.AccessKeyText}"
-                  IsChecked="{Binding ShowCurrentBranchOnly}" IsEnabled="{Binding CanShowCurrentBranchOnly}" />
-        <CheckBox Name="reflogCheckBox" Content="{Binding Strings.Reflog.AccessKeyText}" IsChecked="{Binding ShowReflogReferences}" />
-        <CheckBox Name="firstParentCheckBox" Content="{Binding Strings.OnlyFirstParent.AccessKeyText}" IsChecked="{Binding ShowOnlyFirstParent}" />
-        <CheckBox Name="hideMergesCheckBox" Content="{Binding Strings.HideMergeCommits.AccessKeyText}" IsChecked="{Binding HideMergeCommits}" />
-        <CheckBox Name="simplifyByDecorationCheckBox" Content="{Binding Strings.SimplifyByDecoration.AccessKeyText}" IsChecked="{Binding ShowSimplifyByDecoration}" />
-        <CheckBox Name="fullHistoryCheckBox" Content="{Binding Strings.FullHistory.AccessKeyText}" IsChecked="{Binding ShowFullHistory}" />
-        <CheckBox Name="simplifyMergesCheckBox" Content="{Binding Strings.SimplifyMerges.AccessKeyText}"
-                  IsChecked="{Binding ShowSimplifyMerges}" IsEnabled="{Binding ShowFullHistory}" />
-      </WrapPanel>
-    </StackPanel>
+    <!--
+      Equivalent of tableLayoutPanel1: each filter is a label, a bare check box (in a narrow column) that enables
+      the input, and the input; the options start in the check box column.
+    -->
+    <Grid Classes="form" Margin="12" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" RowSpacing="4"
+          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+      <Grid.Styles>
+        <Style Selector="CheckBox.bare">
+          <Setter Property="MinWidth" Value="0" />
+          <Setter Property="Padding" Value="0" />
+        </Style>
+      </Grid.Styles>
+      <Label Content="{Binding Strings.Since.AccessKeyText}" Target="sinceCheckBox" />
+      <CheckBox Name="sinceCheckBox" Grid.Column="1" Classes="bare" IsChecked="{Binding ByDateFrom}" />
+      <CalendarDatePicker Name="sinceDatePicker" Grid.Column="2" Width="200" HorizontalAlignment="Left"
+                          SelectedDate="{Binding DateFrom}" IsEnabled="{Binding ByDateFrom}" />
+      <Label Grid.Row="1" Content="{Binding Strings.Until.AccessKeyText}" Target="untilCheckBox" />
+      <CheckBox Name="untilCheckBox" Grid.Row="1" Grid.Column="1" Classes="bare" IsChecked="{Binding ByDateTo}" />
+      <CalendarDatePicker Name="untilDatePicker" Grid.Row="1" Grid.Column="2" Width="200" HorizontalAlignment="Left"
+                          SelectedDate="{Binding DateTo}" IsEnabled="{Binding ByDateTo}" />
+      <Label Grid.Row="2" Content="{Binding Strings.Author.AccessKeyText}" Target="authorCheckBox" />
+      <CheckBox Name="authorCheckBox" Grid.Row="2" Grid.Column="1" Classes="bare" IsChecked="{Binding ByAuthor}" />
+      <TextBox Name="authorTextBox" Grid.Row="2" Grid.Column="2" Text="{Binding Author}" IsEnabled="{Binding ByAuthor}" />
+      <Label Grid.Row="3" Content="{Binding Strings.Committer.AccessKeyText}" Target="committerCheckBox" />
+      <CheckBox Name="committerCheckBox" Grid.Row="3" Grid.Column="1" Classes="bare" IsChecked="{Binding ByCommitter}" />
+      <TextBox Name="committerTextBox" Grid.Row="3" Grid.Column="2" Text="{Binding Committer}" IsEnabled="{Binding ByCommitter}" />
+      <Label Grid.Row="4" Content="{Binding Strings.Message.AccessKeyText}" Target="messageCheckBox" />
+      <CheckBox Name="messageCheckBox" Grid.Row="4" Grid.Column="1" Classes="bare" IsChecked="{Binding ByMessage}" />
+      <TextBox Name="messageTextBox" Grid.Row="4" Grid.Column="2" Text="{Binding Message}" IsEnabled="{Binding ByMessage}" />
+      <Label Grid.Row="5" Content="{Binding Strings.DiffContent.AccessKeyText}" Target="diffContentCheckBox"
+             ToolTip.Tip="{Binding Strings.DiffContentToolTip.Text}" />
+      <CheckBox Name="diffContentCheckBox" Grid.Row="5" Grid.Column="1" Classes="bare" IsChecked="{Binding ByDiffContent}"
+                ToolTip.Tip="{Binding Strings.DiffContentToolTip.Text}" />
+      <TextBox Name="diffContentTextBox" Grid.Row="5" Grid.Column="2" Text="{Binding DiffContent}" IsEnabled="{Binding ByDiffContent}"
+               ToolTip.Tip="{Binding Strings.DiffContentToolTip.Text}" />
+      <CheckBox Name="ignoreCaseCheckBox" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.IgnoreCase.AccessKeyText}"
+                IsChecked="{Binding IgnoreCase}" IsEnabled="{Binding CanIgnoreCase}" />
+      <Label Grid.Row="7" Content="{Binding Strings.Limit.AccessKeyText}" Target="limitCheckBox" />
+      <CheckBox Name="limitCheckBox" Grid.Row="7" Grid.Column="1" Classes="bare" IsChecked="{Binding ByCommitsLimit}" />
+      <NumericUpDown Name="limitUpDown" Grid.Row="7" Grid.Column="2" HorizontalAlignment="Left" Width="160"
+                     Minimum="0" Maximum="1000000" Increment="10000" FormatString="0"
+                     Value="{Binding CommitsLimit}" IsEnabled="{Binding ByCommitsLimit}" />
+      <Label Grid.Row="8" Content="{Binding Strings.PathFilter.AccessKeyText}" Target="pathFilterCheckBox" />
+      <CheckBox Name="pathFilterCheckBox" Grid.Row="8" Grid.Column="1" Classes="bare" IsChecked="{Binding ByPathFilter}" />
+      <TextBox Name="pathFilterTextBox" Grid.Row="8" Grid.Column="2" Text="{Binding PathFilter}" IsEnabled="{Binding ByPathFilter}" />
+      <Label Grid.Row="9" Content="{Binding Strings.Branches.AccessKeyText}" Target="branchFilterCheckBox" />
+      <CheckBox Name="branchFilterCheckBox" Grid.Row="9" Grid.Column="1" Classes="bare"
+                IsChecked="{Binding ByBranchFilter}" IsEnabled="{Binding CanFilterBranches}" />
+      <TextBox Name="branchFilterTextBox" Grid.Row="9" Grid.Column="2" Text="{Binding BranchFilter}" IsEnabled="{Binding ByBranchFilter}" />
+      <CheckBox Name="currentBranchOnlyCheckBox" Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.CurrentBranchOnly.AccessKeyText}"
+                IsChecked="{Binding ShowCurrentBranchOnly}" IsEnabled="{Binding CanShowCurrentBranchOnly}" />
+      <CheckBox Name="reflogCheckBox" Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.Reflog.AccessKeyText}"
+                IsChecked="{Binding ShowReflogReferences}" />
+      <CheckBox Name="firstParentCheckBox" Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.OnlyFirstParent.AccessKeyText}"
+                IsChecked="{Binding ShowOnlyFirstParent}" />
+      <CheckBox Name="hideMergesCheckBox" Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.HideMergeCommits.AccessKeyText}"
+                IsChecked="{Binding HideMergeCommits}" />
+      <CheckBox Name="simplifyByDecorationCheckBox" Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.SimplifyByDecoration.AccessKeyText}"
+                IsChecked="{Binding ShowSimplifyByDecoration}" />
+      <CheckBox Name="fullHistoryCheckBox" Grid.Row="15" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.FullHistory.AccessKeyText}"
+                IsChecked="{Binding ShowFullHistory}" />
+      <CheckBox Name="simplifyMergesCheckBox" Grid.Row="16" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.SimplifyMerges.AccessKeyText}"
+                IsChecked="{Binding ShowSimplifyMerges}" IsEnabled="{Binding ShowFullHistory}" />
+    </Grid>
   </DockPanel>
 </h:DialogWindow>

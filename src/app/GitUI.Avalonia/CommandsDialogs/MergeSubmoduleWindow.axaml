@@ -8,17 +8,19 @@
                 Width="600" SizeToContent="Height" CanResize="False">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6">
-        <Button Name="stageCurrentButton" Content="{Binding Strings.StageCurrent.AccessKeyText}" Command="{Binding StageCurrentCommand}" />
-        <Button Name="checkoutBranchButton" Grid.Column="1" IsEnabled="{Binding CanCheckoutBranch}"
-                Content="{Binding Strings.CheckoutBranch.AccessKeyText}" Command="{Binding CheckoutBranchCommand}" />
+      <!-- The three buttons of FormMergeSubmodule share the width of the window. -->
+      <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
         <!-- As in FormMergeSubmodule, "Open submodule" is the accept button. -->
-        <Button Name="openSubmoduleButton" Grid.Column="3" Classes="accent" IsDefault="True" Command="{Binding OpenSubmoduleCommand}">
+        <Button Name="openSubmoduleButton" Classes="accent" HorizontalAlignment="Stretch" IsDefault="True" Command="{Binding OpenSubmoduleCommand}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Image Source="avares://GitUI.Avalonia/Assets/FolderSubmodule.png" Width="16" Height="16" />
             <AccessText Text="{Binding Strings.OpenSubmodule.AccessKeyText}" />
           </StackPanel>
         </Button>
+        <Button Name="checkoutBranchButton" Grid.Column="1" HorizontalAlignment="Stretch" IsEnabled="{Binding CanCheckoutBranch}"
+                Content="{Binding Strings.CheckoutBranch.AccessKeyText}" Command="{Binding CheckoutBranchCommand}" />
+        <Button Name="stageCurrentButton" Grid.Column="2" HorizontalAlignment="Stretch"
+                Content="{Binding Strings.StageCurrent.AccessKeyText}" Command="{Binding StageCurrentCommand}" />
       </Grid>
     </Border>
     <StackPanel Margin="12" Spacing="10">

@@ -15,10 +15,10 @@
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
-        <Button Name="okButton" Classes="accent" IsDefault="True"
-                Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
         <Button Name="cancelButton" IsCancel="True"
                 Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+        <Button Name="okButton" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
       </StackPanel>
     </Border>
     <Grid Margin="9" ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*" ColumnSpacing="6" RowSpacing="4">

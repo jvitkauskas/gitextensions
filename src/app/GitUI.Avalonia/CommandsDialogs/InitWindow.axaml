@@ -5,6 +5,7 @@
                 x:Class="GitUI.Avalonia.CommandsDialogs.InitWindow"
                 x:DataType="vm:InitViewModel"
                 Title="{Binding Strings.Title.PlainText}"
+                ManualSectionSubfolder="getting_started" ManualSectionAnchorName="create-new-repository"
                 Width="542" MinWidth="450" SizeToContent="Height" CanMaximize="False">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
@@ -16,8 +17,12 @@
         <Label Content="{Binding Strings.Directory.AccessKeyText}" Target="directoryComboBox" />
         <ComboBox Name="directoryComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
                   ItemsSource="{Binding RecentDirectories}" Text="{Binding Directory}" />
-        <Button Name="browseButton" Grid.Column="2" MinWidth="100"
-                Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+        <Button Name="browseButton" Grid.Column="2" MinWidth="100" Command="{Binding BrowseCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Browse.AccessKeyText}" />
+          </StackPanel>
+        </Button>
       </Grid>
       <!-- Equivalent of the "Repository type" group box -->
       <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
