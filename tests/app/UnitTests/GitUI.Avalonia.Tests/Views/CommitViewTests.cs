@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Styling;
@@ -6,6 +6,8 @@ using Avalonia.Threading;
 using GitUI.Avalonia.CommandsDialogs.CommitDialog;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
+using GitUI.Presentation.Editor;
+using GitUI.Presentation.Services;
 
 namespace GitUI.AvaloniaTests.Views;
 
@@ -86,6 +88,74 @@ public sealed class CommitViewTests : HeadlessTest
         conventional.Items.OfType<MenuItem>().Select(i => i.Header).Should().StartWith(["build", "chore", "ci"]).And.Contain("[skip ci]");
         items.OfType<MenuItem>().First().RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
         viewModel.Message.Text.Should().Be("From a plugin");
+        window.Close();
+    });
+
+    [Test]
+    public Task Hotkeys_move_the_focus_and_add_the_selection_of_the_diff_to_the_message() => OnUiThreadAsync(() =>
+    {
+        (CommitViewModel viewModel, _) = CommitViewModelTests.Create(new CommitViewModelTests.FakeHost { StoredMessage = "" });
+        CommitWindow window = new()
+        {
+            DataContext = viewModel,
+            Hotkeys =
+            [
+                new HotkeyBinding((int)CommitHotkeyCommand.FocusSelectedDiff, 0x32 /* D2 */ | HotkeyBinding.Control),
+                new HotkeyBinding((int)CommitHotkeyCommand.FocusStagedFiles, 0x33 /* D3 */ | HotkeyBinding.Control),
+                new HotkeyBinding((int)CommitHotkeyCommand.FocusCommitMessage, 0x34 /* D4 */ | HotkeyBinding.Control),
+                new HotkeyBinding((int)CommitHotkeyCommand.AddSelectionToCommitMessage, 0x43 /* C */),
+                new HotkeyBinding((int)CommitHotkeyCommand.SelectNext, 0x4E /* N */ | HotkeyBinding.Control),
+            ],
+        };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.Activate();
+
+        window.KeyPressQwerty(PhysicalKey.Digit4, RawInputModifiers.Control);
+        window.MessageEditor.IsKeyboardFocusWithin.Should().BeTrue();
+        window.KeyPressQwerty(PhysicalKey.N, RawInputModifiers.Control);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Staged.SelectedEntry!.Item.Name.Should().Be("c.txt", "from the message, the next staged file is selected");
+        window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.None);
+        window.MessageEditor.Editor.Text.Should().BeEmpty("without the focus in the diff, C is not a hotkey");
+
+        viewModel.Diff.Show(new FileViewContent(FileViewKind.Diff, "@@ -1 +1 @@\n+added line\n"));
+        Dispatcher.UIThread.RunJobs();
+        window.KeyPressQwerty(PhysicalKey.Digit2, RawInputModifiers.Control);
+        window.DiffViewer.IsKeyboardFocusWithin.Should().BeTrue();
+        AvaloniaEdit.TextEditor diffEditor = window.DiffViewer.TextView.Editor;
+        diffEditor.Select(diffEditor.Text.IndexOf("added", StringComparison.Ordinal), "added line".Length);
+        window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.None);
+        window.MessageEditor.Editor.Text.Should().Be("added line\n");
+        window.MessageEditor.Editor.CaretOffset.Should().Be("added line\n".Length);
+
+        window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Control);
+        window.StagedFiles.IsKeyboardFocusWithin.Should().BeTrue();
+        window.Close();
+    });
+
+    [Test]
+    public Task The_conventional_commit_hotkey_opens_the_menu_and_inserts_the_scope() => OnUiThreadAsync(() =>
+    {
+        (CommitViewModel viewModel, _) = CommitViewModelTests.Create(new CommitViewModelTests.FakeHost { StoredMessage = "" });
+        CommitWindow window = new()
+        {
+            DataContext = viewModel,
+            Hotkeys = [new HotkeyBinding((int)CommitHotkeyCommand.ConventionalCommit_PrefixMessageWithScope, 0x54 /* T */ | HotkeyBinding.Control | HotkeyBinding.Shift)],
+        };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.Activate();
+
+        window.KeyPressQwerty(PhysicalKey.T, RawInputModifiers.Control | RawInputModifiers.Shift);
+        Dispatcher.UIThread.RunJobs();
+
+        MenuItem conventional = window.CommitTemplatesMenuItems.OfType<MenuItem>().Single(i => i.Items.Count > 0);
+        conventional.IsSubMenuOpen.Should().BeTrue();
+        MenuItem feat = conventional.Items.OfType<MenuItem>().Single(i => (string?)i.Header == ConventionalCommits.Feat);
+        feat.IsSelected.Should().BeTrue("it is focused once its popup is shown");
+        feat.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        viewModel.Message.Text.Should().Be("feat(): ");
         window.Close();
     });
 

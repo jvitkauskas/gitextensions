@@ -233,6 +233,31 @@ public sealed class CommitViewModelTests
     }
 
     [Test]
+    public async Task Hotkeys_stage_all_and_move_the_selection_in_a_loop()
+    {
+        FakeHost host = new();
+        (CommitViewModel viewModel, DiffViewModelTests.FakeViewerHost viewer) = Create(host);
+        await viewModel.InitializeAsync();
+
+        viewModel.ExecuteHotkeyCommand((int)CommitHotkeyCommand.SelectNext).Should().BeTrue();
+        viewModel.Unstaged.SelectedEntry!.Item.Name.Should().Be("b.txt");
+        viewModel.ExecuteHotkeyCommand((int)CommitHotkeyCommand.SelectNext_AlternativeHotkey1).Should().BeTrue();
+        viewModel.Unstaged.SelectedEntry!.Item.Name.Should().Be("a.txt", "the selection loops to the first file");
+        viewModel.ExecuteHotkeyCommand((int)CommitHotkeyCommand.SelectPrevious_AlternativeHotkey2).Should().BeTrue();
+        viewModel.Unstaged.SelectedEntry!.Item.Name.Should().Be("b.txt", "and back to the last one");
+        viewer.Requested.Should().Equal("a.txt", "b.txt", "a.txt", "b.txt");
+
+        viewModel.MoveSelection(backwards: false, messageFocused: true);
+        viewModel.Staged.SelectedEntry!.Item.Name.Should().Be("c.txt", "from the message, the staged files are selected");
+        viewModel.Unstaged.SelectedEntries.Should().BeEmpty();
+
+        viewModel.ExecuteHotkeyCommand((int)CommitHotkeyCommand.StageAll).Should().BeTrue();
+        host.Staged.Should().Equal("a.txt", "b.txt");
+        viewModel.ExecuteHotkeyCommand((int)CommitHotkeyCommand.StageAll).Should().BeFalse("nothing is left to stage");
+        viewModel.ExecuteHotkeyCommand((int)CommitHotkeyCommand.FocusCommitMessage).Should().BeFalse("the view moves the focus");
+    }
+
+    [Test]
     public async Task Merge_conflicts_block_the_commit()
     {
         FakeHost host = new() { Conflicts = true };

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -18,6 +18,9 @@ public partial class CommitWindow : DialogWindow
 {
     private CommitViewModel? _viewModel;
     private CommitMessageColorizer? _colorizer;
+
+    /// <summary>As <c>_insertScopeParentheses</c>: the Conventional Commits menu was opened by the hotkey with the scope.</summary>
+    private bool _insertScope;
 
     public CommitWindow()
     {
@@ -68,6 +71,7 @@ public partial class CommitWindow : DialogWindow
         author.LostFocus += (_, _) => _viewModel?.UpdateAuthorInfo();
         ((MenuFlyout)commitMessageButton.Flyout!).Opening += (_, _) => FillCommitMessageMenu();
         ((MenuFlyout)commitTemplatesButton.Flyout!).Opening += (_, _) => FillCommitTemplatesMenu();
+        ((MenuFlyout)commitTemplatesButton.Flyout!).Closed += (_, _) => _insertScope = false;
     }
 
     public FileStatusListView UnstagedFiles => unstagedFiles;
@@ -76,7 +80,12 @@ public partial class CommitWindow : DialogWindow
 
     public TextEditorView MessageEditor => message;
 
+    public FileViewerView DiffViewer => diff;
+
     public TextBlock Watermark => messageWatermark;
+
+    /// <summary>The items of the templates menu, as last filled (e.g. for tests).</summary>
+    public IReadOnlyList<object> CommitTemplatesMenuItems => [.. ((MenuFlyout)commitTemplatesButton.Flyout!).Items.OfType<object>()];
 
     /// <summary>The items of the message menu (e.g. for tests).</summary>
     public IReadOnlyList<object> CommitMessageMenuItems => [.. ((MenuFlyout)commitMessageButton.Flyout!).Items.OfType<object>()];
@@ -108,6 +117,139 @@ public partial class CommitWindow : DialogWindow
         UpdateFilterImages();
         UpdateWatermark();
         UpdateCaret();
+    }
+
+    /// <summary>As <c>ExecuteCommand</c>: the hotkeys of the view; the others are executed by the view model.</summary>
+    protected override bool ExecuteHotkeyCommand(int commandCode)
+    {
+        if (_viewModel is null)
+        {
+            return false;
+        }
+
+        switch ((CommitHotkeyCommand)commandCode)
+        {
+            case CommitHotkeyCommand.FocusUnstagedFiles:
+                return FocusFiles(unstagedFiles);
+            case CommitHotkeyCommand.FocusStagedFiles:
+                return FocusFiles(stagedFiles);
+            case CommitHotkeyCommand.FocusSelectedDiff:
+                diff.TextView.Editor.TextArea.Focus();
+                return true;
+            case CommitHotkeyCommand.FocusCommitMessage:
+                message.Editor.TextArea.Focus();
+                return true;
+            case CommitHotkeyCommand.AddSelectionToCommitMessage:
+                return AddSelectionToCommitMessage();
+            case CommitHotkeyCommand.ConventionalCommit_PrefixMessage:
+            case CommitHotkeyCommand.ConventionalCommit_PrefixMessageWithScope:
+                OpenConventionalCommitMenu(insertScope: commandCode == (int)CommitHotkeyCommand.ConventionalCommit_PrefixMessageWithScope);
+                return true;
+            case CommitHotkeyCommand.SelectNext:
+            case CommitHotkeyCommand.SelectNext_AlternativeHotkey1:
+            case CommitHotkeyCommand.SelectNext_AlternativeHotkey2:
+            case CommitHotkeyCommand.SelectPrevious:
+            case CommitHotkeyCommand.SelectPrevious_AlternativeHotkey1:
+            case CommitHotkeyCommand.SelectPrevious_AlternativeHotkey2:
+                _viewModel.MoveSelection(
+                    backwards: commandCode >= (int)CommitHotkeyCommand.SelectPrevious,
+                    messageFocused: message.IsKeyboardFocusWithin);
+                return true;
+            default:
+                return base.ExecuteHotkeyCommand(commandCode);
+        }
+
+        static bool FocusFiles(FileStatusListView list)
+        {
+            // The selected file has the focus, as the focused node of the WinForms tree.
+            TreeView tree = list.Tree;
+            Control? item = tree.SelectedItem is { } selected ? tree.ContainerFromItem(selected) : null;
+            (item ?? tree).Focus(NavigationMethod.Tab);
+            return true;
+        }
+    }
+
+    /// <summary>As <c>AddSelectionToCommitMessage</c>: the text selected in the diff replaces the selection of the message.</summary>
+    private bool AddSelectionToCommitMessage()
+    {
+        AvaloniaEdit.TextEditor diffEditor = diff.TextView.Editor;
+        if (!diff.IsKeyboardFocusWithin || _viewModel?.IsMessageEditable != true)
+        {
+            return false;
+        }
+
+        string selectedText = diffEditor.SelectedText;
+        if (string.IsNullOrEmpty(selectedText))
+        {
+            return false;
+        }
+
+        AvaloniaEdit.TextEditor editor = message.Editor;
+        if (editor.SelectionLength == 0)
+        {
+            selectedText += '\n';
+        }
+
+        int selectionStart = editor.SelectionStart;
+        editor.Document.Replace(selectionStart, editor.SelectionLength, selectedText);
+        editor.Select(selectionStart + selectedText.Length, 0);
+        return true;
+    }
+
+    /// <summary>As <c>OpenConventionalCommitMenu</c>: the Conventional Commits menu, with <c>feat</c> selected.</summary>
+    public void OpenConventionalCommitMenu(bool insertScope)
+    {
+        if (_viewModel?.IsMessageEditable != true)
+        {
+            return;
+        }
+
+        _insertScope = insertScope;
+        MenuFlyout flyout = (MenuFlyout)commitTemplatesButton.Flyout!;
+        flyout.ShowAt(commitTemplatesButton);
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (flyout.Items.OfType<MenuItem>().LastOrDefault(i => i.Items.Count > 0) is not { } conventional)
+                {
+                    return;
+                }
+
+                conventional.IsSelected = true;
+                conventional.AddHandler(MenuItem.SubmenuOpenedEvent, OnSubmenuOpened);
+                conventional.IsSubMenuOpen = true;
+
+                void OnSubmenuOpened(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+                {
+                    conventional.RemoveHandler(MenuItem.SubmenuOpenedEvent, OnSubmenuOpened);
+                    Dispatcher.UIThread.Post(
+                        () =>
+                        {
+                            if (conventional.Items.OfType<MenuItem>().FirstOrDefault(i => (string?)i.Header == ConventionalCommits.Feat) is not { } feat)
+                            {
+                                return;
+                            }
+
+                            feat.IsSelected = true;
+                            if (TopLevel.GetTopLevel(feat) is not null)
+                            {
+                                feat.Focus(NavigationMethod.Directional);
+                                return;
+                            }
+
+                            // The popup of the submenu is shown after its layout.
+                            feat.AttachedToVisualTree += OnAttached;
+
+                            void OnAttached(object? sender, global::Avalonia.VisualTreeAttachmentEventArgs e)
+                            {
+                                feat.AttachedToVisualTree -= OnAttached;
+                                Dispatcher.UIThread.Post(() => feat.Focus(NavigationMethod.Directional), DispatcherPriority.Loaded);
+                            }
+                        },
+                        DispatcherPriority.Loaded);
+                }
+            },
+            DispatcherPriority.Loaded);
     }
 
     /// <summary>As <c>FormatAllText</c>: the edits of <see cref="CommitMessageFormatter"/>, as one undo step.</summary>
@@ -213,6 +355,7 @@ public partial class CommitWindow : DialogWindow
         }
 
         CommitViewModel viewModel = _viewModel;
+        bool insertScope = _insertScope;
         MenuFlyout flyout = (MenuFlyout)commitTemplatesButton.Flyout!;
         flyout.Items.Clear();
         (IReadOnlyList<GitCommands.CommitTemplateItem> registered, IReadOnlyList<GitCommands.CommitTemplateItem> fromSettings) = viewModel.GetCommitTemplates();
@@ -235,7 +378,7 @@ public partial class CommitWindow : DialogWindow
         foreach (string type in ConventionalCommits.HeaderTypes)
         {
             MenuItem item = new() { Header = type };
-            item.Click += (_, _) => viewModel.ApplyConventionalType(type);
+            item.Click += (_, _) => viewModel.ApplyConventionalType(type, insertScope);
             conventional.Items.Add(item);
         }
 

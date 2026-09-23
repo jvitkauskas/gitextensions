@@ -61,6 +61,7 @@ internal static partial class AvaloniaDialogs
                 });
                 commands.PostRepositoryChanged += onRepositoryChanged;
                 window.Closed += (_, _) => commands.PostRepositoryChanged -= onRepositoryChanged;
+                window.Hotkeys = LoadHotkeys(commands, FormCommit.HotkeySettingsName);
                 window.DataContext = viewModel;
                 return window;
             },

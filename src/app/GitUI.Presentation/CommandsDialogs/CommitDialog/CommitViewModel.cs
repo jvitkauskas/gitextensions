@@ -451,6 +451,59 @@ public sealed partial class CommitViewModel : DialogViewModel
         }
     }
 
+    /// <summary>
+    ///  As <c>ExecuteCommand</c>: the hotkeys that need no view (the view handles the focus, the selection of the diff and
+    ///  the menus).
+    /// </summary>
+    public override bool ExecuteHotkeyCommand(int commandCode)
+    {
+        switch ((CommitHotkeyCommand)commandCode)
+        {
+            case CommitHotkeyCommand.StageAll:
+                if (!Unstaged.AllEntries.Any())
+                {
+                    return false;
+                }
+
+                StageAll();
+                return true;
+            case CommitHotkeyCommand.OpenWithDifftool:
+                _currentFilesList.OpenWithDifftoolCommand.Execute(DifftoolKind.FirstToSelected);
+                return true;
+            case CommitHotkeyCommand.CreateBranch:
+                CreateBranch();
+                return true;
+            case CommitHotkeyCommand.Refresh:
+                RescanChanges();
+                return true;
+            case CommitHotkeyCommand.SelectNext:
+            case CommitHotkeyCommand.SelectNext_AlternativeHotkey1:
+            case CommitHotkeyCommand.SelectNext_AlternativeHotkey2:
+                MoveSelection(backwards: false, messageFocused: false);
+                return true;
+            case CommitHotkeyCommand.SelectPrevious:
+            case CommitHotkeyCommand.SelectPrevious_AlternativeHotkey1:
+            case CommitHotkeyCommand.SelectPrevious_AlternativeHotkey2:
+                MoveSelection(backwards: true, messageFocused: false);
+                return true;
+            default:
+                return base.ExecuteHotkeyCommand(commandCode);
+        }
+    }
+
+    /// <summary>As <c>MoveSelection</c>: the next or previous file of the current list (the staged one from the message), looping.</summary>
+    public void MoveSelection(bool backwards, bool messageFocused)
+    {
+        if (messageFocused)
+        {
+            _currentFilesList = Staged;
+        }
+
+        FileStatusListViewModel list = _currentFilesList;
+        list.SelectNextItem(backwards, loop: true);
+        ApplySelection(list);
+    }
+
     [RelayCommand]
     private void RescanChanges()
     {

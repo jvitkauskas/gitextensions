@@ -178,8 +178,8 @@ public sealed partial class FileStatusListViewModel : ObservableObject
         }
     }
 
-    /// <summary>As <c>SelectNextItem</c> (without looping): the next or previous file.</summary>
-    public void SelectNextItem(bool backwards)
+    /// <summary>As <c>SelectNextItem</c>: the next or previous file, with <paramref name="loop"/> from the last to the first.</summary>
+    public void SelectNextItem(bool backwards, bool loop = false)
     {
         List<FileStatusNode> files = [.. Nodes.SelectMany(n => n.DescendantsAndSelf()).Where(n => n.Entry is not null)];
         if (files.Count == 0)
@@ -188,7 +188,10 @@ public sealed partial class FileStatusListViewModel : ObservableObject
         }
 
         int index = SelectedNodes.Count == 0 ? -1 : files.IndexOf(SelectedNodes[^1]);
-        int next = index < 0 ? 0 : Math.Clamp(index + (backwards ? -1 : 1), 0, files.Count - 1);
+        int next = index + (backwards ? -1 : 1);
+        next = index < 0 ? 0
+            : loop ? (next + files.Count) % files.Count
+            : Math.Clamp(next, 0, files.Count - 1);
         SetSelection([files[next]]);
     }
 

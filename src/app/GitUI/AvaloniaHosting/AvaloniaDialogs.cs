@@ -13,8 +13,10 @@ using GitUI.CommandsDialogs.CommitDialog;
 using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Properties;
+using ResourceManager;
 
 namespace GitUI.AvaloniaHosting;
 
@@ -122,6 +124,11 @@ internal static partial class AvaloniaDialogs
         window.PositionStore = WindowPositionStore.Instance;
         return AvaloniaDialogHost.ShowDialog(window, owner?.Handle ?? 0);
     }
+
+    /// <summary>As <c>GitExtensionsForm.LoadHotkeys</c>: the configured hotkeys of the form's setting.</summary>
+    private static IReadOnlyList<HotkeyBinding> LoadHotkeys(IGitUICommands commands, string hotkeySettingsName)
+        => [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(hotkeySettingsName)
+            .Select(hotkey => new HotkeyBinding(hotkey.CommandCode, (int)hotkey.KeyData))];
 
     private static AvaloniaUiOptions GetOptions()
     {

@@ -15,7 +15,7 @@ namespace GitUI.Avalonia.Hosting;
 ///  <list type="bullet">
 ///   <item>Closes itself when its <see cref="DialogViewModel"/> requests it, and on Escape (like <c>GitExtensionsForm</c>).</item>
 ///   <item>Restores and saves its size and position under <see cref="PositionName"/> (like <c>WindowPositionManager</c>).</item>
-///   <item>Executes configured <see cref="Hotkeys"/> through <see cref="DialogViewModel.ExecuteHotkeyCommand"/>.</item>
+///   <item>Executes configured <see cref="Hotkeys"/> through <see cref="ExecuteHotkeyCommand"/>, before the focused control.</item>
 ///  </list>
 /// </remarks>
 public class DialogWindow : Window
@@ -38,6 +38,9 @@ public class DialogWindow : Window
         {
             Win32Properties.AddWndProcHookCallback(this, WndProcHook);
         }
+
+        // As ProcessCmdKey: the hotkeys come before the focused control (which gets the key if the command is not executed).
+        AddHandler(KeyDownEvent, OnPreviewKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
     }
 
     /// <summary>
@@ -153,15 +156,27 @@ public class DialogWindow : Window
             openManual(ManualSectionSubfolder, ManualSectionAnchorName);
             return;
         }
+    }
 
-        if (Hotkeys.Count > 0 && _viewModel is not null)
+    /// <summary>
+    ///  Executes a hotkey command, by default through <see cref="DialogViewModel.ExecuteHotkeyCommand"/>; a dialog overrides
+    ///  it for the commands of its view (e.g. moving the focus).
+    /// </summary>
+    /// <returns><see langword="true"/> if the command was executed (the key then does not reach the focused control).</returns>
+    protected virtual bool ExecuteHotkeyCommand(int commandCode) => _viewModel?.ExecuteHotkeyCommand(commandCode) == true;
+
+    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || Hotkeys.Count == 0)
         {
-            int keyData = KeyMapping.ToKeyData(e.Key, e.KeyModifiers);
-            HotkeyBinding? hotkey = keyData == 0 ? null : Hotkeys.FirstOrDefault(h => h.KeyData == keyData);
-            if (hotkey is not null && _viewModel.ExecuteHotkeyCommand(hotkey.CommandCode))
-            {
-                e.Handled = true;
-            }
+            return;
+        }
+
+        int keyData = KeyMapping.ToKeyData(e.Key, e.KeyModifiers);
+        HotkeyBinding? hotkey = keyData == 0 ? null : Hotkeys.FirstOrDefault(h => h.KeyData == keyData);
+        if (hotkey is not null && ExecuteHotkeyCommand(hotkey.CommandCode))
+        {
+            e.Handled = true;
         }
     }
 
