@@ -109,8 +109,10 @@ order, group boxes and icons). Deliberate differences:
   `FormViewPatch`, the number boxes of `FormRevisionFilter`).
 - `FormStash` has a refresh button for its F5 hotkey.
 
-Not ported yet: the options toolbar that the WinForms `FileViewer` shows when the mouse moves over it (whitespace, context
-lines, encoding, settings), in every window with a file viewer or editor.
+The options toolbar that the WinForms `FileViewer` shows when the mouse moves over it is ported in `FileViewerView` (next and
+previous change, context lines, entire file, nonprinting characters, whitespace, encoding, settings; the options are saved in
+`AppSettings` as the WinForms viewer saves them). Not ported yet: its syntax highlighting of diffs, its context menu (copy patch,
+find, stage lines, ...), and the toolbar of the file editors (which use `TextEditorView` directly).
 
 ## Translations
 

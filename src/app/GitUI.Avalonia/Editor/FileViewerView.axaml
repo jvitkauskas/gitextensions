@@ -2,12 +2,84 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ed="using:GitUI.Avalonia.Editor"
              xmlns:vm="using:GitUI.Presentation.Editor"
+             xmlns:gs="using:GitCommands.Settings"
              x:Class="GitUI.Avalonia.Editor.FileViewerView"
              x:DataType="vm:FileViewerViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border#toolbar Button, Border#toolbar ToggleButton">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border#toolbar Button, Border#toolbar ToggleButton:unchecked">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border#toolbar Image">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+    </Style>
+    <Style Selector="Border#toolbar Separator">
+      <Setter Property="Width" Value="1" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="Margin" Value="2,0" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+  </UserControl.Styles>
   <Panel>
     <ed:TextEditorView Name="textView" DataContext="{Binding Editor}" />
     <ScrollViewer Name="imageViewer" IsVisible="False" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
       <Image Name="image" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top" />
     </ScrollViewer>
+    <!-- Equivalent of fileviewerToolbar: shown at the top right while the mouse moves over the text. -->
+    <Border Name="toolbar" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,40,0" Padding="2" CornerRadius="0,0,3,3"
+            IsVisible="False" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1,0,1,1">
+      <StackPanel Orientation="Horizontal" Spacing="1">
+        <Button Name="nextChangeButton" ToolTip.Tip="{Binding Strings.NextChange.Text}" IsVisible="{Binding IsDiff}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ArrowDown.png" />
+        </Button>
+        <Button Name="previousChangeButton" ToolTip.Tip="{Binding Strings.PreviousChange.Text}" IsVisible="{Binding IsDiff}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ArrowUp.png" />
+        </Button>
+        <Separator IsVisible="{Binding IsDiff}" />
+        <Button Name="increaseContextLinesButton" ToolTip.Tip="{Binding Strings.IncreaseContextLines.Text}" IsVisible="{Binding IsDiff}"
+                Command="{Binding IncreaseContextLinesCommand}" IsEnabled="{Binding !Settings.ShowEntireFile}">
+          <Image Source="avares://GitUI.Avalonia/Assets/NumberOfLinesIncrease.png" />
+        </Button>
+        <Button Name="decreaseContextLinesButton" ToolTip.Tip="{Binding Strings.DecreaseContextLines.Text}" IsVisible="{Binding IsDiff}"
+                Command="{Binding DecreaseContextLinesCommand}" IsEnabled="{Binding !Settings.ShowEntireFile}">
+          <Image Source="avares://GitUI.Avalonia/Assets/NumberOfLinesDecrease.png" />
+        </Button>
+        <Separator IsVisible="{Binding IsDiff}" />
+        <ToggleButton Name="showEntireFileButton" ToolTip.Tip="{Binding Strings.ShowEntireFile.Text}" IsVisible="{Binding IsDiff}"
+                      IsChecked="{Binding Settings.ShowEntireFile, Mode=OneWay}" Command="{Binding ToggleShowEntireFileCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ShowEntireFile.png" />
+        </ToggleButton>
+        <ToggleButton Name="showNonPrintingCharsButton" ToolTip.Tip="{Binding Strings.ShowNonPrintingChars.Text}"
+                      IsChecked="{Binding Settings.ShowNonPrintingChars, Mode=OneWay}" Command="{Binding ToggleNonPrintingCharsCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ShowWhitespace.png" />
+        </ToggleButton>
+        <ToggleButton Name="ignoreWhitespaceAtEolButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceAtEol.Text}" IsVisible="{Binding IsDiff}"
+                      IsChecked="{Binding IgnoresWhitespaceAtEol, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
+                      CommandParameter="{x:Static gs:IgnoreWhitespaceKind.Eol}">
+          <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreEol.png" />
+        </ToggleButton>
+        <ToggleButton Name="ignoreWhitespaceChangesButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceChanges.Text}" IsVisible="{Binding IsDiff}"
+                      IsChecked="{Binding IgnoresWhitespaceChanges, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
+                      CommandParameter="{x:Static gs:IgnoreWhitespaceKind.Change}">
+          <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnore.png" />
+        </ToggleButton>
+        <ToggleButton Name="ignoreAllWhitespaceButton" ToolTip.Tip="{Binding Strings.IgnoreAllWhitespaceChanges.Text}" IsVisible="{Binding IsDiff}"
+                      IsChecked="{Binding IgnoresAllWhitespace, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
+                      CommandParameter="{x:Static gs:IgnoreWhitespaceKind.AllSpace}">
+          <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreAll.png" />
+        </ToggleButton>
+        <ComboBox Name="encodingComboBox" MinWidth="120" MaxWidth="200" Padding="4,1" VerticalAlignment="Center"
+                  ItemsSource="{Binding Encodings}" SelectedItem="{Binding SelectedEncoding}" />
+        <Button Name="settingsButton" ToolTip.Tip="{Binding Strings.Settings.Text}" Command="{Binding OpenSettingsCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" />
+        </Button>
+      </StackPanel>
+    </Border>
   </Panel>
 </UserControl>

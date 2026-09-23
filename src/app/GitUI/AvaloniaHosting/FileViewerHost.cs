@@ -5,6 +5,7 @@ using GitCommands.Settings;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
+using GitUI.Avalonia.Hosting;
 using GitUI.Editor.Diff;
 using GitUI.Presentation.Editor;
 using GitUI.Presentation.Translations;
@@ -32,26 +33,50 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
 
     private static bool UseGitColoring => AppSettings.UseGitColoring.Value;
 
-    private Encoding Encoding => Module.FilesEncoding;
+    /// <summary>As <c>encodingToolStripComboBox_SelectedIndexChanged</c>: the chosen encoding, or the files encoding.</summary>
+    private Encoding GetEncoding(string? encodingName)
+        => encodingName is null
+            ? Module.FilesEncoding
+            : AppSettings.AvailableEncodings.Values.FirstOrDefault(e => e.EncodingName == encodingName) ?? Module.FilesEncoding;
 
-    public async Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, CancellationToken cancellationToken)
+    public FileViewerSettings Settings
+    {
+        get => new(AppSettings.ShowNonPrintingChars.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, AppSettings.IgnoreWhitespaceKind.Value);
+        set
+        {
+            AppSettings.ShowNonPrintingChars.Value = value.ShowNonPrintingChars;
+            AppSettings.ShowEntireFile.Value = value.ShowEntireFile;
+            AppSettings.NumberOfContextLines = value.NumberOfContextLines;
+            AppSettings.IgnoreWhitespaceKind.Value = value.IgnoreWhitespace;
+        }
+    }
+
+    public IReadOnlyList<string> AvailableEncodings => [.. AppSettings.AvailableEncodings.Values.Select(e => e.EncodingName)];
+
+    public string FilesEncoding => Module.FilesEncoding.EncodingName;
+
+    /// <summary>As <c>settingsButton_Click</c>.</summary>
+    public void OpenSettings()
+        => AvaloniaUi.RunInHostContext(() => commands.StartSettingsDialog(owner: null, CommandsDialogs.SettingsDialog.Pages.DiffViewerSettingsPage.GetPageReference()));
+
+    public async Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, string? encodingName, CancellationToken cancellationToken)
     {
         await TaskScheduler.Default;
-        FileViewContent content = GetChanges(entry, cancellationToken);
+        FileViewContent content = GetChanges(entry, GetEncoding(encodingName), cancellationToken);
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
         return content;
     }
 
-    public async Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, CancellationToken cancellationToken)
+    public async Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, string? encodingName, CancellationToken cancellationToken)
     {
         await TaskScheduler.Default;
-        FileViewContent content = GetGitItem(file, objectId, cancellationToken);
+        FileViewContent content = GetGitItem(file, objectId, GetEncoding(encodingName), cancellationToken);
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
         return content;
     }
 
     /// <summary>As <c>ViewChangesAsync</c>.</summary>
-    private FileViewContent GetChanges(FileStatusEntry entry, CancellationToken cancellationToken)
+    private FileViewContent GetChanges(FileStatusEntry entry, Encoding encoding, CancellationToken cancellationToken)
     {
         GitItemStatus item = entry.Item;
         if (item.IsStatusOnly)
@@ -66,7 +91,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
         if (!item.IsSubmodule && (item.IsNew || firstId.IsZero || (!item.IsDeleted && FileHelper.IsImage(item.Name))))
         {
             // View blob guid from revision, or file for worktree
-            return GetGitItem(item, secondId, cancellationToken);
+            return GetGitItem(item, secondId, encoding, cancellationToken);
         }
 
         if (item.IsRangeDiff || !string.IsNullOrWhiteSpace(item.GrepString))
@@ -76,7 +101,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
 
         if (firstId == ObjectId.CombinedDiffId)
         {
-            bool success = Module.GetCombinedDiffContent(secondId, item.Name, GetExtraDiffArguments(isCombinedDiff: true), Encoding, out string diffOfConflict,
+            bool success = Module.GetCombinedDiffContent(secondId, item.Name, GetExtraDiffArguments(isCombinedDiff: true), encoding, out string diffOfConflict,
                 useGitColoring: UseGitColoring,
                 commandConfiguration: CombinedDiffHighlightService.GetGitCommandConfiguration(Module, UseGitColoring),
                 cancellationToken);
@@ -107,14 +132,14 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
         }
 
         // Diff of a text file (difftastic is not ported yet, the patch is shown instead).
-        string patch = ThreadHelper.JoinableTaskFactory.Run(() => GetSelectedPatchAsync(item, firstId, secondId, cancellationToken)) ?? "";
+        string patch = ThreadHelper.JoinableTaskFactory.Run(() => GetSelectedPatchAsync(item, firstId, secondId, encoding, cancellationToken)) ?? "";
         return Diff(patch);
 
         static FileViewContent Diff(string text) => new(FileViewKind.Diff, text, HasGitColors: AnsiEscapeParser.HasEscapes(text));
     }
 
     /// <summary>As <c>GetSelectedPatchAsync</c> in <c>ViewChangesAsync</c>.</summary>
-    private async Task<string?> GetSelectedPatchAsync(GitItemStatus file, ObjectId firstId, ObjectId selectedId, CancellationToken cancellationToken)
+    private async Task<string?> GetSelectedPatchAsync(GitItemStatus file, ObjectId firstId, ObjectId selectedId, Encoding encoding, CancellationToken cancellationToken)
     {
         bool isSkipWorktree = file.IsSkipWorktree;
         if (isSkipWorktree)
@@ -128,7 +153,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
         {
             // Files with tree guid should be presented with normal diff
             bool isTracked = file.IsTracked || (!file.TreeId.IsZero && !selectedId.IsZero);
-            (patch, errorMessage) = await Module.GetSingleDiffAsync(firstId, selectedId, file.Name, file.OldName, GetExtraDiffArguments(), Encoding, cacheResult: true, isTracked,
+            (patch, errorMessage) = await Module.GetSingleDiffAsync(firstId, selectedId, file.Name, file.OldName, GetExtraDiffArguments(), encoding, cacheResult: true, isTracked,
                 UseGitColoring,
                 PatchHighlightService.GetGitCommandConfiguration(Module, UseGitColoring),
                 cancellationToken);
@@ -167,7 +192,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
     }
 
     /// <summary>As <c>FileViewer.ViewGitItemAsync</c>: the blob of the revision, or the file of the working directory.</summary>
-    private FileViewContent GetGitItem(GitItemStatus file, ObjectId objectId, CancellationToken cancellationToken)
+    private FileViewContent GetGitItem(GitItemStatus file, ObjectId objectId, Encoding encoding, CancellationToken cancellationToken)
     {
         ObjectId blobId = GetUpdateTreeId(file, objectId, cancellationToken);
         if (!blobId.IsZero)
@@ -184,7 +209,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
                 {
                     // If the file blob seem to be a diff file, get also escape sequences, that possibly are stored in the diff
                     bool stripAnsiEscapeCodes = !file.Name.EndsWith(".diff", StringComparison.OrdinalIgnoreCase) && !file.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase);
-                    return Module.GetFileText(blobId, Encoding, stripAnsiEscapeCodes) ?? "";
+                    return Module.GetFileText(blobId, encoding, stripAnsiEscapeCodes) ?? "";
                 },
                 getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.ToString()));
         }
@@ -219,7 +244,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
             getFileText: () =>
             {
                 using FileStream stream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using StreamReader reader = FileReader.OpenStream(stream, Encoding);
+                using StreamReader reader = FileReader.OpenStream(stream, encoding);
                 return reader.ReadToEnd();
             },
             getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), ""));

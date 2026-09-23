@@ -138,5 +138,13 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GotoManual.png" Link="Assets\GotoManual.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\RecentRepositories.png" Link="Assets\RecentRepositories.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Message.png" Link="Assets\Message.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ArrowDown.png" Link="Assets\ArrowDown.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\NumberOfLinesIncrease.png" Link="Assets\NumberOfLinesIncrease.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\NumberOfLinesDecrease.png" Link="Assets\NumberOfLinesDecrease.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowEntireFile.png" Link="Assets\ShowEntireFile.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowWhitespace.png" Link="Assets\ShowWhitespace.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnoreEol.png" Link="Assets\WhitespaceIgnoreEol.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnore.png" Link="Assets\WhitespaceIgnore.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnoreAll.png" Link="Assets\WhitespaceIgnoreAll.png" />
   </ItemGroup>
 </Project>

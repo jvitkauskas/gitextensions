@@ -141,14 +141,27 @@ public sealed class DiffViewModelTests
 
         public bool ReverseGitColoring => true;
 
-        public Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, CancellationToken cancellationToken)
+        public FileViewerSettings Settings { get; set; } = new();
+
+        public IReadOnlyList<string> AvailableEncodings { get; } = ["UTF-8", "Western European (Windows)"];
+
+        public string FilesEncoding => "UTF-8";
+
+        public int SettingsOpened { get; private set; }
+
+        public void OpenSettings() => SettingsOpened++;
+
+        /// <summary>The diff returned instead of the default one.</summary>
+        public string? Diff { get; set; }
+
+        public Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, string? encodingName, CancellationToken cancellationToken)
         {
-            Requested.Add(entry.Item.Name);
+            Requested.Add(encodingName is null ? entry.Item.Name : $"{entry.Item.Name} ({encodingName})");
             _shown.TrySetResult();
-            return Task.FromResult(new FileViewContent(FileViewKind.Diff, $"diff of {entry.Item.Name}"));
+            return Task.FromResult(new FileViewContent(FileViewKind.Diff, Diff ?? $"diff of {entry.Item.Name}"));
         }
 
-        public Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, CancellationToken cancellationToken)
+        public Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, string? encodingName, CancellationToken cancellationToken)
         {
             Requested.Add($"{file.Name}@{objectId.ToShortString()}");
             _shown.TrySetResult();
