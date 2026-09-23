@@ -8,6 +8,7 @@ using GitUI.Presentation.Editor;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
+using GitUI.Presentation.UserControls.Blame;
 using GitUI.Presentation.UserControls.FileStatusList;
 
 namespace GitUI.AvaloniaTests.ViewModels;
@@ -95,6 +96,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new StashStrings()).SetArgDisplayNames(nameof(StashStrings));
         yield return new TestCaseData(new CommitInfoStrings()).SetArgDisplayNames(nameof(CommitInfoStrings));
         yield return new TestCaseData(new CommitDiffStrings()).SetArgDisplayNames(nameof(CommitDiffStrings));
+        yield return new TestCaseData(new BlameStrings()).SetArgDisplayNames(nameof(BlameStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

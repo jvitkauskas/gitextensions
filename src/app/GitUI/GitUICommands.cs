@@ -2117,6 +2117,11 @@ public sealed class GitUICommands : IGitUICommands
 
         return DoActionOnRepo(owner: null, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowBlame(owner: null, this, blameFileName, initialLine))
+            {
+                return true;
+            }
+
             using FormBlame frm = new(this, blameFileName, null, initialLine);
             frm.ShowDialog(null);
             return true;

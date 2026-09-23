@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:GitUI.Avalonia.Controls"
+             xmlns:ed="using:GitUI.Avalonia.Editor"
+             xmlns:vm="using:GitUI.Presentation.UserControls.Blame"
+             x:Class="GitUI.Avalonia.Controls.Blame.BlameView"
+             x:DataType="vm:BlameViewModel">
+  <!-- As BlameControl: the commit info of the selected line above the file with its author gutter. -->
+  <Grid Name="layout" RowDefinitions="160,Auto,*">
+    <Border Name="commitInfoBorder" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <c:CommitInfoView Name="commitInfo" DataContext="{Binding CommitInfo}" />
+    </Border>
+    <GridSplitter Name="commitInfoSplitter" Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+    <Border Grid.Row="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <ed:TextEditorView Name="file" DataContext="{Binding File}">
+        <ed:TextEditorView.ContextMenu>
+          <ContextMenu Name="menu">
+            <MenuItem Name="blameRevisionItem" />
+            <MenuItem Name="blamePreviousRevisionItem" />
+            <MenuItem Name="showChangesItem" />
+            <Separator />
+            <MenuItem Name="copyToClipboardItem">
+              <MenuItem Name="copyHashItem" />
+              <MenuItem Name="copyMessageItem" />
+              <MenuItem Name="copyAllItem" />
+            </MenuItem>
+          </ContextMenu>
+        </ed:TextEditorView.ContextMenu>
+      </ed:TextEditorView>
+    </Border>
+  </Grid>
+</UserControl>

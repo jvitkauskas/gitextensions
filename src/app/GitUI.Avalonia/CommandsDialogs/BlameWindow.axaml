@@ -1,0 +1,12 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:b="using:GitUI.Avalonia.Controls.Blame"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.BlameWindow"
+                x:DataType="vm:BlameDialogViewModel"
+                Title="{Binding Title}"
+                ShowInTaskbar="True"
+                Width="1000" Height="740" MinWidth="400" MinHeight="300">
+  <b:BlameView Name="blame" DataContext="{Binding Blame}" Margin="4" />
+</h:DialogWindow>

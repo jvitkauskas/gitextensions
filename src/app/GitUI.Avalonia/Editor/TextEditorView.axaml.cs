@@ -82,6 +82,10 @@ public partial class TextEditorView : UserControl
                 SetText(_viewModel!.Text);
                 break;
 
+            case nameof(TextEditorViewModel.ShowLineNumbers):
+                editor.ShowLineNumbers = _viewModel!.DiffLines is null && _viewModel.ShowLineNumbers;
+                break;
+
             case nameof(TextEditorViewModel.IsReadOnly) or nameof(TextEditorViewModel.ShowWhitespace) or nameof(TextEditorViewModel.FileName):
                 ApplyOptions();
                 break;
@@ -133,7 +137,7 @@ public partial class TextEditorView : UserControl
     {
         TextView textView = editor.TextArea.TextView;
         bool isDiff = lines is not null;
-        editor.ShowLineNumbers = !isDiff;
+        editor.ShowLineNumbers = !isDiff && _viewModel!.ShowLineNumbers;
         editor.TextArea.LeftMargins.Remove(_diffLineNumbers);
         if (_diffBackground is not null)
         {

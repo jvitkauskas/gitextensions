@@ -22,6 +22,10 @@ public sealed partial class TextEditorViewModel : ObservableObject
     [ObservableProperty]
     public partial bool ShowWhitespace { get; set; }
 
+    /// <summary>Whether the line numbers are shown (a diff shows its own).</summary>
+    [ObservableProperty]
+    public partial bool ShowLineNumbers { get; set; } = true;
+
     /// <summary>The name of the file, whose extension chooses the syntax highlighting.</summary>
     [ObservableProperty]
     public partial string? FileName { get; set; }
