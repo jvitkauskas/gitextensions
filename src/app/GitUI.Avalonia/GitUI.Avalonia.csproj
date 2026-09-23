@@ -119,5 +119,14 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CherryPick.png" Link="Assets\CherryPick.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\RevertCommit.png" Link="Assets\RevertCommit.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CommitSummary.png" Link="Assets\CommitSummary.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Stage.png" Link="Assets\Stage.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StageAll.png" Link="Assets\StageAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StageAllFiltered.png" Link="Assets\StageAllFiltered.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Unstage.png" Link="Assets\Unstage.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\UnstageAll.png" Link="Assets\UnstageAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\UnstageAllFiltered.png" Link="Assets\UnstageAllFiltered.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Branch.png" Link="Assets\Branch.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SolveMerge.png" Link="Assets\SolveMerge.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Settings.png" Link="Assets\Settings.png" />
   </ItemGroup>
 </Project>

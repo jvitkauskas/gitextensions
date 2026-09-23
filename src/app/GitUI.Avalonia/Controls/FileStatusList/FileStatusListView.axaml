@@ -142,7 +142,7 @@
           </TreeDataTemplate>
         </TreeView.ItemTemplate>
       </TreeView>
-      <TextBlock Name="noFilesText" Text="{Binding Strings.NoFiles.Text}" IsVisible="{Binding ShowNoFiles}" Margin="6"
+      <TextBlock Name="noFilesText" Text="{Binding NoFilesText}" IsVisible="{Binding ShowNoFiles}" Margin="6"
                  Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
       <TextBlock Name="loadingText" Text="{Binding Strings.LoadingFiles.Text}" IsVisible="{Binding IsLoading}" Margin="6"
                  HorizontalAlignment="Center" VerticalAlignment="Center" />

@@ -19,6 +19,7 @@ public partial class TextEditorView : UserControl
 {
     private TextEditorViewModel? _viewModel;
     private bool _updatingText;
+    private bool _updatingCaret;
     private readonly DarkThemeHighlightingAdapter _darkThemeAdapter = new();
     private readonly DiffLineNumberMargin _diffLineNumbers = new();
     private readonly DiffColorizer _diffColorizer = new();
@@ -35,6 +36,21 @@ public partial class TextEditorView : UserControl
             if (_viewModel is not null)
             {
                 ApplyOptions();
+            }
+        };
+        editor.TextArea.Caret.PositionChanged += (_, _) =>
+        {
+            if (_viewModel is not null && !_updatingCaret)
+            {
+                _updatingCaret = true;
+                try
+                {
+                    _viewModel.CaretOffset = editor.CaretOffset;
+                }
+                finally
+                {
+                    _updatingCaret = false;
+                }
             }
         };
         editor.TextChanged += (_, _) =>
@@ -63,9 +79,11 @@ public partial class TextEditorView : UserControl
 
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel?.TextLoaded -= OnTextLoaded;
+        _viewModel?.FocusRequested -= OnFocusRequested;
         _viewModel = DataContext as TextEditorViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.TextLoaded += OnTextLoaded;
+        _viewModel?.FocusRequested += OnFocusRequested;
 
         if (_viewModel is not null)
         {
@@ -82,6 +100,19 @@ public partial class TextEditorView : UserControl
                 SetText(_viewModel!.Text);
                 break;
 
+            case nameof(TextEditorViewModel.CaretOffset) when !_updatingCaret:
+                _updatingCaret = true;
+                try
+                {
+                    editor.CaretOffset = Math.Clamp(_viewModel!.CaretOffset, 0, editor.Document.TextLength);
+                }
+                finally
+                {
+                    _updatingCaret = false;
+                }
+
+                break;
+
             case nameof(TextEditorViewModel.ShowLineNumbers):
                 editor.ShowLineNumbers = _viewModel!.DiffLines is null && _viewModel.ShowLineNumbers;
                 break;
@@ -91,6 +122,8 @@ public partial class TextEditorView : UserControl
                 break;
         }
     }
+
+    private void OnFocusRequested(object? sender, EventArgs e) => editor.TextArea.Focus();
 
     private void ApplyOptions()
     {

@@ -34,6 +34,15 @@ public sealed partial class TextEditorViewModel : ObservableObject
     [ObservableProperty]
     public partial int? LineToShow { get; set; }
 
+    /// <summary>The offset of the caret, which the view reports and follows.</summary>
+    [ObservableProperty]
+    public partial int CaretOffset { get; set; }
+
+    /// <summary>Raised to move the focus to the editor.</summary>
+    public event EventHandler? FocusRequested;
+
+    public void RequestFocus() => FocusRequested?.Invoke(this, EventArgs.Empty);
+
     /// <summary>Whether the text changed since it was loaded or saved.</summary>
     public bool HasChanges => Text != _loadedText;
 

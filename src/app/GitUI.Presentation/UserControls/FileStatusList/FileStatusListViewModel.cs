@@ -98,6 +98,9 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     /// <summary>All files shown (as <c>FileStatusList.AllItems</c>).</summary>
     public IEnumerable<FileStatusEntry> AllEntries => Nodes.SelectMany(n => n.DescendantsAndSelf()).Select(n => n.Entry).OfType<FileStatusEntry>().Where(e => e.Item != _noItemStatus);
 
+    /// <summary>All the files, also those the filter hides (as <c>GitItemStatuses</c>).</summary>
+    public IEnumerable<GitItemStatus> AllItems => _groups.SelectMany(g => g.Statuses);
+
     /// <summary>The regular expression the file names are filtered with.</summary>
     [ObservableProperty]
     public partial string Filter { get; set; } = "";
@@ -123,6 +126,19 @@ public sealed partial class FileStatusListViewModel : ObservableObject
 
     /// <summary>Raised when the files are set (as <c>DataSourceChanged</c>).</summary>
     public event EventHandler? DataSourceChanged;
+
+    /// <summary>The text shown without files (as <c>SetNoFilesText</c>); "No changes" by default.</summary>
+    public string NoFilesText
+    {
+        get => field ?? Strings.NoFiles.Text;
+        init;
+    }
+
+    /// <summary>Raised when the selected files are activated (a double click, as the <c>DoubleClick</c> of the WinForms list).</summary>
+    public event EventHandler? SelectionActivated;
+
+    /// <summary>Activates the selected files (from the view).</summary>
+    public void ActivateSelection() => SelectionActivated?.Invoke(this, EventArgs.Empty);
 
     public bool IsFlatList => Options.SortType.ToString().EndsWith("Flat");
 

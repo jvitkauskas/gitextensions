@@ -658,6 +658,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Squash, revision))
+            {
+                return true;
+            }
+
             using FormCommit form = new(this, CommitKind.Squash, revision);
             form.ShowDialog(owner);
             return true;
@@ -670,6 +675,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Fixup, revision))
+            {
+                return true;
+            }
+
             using FormCommit form = new(this, CommitKind.Fixup, revision);
             form.ShowDialog(owner);
             return true;
@@ -682,6 +692,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Amend, revision))
+            {
+                return true;
+            }
+
             using FormCommit form = new(this, CommitKind.Amend, revision);
             form.ShowDialog(owner);
             return true;
@@ -722,6 +737,11 @@ public sealed class GitUICommands : IGitUICommands
         bool Action()
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, commitMessage: commitMessage, showOnlyWhenChanges: showOnlyWhenChanges))
+            {
+                return true;
+            }
 
             using FormCommit form = new(this, commitMessage: commitMessage);
             if (showOnlyWhenChanges)

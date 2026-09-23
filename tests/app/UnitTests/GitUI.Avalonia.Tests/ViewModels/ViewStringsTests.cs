@@ -98,6 +98,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new CommitDiffStrings()).SetArgDisplayNames(nameof(CommitDiffStrings));
         yield return new TestCaseData(new BlameStrings()).SetArgDisplayNames(nameof(BlameStrings));
         yield return new TestCaseData(new FileHistoryStrings()).SetArgDisplayNames(nameof(FileHistoryStrings));
+        yield return new TestCaseData(new CommitStrings()).SetArgDisplayNames(nameof(CommitStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

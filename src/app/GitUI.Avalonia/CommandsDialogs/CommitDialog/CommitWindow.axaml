@@ -1,0 +1,168 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.CommitDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CommitDialog.CommitWindow"
+                x:DataType="vm:CommitViewModel"
+                Title="{Binding Title}"
+                ShowInTaskbar="True"
+                Width="1200" Height="820" MinWidth="700" MinHeight="450">
+  <Window.Styles>
+    <Style Selector="Button.toolbar, DropDownButton.toolbar">
+      <Setter Property="Padding" Value="4,3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="StackPanel.commitButtons > Button">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.forced">
+      <!-- As OtherColors.AmendButtonForcedColor. -->
+      <Setter Property="Background" Value="#C0E66363" />
+    </Style>
+  </Window.Styles>
+  <DockPanel Margin="4">
+    <!-- Equivalent of the status bar: the branch and its remote, the committer, the staged files and the caret. -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="12" Margin="2,4,2,0">
+      <StackPanel Orientation="Horizontal" Spacing="4">
+        <Image Source="avares://GitUI.Avalonia/Assets/Branch.png" Width="16" Height="16" />
+        <TextBlock Name="branchName" Text="{Binding BranchName}" VerticalAlignment="Center" />
+        <TextBlock Name="pushTo" Text="{Binding PushTo}" VerticalAlignment="Center" />
+      </StackPanel>
+      <Button Name="committerButton" Grid.Column="1" Classes="toolbar" Command="{Binding EditCommitterCommand}"
+              ToolTip.Tip="{Binding Strings.CommitCommitterToolTip.Text}">
+        <TextBlock Text="{Binding Committer}" />
+      </Button>
+      <TextBlock Grid.Column="3" VerticalAlignment="Center">
+        <Run Text="{Binding Strings.StagedCountLabel.Text}" />
+        <Run Text="{Binding StagedCount}" />
+      </TextBlock>
+      <TextBlock Name="caret" Grid.Column="4" VerticalAlignment="Center" />
+    </Grid>
+    <!-- Equivalent of the tool strip of the message: previous messages, the options and the author. -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,0,0,4">
+      <DropDownButton Name="commitMessageButton" Classes="toolbar" Content="{Binding Strings.CommitMessageMenu.AccessKeyText}"
+                      IsEnabled="{Binding IsMessageEditable}">
+        <DropDownButton.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedLeft" />
+        </DropDownButton.Flyout>
+      </DropDownButton>
+      <DropDownButton Name="commitTemplatesButton" Classes="toolbar" Content="{Binding Strings.CommitTemplates.AccessKeyText}"
+                      IsEnabled="{Binding IsMessageEditable}" ToolTip.Tip="{Binding Strings.CommitTemplatesToolTip.Text}">
+        <DropDownButton.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedLeft" />
+        </DropDownButton.Flyout>
+      </DropDownButton>
+      <DropDownButton Name="optionsButton" Classes="toolbar" Content="{Binding Strings.Options.AccessKeyText}">
+        <DropDownButton.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedLeft">
+            <MenuItem Header="{Binding Strings.SignOff.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding SignOff}" />
+            <MenuItem Header="{Binding Strings.NoVerify.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding NoVerify}" />
+            <Separator />
+            <MenuItem Header="{Binding Strings.CloseDialogAfterEachCommit.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding CloseDialogAfterEachCommit}" />
+            <MenuItem Header="{Binding Strings.CloseDialogAfterAllFilesCommitted.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding CloseDialogAfterAllFilesCommitted}" />
+            <MenuItem Header="{Binding Strings.RefreshDialogOnFormFocus.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding RefreshDialogOnFormFocus}" />
+            <MenuItem Header="{Binding Strings.SelectStagedOnEnterMessage.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding SelectStagedOnEnterMessage}" />
+          </MenuFlyout>
+        </DropDownButton.Flyout>
+      </DropDownButton>
+      <TextBlock Text="{Binding Strings.AuthorLabel.PlainText}" VerticalAlignment="Center" Margin="8,0,0,0" />
+      <TextBox Name="author" Text="{Binding Author}" MinWidth="260" />
+      <Button Name="createBranchButton" Classes="toolbar" Command="{Binding CreateBranchCommand}" ToolTip.Tip="{Binding Strings.CreateBranchToolTip.Text}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/Branch.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding Strings.CreateBranch.PlainText}" />
+        </StackPanel>
+      </Button>
+    </StackPanel>
+    <Grid ColumnDefinitions="380,Auto,*">
+      <!-- Equivalent of splitLeft: the unstaged files above the staged files. -->
+      <Grid RowDefinitions="Auto,*,Auto,Auto,*">
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <Button Name="rescanButton" Classes="toolbar" Command="{Binding RescanChangesCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
+          </Button>
+          <Button Name="stageButton" Classes="toolbar" Command="{Binding StageCommand}" IsEnabled="{Binding CanStage}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Stage.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.Stage.PlainText}" />
+            </StackPanel>
+          </Button>
+          <Button Name="stageAllButton" Classes="toolbar" Command="{Binding StageAllCommand}" IsEnabled="{Binding CanStage}">
+            <Image Name="stageAllImage" Source="avares://GitUI.Avalonia/Assets/StageAll.png" Width="16" Height="16" />
+          </Button>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Width="60" MinWidth="0" VerticalAlignment="Center" Margin="6,0" />
+        </StackPanel>
+        <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <fs:FileStatusListView Name="unstagedFiles" DataContext="{Binding Unstaged}" />
+        </Border>
+        <GridSplitter Grid.Row="2" Height="5" ResizeDirection="Rows" Background="Transparent" />
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="2">
+          <Button Name="unstageButton" Classes="toolbar" Command="{Binding UnstageCommand}" IsEnabled="{Binding CanStage}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Unstage.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.Unstage.PlainText}" />
+            </StackPanel>
+          </Button>
+          <Button Name="unstageAllButton" Classes="toolbar" Command="{Binding UnstageAllCommand}" IsEnabled="{Binding CanStage}">
+            <Image Name="unstageAllImage" Source="avares://GitUI.Avalonia/Assets/UnstageAll.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <Border Grid.Row="4" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <fs:FileStatusListView Name="stagedFiles" DataContext="{Binding Staged}" />
+        </Border>
+      </Grid>
+      <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+      <!-- Equivalent of splitRight: the diff above the message and the buttons. -->
+      <Grid Grid.Column="2" RowDefinitions="*,Auto,220">
+        <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <ed:FileViewerView Name="diff" DataContext="{Binding Diff}" />
+        </Border>
+        <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+        <Grid Grid.Row="2" ColumnDefinitions="220,*" ColumnSpacing="6">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Classes="commitButtons" Spacing="4">
+              <Button Name="solveMergeConflictsButton" Command="{Binding SolveMergeConflictsCommand}" IsVisible="{Binding HasMergeConflicts}"
+                      Background="#C0E66363" FontWeight="Bold">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Image Source="avares://GitUI.Avalonia/Assets/SolveMerge.png" Width="16" Height="16" />
+                  <TextBlock Text="{Binding Strings.SolveMergeConflicts.PlainText}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Button>
+              <Button Name="commitButton" Content="{Binding Strings.Commit.AccessKeyText}" Command="{Binding CommitCommand}" IsEnabled="{Binding CanCommit}" IsDefault="False" />
+              <Button Name="commitAndPushButton" Content="{Binding CommitAndPushText}" Command="{Binding CommitAndPushCommand}"
+                      IsEnabled="{Binding CanCommit}" IsVisible="{Binding Options.ShowCommitAndPush}" Classes.forced="{Binding IsPushForced}" />
+              <Button Name="modifyMessageButton" Content="{Binding Strings.ModifyCommitMessage.AccessKeyText}" Command="{Binding ModifyCommitMessageCommand}"
+                      IsVisible="{Binding ShowModifyMessageButton}" ToolTip.Tip="{Binding Strings.ModifyCommitMessageButtonToolTip.Text}" />
+              <CheckBox Name="amend" Content="{Binding Strings.Amend.AccessKeyText}" IsChecked="{Binding Amend}" IsEnabled="{Binding IsAmendEnabled}" />
+              <StackPanel Name="amendPanel" Margin="18,0,0,0" Spacing="4" IsVisible="{Binding Amend}">
+                <CheckBox Name="resetAuthor" Content="{Binding Strings.ResetAuthor.AccessKeyText}" IsChecked="{Binding ResetAuthor}" />
+                <Button Name="resetSoftButton" Content="{Binding Strings.ResetSoft.AccessKeyText}" Command="{Binding ResetSoftCommand}"
+                        IsEnabled="{Binding CanResetSoft}" ToolTip.Tip="{Binding Strings.ResetSoftToolTip.Text}" HorizontalAlignment="Stretch" />
+              </StackPanel>
+              <CheckBox Name="stageInSuperproject" Content="{Binding Strings.StageInSuperproject.AccessKeyText}" IsChecked="{Binding StageInSuperproject}"
+                        IsVisible="{Binding HasSuperproject}" ToolTip.Tip="{Binding Strings.StageInSuperprojectToolTip.Text}" />
+              <Button Name="stashStagedButton" Content="{Binding Strings.StashStaged.AccessKeyText}" Command="{Binding StashStagedCommand}"
+                      IsVisible="{Binding Options.SupportStashStaged}" />
+              <Button Name="resetAllButton" Content="{Binding Strings.ResetAllChanges.AccessKeyText}" Command="{Binding ResetAllChangesCommand}"
+                      IsEnabled="{Binding HasChanges}" IsVisible="{Binding Options.ShowResetAllChanges}" />
+              <Button Name="resetUnstagedButton" Content="{Binding Strings.ResetUnstagedChanges.AccessKeyText}" Command="{Binding ResetUnstagedChangesCommand}"
+                      IsEnabled="{Binding HasUnstagedChanges}" IsVisible="{Binding Options.ShowResetWorkTreeChanges}" />
+            </StackPanel>
+          </ScrollViewer>
+          <Border Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <Panel>
+              <ed:TextEditorView Name="message" DataContext="{Binding Message}" />
+              <TextBlock Name="messageWatermark" Text="{Binding MessageWatermark}" IsHitTestVisible="False" Margin="6,4"
+                         Foreground="{DynamicResource TextControlPlaceholderForeground}" />
+            </Panel>
+          </Border>
+        </Grid>
+      </Grid>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

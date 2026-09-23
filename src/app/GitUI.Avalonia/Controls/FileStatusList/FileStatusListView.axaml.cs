@@ -15,6 +15,16 @@ public partial class FileStatusListView : UserControl
 
         // As ItemContextMenu_Opening: the items for the selection.
         treeMenu.Opening += (_, _) => (DataContext as FileStatusListViewModel)?.UpdateMenuState();
+
+        // A double click on a file activates the selection (a folder expands instead).
+        filesTree.DoubleTapped += (_, e) =>
+        {
+            if (DataContext is FileStatusListViewModel viewModel
+                && (e.Source as global::Avalonia.StyledElement)?.DataContext is FileStatusNode { Entry: not null })
+            {
+                viewModel.ActivateSelection();
+            }
+        };
     }
 
     /// <summary>The context menu, e.g. for tests.</summary>
