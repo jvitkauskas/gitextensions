@@ -230,10 +230,15 @@ internal static partial class AvaloniaDialogs
         return new RevisionInfo(revision.Guid, ToCommitSummary(revision), parents);
     }
 
-    /// <summary>Lets the user choose a commit in the (WinForms) revision grid of <see cref="FormChooseCommit"/>.</summary>
+    /// <summary>Lets the user choose a commit in the revision grid of the choose commit dialog.</summary>
     private static RevisionInfo? ChooseRevision(DialogWindow window, IGitUICommands commands, string? currentGuid, bool withParents = true)
         => AvaloniaUi.RunInHostContext(() =>
         {
+            if (TryChooseCommit(new NativeWindowOwner(window), commands, currentGuid, out GitRevision? chosen))
+            {
+                return chosen is null ? null : ToRevisionInfo(commands.Module, chosen, withParents);
+            }
+
             using FormChooseCommit chooseForm = new(commands, currentGuid);
             return chooseForm.ShowDialog(new NativeWindowOwner(window)) == DialogResult.OK && chooseForm.SelectedRevision is GitRevision selected
                 ? ToRevisionInfo(commands.Module, selected, withParents)

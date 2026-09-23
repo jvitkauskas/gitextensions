@@ -169,6 +169,12 @@ public partial class FormArchive : GitModuleForm
 
     private void btnChooseRevision_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryChooseCommit(this, UICommands, SelectedRevision?.Guid, out GitRevision? chosen))
+        {
+            SelectedRevision = chosen ?? SelectedRevision;
+            return;
+        }
+
         using FormChooseCommit chooseForm = new(UICommands, SelectedRevision?.Guid);
         if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)
         {
@@ -187,6 +193,12 @@ public partial class FormArchive : GitModuleForm
 
     private void btnDiffChooseRevision_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryChooseCommit(this, UICommands, DiffSelectedRevision?.Guid, out GitRevision? chosen))
+        {
+            DiffSelectedRevision = chosen ?? DiffSelectedRevision;
+            return;
+        }
+
         using FormChooseCommit chooseForm = new(UICommands, DiffSelectedRevision is not null ? DiffSelectedRevision.Guid : string.Empty);
         if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)
         {

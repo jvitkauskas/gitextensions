@@ -1,0 +1,37 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
+                xmlns:vm="using:GitUI.Presentation.HelperDialogs"
+                x:Class="GitUI.Avalonia.HelperDialogs.ChooseCommitWindow"
+                x:DataType="vm:ChooseCommitViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="1105" Height="515" MinWidth="500" MinHeight="250">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+        <TextBlock Text="{Binding Strings.FindSpecificCommit.Text}" VerticalAlignment="Center" />
+        <Button Name="goToCommitButton" Grid.Column="1" Content="{Binding Strings.GoToCommit.AccessKeyText}" Command="{Binding GoToCommitCommand}" />
+        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="{Binding IsCommitSelected}">
+          <TextBlock Text="{Binding Strings.Parents.Text}" VerticalAlignment="Center" />
+          <ItemsControl Name="parentLinks" ItemsSource="{Binding Parents}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="6" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ParentLink">
+                <Button Classes="link" Command="{Binding $parent[h:DialogWindow].((vm:ChooseCommitViewModel)DataContext).SelectParentCommand}" CommandParameter="{Binding}">
+                  <TextBlock Text="{Binding ShortId}" FontFamily="{DynamicResource MonospaceFontFamily}" />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <Button Name="okButton" Grid.Column="4" Classes="accent" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+      </Grid>
+    </Border>
+    <rg:RevisionGridView Name="revisionGrid" Margin="4" DataContext="{Binding Grid}" />
+  </DockPanel>
+</h:DialogWindow>

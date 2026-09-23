@@ -5,6 +5,11 @@
   <Application.Resources>
     <!-- Hashes and code; replaced by AppSettings.MonospaceFont, see ApplyOptions. -->
     <FontFamily x:Key="MonospaceFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
+    <!-- Reference colors of the default theme (AppColorDefaults); replaced by the Git Extensions theme, see ApplyOptions. -->
+    <SolidColorBrush x:Key="AppColor.Branch" Color="#008000" />
+    <SolidColorBrush x:Key="AppColor.RemoteBranch" Color="#8B0009" />
+    <SolidColorBrush x:Key="AppColor.Tag" Color="#00008B" />
+    <SolidColorBrush x:Key="AppColor.OtherTag" Color="#808080" />
   </Application.Resources>
   <Application.Styles>
     <!-- Compact density matches the information density of the WinForms UI. -->

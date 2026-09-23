@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("GitUI")]
 [assembly: InternalsVisibleTo("GitUI.Avalonia")]
+[assembly: InternalsVisibleTo("GitUI.Presentation")]
 [assembly: InternalsVisibleTo("GitUI.Tests")]
 [assembly: InternalsVisibleTo("GitUI.Avalonia.Tests")]
 [assembly: InternalsVisibleTo("UI.IntegrationTests")]

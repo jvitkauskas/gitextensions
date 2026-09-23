@@ -192,6 +192,13 @@ public partial class FormCherryPick : GitExtensionsDialog
 
     private void btnChooseRevision_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryChooseCommit(this, UICommands, Revision?.Guid, out GitRevision? chosen))
+        {
+            Revision = chosen ?? Revision;
+            OnRevisionChanged();
+            return;
+        }
+
         using (FormChooseCommit chooseForm = new(UICommands, Revision?.Guid))
         {
             if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)

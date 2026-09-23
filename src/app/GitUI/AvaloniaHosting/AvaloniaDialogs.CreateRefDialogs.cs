@@ -161,6 +161,11 @@ internal static partial class AvaloniaDialogs
 
         public string? ChooseCommit(ObjectId? current) => AvaloniaUi.RunInHostContext(() =>
         {
+            if (TryChooseCommit(new NativeWindowOwner(window), commands, current?.ToString(), out GitRevision? chosen))
+            {
+                return chosen?.Guid;
+            }
+
             using FormChooseCommit chooseForm = new(commands, current?.ToString());
             return chooseForm.ShowDialog(new NativeWindowOwner(window)) == DialogResult.OK ? chooseForm.SelectedRevision?.Guid : null;
         });

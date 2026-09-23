@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
+             xmlns:vm="using:GitUI.Presentation.UserControls.RevisionGrid"
+             x:Class="GitUI.Avalonia.Controls.RevisionGrid.RevisionGridView"
+             x:DataType="vm:RevisionGridViewModel">
+  <UserControl.Styles>
+    <!-- Reference "capsules" before the subject, colored as the WinForms revision grid's. -->
+    <Style Selector="Border.ref">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="3,0" />
+      <Setter Property="Margin" Value="0,0,4,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.ref TextBlock">
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="Border.ref.branch">
+      <Setter Property="BorderBrush" Value="{DynamicResource AppColor.Branch}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource AppColor.Branch}" />
+    </Style>
+    <Style Selector="Border.ref.remote">
+      <Setter Property="BorderBrush" Value="{DynamicResource AppColor.RemoteBranch}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource AppColor.RemoteBranch}" />
+    </Style>
+    <Style Selector="Border.ref.tag">
+      <Setter Property="BorderBrush" Value="{DynamicResource AppColor.Tag}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource AppColor.Tag}" />
+    </Style>
+    <Style Selector="Border.ref.current TextBlock">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="DataGridCell">
+      <Setter Property="MinHeight" Value="22" />
+    </Style>
+    <Style Selector="DataGridRow">
+      <Setter Property="MinHeight" Value="22" />
+      <Setter Property="Height" Value="22" />
+    </Style>
+  </UserControl.Styles>
+  <DataGrid Name="revisionsGrid" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+            IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserReorderColumns="False"
+            HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+    <DataGrid.Columns>
+      <DataGridTemplateColumn Width="64" CanUserResize="False">
+        <DataGridTemplateColumn.CellTemplate>
+          <DataTemplate x:DataType="vm:RevisionGridRow">
+            <rg:RevisionGraphCell Graph="{Binding $parent[rg:RevisionGridView].Graph}"
+                                  Renderer="{Binding $parent[rg:RevisionGridView].Renderer}" />
+          </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
+      <DataGridTemplateColumn Width="*">
+        <DataGridTemplateColumn.CellTemplate>
+          <DataTemplate x:DataType="vm:RevisionGridRow">
+            <StackPanel Orientation="Horizontal" Margin="4,0" ClipToBounds="True">
+              <ItemsControl ItemsSource="{Binding Refs}" VerticalAlignment="Center">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:RevisionRefItem">
+                    <Border Classes="ref"
+                            Classes.branch="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Branch}}"
+                            Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
+                            Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
+                            Classes.current="{Binding IsCurrentBranch}">
+                      <TextBlock Text="{Binding Name}" />
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
+      <DataGridTextColumn Binding="{Binding AuthorName}" Width="150" x:DataType="vm:RevisionGridRow" />
+      <DataGridTextColumn Binding="{Binding Date}" Width="130" x:DataType="vm:RevisionGridRow" />
+      <DataGridTemplateColumn Width="80">
+        <DataGridTemplateColumn.CellTemplate>
+          <DataTemplate x:DataType="vm:RevisionGridRow">
+            <TextBlock Text="{Binding ShortId}" FontFamily="{DynamicResource MonospaceFontFamily}" VerticalAlignment="Center" Margin="4,0" />
+          </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
+    </DataGrid.Columns>
+  </DataGrid>
+</UserControl>

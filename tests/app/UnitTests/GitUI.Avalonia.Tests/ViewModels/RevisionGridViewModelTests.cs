@@ -1,0 +1,164 @@
+using GitExtensions.Extensibility.Git;
+using GitUI.AvaloniaTests.Views;
+using GitUI.Presentation.HelperDialogs;
+using GitUI.Presentation.UserControls.RevisionGrid;
+using GitUI.UserControls.RevisionGrid.Graph;
+using GitUIPluginInterfaces;
+
+namespace GitUI.AvaloniaTests.ViewModels;
+
+/// <summary>View model tests of the Avalonia revision grid and the choose commit dialog (phase 4).</summary>
+[TestFixture]
+public sealed class RevisionGridViewModelTests
+{
+    private static readonly RevisionGridDisplayOptions _options = new(RelativeDate: false, ShowAuthorDate: false);
+
+    [Test]
+    public void Adds_the_rows_of_each_batch_and_selects_the_preselected_revision_once_loaded()
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        BatchedHost host = new(history);
+        RevisionGridViewModel viewModel = new(host, _options);
+        bool loaded = false;
+        viewModel.Loaded += (_, _) => loaded = true;
+
+        viewModel.Load(toBeSelected: history[6].ObjectId);
+        viewModel.IsLoading.Should().BeTrue();
+
+        host.AddBatch(3);
+        viewModel.Rows.Select(r => r.Subject).Should().Equal(history.Take(3).Select(r => r.Subject));
+        viewModel.SelectedRow.Should().BeNull("the preselected revision is not loaded yet");
+
+        host.AddBatch(5);
+        viewModel.Rows.Should().HaveCount(8);
+        viewModel.SelectedRow!.ObjectId.Should().Be(history[6].ObjectId, "it is selected as soon as it is loaded");
+
+        host.Complete();
+        viewModel.IsLoading.Should().BeFalse();
+        loaded.Should().BeTrue();
+        viewModel.CachedGraphRowCount.Should().Be(8, "the graph is laid out for the rows shown");
+        viewModel.Rows[0].Date.Should().Be(RevisionGridRow.FormatDate(history[0].CommitDate, relative: false));
+    }
+
+    [Test]
+    public void Reloading_ignores_the_batches_of_the_previous_load()
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        BatchedHost host = new(history);
+        RevisionGridViewModel viewModel = new(host, _options);
+
+        viewModel.Load();
+        Action staleBatch = host.ReportBatch!;
+        viewModel.Load();
+        host.AddBatch(2);
+        staleBatch();
+
+        viewModel.Rows.Should().HaveCount(2);
+    }
+
+    [Test]
+    public void Choose_commit_shows_the_parents_of_the_selected_commit_and_accepts_it()
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel grid = new(new RevisionGridViewTests.FakeRevisionGridHost(history), _options);
+        FakeChooseCommitHost host = new();
+        ChooseCommitViewModel viewModel = new(new ChooseCommitStrings(), grid, host);
+        bool? closed = null;
+        viewModel.CloseRequested += (_, accepted) => closed = accepted;
+        grid.Load();
+
+        viewModel.OkCommand.CanExecute(null).Should().BeFalse();
+        GitRevision merge = history[2];
+        grid.SelectRevision(merge.ObjectId);
+        viewModel.IsCommitSelected.Should().BeTrue();
+        viewModel.Parents.Select(p => p.ObjectId).Should().Equal(merge.ParentIds);
+
+        viewModel.SelectParentCommand.Execute(viewModel.Parents[1]);
+        grid.SelectedRow!.ObjectId.Should().Be(merge.ParentIds![1]);
+
+        viewModel.OkCommand.Execute(null);
+        viewModel.SelectedRevision.Should().Be(history[3]);
+        closed.Should().BeTrue();
+    }
+
+    [Test]
+    public void Choose_commit_goes_to_a_commit_or_reports_that_it_is_not_shown()
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel grid = new(new RevisionGridViewTests.FakeRevisionGridHost(history), _options);
+        FakeChooseCommitHost host = new();
+        ChooseCommitViewModel viewModel = new(new ChooseCommitStrings(), grid, host);
+        grid.Load();
+
+        host.GoTo = history[4].ObjectId;
+        viewModel.GoToCommitCommand.Execute(null);
+        grid.SelectedRow!.ObjectId.Should().Be(history[4].ObjectId);
+
+        ObjectId filtered = ObjectId.Random();
+        host.GoTo = filtered;
+        viewModel.GoToCommitCommand.Execute(null);
+        host.Filtered.Should().Equal(filtered);
+
+        host.GoTo = ObjectId.Parse("0000000000000000000000000000000000000000");
+        viewModel.GoToCommitCommand.Execute(null);
+        host.NotFound.Should().Be(1);
+
+        host.GoTo = null;
+        viewModel.GoToCommitCommand.Execute(null);
+        host.NotFound.Should().Be(1, "a cancelled go to commit does nothing");
+    }
+
+    /// <summary>Adds the revisions in batches on request, as <c>RevisionReader</c> reports them.</summary>
+    private sealed class BatchedHost(IReadOnlyList<GitRevision> revisions) : IRevisionGridHost
+    {
+        private RevisionGraph? _graph;
+        private int _added;
+        private Action<Exception?>? _completed;
+
+        public Action? ReportBatch { get; private set; }
+
+        public string CurrentBranch => "main";
+
+        public void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken)
+        {
+            _graph = graph;
+            _added = 0;
+            ReportBatch = reportBatch;
+            _completed = completed;
+        }
+
+        public void AddBatch(int count)
+        {
+            foreach (GitRevision revision in revisions.Skip(_added).Take(count))
+            {
+                _graph!.Add(revision);
+            }
+
+            _added += count;
+            ReportBatch!();
+        }
+
+        public void Complete() => _completed!(null);
+
+        public void RunInBackground(Action work, Action then)
+        {
+            work();
+            then();
+        }
+    }
+
+    private sealed class FakeChooseCommitHost : IChooseCommitHost
+    {
+        public ObjectId? GoTo { get; set; }
+
+        public List<ObjectId> Filtered { get; } = [];
+
+        public int NotFound { get; private set; }
+
+        public ObjectId? ChooseCommitToGoTo() => GoTo;
+
+        public void ShowRevisionFiltered(ObjectId objectId) => Filtered.Add(objectId);
+
+        public void ShowRevisionNotFound() => NotFound++;
+    }
+}

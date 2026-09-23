@@ -73,6 +73,16 @@ public partial class CommitPickerSmallControl : GitModuleControl
 
     private void buttonPickCommit_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryChooseCommit(this, UICommands, SelectedObjectId.IsZero ? null : SelectedObjectId.ToString(), out GitUIPluginInterfaces.GitRevision? chosen))
+        {
+            if (chosen is not null)
+            {
+                SetSelectedCommitHash(chosen.Guid);
+            }
+
+            return;
+        }
+
         using FormChooseCommit chooseForm = new(UICommands, SelectedObjectId.IsZero ? null : SelectedObjectId.ToString());
         if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)
         {

@@ -433,6 +433,16 @@ public partial class FormRebase : GitExtensionsDialog
                 }
             }
 
+            if (AvaloniaHosting.AvaloniaDialogs.TryChooseCommit(this, UICommands, preSelectedCommit, out GitUIPluginInterfaces.GitRevision? chosen, showCurrentBranchOnly: true, lastRevisionToDisplayHash: mergeBaseCommitId))
+            {
+                if (chosen is not null)
+                {
+                    txtFrom.Text = chosen.ObjectId.ToShortString();
+                }
+
+                return;
+            }
+
             using FormChooseCommit chooseForm = new(UICommands, preSelectedCommit, showCurrentBranchOnly: true, lastRevisionToDisplayHash: mergeBaseCommitId);
             if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)
             {
