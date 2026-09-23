@@ -698,6 +698,11 @@ public sealed partial class BlameControl : GitModuleControl
             return;
         }
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowCommitDiff(this, UICommands, commitId))
+        {
+            return;
+        }
+
         using FormCommitDiff frm = new(UICommands, commitId);
         frm.ShowDialog(this);
     }
@@ -707,6 +712,11 @@ public sealed partial class BlameControl : GitModuleControl
         GitBlameCommit? commit = GetBlameCommit();
 
         if (commit is null)
+        {
+            return;
+        }
+
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowCommitDiff(this, UICommands, commit.ObjectId))
         {
             return;
         }

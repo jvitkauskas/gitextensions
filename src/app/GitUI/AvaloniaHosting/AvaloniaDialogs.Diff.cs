@@ -56,6 +56,20 @@ internal static partial class AvaloniaDialogs
             MergeSingleItemsWithFolder: AppSettings.FileStatusMergeSingleItemWithFolder.Value,
             ShowGroupNodesInFlatList: AppSettings.FileStatusShowGroupNodesInFlatList.Value);
 
+    /// <summary>The files of the diffs of the first revision to the others, with <c>FileStatusDiffCalculator</c> (as <c>FileStatusList.SetDiffs</c>).</summary>
+    internal static async Task<IReadOnlyList<FileStatusGroup>> CalculateDiffsAsync(IGitUICommands commands, IReadOnlyList<GitRevision> revisions, ObjectId headId, bool allowMultiDiff, CancellationToken cancellationToken)
+    {
+        await TaskScheduler.Default;
+        cancellationToken.ThrowIfCancellationRequested();
+
+        FileStatusDiffCalculator calculator = new(() => commands.Module);
+        calculator.SetDiff(revisions, headId, allowMultiDiff);
+        IReadOnlyList<FileStatusWithDescription> diffs = calculator.Calculate(prevList: [], refreshDiff: true, refreshGrep: false, cancellationToken);
+
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        return [.. diffs.Select(diff => new FileStatusGroup(diff.FirstRev, diff.SecondRev, diff.Summary, diff.Statuses, diff.BaseA, diff.BaseB, diff.IconName))];
+    }
+
     /// <summary>As the constructor of <c>FormDiff</c>: artificial commits are compared with the current checkout.</summary>
     private static GitRevision? GetMergeBase(IGitModule module, ObjectId firstId, ObjectId secondId)
     {
@@ -80,19 +94,8 @@ internal static partial class AvaloniaDialogs
         private NativeWindowOwner Owner => new(window);
 
         /// <summary>As <c>FileStatusList.SetDiffsAsync</c> with <c>FileStatusDiffCalculator</c>.</summary>
-        public async Task<IReadOnlyList<FileStatusGroup>> GetDiffsAsync(IReadOnlyList<GitRevision> revisions, CancellationToken cancellationToken)
-        {
-            ObjectId headId = _currentHead.Value;
-            await TaskScheduler.Default;
-            cancellationToken.ThrowIfCancellationRequested();
-
-            FileStatusDiffCalculator calculator = new(() => Module);
-            calculator.SetDiff(revisions, headId, allowMultiDiff: true);
-            IReadOnlyList<FileStatusWithDescription> diffs = calculator.Calculate(prevList: [], refreshDiff: true, refreshGrep: false, cancellationToken);
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            return [.. diffs.Select(ToGroup)];
-        }
+        public Task<IReadOnlyList<FileStatusGroup>> GetDiffsAsync(IReadOnlyList<GitRevision> revisions, CancellationToken cancellationToken)
+            => CalculateDiffsAsync(commands, revisions, _currentHead.Value, allowMultiDiff: true, cancellationToken);
 
         /// <summary>As <c>FormDiff.PickAnotherBranch</c>.</summary>
         public (string DisplayName, GitRevision? Revision)? PickBranch(GitRevision preselect) => AvaloniaUi.RunInHostContext<(string, GitRevision?)?>(() =>
@@ -126,8 +129,5 @@ internal static partial class AvaloniaDialogs
 
         public void OpenDirectoryDiff(GitRevision first, GitRevision second)
             => Module.OpenWithDifftoolDirDiff(first.Guid, second.Guid, customTool: null);
-
-        private static FileStatusGroup ToGroup(FileStatusWithDescription diff)
-            => new(diff.FirstRev, diff.SecondRev, diff.Summary, diff.Statuses, diff.BaseA, diff.BaseB, diff.IconName);
     }
 }

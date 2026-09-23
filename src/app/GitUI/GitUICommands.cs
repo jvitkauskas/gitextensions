@@ -846,6 +846,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommitDiff(null, this, objectId))
+            {
+                return true;
+            }
+
             using FormCommitDiff viewPatch = new(this, objectId);
             viewPatch.ShowDialog(null);
             return true;

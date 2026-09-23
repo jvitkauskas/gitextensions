@@ -2082,6 +2082,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
         IReadOnlyList<GitRevision> selectedRevisions = GetSelectedRevisions();
         if (selectedRevisions.Count > 0 && !selectedRevisions[0].IsArtificial)
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommitDiff(ParentForm, UICommands, selectedRevisions[0].ObjectId, modeless: true))
+            {
+                return;
+            }
+
             Form ProvideForm()
             {
                 return new FormCommitDiff(UICommands, selectedRevisions[0].ObjectId);

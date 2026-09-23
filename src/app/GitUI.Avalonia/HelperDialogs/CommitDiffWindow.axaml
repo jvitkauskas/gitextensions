@@ -1,0 +1,27 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:vm="using:GitUI.Presentation.HelperDialogs"
+                x:Class="GitUI.Avalonia.HelperDialogs.CommitDiffWindow"
+                x:DataType="vm:CommitDiffViewModel"
+                Title="{Binding Title}"
+                ShowInTaskbar="True"
+                Width="900" Height="680" MinWidth="400" MinHeight="300">
+  <!-- Equivalent of the CommitDiff control: the commit info above the files and their diff. -->
+  <Grid RowDefinitions="170,Auto,*" Margin="4">
+    <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <c:CommitInfoView Name="commitInfo" DataContext="{Binding CommitInfo}" />
+    </Border>
+    <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+    <Grid Grid.Row="2" ColumnDefinitions="260,Auto,*">
+      <fs:FileStatusListView Name="diffFiles" DataContext="{Binding Files}" />
+      <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+      <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <ed:FileViewerView Name="diffText" DataContext="{Binding Viewer}" />
+      </Border>
+    </Grid>
+  </Grid>
+</h:DialogWindow>
