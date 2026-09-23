@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using GitUI.Shells;
 
 namespace GitUI.ConsoleEmulation.ConEmu;
@@ -13,7 +14,9 @@ internal sealed class ConEmuConsoleEmulator(IShellProvider shellProvider) : ICon
 
     public string DisplayName => "ConEmu";
 
-    public bool IsSupportedInCurrentEnvironment => OperatingSystem.IsWindows();
+    // ConEmu ships x86 and x64 binaries only; hosted in an ARM64 process it fails to load them (error 193).
+    public bool IsSupportedInCurrentEnvironment => OperatingSystem.IsWindows()
+        && RuntimeInformation.ProcessArchitecture is Architecture.X64 or Architecture.X86;
 
     public IReadOnlyCollection<string> AvailableThemes { get; } =
     [
