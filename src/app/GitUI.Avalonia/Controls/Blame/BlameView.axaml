@@ -13,16 +13,44 @@
     <GridSplitter Name="commitInfoSplitter" Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
     <Border Grid.Row="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
       <ed:TextEditorView Name="file" DataContext="{Binding File}">
+        <!-- As BlameControl, which sets it only on BlameAuthor: the code behind moves this menu to the author gutter. -->
         <ed:TextEditorView.ContextMenu>
           <ContextMenu Name="menu">
-            <MenuItem Name="blameRevisionItem" />
-            <MenuItem Name="blamePreviousRevisionItem" />
-            <MenuItem Name="showChangesItem" />
+            <MenuItem Name="blameRevisionItem">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Blame.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="blamePreviousRevisionItem">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/RecentRepositories.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="showChangesItem">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <Separator />
             <MenuItem Name="copyToClipboardItem">
-              <MenuItem Name="copyHashItem" />
-              <MenuItem Name="copyMessageItem" />
-              <MenuItem Name="copyAllItem" />
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+              <MenuItem Name="copyHashItem">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/CommitId.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Name="copyMessageItem">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/Message.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Name="copyAllItem">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/CommitSummary.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
             </MenuItem>
           </ContextMenu>
         </ed:TextEditorView.ContextMenu>

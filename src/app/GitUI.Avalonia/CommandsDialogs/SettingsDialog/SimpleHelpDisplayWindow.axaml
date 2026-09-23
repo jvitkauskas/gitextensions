@@ -6,7 +6,7 @@
                 x:DataType="vm:SimpleHelpDisplayViewModel"
                 Title="{Binding Title}"
                 Width="299" Height="439" MinWidth="200" MinHeight="150" CanMaximize="False">
-  <TextBox Name="contentTextBox" Text="{Binding Content, Mode=OneWay}" IsReadOnly="True"
+  <TextBox Name="contentTextBox" Classes="info" Text="{Binding Content, Mode=OneWay}" IsReadOnly="True"
            AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" CornerRadius="0"
            ScrollViewer.VerticalScrollBarVisibility="Auto" />
 </h:DialogWindow>

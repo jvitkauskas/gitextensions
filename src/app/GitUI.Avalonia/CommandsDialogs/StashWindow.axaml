@@ -29,12 +29,13 @@
       </Grid>
       <!-- Equivalent of tableLayoutPanel1: the options and the buttons. -->
       <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="0,4,0,0">
-        <StackPanel Orientation="Horizontal" Spacing="12">
+        <!-- Equivalent of the two 50% columns of tableLayoutPanel1: Keep index on the left, Include untracked files right-aligned -->
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
           <CheckBox Name="keepIndexCheckBox" IsChecked="{Binding KeepIndex}" Content="{Binding Strings.KeepIndex.AccessKeyText}"
                     ToolTip.Tip="{Binding Strings.KeepIndexToolTip.Text}" />
-          <CheckBox Name="includeUntrackedCheckBox" IsChecked="{Binding IncludeUntrackedFiles}" Content="{Binding Strings.IncludeUntracked.AccessKeyText}"
+          <CheckBox Name="includeUntrackedCheckBox" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{Binding IncludeUntrackedFiles}" Content="{Binding Strings.IncludeUntracked.AccessKeyText}"
                     ToolTip.Tip="{Binding Strings.IncludeUntrackedToolTip.Text}" />
-        </StackPanel>
+        </Grid>
         <Button Name="stashAllButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                 Content="{Binding Strings.StashAll.AccessKeyText}" ToolTip.Tip="{Binding Strings.StashAllToolTip.Text}" Command="{Binding StashAllCommand}" />
         <Button Name="stashSelectedButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsEnabled="{Binding CanStashSelected}"
@@ -44,7 +45,7 @@
         <Button Name="applyButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsEnabled="{Binding CanApplyOrDrop}"
                 Content="{Binding Strings.Apply.AccessKeyText}" ToolTip.Tip="{Binding Strings.ApplyToolTip.Text}" Command="{Binding ApplyCommand}" />
       </StackPanel>
-      <TextBox Name="messageTextBox" DockPanel.Dock="Bottom" Height="80" AcceptsReturn="True" TextWrapping="Wrap"
+      <TextBox Name="messageTextBox" DockPanel.Dock="Bottom" Height="80" Classes="info" BorderThickness="0" AcceptsReturn="True" TextWrapping="Wrap"
                Text="{Binding Message}" PlaceholderText="{Binding MessagePlaceholder}" IsReadOnly="{Binding IsMessageReadOnly}" />
       <Label DockPanel.Dock="Bottom" Content="{Binding Strings.Message.AccessKeyText}" Target="messageTextBox" Padding="0,4,0,2" />
       <fs:FileStatusListView Name="stashedFiles" DataContext="{Binding Files}" />

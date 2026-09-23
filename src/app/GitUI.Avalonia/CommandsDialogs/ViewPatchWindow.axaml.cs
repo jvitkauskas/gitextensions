@@ -18,9 +18,9 @@ public partial class ViewPatchWindow : DialogWindow
         // Column headers are not in the logical tree, so they are not bound.
         if (DataContext is ViewPatchViewModel { Strings: var strings })
         {
-            patchesGrid.Columns[0].Header = strings.ChangeColumn.Text;
-            patchesGrid.Columns[1].Header = strings.TypeColumn.Text;
-            patchesGrid.Columns[2].Header = strings.FileNameColumn.Text;
+            patchesGrid.Columns[0].Header = strings.FileNameColumn.Text;
+            patchesGrid.Columns[1].Header = strings.ChangeColumn.Text;
+            patchesGrid.Columns[2].Header = strings.TypeColumn.Text;
         }
     }
 }

@@ -51,9 +51,14 @@ public partial class BlameView : UserControl
             ToolTip.SetIsOpen(_margin, false);
         };
         _margin.PointerPressed += OnMarginPointerPressed;
-        file.ContextRequested += (_, e) => _menuLine = e.TryGetPosition(editor.TextArea.TextView, out Point position)
+
+        // As BlameControl, which attaches the menu only to the author viewer: it opens on the author gutter, not on the
+        // file text. The line is taken before the menu (subscribed when attached) opens.
+        file.ContextMenu = null;
+        _margin.ContextRequested += (_, e) => _menuLine = e.TryGetPosition(editor.TextArea.TextView, out Point position)
             ? _margin.GetLineAt(position.Y)
             : editor.TextArea.Caret.Line;
+        _margin.ContextMenu = menu;
         menu.Opening += (_, _) => UpdateMenu();
         blameRevisionItem.Click += (_, _) => _viewModel?.BlameRevisionOf(_menuLine);
         blamePreviousRevisionItem.Click += (_, _) => _viewModel?.BlamePreviousRevisionOf(_menuLine);

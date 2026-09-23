@@ -18,42 +18,51 @@
         <TextBlock Name="helpText" Text="{Binding Strings.Help.Text}" TextWrapping="Wrap" MaxWidth="360" HorizontalAlignment="Left" />
         <TextBlock Text="{Binding Strings.QuickViewHint.Text}" FontWeight="SemiBold" />
       </StackPanel>
+      <!-- Equivalent of the check boxes of panel2: the two filters side by side, then the fsck options -->
       <StackPanel Grid.Column="1" Spacing="0">
+        <StackPanel Orientation="Horizontal" Spacing="20">
+          <CheckBox Name="showCommitsCheckBox" IsChecked="{Binding ShowCommitsAndTags}"
+                    Content="{Binding Strings.ShowCommitsAndTags.AccessKeyText}" ToolTip.Tip="{Binding Strings.ShowCommitsAndTagsToolTip.Text}" />
+          <CheckBox Name="showOtherCheckBox" IsChecked="{Binding ShowOtherObjects}"
+                    Content="{Binding Strings.ShowOtherObjects.AccessKeyText}" ToolTip.Tip="{Binding Strings.ShowOtherObjectsToolTip.Text}" />
+        </StackPanel>
+        <CheckBox Name="noReflogsCheckBox" IsChecked="{Binding NoReflogs}">
+          <TextBlock Text="{Binding Strings.NoReflogs.Text}" TextWrapping="Wrap" />
+        </CheckBox>
         <CheckBox Name="unreachableCheckBox" IsChecked="{Binding Unreachable}">
           <TextBlock Text="{Binding Strings.Unreachable.Text}" TextWrapping="Wrap" />
         </CheckBox>
         <CheckBox Name="fullCheckCheckBox" IsChecked="{Binding FullCheck}">
           <TextBlock Text="{Binding Strings.FullCheck.Text}" TextWrapping="Wrap" />
         </CheckBox>
-        <CheckBox Name="noReflogsCheckBox" IsChecked="{Binding NoReflogs}">
-          <TextBlock Text="{Binding Strings.NoReflogs.Text}" TextWrapping="Wrap" />
-        </CheckBox>
-        <CheckBox Name="showCommitsCheckBox" IsChecked="{Binding ShowCommitsAndTags}"
-                  Content="{Binding Strings.ShowCommitsAndTags.AccessKeyText}" ToolTip.Tip="{Binding Strings.ShowCommitsAndTagsToolTip.Text}" />
-        <CheckBox Name="showOtherCheckBox" IsChecked="{Binding ShowOtherObjects}"
-                  Content="{Binding Strings.ShowOtherObjects.AccessKeyText}" ToolTip.Tip="{Binding Strings.ShowOtherObjectsToolTip.Text}" />
       </StackPanel>
     </Grid>
 
+    <!-- Equivalent of panel1: Remove above Delete tags on the left, Recover stretched in the center, Save objects above Cancel on the right -->
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="6">
-        <Button Name="saveObjectsButton" Content="{Binding Strings.SaveObjects.AccessKeyText}" Command="{Binding SaveObjectsCommand}" />
-        <Button Name="removeButton" Grid.Column="1" Content="{Binding Strings.Remove.AccessKeyText}" Command="{Binding RemoveCommand}" />
-        <Button Name="deleteTagsButton" Grid.Column="2" Content="{Binding Strings.DeleteAllLostAndFoundTags.AccessKeyText}" Command="{Binding DeleteAllLostAndFoundTagsCommand}" />
-        <Button Name="restoreButton" Grid.Column="4" Classes="accent"
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="40">
+        <StackPanel Spacing="2">
+          <Button Name="removeButton" MinWidth="252" Content="{Binding Strings.Remove.AccessKeyText}" Command="{Binding RemoveCommand}" />
+          <Button Name="deleteTagsButton" MinWidth="252" Content="{Binding Strings.DeleteAllLostAndFoundTags.AccessKeyText}" Command="{Binding DeleteAllLostAndFoundTagsCommand}" />
+        </StackPanel>
+        <Button Name="restoreButton" Grid.Column="1" Classes="accent" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                 Content="{Binding Strings.RestoreSelectedObjects.AccessKeyText}" Command="{Binding RestoreSelectedObjectsCommand}" />
-        <Button Name="cancelButton" Grid.Column="5" Content="{Binding Strings.Close.AccessKeyText}" Command="{Binding CancelCommand}" />
+        <StackPanel Grid.Column="2" Spacing="2">
+          <Button Name="saveObjectsButton" MinWidth="208" Content="{Binding Strings.SaveObjects.AccessKeyText}" Command="{Binding SaveObjectsCommand}" />
+          <Button Name="cancelButton" MinWidth="208" Content="{Binding Strings.Close.AccessKeyText}" Command="{Binding CancelCommand}" />
+        </StackPanel>
       </Grid>
     </Border>
 
-    <Grid ColumnDefinitions="3*,Auto,2*">
+    <!-- Equivalent of splitContainer1 (SplitterDistance 700 of 859) -->
+    <Grid ColumnDefinitions="4*,Auto,*">
       <DataGrid Name="lostObjectsGrid" ItemsSource="{Binding LostObjects}" SelectedItem="{Binding SelectedObject}"
                 SelectionMode="Single" CanUserReorderColumns="False" HeadersVisibility="Column" GridLinesVisibility="All"
                 BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
         <DataGrid.Columns>
           <DataGridCheckBoxColumn Binding="{Binding IsSelected}" Width="32" x:DataType="vm:LostObjectItem" />
-          <DataGridTextColumn Binding="{Binding Date, StringFormat='{}{0:g}'}" Width="125" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
-          <DataGridTextColumn Binding="{Binding RawType}" Width="105" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding Date, StringFormat='{}{0:g}'}" Width="Auto" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding RawType}" Width="Auto" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
           <DataGridTextColumn Binding="{Binding Subject}" Width="*" MinWidth="140" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
           <DataGridTextColumn Binding="{Binding Author}" Width="100" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
           <DataGridTextColumn Binding="{Binding ObjectId}" Width="70" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
@@ -61,16 +70,40 @@
         </DataGrid.Columns>
         <DataGrid.ContextMenu>
           <ContextMenu Name="lostObjectsMenu">
-            <MenuItem Name="viewMenuItem" Header="{Binding Strings.View.AccessKeyText}" Command="{Binding ViewCommand}" />
+            <MenuItem Name="viewMenuItem" Header="{Binding Strings.View.AccessKeyText}" Command="{Binding ViewCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="createTagMenuItem" Header="{Binding Strings.CreateTag.AccessKeyText}" Command="{Binding CreateTagCommand}"
-                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+T" />
+                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+T">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/TagCreate.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="createBranchMenuItem" Header="{Binding Strings.CreateBranch.AccessKeyText}" Command="{Binding CreateBranchCommand}"
-                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+B" />
-            <MenuItem Name="copyHashMenuItem" Header="{Binding Strings.CopyHash.AccessKeyText}" Command="{Binding CopyHashCommand}" />
+                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+B">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/BranchCreate.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="copyHashMenuItem" Header="{Binding Strings.CopyHash.AccessKeyText}" Command="{Binding CopyHashCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="copyParentHashMenuItem" Header="{Binding Strings.CopyParentHash.AccessKeyText}" Command="{Binding CopyParentHashCommand}"
-                      IsEnabled="{Binding CanCreateRef}" />
+                      IsEnabled="{Binding CanCreateRef}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="saveAsMenuItem" Header="{Binding Strings.SaveAs.AccessKeyText}" Command="{Binding SaveAsCommand}"
-                      IsEnabled="{Binding CanSaveAs}" InputGesture="Ctrl+S" />
+                      IsEnabled="{Binding CanSaveAs}" InputGesture="Ctrl+S">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/SaveAs.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
           </ContextMenu>
         </DataGrid.ContextMenu>
       </DataGrid>

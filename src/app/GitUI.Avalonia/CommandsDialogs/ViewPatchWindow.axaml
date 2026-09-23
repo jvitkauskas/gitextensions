@@ -14,15 +14,17 @@
       <TextBox Name="patchFileTextBox" Grid.Column="1" Text="{Binding PatchFile}" />
       <Button Name="browseButton" Grid.Column="2" MinWidth="80" Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
     </Grid>
-    <Grid RowDefinitions="160,Auto,*">
+    <!-- Equivalent of splitContainer1 (Panel1 fixed, SplitterDistance 270); the Change and Type columns are the 70 and 50 of
+         FormViewPatch plus the wider cell padding of the Avalonia DataGrid. -->
+    <Grid RowDefinitions="270,Auto,*">
       <DataGrid Name="patchesGrid" ItemsSource="{Binding Patches}" SelectedItem="{Binding SelectedPatch}"
                 IsReadOnly="True" SelectionMode="Single" CanUserReorderColumns="False"
                 HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
         <DataGrid.Columns>
+          <DataGridTextColumn Binding="{Binding FileNameA}" Width="*" x:DataType="git:Patch" />
           <DataGridTextColumn Binding="{Binding ChangeType}" Width="90" x:DataType="git:Patch" />
           <DataGridTextColumn Binding="{Binding FileType}" Width="70" x:DataType="git:Patch" />
-          <DataGridTextColumn Binding="{Binding FileNameA}" Width="*" x:DataType="git:Patch" />
         </DataGrid.Columns>
       </DataGrid>
       <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />

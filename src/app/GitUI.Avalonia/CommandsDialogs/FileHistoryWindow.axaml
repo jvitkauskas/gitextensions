@@ -14,7 +14,7 @@
                 ShowInTaskbar="True"
                 Width="1100" Height="800" MinWidth="500" MinHeight="400">
   <Window.Styles>
-    <Style Selector="Button.toolbar, DropDownButton.toolbar">
+    <Style Selector="Button.toolbar, DropDownButton.toolbar, SplitButton.toolbar">
       <Setter Property="Padding" Value="4,3" />
       <Setter Property="MinWidth" Value="0" />
       <Setter Property="Background" Value="Transparent" />
@@ -28,17 +28,20 @@
   <DockPanel Margin="4">
     <!-- Equivalent of ToolStripFilters with the items of FormFileHistory (the filters of the grid are not ported yet). -->
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="0,0,0,4">
-      <Button Name="loadButton" Classes="toolbar" Command="{Binding LoadFileHistoryCommand}" ToolTip.Tip="{Binding Strings.LoadFileHistory.Text}">
+      <!-- Equivalent of the ToolStripSplitButton: loads the history, its drop down holds the "on show" options -->
+      <SplitButton Name="loadButton" Classes="toolbar" Command="{Binding LoadFileHistoryCommand}" ToolTip.Tip="{Binding Strings.LoadFileHistory.Text}">
+        <SplitButton.Resources>
+          <!-- A narrow drop down arrow, as the ToolStripSplitButton (the Fluent one is 32 wide). -->
+          <x:Double x:Key="SplitButtonSecondaryButtonSize">20</x:Double>
+        </SplitButton.Resources>
         <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
-      </Button>
-      <DropDownButton Name="loadOptionsButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.LoadFileHistory.Text}">
-        <DropDownButton.Flyout>
+        <SplitButton.Flyout>
           <MenuFlyout>
             <MenuItem Name="loadHistoryOnShowItem" Header="{Binding Strings.LoadHistoryOnShow.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding LoadHistoryOnShow}" />
             <MenuItem Name="loadBlameOnShowItem" Header="{Binding Strings.LoadBlameOnShow.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding LoadBlameOnShow}" IsEnabled="{Binding IsBlameTabVisible}" />
           </MenuFlyout>
-        </DropDownButton.Flyout>
-      </DropDownButton>
+        </SplitButton.Flyout>
+      </SplitButton>
       <DropDownButton Name="fullHistoryButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.ShowFullHistoryToolTip.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/FileHistory.png" Width="16" Height="16" />
         <DropDownButton.Flyout>
