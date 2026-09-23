@@ -14,6 +14,11 @@
     <Style Selector="TextBlock.missing">
       <Setter Property="Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
     </Style>
+    <!-- The list views of FormRecentReposSettings have the default 3D border. -->
+    <Style Selector="ListBox.repos">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+    </Style>
     <Style Selector="ListBox.repos ListBoxItem">
       <Setter Property="Padding" Value="6,2" />
     </Style>
@@ -46,8 +51,8 @@
           <StackPanel Spacing="4">
             <TextBlock Text="{Binding Strings.ShorteningStrategy.Text}" FontWeight="SemiBold" />
             <RadioButton Name="dontShortenRadioButton" GroupName="shortening" Content="{Binding Strings.DontShorten.AccessKeyText}" IsChecked="{Binding IsDontShorten}" />
-            <RadioButton Name="mostSignificantDirRadioButton" GroupName="shortening" Content="{Binding Strings.MostSignificantDir.AccessKeyText}" IsChecked="{Binding IsMostSignificantDir}" />
             <RadioButton Name="middleDotsRadioButton" GroupName="shortening" Content="{Binding Strings.MiddleDots.AccessKeyText}" IsChecked="{Binding IsMiddleDots}" />
+            <RadioButton Name="mostSignificantDirRadioButton" GroupName="shortening" Content="{Binding Strings.MostSignificantDir.AccessKeyText}" IsChecked="{Binding IsMostSignificantDir}" />
           </StackPanel>
         </Border>
         <Grid Classes="form" ColumnDefinitions="*,Auto" ColumnSpacing="8">
@@ -57,9 +62,10 @@
         </Grid>
         <TextBlock Text="{Binding Strings.ComboMinWidthNote.Text}" TextWrapping="Wrap" Opacity="0.8" />
       </StackPanel>
-      <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto,*" RowSpacing="4">
+      <!-- Equivalent of comboPanel: TopLB is docked at the top with a fixed height, RecentLB fills the rest. -->
+      <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="4">
         <TextBlock Text="{Binding Strings.TopRepositories.Text}" FontWeight="SemiBold" />
-        <ListBox Name="topListBox" Grid.Row="1" Classes="repos" SelectionMode="Multiple" ItemsSource="{Binding TopRepos}" />
+        <ListBox Name="topListBox" Grid.Row="1" Height="121" Classes="repos" SelectionMode="Multiple" ItemsSource="{Binding TopRepos}" />
         <TextBlock Grid.Row="2" Margin="0,4,0,0" Text="{Binding Strings.RecentRepositories.Text}" FontWeight="SemiBold" />
         <ListBox Name="recentListBox" Grid.Row="3" Classes="repos" SelectionMode="Multiple" ItemsSource="{Binding RecentRepos}" />
       </Grid>

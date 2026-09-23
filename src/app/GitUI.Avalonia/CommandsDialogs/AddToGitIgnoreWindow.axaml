@@ -13,21 +13,34 @@
         <Button Name="cancelButton" IsCancel="True" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
       </StackPanel>
     </Border>
-    <Grid Margin="12" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="6">
-      <Label Content="{Binding Strings.FilePattern.AccessKeyText}" Target="patternsTextBox" Padding="0" />
-      <TextBox Name="patternsTextBox" Grid.Row="1" Height="80" AcceptsReturn="True" TextWrapping="NoWrap" Text="{Binding Patterns}" />
-      <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Margin="0,6,0,0">
-        <TextBlock Text="{Binding Strings.Preview.Text}" FontWeight="SemiBold" />
-        <TextBlock Name="matchStatusText" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding MatchStatus}"
-                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-      </Grid>
-      <Grid Grid.Row="3" RowDefinitions="Auto,*" RowSpacing="4">
-        <StackPanel Name="noMatchPanel" Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasNoMatch}">
-          <Image Source="avares://GitUI.Avalonia/Assets/Unmerged.png" Width="16" Height="16" />
-          <TextBlock Text="{Binding Strings.NoMatch.Text}" />
+    <Grid Margin="9" RowDefinitions="Auto,*" RowSpacing="8">
+      <!-- Equivalent of the "Enter a file pattern to ignore:" group box (groupFilePattern) -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="6">
+          <Label Content="{Binding Strings.FilePattern.AccessKeyText}" Target="patternsTextBox" Padding="0" FontWeight="SemiBold" />
+          <TextBox Name="patternsTextBox" Height="80" AcceptsReturn="True" TextWrapping="NoWrap" Text="{Binding Patterns}" />
         </StackPanel>
-        <ListBox Name="previewListBox" Grid.Row="1" ItemsSource="{Binding PreviewFiles}" IsEnabled="{Binding !IsUpdating}" />
-      </Grid>
+      </Border>
+      <!-- Equivalent of the "Preview" group box (groupBox1) -->
+      <Border Grid.Row="1" BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="6">
+          <TextBlock Text="{Binding Strings.Preview.Text}" FontWeight="SemiBold" />
+          <ListBox Name="previewListBox" Grid.Row="1" ItemsSource="{Binding PreviewFiles}" IsEnabled="{Binding !IsUpdating}" />
+          <!-- Equivalent of noMatchPanel, centered over the preview list. -->
+          <Border Name="noMatchPanel" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,5"
+                  Background="{DynamicResource SystemControlBackgroundAltHighBrush}" IsVisible="{Binding HasNoMatch}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Image Source="avares://GitUI.Avalonia/Assets/Unmerged.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.NoMatch.Text}" VerticalAlignment="Center"
+                         Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            </StackPanel>
+          </Border>
+          <!-- Equivalent of _NO_TRANSLATE_filesWillBeIgnored, docked bottom-right under the list. -->
+          <TextBlock Name="matchStatusText" Grid.Row="2" HorizontalAlignment="Right" Text="{Binding MatchStatus}" />
+        </Grid>
+      </Border>
     </Grid>
   </DockPanel>
 </h:DialogWindow>

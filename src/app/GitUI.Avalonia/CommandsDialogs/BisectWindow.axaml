@@ -14,13 +14,13 @@
   </Window.Styles>
   <StackPanel Name="buttons" Margin="12" Spacing="6">
     <Button Name="startButton" Content="{Binding Strings.Start.AccessKeyText}" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" />
-    <Button Name="goodButton" Content="{Binding Strings.Good.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Good}"
-            IsEnabled="{Binding IsInTheMiddleOfBisect}" />
     <Button Name="badButton" Content="{Binding Strings.Bad.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Bad}"
+            IsEnabled="{Binding IsInTheMiddleOfBisect}" />
+    <Button Name="goodButton" Content="{Binding Strings.Good.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Good}"
             IsEnabled="{Binding IsInTheMiddleOfBisect}" />
     <Button Name="skipButton" Content="{Binding Strings.Skip.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Skip}"
             IsEnabled="{Binding IsInTheMiddleOfBisect}" />
-    <Button Name="stopButton" Margin="0,6,0,0" Content="{Binding Strings.Stop.AccessKeyText}" Command="{Binding StopCommand}"
+    <Button Name="stopButton" Content="{Binding Strings.Stop.AccessKeyText}" Command="{Binding StopCommand}"
             IsEnabled="{Binding IsInTheMiddleOfBisect}" />
   </StackPanel>
 </h:DialogWindow>

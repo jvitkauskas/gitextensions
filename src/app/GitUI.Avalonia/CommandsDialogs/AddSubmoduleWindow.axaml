@@ -15,13 +15,14 @@
             Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
     <Label Grid.Row="1" Content="{Binding Strings.LocalPath.AccessKeyText}" Target="localPathTextBox" />
     <TextBox Name="localPathTextBox" Grid.Row="1" Grid.Column="1" Text="{Binding LocalPath}" />
-    <Button Name="addButton" Grid.Row="1" Grid.Column="2" MinWidth="90" Classes="accent" IsDefault="True"
-            Content="{Binding Strings.AddSubmodule.AccessKeyText}" Command="{Binding AddSubmoduleCommand}" />
     <Label Grid.Row="2" Content="{Binding Strings.Branch.AccessKeyText}" Target="branchComboBox" />
     <!-- The branches of the repository are listed (git ls-remote) when the list drops down. -->
     <ComboBox Name="branchComboBox" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
               ItemsSource="{Binding RemoteBranches}" Text="{Binding Branch}" DropDownOpened="BranchComboBox_DropDownOpened" />
-    <CheckBox Name="forceCheckBox" Grid.Row="3" Grid.Column="1"
+    <!-- Equivalent of chkForce at the left edge under the labels, with Add bottom-right on the same row. -->
+    <CheckBox Name="forceCheckBox" Grid.Row="3"
               Content="{Binding Strings.Force.AccessKeyText}" IsChecked="{Binding Force}" />
+    <Button Name="addButton" Grid.Row="3" Grid.Column="2" MinWidth="90" Classes="accent" IsDefault="True"
+            Content="{Binding Strings.AddSubmodule.AccessKeyText}" Command="{Binding AddSubmoduleCommand}" />
   </Grid>
 </h:DialogWindow>

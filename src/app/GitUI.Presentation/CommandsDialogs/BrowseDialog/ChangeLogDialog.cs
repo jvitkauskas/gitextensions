@@ -26,5 +26,5 @@ public sealed class ChangeLogViewModel : DialogViewModel
 
     public ChangeLogStrings Strings { get; }
 
-    public TextEditorViewModel ChangeLog { get; } = new() { IsReadOnly = true };
+    public TextEditorViewModel ChangeLog { get; } = new() { IsReadOnly = true, ShowLineNumbers = false };
 }

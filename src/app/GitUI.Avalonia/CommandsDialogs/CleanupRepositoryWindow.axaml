@@ -6,62 +6,69 @@
                 x:DataType="vm:CleanupRepositoryViewModel"
                 Title="{Binding Strings.Title.PlainText}"
                 Width="560" Height="720" MinWidth="500" MinHeight="600">
-  <DockPanel>
-    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6">
-        <Button Name="previewButton" MinWidth="100" Command="{Binding PreviewCommand}">
+  <Window.Styles>
+    <Style Selector="StackPanel#actionButtons > Button">
+      <Setter Property="MinWidth" Value="120" />
+    </Style>
+  </Window.Styles>
+  <DockPanel Margin="9">
+    <StackPanel DockPanel.Dock="Top" Spacing="4">
+      <!-- Equivalent of the "Remove untracked files" group box, which only holds the radio buttons -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding Strings.RemoveUntracked.Text}" FontWeight="SemiBold" Margin="0,0,0,2" />
+          <RadioButton Name="removeAllRadioButton" GroupName="cleanMode"
+                       Content="{Binding Strings.RemoveAll.AccessKeyText}" IsChecked="{Binding IsRemoveAll}" />
+          <RadioButton Name="removeNonIgnoredRadioButton" GroupName="cleanMode"
+                       Content="{Binding Strings.RemoveNonIgnored.AccessKeyText}" IsChecked="{Binding IsRemoveNonIgnored}" />
+          <RadioButton Name="removeIgnoredRadioButton" GroupName="cleanMode"
+                       Content="{Binding Strings.RemoveIgnored.AccessKeyText}" IsChecked="{Binding IsRemoveIgnored}" />
+        </StackPanel>
+      </Border>
+      <StackPanel Margin="8,0,0,0" Spacing="4">
+        <CheckBox Name="removeDirectoriesCheckBox" Content="{Binding Strings.RemoveDirectories.AccessKeyText}" IsChecked="{Binding RemoveDirectories}" />
+        <CheckBox Name="cleanSubmodulesCheckBox" Content="{Binding Strings.CleanSubmodules.AccessKeyText}" IsChecked="{Binding CleanSubmodules}" />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,4,0,0">
+          <CheckBox Name="includeFilterCheckBox" Content="{Binding Strings.IncludePathFilter.AccessKeyText}" IsChecked="{Binding IsIncludeFilterEnabled}" />
+          <Button Name="addIncludePathButton" Grid.Column="1" MinWidth="120" Content="{Binding Strings.AddIncludePath.AccessKeyText}" Command="{Binding AddIncludePathCommand}" />
+        </Grid>
+        <!-- The path text boxes are indented under their check box, with the hint below (shown when the filter is enabled). -->
+        <TextBox Name="includePathsTextBox" Height="70" Margin="28,0,0,0" AcceptsReturn="True" TextWrapping="NoWrap"
+                 Text="{Binding IncludePaths}" IsEnabled="{Binding IsIncludeFilterEnabled}" />
+        <Panel Margin="30,0,0,0" MinHeight="18">
+          <TextBlock Text="{Binding Strings.IncludePathHint.Text}" IsVisible="{Binding IsIncludeFilterEnabled}" />
+        </Panel>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <CheckBox Name="excludeFilterCheckBox" Content="{Binding Strings.ExcludePathFilter.AccessKeyText}" IsChecked="{Binding IsExcludeFilterEnabled}" />
+          <Button Name="addExcludePathButton" Grid.Column="1" MinWidth="120" Content="{Binding Strings.AddExcludePath.AccessKeyText}" Command="{Binding AddExcludePathCommand}" />
+        </Grid>
+        <TextBox Name="excludePathsTextBox" Height="70" Margin="28,0,0,0" AcceptsReturn="True" TextWrapping="NoWrap"
+                 Text="{Binding ExcludePaths}" IsEnabled="{Binding IsExcludeFilterEnabled}" />
+        <Panel Margin="30,0,0,0" MinHeight="18">
+          <TextBlock Text="{Binding Strings.ExcludePathHint.Text}" IsVisible="{Binding IsExcludeFilterEnabled}" />
+        </Panel>
+      </StackPanel>
+      <!-- Equivalent of Preview, Cleanup and Close: one right-aligned row above the log -->
+      <StackPanel Name="actionButtons" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,4,0,0">
+        <Button Name="previewButton" Command="{Binding PreviewCommand}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Image Source="avares://GitUI.Avalonia/Assets/Preview.png" Width="16" Height="16" />
             <AccessText Text="{Binding Strings.Preview.AccessKeyText}" />
           </StackPanel>
         </Button>
-        <Button Name="cleanupButton" Grid.Column="1" MinWidth="100" Command="{Binding CleanupCommand}">
+        <Button Name="cleanupButton" Command="{Binding CleanupCommand}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Image Source="avares://GitUI.Avalonia/Assets/CleanupRepo.png" Width="16" Height="16" />
             <AccessText Text="{Binding Strings.Cleanup.AccessKeyText}" />
           </StackPanel>
         </Button>
-        <Button Name="closeButton" Grid.Column="3" IsCancel="True" Content="{Binding Strings.Close}" Command="{Binding CloseCommand}" />
-      </Grid>
-    </Border>
-    <DockPanel Margin="9">
-      <StackPanel DockPanel.Dock="Top" Spacing="8">
-        <!-- Equivalent of the "Remove untracked files" group box -->
-        <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-          <StackPanel Spacing="4">
-            <TextBlock Text="{Binding Strings.RemoveUntracked.Text}" FontWeight="SemiBold" Margin="0,0,0,2" />
-            <RadioButton Name="removeAllRadioButton" GroupName="cleanMode"
-                         Content="{Binding Strings.RemoveAll.AccessKeyText}" IsChecked="{Binding IsRemoveAll}" />
-            <RadioButton Name="removeNonIgnoredRadioButton" GroupName="cleanMode"
-                         Content="{Binding Strings.RemoveNonIgnored.AccessKeyText}" IsChecked="{Binding IsRemoveNonIgnored}" />
-            <RadioButton Name="removeIgnoredRadioButton" GroupName="cleanMode"
-                         Content="{Binding Strings.RemoveIgnored.AccessKeyText}" IsChecked="{Binding IsRemoveIgnored}" />
-            <CheckBox Name="removeDirectoriesCheckBox" Content="{Binding Strings.RemoveDirectories.AccessKeyText}" IsChecked="{Binding RemoveDirectories}" />
-            <CheckBox Name="cleanSubmodulesCheckBox" Content="{Binding Strings.CleanSubmodules.AccessKeyText}" IsChecked="{Binding CleanSubmodules}" />
-          </StackPanel>
-        </Border>
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-          <CheckBox Name="includeFilterCheckBox" Content="{Binding Strings.IncludePathFilter.AccessKeyText}" IsChecked="{Binding IsIncludeFilterEnabled}" />
-          <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Strings.IncludePathHint.Text}"
-                     IsVisible="{Binding IsIncludeFilterEnabled}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-          <Button Name="addIncludePathButton" Grid.Column="2" Content="{Binding Strings.AddIncludePath.AccessKeyText}" Command="{Binding AddIncludePathCommand}" />
-        </Grid>
-        <TextBox Name="includePathsTextBox" Height="70" AcceptsReturn="True" TextWrapping="NoWrap"
-                 Text="{Binding IncludePaths}" IsEnabled="{Binding IsIncludeFilterEnabled}" />
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-          <CheckBox Name="excludeFilterCheckBox" Content="{Binding Strings.ExcludePathFilter.AccessKeyText}" IsChecked="{Binding IsExcludeFilterEnabled}" />
-          <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Strings.ExcludePathHint.Text}"
-                     IsVisible="{Binding IsExcludeFilterEnabled}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-          <Button Name="addExcludePathButton" Grid.Column="2" Content="{Binding Strings.AddExcludePath.AccessKeyText}" Command="{Binding AddExcludePathCommand}" />
-        </Grid>
-        <TextBox Name="excludePathsTextBox" Height="70" AcceptsReturn="True" TextWrapping="NoWrap"
-                 Text="{Binding ExcludePaths}" IsEnabled="{Binding IsExcludeFilterEnabled}" />
-        <Label Content="{Binding Strings.Log.AccessKeyText}" Target="outputTextBox" Padding="0,4,0,0" />
+        <Button Name="closeButton" IsCancel="True" Content="{Binding Strings.Close}" Command="{Binding CloseCommand}" />
       </StackPanel>
-      <TextBox Name="outputTextBox" Margin="0,4,0,0" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
-               Text="{Binding Output}"
-               ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
-    </DockPanel>
+      <Label Content="{Binding Strings.Log.AccessKeyText}" Target="outputTextBox" Padding="0,4,0,0" />
+    </StackPanel>
+    <TextBox Name="outputTextBox" Margin="0,4,0,0" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+             Text="{Binding Output}"
+             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
   </DockPanel>
 </h:DialogWindow>
