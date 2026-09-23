@@ -1,0 +1,69 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.HelperDialogs.ResetCurrentBranchWindow"
+                x:DataType="vm:ResetCurrentBranchViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="500" MinWidth="480" SizeToContent="Height" CanMaximize="False">
+  <Window.Resources>
+    <ResourceDictionary>
+      <!-- OtherColors.BrightGreen / BrightYellow / BrightRed of the WinForms form, dimmed in dark themes. -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="ResetSafeBrush" Color="#80FF80" />
+          <SolidColorBrush x:Key="ResetCautionBrush" Color="#FFFF80" />
+          <SolidColorBrush x:Key="ResetDangerBrush" Color="#FF8080" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="ResetSafeBrush" Color="#2D5A2D" />
+          <SolidColorBrush x:Key="ResetCautionBrush" Color="#5A5A2D" />
+          <SolidColorBrush x:Key="ResetDangerBrush" Color="#5A2D2D" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="Border.resetKind">
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="CornerRadius" Value="2" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" MinWidth="91" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" MinWidth="91" IsCancel="True"
+                Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <StackPanel Margin="9" Spacing="8">
+      <TextBlock Name="branchInfoText" Text="{Binding BranchInfo}" />
+      <c:CommitSummaryView Name="commitSummary" DataContext="{Binding Summary}" />
+      <!-- Equivalent of the "Reset type" group box; F1 opens the git documentation of the chosen type. -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="6">
+          <TextBlock Text="{Binding Strings.ResetType}" FontWeight="SemiBold" />
+          <Border Classes="resetKind" Background="{DynamicResource ResetSafeBrush}">
+            <RadioButton Name="softRadioButton" GroupName="resetKind" Content="{Binding Strings.Soft.AccessKeyText}" IsChecked="{Binding IsSoft}" />
+          </Border>
+          <Border Classes="resetKind" Background="{DynamicResource ResetCautionBrush}">
+            <RadioButton Name="mixedRadioButton" GroupName="resetKind" Content="{Binding Strings.Mixed.AccessKeyText}" IsChecked="{Binding IsMixed}" />
+          </Border>
+          <Border Classes="resetKind" Background="{DynamicResource ResetCautionBrush}">
+            <RadioButton Name="keepRadioButton" GroupName="resetKind" Content="{Binding Strings.Keep.AccessKeyText}" IsChecked="{Binding IsKeep}" />
+          </Border>
+          <Border Classes="resetKind" Background="{DynamicResource ResetCautionBrush}">
+            <RadioButton Name="mergeRadioButton" GroupName="resetKind" Content="{Binding Strings.Merge.AccessKeyText}" IsChecked="{Binding IsMerge}" />
+          </Border>
+          <Border Classes="resetKind" Background="{DynamicResource ResetDangerBrush}">
+            <RadioButton Name="hardRadioButton" GroupName="resetKind" Content="{Binding Strings.Hard.AccessKeyText}" IsChecked="{Binding IsHard}" />
+          </Border>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

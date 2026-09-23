@@ -296,5 +296,15 @@ public sealed class SmallDialogViewModelTests
             StartDirectories.Add(startDirectory);
             return Task.FromResult(Folder);
         }
+
+        public string? SaveFile { get; init; }
+
+        public string? SuggestedFileName { get; private set; }
+
+        public Task<string?> PickSaveFileAsync(string title, string filterName, string extension, string? suggestedFileName = null, string? startDirectory = null)
+        {
+            SuggestedFileName = suggestedFileName;
+            return Task.FromResult(SaveFile);
+        }
     }
 }

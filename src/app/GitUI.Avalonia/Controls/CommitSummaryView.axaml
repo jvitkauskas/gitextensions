@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.UserControls"
+             x:Class="GitUI.Avalonia.Controls.CommitSummaryView"
+             x:DataType="vm:CommitSummaryViewModel">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <!-- The WinForms control uses LightSteelBlue / LightSalmon, adapted to dark themes. -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="CommitSummaryTagBrush" Color="LightSteelBlue" />
+          <SolidColorBrush x:Key="CommitSummaryBranchBrush" Color="LightSalmon" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="CommitSummaryTagBrush" Color="#2F4A6B" />
+          <SolidColorBrush x:Key="CommitSummaryBranchBrush" Color="#7A3E26" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <!-- Port of CommitSummaryUserControl: a group box titled with the short commit id. -->
+  <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+          BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+    <StackPanel Spacing="6">
+      <SelectableTextBlock Name="titleText" Text="{Binding Title}" FontWeight="SemiBold" />
+      <SelectableTextBlock Name="subjectText" Text="{Binding Subject}" FontWeight="Bold" TextWrapping="Wrap" MaxLines="2" />
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+        <TextBlock Text="{Binding Strings.Author}" />
+        <SelectableTextBlock Name="authorText" Grid.Column="1" Text="{Binding Author}" FontWeight="Bold" />
+        <TextBlock Grid.Row="1" Text="{Binding Strings.CommitDate}" />
+        <TextBlock Name="dateText" Grid.Row="1" Grid.Column="1" Text="{Binding Date}" />
+        <TextBlock Grid.Row="2" Text="{Binding Strings.Tags.Text}" />
+        <Border Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Padding="4,0" CornerRadius="2"
+                Background="{DynamicResource CommitSummaryTagBrush}" IsVisible="{Binding HasTags}">
+          <TextBlock Name="tagsText" Text="{Binding TagsText}" FontWeight="Bold" />
+        </Border>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TagsText}" IsVisible="{Binding !HasTags}" />
+        <TextBlock Grid.Row="3" Text="{Binding Strings.Branches.Text}" />
+        <Border Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Padding="4,0" CornerRadius="2"
+                Background="{DynamicResource CommitSummaryBranchBrush}" IsVisible="{Binding HasBranches}">
+          <TextBlock Name="branchesText" Text="{Binding BranchesText}" FontWeight="Bold" />
+        </Border>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding BranchesText}" IsVisible="{Binding !HasBranches}" />
+      </Grid>
+    </StackPanel>
+  </Border>
+</UserControl>

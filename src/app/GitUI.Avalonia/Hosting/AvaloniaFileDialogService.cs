@@ -31,6 +31,20 @@ public sealed class AvaloniaFileDialogService(TopLevel topLevel) : IFileDialogSe
         return folders.Count == 0 ? null : folders[0].TryGetLocalPath();
     }
 
+    public async Task<string?> PickSaveFileAsync(string title, string filterName, string extension, string? suggestedFileName = null, string? startDirectory = null)
+    {
+        IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedFileName,
+            DefaultExtension = extension,
+            FileTypeChoices = [new FilePickerFileType(filterName) { Patterns = [$"*.{extension}"] }],
+            SuggestedStartLocation = await GetFolderAsync(startDirectory),
+        });
+
+        return file?.TryGetLocalPath();
+    }
+
     private async Task<IStorageFolder?> GetFolderAsync(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))

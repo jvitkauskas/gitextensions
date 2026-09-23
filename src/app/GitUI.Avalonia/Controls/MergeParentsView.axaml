@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+             xmlns:uc="using:GitUI.Presentation.UserControls"
+             x:Class="GitUI.Avalonia.Controls.MergeParentsView"
+             x:DataType="vm:MergeParentViewModel"
+             IsVisible="{Binding IsMerge}">
+  <!-- The parents of a merge commit, to choose the mainline of a cherry-pick or revert (a details list view in WinForms). -->
+  <DockPanel>
+    <Label DockPanel.Dock="Top" Padding="0,0,0,4" Content="{Binding ParentStrings.SelectParent.AccessKeyText}" Target="parentsListBox" />
+    <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DockPanel>
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="44,*,120,90" Margin="8,4" ColumnSpacing="6">
+          <TextBlock Text="{Binding ParentStrings.NumberColumn.Text}" FontWeight="SemiBold" />
+          <TextBlock Grid.Column="1" Text="{Binding ParentStrings.MessageColumn.Text}" FontWeight="SemiBold" />
+          <TextBlock Grid.Column="2" Text="{Binding ParentStrings.AuthorColumn.Text}" FontWeight="SemiBold" />
+          <TextBlock Grid.Column="3" Text="{Binding ParentStrings.DateColumn.Text}" FontWeight="SemiBold" />
+        </Grid>
+        <ListBox Name="parentsListBox" ItemsSource="{Binding Parents}" SelectedItem="{Binding SelectedParent}" MaxHeight="120">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="uc:ParentCommit">
+              <Grid ColumnDefinitions="44,*,120,90" ColumnSpacing="6">
+                <TextBlock Text="{Binding Number}" />
+                <TextBlock Grid.Column="1" Text="{Binding Subject}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Text="{Binding Author}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="3" Text="{Binding Date}" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+  </DockPanel>
+</UserControl>

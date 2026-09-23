@@ -2115,6 +2115,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
         UICommands.DoActionOnRepo(() =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(ParentForm, UICommands, LatestSelectedRevision, FormResetCurrentBranch.ResetType.Soft, out bool reset))
+            {
+                return reset;
+            }
+
             using FormResetCurrentBranch form = FormResetCurrentBranch.Create(UICommands, LatestSelectedRevision);
             return form.ShowDialog(ParentForm) == DialogResult.OK;
         });
@@ -2140,6 +2145,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
         UICommands.DoActionOnRepo(() =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowResetAnotherBranch(ParentForm, UICommands, LatestSelectedRevision, out bool reset))
+            {
+                return reset;
+            }
+
             using FormResetAnotherBranch form = FormResetAnotherBranch.Create(UICommands, LatestSelectedRevision);
             return form.ShowDialog(ParentForm) == DialogResult.OK;
         });

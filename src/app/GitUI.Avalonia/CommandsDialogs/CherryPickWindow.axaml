@@ -1,0 +1,35 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CherryPickWindow"
+                x:DataType="vm:CherryPickViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="630" MinWidth="630" SizeToContent="Height" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="pickButton" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.CherryPick.AccessKeyText}" Command="{Binding CherryPickCommand}" />
+        <Button Name="abortButton" IsCancel="True"
+                Content="{Binding Strings.Abort.AccessKeyText}" Command="{Binding AbortCommand}" />
+      </StackPanel>
+    </Border>
+    <StackPanel Margin="9" Spacing="8">
+      <TextBlock Text="{Binding Strings.CherryPickThisCommit.Text}" />
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <c:CommitSummaryView Name="commitSummary" DataContext="{Binding Summary}" />
+        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Top">
+          <Label Content="{Binding Strings.ChooseAnotherRevision.AccessKeyText}" Target="chooseRevisionButton" Padding="0" />
+          <Button Name="chooseRevisionButton" Padding="4" Command="{Binding ChooseRevisionCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+      </Grid>
+      <c:MergeParentsView Name="mergeParents" />
+      <CheckBox Name="autoCommitCheckBox" Content="{Binding Strings.AutoCommit.AccessKeyText}" IsChecked="{Binding AutoCommit}" />
+      <CheckBox Name="addReferenceCheckBox" Content="{Binding Strings.AddReference.AccessKeyText}" IsChecked="{Binding AddReference}" />
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

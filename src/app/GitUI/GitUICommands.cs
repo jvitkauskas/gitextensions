@@ -195,6 +195,11 @@ public sealed class GitUICommands : IGitUICommands
             return false;
         }
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(owner, this, Module.GetRevision(objectId), FormResetCurrentBranch.ResetType.Soft, out bool reset))
+        {
+            return reset;
+        }
+
         using FormResetCurrentBranch form = FormResetCurrentBranch.Create(this, Module.GetRevision(objectId));
         return form.ShowDialog(owner) == DialogResult.OK;
     }
@@ -948,6 +953,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowRevertCommit(owner, this, revision, out bool reverted))
+            {
+                return reverted;
+            }
+
             using FormRevertCommit form = new(this, revision);
             return form.ShowDialog(owner) == DialogResult.OK;
         }
@@ -971,6 +981,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCherryPick(owner, this, revision, out bool picked))
+            {
+                return picked;
+            }
+
             using FormCherryPick form = new(this, revision);
             return form.ShowDialog(owner) == DialogResult.OK;
         }
@@ -984,6 +999,11 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCherryPicks(owner, this, revisions, out bool changed))
+            {
+                return changed;
+            }
+
             FormCherryPick? prevForm = null;
 
             try
@@ -1130,6 +1150,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
             {
+                if (AvaloniaHosting.AvaloniaDialogs.TryShowArchive(owner, this, revision, revision2, path))
+                {
+                    return true;
+                }
+
                 using FormArchive form = new(this)
                 {
                     SelectedRevision = revision,

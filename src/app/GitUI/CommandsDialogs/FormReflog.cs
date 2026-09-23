@@ -157,6 +157,11 @@ public partial class FormReflog : GitModuleForm
         FormResetCurrentBranch.ResetType resetType = _isDirtyDir ? FormResetCurrentBranch.ResetType.Soft : FormResetCurrentBranch.ResetType.Hard;
         UICommands.DoActionOnRepo(() =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(this, UICommands, gitRevision, resetType, out bool reset))
+            {
+                return reset;
+            }
+
             using FormResetCurrentBranch form = FormResetCurrentBranch.Create(UICommands, gitRevision, resetType);
             return form.ShowDialog(this) == DialogResult.OK;
         });
