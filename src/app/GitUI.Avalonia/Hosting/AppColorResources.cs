@@ -25,4 +25,22 @@ public static class AppColorResources
 
     public static IBrush? GetBrush(StyledElement element, AppColor appColor)
         => GetColor(element, appColor) is { } color ? new SolidColorBrush(color) : null;
+
+    /// <summary>Halfway between the color and the background, in linear light (as <c>ColorHelper.DimColor</c> with the editor background).</summary>
+    public static Color Dim(Color color, Color background)
+        => Color.FromArgb(color.A, Mix(color.R, background.R), Mix(color.G, background.G), Mix(color.B, background.B));
+
+    private static byte Mix(byte channel, byte background) => SrgbDelinearize((SrgbLinearize(channel) + SrgbLinearize(background)) * 0.5);
+
+    private static double SrgbLinearize(byte channel)
+    {
+        double normalized = channel / 255.0;
+        return normalized <= 0.04045 ? normalized / 12.92 : Math.Pow((normalized + 0.055) / 1.055, 2.4);
+    }
+
+    private static byte SrgbDelinearize(double linear)
+    {
+        double normalized = linear <= 0.0031308 ? 12.92 * linear : (1.055 * Math.Pow(linear, 1.0 / 2.4)) - 0.055;
+        return (byte)Math.Round(Math.Clamp(normalized * 255.0, 0.0, 255.0));
+    }
 }

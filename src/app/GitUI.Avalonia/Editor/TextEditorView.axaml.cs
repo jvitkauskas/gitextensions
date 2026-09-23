@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Rendering;
@@ -146,17 +147,38 @@ public partial class TextEditorView : UserControl
 
         if (_diffBackground is null)
         {
-            // The colors of a patch without git's colors, as DiffHighlightService.HighlightAddedAndDeletedLines.
-            _diffBackground = new DiffBackgroundRenderer(
-                AppColorResources.GetBrush(this, AppColor.AnsiTerminalGreenBackNormal),
-                AppColorResources.GetBrush(this, AppColor.AnsiTerminalRedBackNormal),
-                AppColorResources.GetBrush(this, AppColor.DiffSection));
+            _diffBackground = new DiffBackgroundRenderer(CreateDiffBrushes());
             textView.BackgroundRenderers.Add(_diffBackground);
         }
 
         _diffLineNumbers.Lines = lines!;
         _diffBackground.Lines = lines!;
+        _diffBackground.Markers = _viewModel!.InlineDiffMarkers;
         textView.InvalidateLayer(KnownLayer.Background);
+    }
+
+    /// <summary>
+    ///  The colors of a patch without git's colors, as <c>DiffHighlightService</c>: the lines (<c>HighlightAddedAndDeletedLines</c>),
+    ///  their identical parts twice dimmed and the anchors of insertions and deletions (<c>AddInlineDifferenceMarkers</c>).
+    /// </summary>
+    private DiffBrushes CreateDiffBrushes()
+    {
+        Color? added = AppColorResources.GetColor(this, AppColor.AnsiTerminalGreenBackNormal);
+        Color? removed = AppColorResources.GetColor(this, AppColor.AnsiTerminalRedBackNormal);
+        Color background = AppColorResources.GetColor(this, AppColor.EditorBackground) ?? Colors.White;
+        return new DiffBrushes(
+            Added: ToBrush(added),
+            Removed: ToBrush(removed),
+            Header: AppColorResources.GetBrush(this, AppColor.DiffSection),
+            DimmedAdded: ToBrush(Dim(added)),
+            DimmedRemoved: ToBrush(Dim(removed)),
+            AddedAnchor: AppColorResources.GetBrush(this, AppColor.AnsiTerminalGreenForeBold),
+            RemovedAnchor: AppColorResources.GetBrush(this, AppColor.AnsiTerminalRedForeBold));
+
+        Color? Dim(Color? color)
+            => color is { } c ? AppColorResources.Dim(AppColorResources.Dim(c, background), background) : null;
+
+        static IBrush? ToBrush(Color? color) => color is { } c ? new SolidColorBrush(c) : null;
     }
 
     private void SetText(string text)

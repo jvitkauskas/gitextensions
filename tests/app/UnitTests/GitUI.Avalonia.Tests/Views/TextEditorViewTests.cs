@@ -59,6 +59,32 @@ public sealed class TextEditorViewTests : HeadlessTest
     });
 
     [Test]
+    public Task Diff_mode_dims_the_identical_parts_of_changed_lines() => OnUiThreadAsync(() =>
+    {
+        TextEditorViewModel viewModel = new();
+        TextEditorView view = new() { DataContext = viewModel };
+        Window window = new() { Content = view, Width = 600, Height = 260 };
+        window.Show();
+
+        viewModel.LoadDiff("""
+            @@ -1,4 +1,4 @@
+             public int Compute(int value)
+            -    return value * 2 + Offset;
+            +    return value * 3 + Offset;
+            -    // deprecated
+            +    // deprecated since 5.0
+             }
+
+            """);
+        Dispatcher.UIThread.RunJobs();
+
+        viewModel.InlineDiffMarkers.Should().Contain(m => m.Kind == InlineDiffMarkerKind.DimmedAdded)
+            .And.Contain(m => m.Kind == InlineDiffMarkerKind.InsertionAnchor);
+        SaveScreenshot(window.CaptureRenderedFrame(), "diff-view-inline");
+        window.Close();
+    });
+
+    [Test]
     public Task Shows_the_loaded_text_with_highlighting_and_reports_edits() => OnUiThreadAsync(() =>
     {
         FileEditorViewModel viewModel = CreateFileEditor(showWarning: false);

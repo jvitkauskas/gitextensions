@@ -39,15 +39,24 @@ public sealed partial class TextEditorViewModel : ObservableObject
     /// <summary>The lines of the diff shown (with their line numbers), or <see langword="null"/> for a plain text.</summary>
     public IReadOnlyList<DiffLine>? DiffLines { get; private set; }
 
+    /// <summary>The in-line differences of the matching removed and added lines of the diff shown; empty for a plain text.</summary>
+    public IReadOnlyList<InlineDiffMarker> InlineDiffMarkers { get; private set; } = [];
+
     /// <summary>Shows a diff, read-only, with the added and removed lines colored (as <c>FileViewer.ViewFixedPatch</c>).</summary>
     public void LoadDiff(string text)
     {
         IsReadOnly = true;
-        LoadText(text, fileName: null, line: null, DiffLinesAnalyzer.Analyze(text));
+        IReadOnlyList<DiffLine> diffLines = DiffLinesAnalyzer.Analyze(text);
+        InlineDiffMarkers = InlineDiffAnalyzer.Analyze(text, diffLines);
+        LoadText(text, fileName: null, line: null, diffLines);
     }
 
     /// <summary>Loads a text, which is unchanged afterwards (as <c>FileViewer.TextLoaded</c>).</summary>
-    public void Load(string text, string? fileName = null, int? line = null) => LoadText(text, fileName, line, diffLines: null);
+    public void Load(string text, string? fileName = null, int? line = null)
+    {
+        InlineDiffMarkers = [];
+        LoadText(text, fileName, line, diffLines: null);
+    }
 
     private void LoadText(string text, string? fileName, int? line, IReadOnlyList<DiffLine>? diffLines)
     {
