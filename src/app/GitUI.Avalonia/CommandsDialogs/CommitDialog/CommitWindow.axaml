@@ -57,6 +57,12 @@
             <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
           </Button>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Width="60" MinWidth="0" VerticalAlignment="Center" Margin="6,0" />
+          <!-- Equivalent of toolbarSelectionFilter. -->
+          <StackPanel Name="selectionFilterBar" Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsSelectionFilterVisible}">
+            <TextBlock Text="{Binding Strings.SelectionFilter.PlainText}" VerticalAlignment="Center" />
+            <ComboBox Name="selectionFilter" IsEditable="True" Width="160" Padding="4,1" VerticalAlignment="Center"
+                      ItemsSource="{Binding SelectionFilterHistory}" Text="{Binding SelectionFilter}" ToolTip.Tip="{Binding SelectionFilterToolTip}" />
+          </StackPanel>
         </StackPanel>
         <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
           <fs:FileStatusListView Name="unstagedFiles" DataContext="{Binding Unstaged}" />
@@ -110,7 +116,7 @@
               </Button>
               <Button Name="commitButton" Command="{Binding CommitCommand}" IsEnabled="{Binding CanCommit}">
                 <Grid ColumnDefinitions="Auto,*">
-                  <Image Source="avares://GitUI.Avalonia/Assets/RepoStateClean.png" Width="16" Height="16" />
+                  <Image Name="commitImage" Source="avares://GitUI.Avalonia/Assets/RepoStateClean.png" Width="16" Height="16" />
                   <AccessText Grid.Column="1" Text="{Binding Strings.Commit.AccessKeyText}" HorizontalAlignment="Center" />
                 </Grid>
               </Button>
@@ -179,6 +185,16 @@
                     </MenuItem.Header>
                   </MenuItem>
                   <MenuItem Header="{Binding Strings.NoVerify.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding NoVerify}" />
+                  <Separator />
+                  <!-- Equivalent of gpgSignCommitToolStripComboBox and toolStripGpgKeyTextBox. -->
+                  <MenuItem StaysOpenOnClick="True">
+                    <MenuItem.Header>
+                      <StackPanel Spacing="2">
+                        <ComboBox Name="gpgSign" MinWidth="230" ItemsSource="{x:Static vm:CommitViewModel.GpgSignModes}" SelectedIndex="{Binding GpgSignIndex}" />
+                        <TextBox Name="gpgKey" MinWidth="230" Text="{Binding GpgKeyId}" IsVisible="{Binding IsGpgKeyVisible}" />
+                      </StackPanel>
+                    </MenuItem.Header>
+                  </MenuItem>
                 </MenuFlyout>
               </DropDownButton.Flyout>
             </DropDownButton>

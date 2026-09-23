@@ -64,6 +64,8 @@ public sealed partial class CommitViewModel : DialogViewModel
         RefreshDialogOnFormFocus = _settings.RefreshDialogOnFormFocus;
         SelectStagedOnEnterMessage = _settings.SelectStagedOnEnterMessage;
         ShowOnlyMyMessages = _settings.ShowOnlyMyMessages;
+        IsSelectionFilterVisible = Options.ShowSelectionFilter;
+        SelectionFilterToolTip = strings.SelectionFilterToolTip.Text;
         MessageWatermark = Options.UseFormCommitMessage ? strings.EnterCommitMessageHint.Text : strings.CommitMessageDisabled.Text;
 
         Unstaged.SelectionChanged += (_, _) => OnSelectionChanged(Unstaged, Staged);
@@ -154,6 +156,41 @@ public sealed partial class CommitViewModel : DialogViewModel
 
     [ObservableProperty]
     public partial bool NoVerify { get; set; }
+
+    /// <summary>The items of <c>gpgSignCommitToolStripComboBox</c> (not translated in <c>FormCommit</c> either).</summary>
+    public static IReadOnlyList<string> GpgSignModes { get; } = ["Git default GPG signing", "Do not sign commit", "Sign with default GPG", "Sign with specific GPG"];
+
+    /// <summary>The index in <see cref="GpgSignModes"/>.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGpgKeyVisible), nameof(IsGpgSignSelected))]
+    public partial int GpgSignIndex { get; set; }
+
+    /// <summary>The key of "Sign with specific GPG" (<c>toolStripGpgKeyTextBox</c>).</summary>
+    [ObservableProperty]
+    public partial string GpgKeyId { get; set; } = "";
+
+    /// <summary>
+    ///  The key is entered for "Sign with specific GPG" (<c>gpgSignCommitChanged</c> shows it for the default key, the item
+    ///  before).
+    /// </summary>
+    public bool IsGpgKeyVisible => GpgSignIndex == 3;
+
+    /// <summary>As <c>gpgSignCommitChanged</c>: the commit button has the key image.</summary>
+    public bool IsGpgSignSelected => GpgSignIndex > 0;
+
+    /// <summary>As <c>toolbarSelectionFilter.Visible</c>.</summary>
+    [ObservableProperty]
+    public partial bool IsSelectionFilterVisible { get; set; }
+
+    /// <summary>The regular expression selecting the unstaged files (<c>selectionFilter</c>).</summary>
+    [ObservableProperty]
+    public partial string SelectionFilter { get; set; } = "";
+
+    [ObservableProperty]
+    public partial string SelectionFilterToolTip { get; private set; } = "";
+
+    /// <summary>The last filters that selected files (the items of <c>selectionFilter</c>), the last one first.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<string> SelectionFilterHistory { get; } = [];
 
     /// <summary>The author, as <c>name &lt;mail&gt;</c>, if not the committer.</summary>
     [ObservableProperty]
@@ -501,6 +538,40 @@ public sealed partial class CommitViewModel : DialogViewModel
         }
     }
 
+    /// <summary>
+    ///  As <c>Update</c> of the selection filter (throttled by the view): the unstaged files matching the regular expression
+    ///  are selected (all without one); a filter selecting files is remembered.
+    /// </summary>
+    public void ApplySelectionFilter()
+    {
+        const int selectionFilterMaxLength = 10;
+        string filter = SelectionFilter;
+        int matchCount = 0;
+        try
+        {
+            Regex? regex = string.IsNullOrEmpty(filter) ? null : new Regex(filter, RegexOptions.IgnoreCase);
+            Unstaged.Select(e => regex is null || regex.IsMatch(e.Item.Name));
+            matchCount = Unstaged.SelectedEntries.Count;
+            SelectionFilterToolTip = Strings.SelectionFilterToolTip.Text;
+        }
+        catch (ArgumentException ex)
+        {
+            SelectionFilterToolTip = string.Format(Strings.SelectionFilterErrorToolTip.Text, ex.Message);
+        }
+
+        if (matchCount == 0 || SelectionFilterHistory.Contains(filter))
+        {
+            return;
+        }
+
+        while (SelectionFilterHistory.Count >= selectionFilterMaxLength)
+        {
+            SelectionFilterHistory.RemoveAt(selectionFilterMaxLength - 1);
+        }
+
+        SelectionFilterHistory.Insert(0, filter);
+    }
+
     /// <summary>As <c>MoveSelection</c>: the next or previous file of the current list (the staged one from the message), looping.</summary>
     public void MoveSelection(bool backwards, bool messageFocused)
     {
@@ -840,7 +911,9 @@ public sealed partial class CommitViewModel : DialogViewModel
                 NoVerify,
                 AllowEmpty: !Staged.AllEntries.Any(),
                 resetAuthor,
-                UsingCommitTemplate: !string.IsNullOrEmpty(_commitTemplate)));
+                UsingCommitTemplate: !string.IsNullOrEmpty(_commitTemplate),
+                GpgSign: GpgSignIndex == 0 ? null : GpgSignIndex > 1,
+                GpgKeyId: IsGpgKeyVisible ? GpgKeyId : ""));
             if (!success)
             {
                 return;

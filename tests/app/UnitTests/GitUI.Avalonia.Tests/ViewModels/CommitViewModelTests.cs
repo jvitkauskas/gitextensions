@@ -258,6 +258,63 @@ public sealed class CommitViewModelTests
     }
 
     [Test]
+    public async Task The_gpg_signing_is_passed_to_the_commit()
+    {
+        // The later commits are empty: the first one commits the staged file.
+        FakeHost host = new() { NoStagedChoice = NoStagedFilesChoice.EmptyCommit };
+        (CommitViewModel viewModel, _) = Create(host);
+        await viewModel.InitializeAsync();
+
+        viewModel.GpgSignIndex.Should().Be(0);
+        viewModel.IsGpgSignSelected.Should().BeFalse();
+        viewModel.GpgSignIndex = 3;
+        viewModel.IsGpgKeyVisible.Should().BeTrue();
+        viewModel.GpgKeyId = "ABCD1234";
+        viewModel.CommitCommand.Execute(null);
+        viewModel.GpgSignIndex = 2;
+        viewModel.IsGpgKeyVisible.Should().BeFalse();
+        viewModel.Message.Text = "Second";
+        viewModel.CommitCommand.Execute(null);
+        viewModel.GpgSignIndex = 1;
+        viewModel.Message.Text = "Third";
+        viewModel.CommitCommand.Execute(null);
+
+        host.Commits.Select(c => (c.GpgSign, c.GpgKeyId)).Should().Equal((true, "ABCD1234"), (true, ""), (false, ""));
+        viewModel.IsGpgSignSelected.Should().BeTrue("as in FormCommit, not signing also shows the key");
+    }
+
+    [Test]
+    public async Task The_selection_filter_selects_the_matching_unstaged_files_and_remembers_the_filter()
+    {
+        FakeHost host = new() { Options = new CommitDialogOptions { ShowSelectionFilter = true } };
+        (CommitViewModel viewModel, _) = Create(host);
+        await viewModel.InitializeAsync();
+        viewModel.IsSelectionFilterVisible.Should().BeTrue();
+
+        viewModel.SelectionFilter = "^B";
+        viewModel.ApplySelectionFilter();
+        viewModel.Unstaged.SelectedEntries.Select(e => e.Item.Name).Should().Equal("b.txt");
+        viewModel.SelectionFilterHistory.Should().Equal("^B");
+
+        viewModel.SelectionFilter = "(";
+        viewModel.ApplySelectionFilter();
+        viewModel.SelectionFilterToolTip.Should().StartWith("Error ");
+        viewModel.SelectionFilter = "zzz";
+        viewModel.ApplySelectionFilter();
+        viewModel.SelectionFilterToolTip.Should().Be("Enter a regular expression to select unstaged files.");
+        viewModel.SelectionFilterHistory.Should().Equal(["^B"], "filters that select nothing are not remembered");
+
+        for (int i = 0; i < 12; i++)
+        {
+            viewModel.SelectionFilter = $"txt|{i}";
+            viewModel.ApplySelectionFilter();
+        }
+
+        viewModel.SelectionFilterHistory.Should().HaveCount(10).And.StartWith("txt|11");
+        viewModel.Unstaged.SelectedEntries.Should().HaveCount(2);
+    }
+
+    [Test]
     public async Task Merge_conflicts_block_the_commit()
     {
         FakeHost host = new() { Conflicts = true };

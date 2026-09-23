@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using GitUI.Avalonia.CommandsDialogs.CommitDialog;
@@ -156,6 +157,34 @@ public sealed class CommitViewTests : HeadlessTest
         feat.IsSelected.Should().BeTrue("it is focused once its popup is shown");
         feat.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
         viewModel.Message.Text.Should().Be("feat(): ");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_selection_filter_hotkey_shows_and_hides_the_filter() => OnUiThreadAsync(() =>
+    {
+        (CommitViewModel viewModel, _) = CommitViewModelTests.Create(new CommitViewModelTests.FakeHost());
+        CommitWindow window = new()
+        {
+            DataContext = viewModel,
+            Hotkeys = [new HotkeyBinding((int)CommitHotkeyCommand.ToggleSelectionFilter, 0x46 /* F */ | HotkeyBinding.Control)],
+        };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.Activate();
+        ComboBox filter = window.GetLogicalDescendants().OfType<ComboBox>().Single(c => c.Name == "selectionFilter");
+        filter.IsEffectivelyVisible.Should().BeFalse();
+
+        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        Dispatcher.UIThread.RunJobs();
+        filter.IsEffectivelyVisible.Should().BeTrue();
+        filter.IsKeyboardFocusWithin.Should().BeTrue();
+        SaveScreenshot(window.CaptureRenderedFrame(), "commit-selection-filter");
+
+        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.IsSelectionFilterVisible.Should().BeFalse();
+        window.UnstagedFiles.IsKeyboardFocusWithin.Should().BeTrue("the focus goes to the unstaged files");
         window.Close();
     });
 

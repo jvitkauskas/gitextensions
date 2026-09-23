@@ -50,6 +50,9 @@ public sealed record CommitDialogOptions
 
     public bool SupportStashStaged { get; init; } = true;
 
+    /// <summary>As <c>AppSettings.CommitDialogSelectionFilter</c>: the selection filter is shown.</summary>
+    public bool ShowSelectionFilter { get; init; }
+
     public bool DontConfirmAmend { get; init; }
 
     public int NumberOfPreviousMessages { get; init; } = 6;
@@ -80,7 +83,9 @@ public sealed record CommitRequest(
     bool NoVerify,
     bool AllowEmpty,
     bool ResetAuthor,
-    bool UsingCommitTemplate);
+    bool UsingCommitTemplate,
+    bool? GpgSign = null,
+    string GpgKeyId = "");
 
 /// <summary>The current branch and where it is pushed to (the status bar of <c>FormCommit</c>).</summary>
 public sealed record CommitBranchInfo(string Branch, string? PushTo);

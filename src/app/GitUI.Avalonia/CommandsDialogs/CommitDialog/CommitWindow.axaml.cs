@@ -22,6 +22,9 @@ public partial class CommitWindow : DialogWindow
     /// <summary>As <c>_insertScopeParentheses</c>: the Conventional Commits menu was opened by the hotkey with the scope.</summary>
     private bool _insertScope;
 
+    /// <summary>As the throttling of <c>_selectionFilterSubject</c>.</summary>
+    private readonly DispatcherTimer _selectionFilterTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
+
     public CommitWindow()
     {
         InitializeComponent();
@@ -29,7 +32,25 @@ public partial class CommitWindow : DialogWindow
         // As OnShown: the files and the message are loaded once the window is shown.
         Opened += (_, _) => Dispatcher.UIThread.Post(() => _ = _viewModel?.InitializeAsync());
         Activated += (_, _) => _viewModel?.OnActivated();
-        Closed += (_, _) => _viewModel?.SpellCheck?.CancelAutoComplete();
+        Closed += (_, _) =>
+        {
+            _selectionFilterTimer.Stop();
+            _viewModel?.SpellCheck?.CancelAutoComplete();
+        };
+        _selectionFilterTimer.Tick += (_, _) =>
+        {
+            _selectionFilterTimer.Stop();
+            _viewModel?.ApplySelectionFilter();
+        };
+
+        // As OnSelectionFilterIndexChanged: a remembered filter applies at once.
+        selectionFilter.SelectionChanged += (_, _) =>
+        {
+            if (selectionFilter.SelectedItem is not null)
+            {
+                Dispatcher.UIThread.Post(() => _viewModel?.ApplySelectionFilter());
+            }
+        };
 
         AvaloniaEdit.TextEditor editor = message.Editor;
         editor.TextChanged += (_, _) => UpdateWatermark();
@@ -121,6 +142,9 @@ public partial class CommitWindow : DialogWindow
             case CommitHotkeyCommand.FocusCommitMessage:
                 message.Editor.TextArea.Focus();
                 return true;
+            case CommitHotkeyCommand.ToggleSelectionFilter:
+                ToggleSelectionFilter();
+                return true;
             case CommitHotkeyCommand.AddSelectionToCommitMessage:
                 return AddSelectionToCommitMessage();
             case CommitHotkeyCommand.ConventionalCommit_PrefixMessage:
@@ -140,14 +164,30 @@ public partial class CommitWindow : DialogWindow
             default:
                 return base.ExecuteHotkeyCommand(commandCode);
         }
+    }
 
-        static bool FocusFiles(FileStatusListView list)
+    private static bool FocusFiles(FileStatusListView list)
+    {
+        // The selected file has the focus, as the focused node of the WinForms tree.
+        TreeView tree = list.Tree;
+        Control? item = tree.SelectedItem is { } selected ? tree.ContainerFromItem(selected) : null;
+        (item ?? tree).Focus(NavigationMethod.Tab);
+        return true;
+    }
+
+    /// <summary>As <c>ToggleSelectionFilter</c>: the filter gets the focus when shown, gives it to the unstaged files when hidden.</summary>
+    private void ToggleSelectionFilter()
+    {
+        bool visible = !_viewModel!.IsSelectionFilterVisible;
+        if (!visible && selectionFilter.IsKeyboardFocusWithin)
         {
-            // The selected file has the focus, as the focused node of the WinForms tree.
-            TreeView tree = list.Tree;
-            Control? item = tree.SelectedItem is { } selected ? tree.ContainerFromItem(selected) : null;
-            (item ?? tree).Focus(NavigationMethod.Tab);
-            return true;
+            FocusFiles(unstagedFiles);
+        }
+
+        _viewModel.IsSelectionFilterVisible = visible;
+        if (visible)
+        {
+            Dispatcher.UIThread.Post(() => selectionFilter.Focus(), DispatcherPriority.Loaded);
         }
     }
 
@@ -329,9 +369,19 @@ public partial class CommitWindow : DialogWindow
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(CommitViewModel.IsMessageEditable))
+        switch (e.PropertyName)
         {
-            UpdateMessageEditable();
+            case nameof(CommitViewModel.IsMessageEditable):
+                UpdateMessageEditable();
+                break;
+            case nameof(CommitViewModel.IsGpgSignSelected):
+                UpdateCommitImage();
+                break;
+            case nameof(CommitViewModel.SelectionFilter):
+                // As OnSelectionFilterTextChanged.
+                _selectionFilterTimer.Stop();
+                _selectionFilterTimer.Start();
+                break;
         }
     }
 
@@ -342,6 +392,10 @@ public partial class CommitWindow : DialogWindow
             UpdateFilterImages();
         }
     }
+
+    /// <summary>As <c>gpgSignCommitChanged</c>.</summary>
+    private void UpdateCommitImage()
+        => commitImage.Source = new Bitmap(AssetLoader.Open(new Uri($"avares://GitUI.Avalonia/Assets/{(_viewModel?.IsGpgSignSelected == true ? "Key" : "RepoStateClean")}.png")));
 
     private void UpdateMessageEditable() => message.Editor.IsReadOnly = _viewModel?.IsMessageEditable != true;
 

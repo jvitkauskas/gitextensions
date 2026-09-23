@@ -129,6 +129,7 @@ internal static partial class AvaloniaDialogs
             ShowResetWorkTreeChanges = AppSettings.ShowResetWorkTreeChanges,
             DontConfirmAmend = AppSettings.DontConfirmAmend.Value,
             NumberOfPreviousMessages = AppSettings.CommitDialogNumberOfPreviousMessages,
+            ShowSelectionFilter = AppSettings.CommitDialogSelectionFilter,
         };
 
         public ICommitDialogSettings Settings { get; } = new CommitDialogSettings();
@@ -412,8 +413,8 @@ internal static partial class AvaloniaDialogs
                 _commitMessageManager.CommitMessagePath,
                 Module.GetPathForGitExecution,
                 request.NoVerify,
-                gpgSign: null,
-                gpgKeyId: "",
+                request.GpgSign,
+                request.GpgKeyId,
                 request.AllowEmpty,
                 request.ResetAuthor);
             bool success = FormProcess.ShowDialog(Owner, _commands, arguments: commitCmd, Module.WorkingDir, input: null, useDialogSettings: true);

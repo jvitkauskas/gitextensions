@@ -54,6 +54,9 @@ public sealed class CommitStrings : ViewStrings
         StageDetails = Add("_stageDetails", "Text", "Stage Details");
         StageFiles = Add("_stageFiles", "Text", "Stage {0} files");
         StageFiltered = Add("_stageFiltered", "Text", "Stage filtered");
+        SelectionFilter = Add("toolStripLabel1", "Text", "Selection Filter");
+        SelectionFilterToolTip = Add("_selectionFilterToolTip", "Text", "Enter a regular expression to select unstaged files.");
+        SelectionFilterErrorToolTip = Add("_selectionFilterErrorToolTip", "Text", "Error {0}");
         StatusBarBranchWithoutRemote = Add("_statusBarBranchWithoutRemote", "Text", "(remote not configured)");
         UnstageAll = Add("_unstageAll", "Text", "Unstage all");
         UnstageFiltered = Add("_unstageFiltered", "Text", "Unstage filtered");
@@ -180,6 +183,12 @@ public sealed class CommitStrings : ViewStrings
     public TranslatedText StageFiles { get; }
 
     public TranslatedText StageFiltered { get; }
+
+    public TranslatedText SelectionFilter { get; }
+
+    public TranslatedText SelectionFilterToolTip { get; }
+
+    public TranslatedText SelectionFilterErrorToolTip { get; }
 
     public TranslatedText StatusBarBranchWithoutRemote { get; }
 
