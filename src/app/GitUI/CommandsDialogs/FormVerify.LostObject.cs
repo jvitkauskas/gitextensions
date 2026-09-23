@@ -8,7 +8,7 @@ namespace GitUI.CommandsDialogs;
 
 partial class FormVerify
 {
-    private enum LostObjectType
+    internal enum LostObjectType
     {
         Commit,
         Blob,
@@ -17,7 +17,7 @@ partial class FormVerify
         Other
     }
 
-    private sealed partial class LostObject
+    internal sealed partial class LostObject
     {
         [GeneratedRegex(@"^(?<rawtype>(dangling|missing|unreachable) (?<objecttype>commit|blob|tree|tag)|warning in tree) (?<objectid>[a-f\d]{40})(.)*$", RegexOptions.ExplicitCapture)]
         private static partial Regex RawDataRegex { get; }

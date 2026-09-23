@@ -1,0 +1,83 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.VerifyWindow"
+                x:DataType="vm:VerifyViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="960" Height="620" MinWidth="700" MinHeight="400">
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+T" Command="{Binding CreateTagCommand}" />
+    <KeyBinding Gesture="Ctrl+B" Command="{Binding CreateBranchCommand}" />
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveAsCommand}" />
+  </Window.KeyBindings>
+  <DockPanel>
+    <Grid DockPanel.Dock="Top" Margin="8,6" ColumnDefinitions="Auto,*" ColumnSpacing="16">
+      <StackPanel Spacing="6">
+        <TextBlock Name="helpText" Text="{Binding Strings.Help.Text}" TextWrapping="Wrap" MaxWidth="360" HorizontalAlignment="Left" />
+        <TextBlock Text="{Binding Strings.QuickViewHint.Text}" FontWeight="SemiBold" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Spacing="0">
+        <CheckBox Name="unreachableCheckBox" IsChecked="{Binding Unreachable}">
+          <TextBlock Text="{Binding Strings.Unreachable.Text}" TextWrapping="Wrap" />
+        </CheckBox>
+        <CheckBox Name="fullCheckCheckBox" IsChecked="{Binding FullCheck}">
+          <TextBlock Text="{Binding Strings.FullCheck.Text}" TextWrapping="Wrap" />
+        </CheckBox>
+        <CheckBox Name="noReflogsCheckBox" IsChecked="{Binding NoReflogs}">
+          <TextBlock Text="{Binding Strings.NoReflogs.Text}" TextWrapping="Wrap" />
+        </CheckBox>
+        <CheckBox Name="showCommitsCheckBox" IsChecked="{Binding ShowCommitsAndTags}"
+                  Content="{Binding Strings.ShowCommitsAndTags.AccessKeyText}" ToolTip.Tip="{Binding Strings.ShowCommitsAndTagsToolTip.Text}" />
+        <CheckBox Name="showOtherCheckBox" IsChecked="{Binding ShowOtherObjects}"
+                  Content="{Binding Strings.ShowOtherObjects.AccessKeyText}" ToolTip.Tip="{Binding Strings.ShowOtherObjectsToolTip.Text}" />
+      </StackPanel>
+    </Grid>
+
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="6">
+        <Button Name="saveObjectsButton" Content="{Binding Strings.SaveObjects.AccessKeyText}" Command="{Binding SaveObjectsCommand}" />
+        <Button Name="removeButton" Grid.Column="1" Content="{Binding Strings.Remove.AccessKeyText}" Command="{Binding RemoveCommand}" />
+        <Button Name="deleteTagsButton" Grid.Column="2" Content="{Binding Strings.DeleteAllLostAndFoundTags.AccessKeyText}" Command="{Binding DeleteAllLostAndFoundTagsCommand}" />
+        <Button Name="restoreButton" Grid.Column="4" Classes="accent"
+                Content="{Binding Strings.RestoreSelectedObjects.AccessKeyText}" Command="{Binding RestoreSelectedObjectsCommand}" />
+        <Button Name="cancelButton" Grid.Column="5" Content="{Binding Strings.Close.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="3*,Auto,2*">
+      <DataGrid Name="lostObjectsGrid" ItemsSource="{Binding LostObjects}" SelectedItem="{Binding SelectedObject}"
+                SelectionMode="Single" CanUserReorderColumns="False" HeadersVisibility="Column" GridLinesVisibility="All"
+                BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DataGrid.Columns>
+          <DataGridCheckBoxColumn Binding="{Binding IsSelected}" Width="32" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding Date, StringFormat='{}{0:g}'}" Width="125" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding RawType}" Width="105" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding Subject}" Width="*" MinWidth="140" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding Author}" Width="100" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding ObjectId}" Width="70" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+          <DataGridTextColumn Binding="{Binding Parent}" Width="70" IsReadOnly="True" x:DataType="vm:LostObjectItem" />
+        </DataGrid.Columns>
+        <DataGrid.ContextMenu>
+          <ContextMenu Name="lostObjectsMenu">
+            <MenuItem Name="viewMenuItem" Header="{Binding Strings.View.AccessKeyText}" Command="{Binding ViewCommand}" />
+            <MenuItem Name="createTagMenuItem" Header="{Binding Strings.CreateTag.AccessKeyText}" Command="{Binding CreateTagCommand}"
+                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+T" />
+            <MenuItem Name="createBranchMenuItem" Header="{Binding Strings.CreateBranch.AccessKeyText}" Command="{Binding CreateBranchCommand}"
+                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+B" />
+            <MenuItem Name="copyHashMenuItem" Header="{Binding Strings.CopyHash.AccessKeyText}" Command="{Binding CopyHashCommand}" />
+            <MenuItem Name="copyParentHashMenuItem" Header="{Binding Strings.CopyParentHash.AccessKeyText}" Command="{Binding CopyParentHashCommand}"
+                      IsEnabled="{Binding CanCreateRef}" />
+            <MenuItem Name="saveAsMenuItem" Header="{Binding Strings.SaveAs.AccessKeyText}" Command="{Binding SaveAsCommand}"
+                      IsEnabled="{Binding CanSaveAs}" InputGesture="Ctrl+S" />
+          </ContextMenu>
+        </DataGrid.ContextMenu>
+      </DataGrid>
+      <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+      <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <ed:TextEditorView Name="previewView" DataContext="{Binding Preview}" />
+      </Border>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

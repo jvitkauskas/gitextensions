@@ -83,6 +83,8 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new GitIgnoreModelStrings()).SetArgDisplayNames(nameof(GitIgnoreModelStrings));
         yield return new TestCaseData(new GitLocalExcludeModelStrings()).SetArgDisplayNames(nameof(GitLocalExcludeModelStrings));
         yield return new TestCaseData(new ChangeLogStrings()).SetArgDisplayNames(nameof(ChangeLogStrings));
+        yield return new TestCaseData(new VerifyStrings()).SetArgDisplayNames(nameof(VerifyStrings));
+        yield return new TestCaseData(new TextViewerStrings()).SetArgDisplayNames(nameof(TextViewerStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

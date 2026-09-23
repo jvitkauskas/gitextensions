@@ -85,6 +85,9 @@ internal static partial class AvaloniaDialogs
         public void ShowInformation(string text, string caption)
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(owner(), text, caption, MessageBoxButtons.OK, MessageBoxIcon.Information));
 
+        public void ShowWarning(string text, string caption)
+            => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(owner(), text, caption, MessageBoxButtons.OK, MessageBoxIcon.Warning));
+
         public bool Confirm(string text, string caption, bool defaultNo = false)
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(
                 owner(), text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, defaultNo ? MessageBoxDefaultButton.Button2 : MessageBoxDefaultButton.Button1) == DialogResult.Yes);

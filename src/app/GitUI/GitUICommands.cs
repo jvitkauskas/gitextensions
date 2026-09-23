@@ -1238,6 +1238,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowVerify(owner, this))
+            {
+                return true;
+            }
+
             using FormVerify form = new(this);
             form.ShowDialog(owner);
             return true;

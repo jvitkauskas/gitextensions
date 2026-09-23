@@ -312,6 +312,10 @@ public sealed class ProcessViewModelTests
 
         public void ShowInformation(string text, string caption) => Informations.Add(text);
 
+        public List<string> Warnings { get; } = [];
+
+        public void ShowWarning(string text, string caption) => Warnings.Add(text);
+
         public List<string> Confirmations { get; } = [];
 
         public bool ConfirmResult { get; set; } = true;

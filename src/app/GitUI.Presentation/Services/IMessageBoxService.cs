@@ -10,6 +10,8 @@ public interface IMessageBoxService
 
     void ShowInformation(string text, string caption);
 
+    void ShowWarning(string text, string caption);
+
     /// <summary>Asks a yes/no question; returns <see langword="true"/> for yes.</summary>
     /// <param name="defaultNo">Whether "No" is the default button, for destructive actions.</param>
     bool Confirm(string text, string caption, bool defaultNo = false);
