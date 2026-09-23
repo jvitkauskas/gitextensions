@@ -189,6 +189,26 @@ public sealed class CommitViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_buttons_with_an_image_and_a_text_are_named_after_their_text() => OnUiThreadAsync(() =>
+    {
+        (CommitViewModel viewModel, _) = CommitViewModelTests.Create(new CommitViewModelTests.FakeHost());
+        CommitWindow window = new() { DataContext = viewModel };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        Dictionary<string, string> names = window.GetLogicalDescendants().OfType<Button>().Where(b => b.Name is "commitButton" or "commitAndPushButton" or "commitTemplatesButton")
+            .ToDictionary(b => b.Name!, b => global::Avalonia.Automation.Peers.ControlAutomationPeer.CreatePeerForElement(b).GetName());
+        names.Should().BeEquivalentTo(new Dictionary<string, string>
+        {
+            ["commitButton"] = "Commit",
+            ["commitAndPushButton"] = "Commit & push",
+            ["commitTemplatesButton"] = "Commit templates",
+        });
+        GitUI.Avalonia.Hosting.AccessibleNames.RemoveAccessKey("a__b _c").Should().Be("a_b c");
+        window.Close();
+    });
+
+    [Test]
     public Task Typing_on_the_second_line_keeps_it_empty() => OnUiThreadAsync(() =>
     {
         (CommitViewModel viewModel, _) = CommitViewModelTests.Create(new CommitViewModelTests.FakeHost { StoredMessage = "", Options = new CommitDialogOptions { SecondLineMustBeEmpty = true } });

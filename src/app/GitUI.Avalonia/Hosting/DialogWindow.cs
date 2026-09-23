@@ -105,6 +105,7 @@ public class DialogWindow : Window
         // Before the base raises Opened, where the host centers the dialog with its final size.
         _frameThickness = FrameSize is { } frameSize ? new Size(Math.Max(0, frameSize.Width - ClientSize.Width), Math.Max(0, frameSize.Height - ClientSize.Height)) : default;
         RestorePosition();
+        AccessibleNames.Apply(this);
         base.OnOpened(e);
         RememberNormalBounds();
     }
