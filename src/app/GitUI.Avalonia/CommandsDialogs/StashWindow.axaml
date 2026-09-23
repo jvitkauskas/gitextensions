@@ -1,0 +1,57 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                xmlns:git="using:GitUIPluginInterfaces"
+                x:Class="GitUI.Avalonia.CommandsDialogs.StashWindow"
+                x:DataType="vm:StashViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="1100" Height="760" MinWidth="700" MinHeight="450">
+  <Grid ColumnDefinitions="320,Auto,*" Margin="6">
+    <DockPanel>
+      <!-- Equivalent of toolStrip1: the stash to show. -->
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4" Margin="0,0,0,4">
+        <Label VerticalAlignment="Center" Content="{Binding Strings.Show.AccessKeyText}" Target="stashesComboBox" />
+        <ComboBox Name="stashesComboBox" Grid.Column="1" HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding Stashes}" SelectedItem="{Binding SelectedStash}" IsEnabled="{Binding !IsLoading}"
+                  ToolTip.Tip="{Binding Strings.StashesToolTip.Text}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="git:GitStash">
+              <TextBlock Text="{Binding Summary}" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <Button Name="refreshButton" Grid.Column="2" Padding="4" Command="{Binding RefreshCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
+        </Button>
+      </Grid>
+      <!-- Equivalent of tableLayoutPanel1: the options and the buttons. -->
+      <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="0,4,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <CheckBox Name="keepIndexCheckBox" IsChecked="{Binding KeepIndex}" Content="{Binding Strings.KeepIndex.AccessKeyText}"
+                    ToolTip.Tip="{Binding Strings.KeepIndexToolTip.Text}" />
+          <CheckBox Name="includeUntrackedCheckBox" IsChecked="{Binding IncludeUntrackedFiles}" Content="{Binding Strings.IncludeUntracked.AccessKeyText}"
+                    ToolTip.Tip="{Binding Strings.IncludeUntrackedToolTip.Text}" />
+        </StackPanel>
+        <Button Name="stashAllButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                Content="{Binding Strings.StashAll.AccessKeyText}" ToolTip.Tip="{Binding Strings.StashAllToolTip.Text}" Command="{Binding StashAllCommand}" />
+        <Button Name="stashSelectedButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsEnabled="{Binding CanStashSelected}"
+                Content="{Binding Strings.StashSelected.AccessKeyText}" ToolTip.Tip="{Binding Strings.StashSelectedToolTip.Text}" Command="{Binding StashSelectedCommand}" />
+        <Button Name="dropButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsEnabled="{Binding CanApplyOrDrop}"
+                Content="{Binding Strings.Drop.AccessKeyText}" ToolTip.Tip="{Binding Strings.DropToolTip.Text}" Command="{Binding DropCommand}" />
+        <Button Name="applyButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsEnabled="{Binding CanApplyOrDrop}"
+                Content="{Binding Strings.Apply.AccessKeyText}" ToolTip.Tip="{Binding Strings.ApplyToolTip.Text}" Command="{Binding ApplyCommand}" />
+      </StackPanel>
+      <TextBox Name="messageTextBox" DockPanel.Dock="Bottom" Height="80" AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding Message}" PlaceholderText="{Binding MessagePlaceholder}" IsReadOnly="{Binding IsMessageReadOnly}" />
+      <Label DockPanel.Dock="Bottom" Content="{Binding Strings.Message.AccessKeyText}" Target="messageTextBox" Padding="0,4,0,2" />
+      <fs:FileStatusListView Name="stashedFiles" DataContext="{Binding Files}" />
+    </DockPanel>
+    <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+    <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <ed:FileViewerView Name="view" DataContext="{Binding Viewer}" />
+    </Border>
+  </Grid>
+</h:DialogWindow>
