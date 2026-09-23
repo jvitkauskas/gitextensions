@@ -131,7 +131,9 @@ internal static partial class AvaloniaDialogs
             FontFamily: font.FontFamily.Name,
             FontSize: font.SizeInPoints * 96 / 72,
             Colors: GetThemeColors(),
-            MonospaceFontFamily: AppSettings.MonospaceFont.FontFamily.Name);
+            MonospaceFontFamily: AppSettings.MonospaceFont.FontFamily.Name,
+            EditorFontFamily: AppSettings.FixedWidthFont.FontFamily.Name,
+            EditorFontSize: AppSettings.FixedWidthFont.SizeInPoints * 96 / 72);
     }
 
     private sealed class AboutDialogHost(DialogWindow window) : IAboutDialogHost

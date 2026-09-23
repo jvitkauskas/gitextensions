@@ -832,6 +832,9 @@
       <Component Id="Avalonia.Controls.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Avalonia.Controls.dll" />
       </Component>
+      <Component Id="AvaloniaEdit.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\AvaloniaEdit.dll" />
+      </Component>
       <Component Id="Avalonia.Controls.DataGrid.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Avalonia.Controls.DataGrid.dll" />
       </Component>
@@ -928,6 +931,7 @@
       <ComponentRef Id="Avalonia.Base.dll" />
       <ComponentRef Id="Avalonia.Controls.dll" />
       <ComponentRef Id="Avalonia.Controls.DataGrid.dll" />
+      <ComponentRef Id="AvaloniaEdit.dll" />
       <ComponentRef Id="Avalonia.DesignerSupport.dll" />
       <ComponentRef Id="Avalonia.Dialogs.dll" />
       <ComponentRef Id="Avalonia.dll" />

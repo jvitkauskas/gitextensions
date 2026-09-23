@@ -13,8 +13,17 @@ namespace GitUI.Avalonia.Hosting;
 ///  Theme colors as ARGB: the system colors <see cref="ThemeColors.Control"/>, <see cref="ThemeColors.Highlight"/> etc.
 ///  (as the Git Extensions theme defines them) and every <c>AppColor</c> under <c>"AppColor.&lt;name&gt;"</c>.
 /// </param>
-/// <param name="MonospaceFontFamily">The font family of hashes and code (<c>AppSettings.MonospaceFont</c>).</param>
-public sealed record AvaloniaUiOptions(bool IsDarkTheme, string? FontFamily, double FontSize, IReadOnlyDictionary<string, uint>? Colors = null, string? MonospaceFontFamily = null);
+/// <param name="MonospaceFontFamily">The font family of hashes (<c>AppSettings.MonospaceFont</c>).</param>
+/// <param name="EditorFontFamily">The font family of the file viewer and editor (<c>AppSettings.FixedWidthFont</c>).</param>
+/// <param name="EditorFontSize">The font size of the file viewer and editor, in device-independent pixels.</param>
+public sealed record AvaloniaUiOptions(
+    bool IsDarkTheme,
+    string? FontFamily,
+    double FontSize,
+    IReadOnlyDictionary<string, uint>? Colors = null,
+    string? MonospaceFontFamily = null,
+    string? EditorFontFamily = null,
+    double EditorFontSize = 0);
 
 /// <summary>Keys of <see cref="AvaloniaUiOptions.Colors"/>.</summary>
 public static class ThemeColors

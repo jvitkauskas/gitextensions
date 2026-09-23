@@ -88,6 +88,14 @@ internal static partial class AvaloniaDialogs
         public bool Confirm(string text, string caption, bool defaultNo = false)
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(
                 owner(), text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, defaultNo ? MessageBoxDefaultButton.Button2 : MessageBoxDefaultButton.Button1) == DialogResult.Yes);
+
+        public bool? ConfirmWithCancel(string text, string caption)
+            => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(owner(), text, caption, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question) switch
+            {
+                DialogResult.Yes => true,
+                DialogResult.No => (bool?)false,
+                _ => null,
+            });
     }
 
     /// <summary>Lets event scripts run for a WinForms owner (see <see cref="ScriptHost"/> for an Avalonia dialog).</summary>

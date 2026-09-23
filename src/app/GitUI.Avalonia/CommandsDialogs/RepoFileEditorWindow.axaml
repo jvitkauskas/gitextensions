@@ -1,0 +1,21 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RepoFileEditorWindow"
+                x:DataType="vm:RepoFileEditorViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="634" Height="474" MinWidth="450" MinHeight="300">
+  <Grid ColumnDefinitions="3*,Auto,2*">
+    <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+    <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+    <DockPanel Grid.Column="2" Margin="6">
+      <Button Name="saveButton" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="accent"
+              Content="{Binding Strings.Save.AccessKeyText}" Command="{Binding SaveCommand}" />
+      <ScrollViewer>
+        <TextBlock Name="helpText" Text="{Binding Strings.Help.Text}" TextWrapping="Wrap" />
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+</h:DialogWindow>

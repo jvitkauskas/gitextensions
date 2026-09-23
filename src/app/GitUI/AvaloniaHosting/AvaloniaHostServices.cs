@@ -108,6 +108,14 @@ internal static partial class AvaloniaDialogs
         public bool Confirm(string text, string caption, bool defaultNo = false)
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(
                 new NativeWindowOwner(window), text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, defaultNo ? MessageBoxDefaultButton.Button2 : MessageBoxDefaultButton.Button1) == DialogResult.Yes);
+
+        public bool? ConfirmWithCancel(string text, string caption)
+            => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(new NativeWindowOwner(window), text, caption, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question) switch
+            {
+                DialogResult.Yes => true,
+                DialogResult.No => (bool?)false,
+                _ => null,
+            });
     }
 
     /// <summary>

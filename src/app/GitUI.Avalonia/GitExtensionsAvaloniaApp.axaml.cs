@@ -36,6 +36,16 @@ public partial class GitExtensionsAvaloniaApp : Application
             Resources["MonospaceFontFamily"] = new FontFamily(options.MonospaceFontFamily);
         }
 
+        if (!string.IsNullOrWhiteSpace(options.EditorFontFamily))
+        {
+            Resources["EditorFontFamily"] = new FontFamily(options.EditorFontFamily);
+        }
+
+        if (options.EditorFontSize > 0)
+        {
+            Resources["EditorFontSize"] = options.EditorFontSize;
+        }
+
         if (options.FontSize > 0)
         {
             // Fluent sizes most controls from this resource.

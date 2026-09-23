@@ -74,6 +74,9 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new RemotesStrings()).SetArgDisplayNames(nameof(RemotesStrings));
         yield return new TestCaseData(new ChooseCommitStrings()).SetArgDisplayNames(nameof(ChooseCommitStrings));
         yield return new TestCaseData(new FormatPatchStrings()).SetArgDisplayNames(nameof(FormatPatchStrings));
+        yield return new TestCaseData(new GitAttributesEditorStrings()).SetArgDisplayNames(nameof(GitAttributesEditorStrings));
+        yield return new TestCaseData(new MailMapEditorStrings()).SetArgDisplayNames(nameof(MailMapEditorStrings));
+        yield return new TestCaseData(new FileEditorStrings()).SetArgDisplayNames(nameof(FileEditorStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

@@ -18,5 +18,11 @@ public abstract class DialogViewModel : ObservableObject
     /// </summary>
     public virtual bool ExecuteHotkeyCommand(int commandCode) => false;
 
+    /// <summary>
+    ///  Called when the dialog is about to close (also by the title bar or Escape); returns <see langword="false"/> to keep it
+    ///  open, e.g. when the user cancels saving changes (the equivalent of <c>FormClosing</c> with <c>e.Cancel</c>).
+    /// </summary>
+    public virtual bool CanClose() => true;
+
     protected void Close(bool accepted) => CloseRequested?.Invoke(this, accepted);
 }

@@ -95,6 +95,11 @@ public class DialogWindow : Window
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
+        if (_viewModel?.CanClose() == false)
+        {
+            e.Cancel = true;
+        }
+
         base.OnClosing(e);
 
         if (!e.Cancel)

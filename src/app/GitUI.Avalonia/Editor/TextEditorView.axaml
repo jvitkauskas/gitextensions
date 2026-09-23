@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ae="using:AvaloniaEdit"
+             x:Class="GitUI.Avalonia.Editor.TextEditorView">
+  <ae:TextEditor Name="editor"
+                 FontFamily="{DynamicResource EditorFontFamily}" FontSize="{DynamicResource EditorFontSize}"
+                 ShowLineNumbers="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                 Background="{DynamicResource TextControlBackground}"
+                 Foreground="{DynamicResource TextControlForeground}" />
+</UserControl>

@@ -5,6 +5,9 @@
   <Application.Resources>
     <!-- Hashes and code; replaced by AppSettings.MonospaceFont, see ApplyOptions. -->
     <FontFamily x:Key="MonospaceFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
+    <!-- The file viewer and editor; replaced by AppSettings.FixedWidthFont, see ApplyOptions. -->
+    <FontFamily x:Key="EditorFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
+    <x:Double x:Key="EditorFontSize">13</x:Double>
     <!-- Reference colors of the default theme (AppColorDefaults); replaced by the Git Extensions theme, see ApplyOptions. -->
     <SolidColorBrush x:Key="AppColor.Branch" Color="#008000" />
     <SolidColorBrush x:Key="AppColor.RemoteBranch" Color="#8B0009" />
@@ -15,6 +18,7 @@
     <!-- Compact density matches the information density of the WinForms UI. -->
     <FluentTheme DensityStyle="Compact" />
     <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
 
     <!-- Equivalent of GitExtensionsDialog.ControlsPanel: the OK/Cancel strip at the bottom of a dialog. -->
     <Style Selector="Border.dialogFooter">

@@ -321,5 +321,14 @@ public sealed class ProcessViewModelTests
             Confirmations.Add(text);
             return ConfirmResult;
         }
+
+        /// <summary>The answer to the next yes/no/cancel questions.</summary>
+        public bool? ConfirmWithCancelResult { get; set; } = true;
+
+        public bool? ConfirmWithCancel(string text, string caption)
+        {
+            Confirmations.Add(text);
+            return ConfirmWithCancelResult;
+        }
     }
 }

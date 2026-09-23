@@ -1206,6 +1206,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowMailMap(owner, this))
+            {
+                return true;
+            }
+
             using FormMailMap form = new(this);
             form.ShowDialog(owner);
             return true;
@@ -1509,6 +1514,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowEditGitAttributes(owner, this))
+            {
+                return true;
+            }
+
             using FormGitAttributes form = new(this);
             form.ShowDialog(owner);
             return true;
@@ -1977,6 +1987,11 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartFileEditorDialog(string? filename, bool showWarning = false, int? lineNumber = null)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowFileEditor(this, filename, showWarning, lineNumber, out bool accepted))
+        {
+            return accepted;
+        }
+
         using FormEditor formEditor = new(this, filename, showWarning, lineNumber: lineNumber);
         return !formEditor.IsDisposed && formEditor.ShowDialog() != DialogResult.Cancel;
     }
