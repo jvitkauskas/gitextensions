@@ -30,7 +30,7 @@ public partial class TextEditorView : UserControl
     public TextEditorView()
     {
         InitializeComponent();
-        SearchPanel.Install(editor);
+        Search = SearchPanel.Install(editor);
         ActualThemeVariantChanged += (_, _) =>
         {
             if (_viewModel is not null)
@@ -72,6 +72,9 @@ public partial class TextEditorView : UserControl
 
     /// <summary>The AvaloniaEdit editor, e.g. for tests.</summary>
     public AvaloniaEdit.TextEditor Editor => editor;
+
+    /// <summary>The search panel of the editor (as <c>FindAndReplaceForm</c>).</summary>
+    public SearchPanel Search { get; }
 
     protected override void OnDataContextChanged(EventArgs e)
     {

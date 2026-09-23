@@ -1,6 +1,7 @@
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Editor;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUIPluginInterfaces;
 using static GitUI.AvaloniaTests.ViewModels.FileStatusListViewModelTests;
@@ -151,6 +152,25 @@ public sealed class DiffViewModelTests
 
         public void OpenSettings() => SettingsOpened++;
 
+        public bool IsPatchAppearance => true;
+
+        public IReadOnlyList<HotkeyBinding> Hotkeys { get; set; } = [];
+
+        /// <summary>Whether the changes support line patches.</summary>
+        public bool SupportsLinePatching { get; set; }
+
+        public List<string> Patches { get; } = [];
+
+        public List<(string Text, bool AdjustLineEndings)> Copied { get; } = [];
+
+        public bool ApplyLinePatch(LinePatchOperation operation, FileStatusEntry entry, StagedStatus stagedStatus, string text, int selectionStart, int selectionLength, byte[]? filePreamble)
+        {
+            Patches.Add($"{operation} {stagedStatus} {selectionStart}+{selectionLength}");
+            return true;
+        }
+
+        public void CopyToClipboard(string text, bool adjustLineEndings) => Copied.Add((text, adjustLineEndings));
+
         /// <summary>The diff returned instead of the default one.</summary>
         public string? Diff { get; set; }
 
@@ -158,7 +178,7 @@ public sealed class DiffViewModelTests
         {
             Requested.Add(encodingName is null ? entry.Item.Name : $"{entry.Item.Name} ({encodingName})");
             _shown.TrySetResult();
-            return Task.FromResult(new FileViewContent(FileViewKind.Diff, Diff ?? $"diff of {entry.Item.Name}"));
+            return Task.FromResult(new FileViewContent(FileViewKind.Diff, Diff ?? $"diff of {entry.Item.Name}", SupportsLinePatching: SupportsLinePatching));
         }
 
         public Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, string? encodingName, CancellationToken cancellationToken)

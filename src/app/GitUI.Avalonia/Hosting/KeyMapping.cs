@@ -38,6 +38,56 @@ internal static class KeyMapping
         return virtualKey;
     }
 
+    /// <summary>The gesture shown beside a menu item for a hotkey (the <c>ShortcutKeyDisplayString</c>), if the key maps.</summary>
+    public static KeyGesture? ToKeyGesture(int keyData)
+    {
+        int virtualKey = keyData & 0xFFFF;
+        Key? key = Enum.GetValues<Key>().Cast<Key?>().FirstOrDefault(k => k is { } candidate && ToVirtualKey(candidate) == virtualKey);
+        if (key is null or Key.None)
+        {
+            return null;
+        }
+
+        KeyModifiers modifiers = KeyModifiers.None;
+        if ((keyData & HotkeyBinding.Shift) != 0)
+        {
+            modifiers |= KeyModifiers.Shift;
+        }
+
+        if ((keyData & HotkeyBinding.Control) != 0)
+        {
+            modifiers |= KeyModifiers.Control;
+        }
+
+        if ((keyData & HotkeyBinding.Alt) != 0)
+        {
+            modifiers |= KeyModifiers.Alt;
+        }
+
+        return new KeyGesture(key.Value, modifiers);
+    }
+
+    /// <summary>
+    ///  As <c>GitExtensionsControl.IsTextEditKey</c>: the key types or edits text (hotkeys with it would prevent typing),
+    ///  <paramref name="multiLine"/> also for the keys moving between lines.
+    /// </summary>
+    public static bool IsTextEditKey(int keyData, bool multiLine = false)
+    {
+        keyData &= ~HotkeyBinding.Shift;
+        if (keyData is (>= 0x41 and <= 0x5A) or (>= 0x30 and <= 0x39) or (>= 0xBA and <= 0xE2) or 0x20 or 0x2D)
+        {
+            return true;
+        }
+
+        keyData &= ~HotkeyBinding.Control;
+        return keyData switch
+        {
+            0x41 or 0x43 or 0x56 or 0x58 or 0x59 or 0x5A or 0x08 or 0x2E or 0x25 or 0x27 or 0x24 or 0x23 => true,
+            0x26 or 0x28 or 0x21 or 0x22 => multiLine,
+            _ => false,
+        };
+    }
+
     /// <summary>Returns the Win32 virtual-key code of <paramref name="key"/>, or 0 if it has none here.</summary>
     public static int ToVirtualKey(Key key)
     {

@@ -26,7 +26,58 @@ public sealed class FileViewerStrings : ViewStrings
         IgnoreWhitespaceChanges = Add("ignoreWhiteSpaces", "ToolTipText", "Ignore changes in amount of whitespace");
         IgnoreAllWhitespaceChanges = Add("ignoreAllWhitespaces", "ToolTipText", "Ignore all whitespace changes");
         Settings = Add("settingsButton", "ToolTipText", "Settings");
+        StageSelectedLines = Add("stageSelectedLinesToolStripMenuItem", "Text", "Stage selected line(s)");
+        UnstageSelectedLines = Add("unstageSelectedLinesToolStripMenuItem", "Text", "Unstage selected line(s)");
+        ResetSelectedLines = Add("resetSelectedLinesToolStripMenuItem", "Text", "Reset selected line(s)");
+        Copy = Add("copyToolStripMenuItem", "Text", "&Copy");
+        CopyPatch = Add("copyPatchToolStripMenuItem", "Text", "Copy &patch");
+        CopyNewVersion = Add("copyNewVersionToolStripMenuItem", "Text", "Copy &new version");
+        CopyOldVersion = Add("copyOldVersionToolStripMenuItem", "Text", "Copy &old version");
+        IncreaseContextLinesMenu = Add("increaseNumberOfLinesToolStripMenuItem", "Text", "&Increase the number of lines of context");
+        DecreaseContextLinesMenu = Add("decreaseNumberOfLinesToolStripMenuItem", "Text", "&Decrease the number of lines of context");
+        ShowEntireFileMenu = Add("showEntireFileToolStripMenuItem", "Text", "Show &entire file");
+        ShowNonPrintingCharsMenu = Add("showNonprintableCharactersToolStripMenuItem", "Text", "S&how nonprinting characters");
+        IgnoreWhitespaceAtEolMenu = Add("ignoreWhitespaceAtEolToolStripMenuItem", "Text", "Ignore whitespace changes at end of &line");
+        IgnoreWhitespaceChangesMenu = Add("ignoreWhitespaceChangesToolStripMenuItem", "Text", "Ignore changes in &amount of whitespace");
+        IgnoreAllWhitespaceChangesMenu = Add("ignoreAllWhitespaceChangesToolStripMenuItem", "Text", "Ignore all &whitespace changes");
+        Find = Add("findToolStripMenuItem", "Text", "&Find...");
+        Replace = Add("replaceToolStripMenuItem", "Text", "&Replace...");
+        GoToLine = Add("goToLineToolStripMenuItem", "Text", "&Go to line");
     }
+
+    public TranslatedText StageSelectedLines { get; }
+
+    public TranslatedText UnstageSelectedLines { get; }
+
+    public TranslatedText ResetSelectedLines { get; }
+
+    public TranslatedText Copy { get; }
+
+    public TranslatedText CopyPatch { get; }
+
+    public TranslatedText CopyNewVersion { get; }
+
+    public TranslatedText CopyOldVersion { get; }
+
+    public TranslatedText IncreaseContextLinesMenu { get; }
+
+    public TranslatedText DecreaseContextLinesMenu { get; }
+
+    public TranslatedText ShowEntireFileMenu { get; }
+
+    public TranslatedText ShowNonPrintingCharsMenu { get; }
+
+    public TranslatedText IgnoreWhitespaceAtEolMenu { get; }
+
+    public TranslatedText IgnoreWhitespaceChangesMenu { get; }
+
+    public TranslatedText IgnoreAllWhitespaceChangesMenu { get; }
+
+    public TranslatedText Find { get; }
+
+    public TranslatedText Replace { get; }
+
+    public TranslatedText GoToLine { get; }
 
     public TranslatedText BinaryFile { get; }
 
@@ -72,7 +123,16 @@ public enum FileViewKind
 /// <param name="FileName">The file, whose extension chooses the syntax highlighting of a text.</param>
 /// <param name="HasGitColors">Whether a diff is git's colored output (with ANSI escape sequences).</param>
 /// <param name="Image">The content of an image.</param>
-public sealed record FileViewContent(FileViewKind Kind, string Text, string? FileName = null, bool HasGitColors = false, byte[]? Image = null)
+/// <param name="SupportsLinePatching">Whether lines can be staged, unstaged or reset (as <c>FileViewer.SupportLinePatching</c>).</param>
+/// <param name="FilePreamble">The preamble of the encoding of a new file read from the working directory (<c>FilePreamble</c>).</param>
+public sealed record FileViewContent(
+    FileViewKind Kind,
+    string Text,
+    string? FileName = null,
+    bool HasGitColors = false,
+    byte[]? Image = null,
+    bool SupportsLinePatching = false,
+    byte[]? FilePreamble = null)
 {
     public static FileViewContent Empty { get; } = new(FileViewKind.Text, "");
 }
@@ -83,6 +143,42 @@ public sealed record FileViewerSettings(
     bool ShowEntireFile = false,
     int NumberOfContextLines = 3,
     IgnoreWhitespaceKind IgnoreWhitespace = IgnoreWhitespaceKind.None);
+
+/// <summary>The line patches of the context menu (<c>StageSelectedLines</c>, <c>UnstageSelectedLines</c>, <c>ResetSelectedLines</c>).</summary>
+public enum LinePatchOperation
+{
+    Stage,
+    Unstage,
+    Reset,
+}
+
+/// <summary>The hotkey commands of the viewer, with the codes of <c>FileViewer.Command</c> (the "FileViewer" hotkey settings).</summary>
+public enum FileViewerHotkeyCommand
+{
+    Find = 0,
+    GoToLine = 1,
+    IncreaseNumberOfVisibleLines = 2,
+    DecreaseNumberOfVisibleLines = 3,
+    ShowEntireFile = 4,
+    TreatFileAsText = 5,
+    NextChange = 6,
+    PreviousChange = 7,
+    FindNextOrOpenWithDifftool = 8,
+    FindPrevious = 9,
+    NextOccurrence = 10,
+    PreviousOccurrence = 11,
+    StageLines = 12,
+    UnstageLines = 13,
+    ResetLines = 14,
+    IgnoreAllWhitespace = 15,
+    Replace = 16,
+    ShowSyntaxHighlighting = 17,
+    ShowGitWordColoring = 18,
+    ShowDifftastic = 19,
+}
+
+/// <summary>The items of the context menu that apply (as <c>SetVisibilityDiffContextMenu</c>).</summary>
+public sealed record FileViewerMenuState(bool CanStage, bool CanUnstage, bool CanReset, bool CanCopyPatch, bool IsDiff);
 
 /// <summary>Gets the changes of a file (the WinForms <c>GitUIExtensions.ViewChangesAsync</c>) from the repository.</summary>
 public interface IFileViewerHost
@@ -111,6 +207,22 @@ public interface IFileViewerHost
 
     /// <summary>Opens the settings of the diff viewer (<c>settingsButton_Click</c>).</summary>
     void OpenSettings();
+
+    /// <summary>Whether diffs are shown as patches (<c>AppSettings.DiffDisplayAppearance</c>), which can be copied.</summary>
+    bool IsPatchAppearance { get; }
+
+    /// <summary>The configured hotkeys of the viewer (the "FileViewer" hotkey settings).</summary>
+    IReadOnlyList<Services.HotkeyBinding> Hotkeys { get; }
+
+    /// <summary>
+    ///  As <c>StageSelectedLines</c>, <c>ResetNoncommittedSelectedLines</c> and <c>ApplySelectedLines</c>: applies the selected
+    ///  lines of the diff (asking before a reset).
+    /// </summary>
+    /// <returns><see langword="true"/> if git applied (or tried to apply) the patch.</returns>
+    bool ApplyLinePatch(LinePatchOperation operation, FileStatusEntry entry, StagedStatus stagedStatus, string text, int selectionStart, int selectionLength, byte[]? filePreamble);
+
+    /// <summary>Puts the text on the clipboard, with the line endings of <c>core.autocrlf</c> if <paramref name="adjustLineEndings"/>.</summary>
+    void CopyToClipboard(string text, bool adjustLineEndings);
 }
 
 /// <summary>
@@ -123,6 +235,9 @@ public sealed partial class FileViewerViewModel : ObservableObject
     private CancellationTokenSource? _loading;
     private Func<CancellationToken, Task<FileViewContent>>? _reload;
     private string? _reloadDefaultText;
+    private FileStatusEntry? _entry;
+    private FileViewContent _content = FileViewContent.Empty;
+    private bool _allowLinePatching;
 
     public FileViewerViewModel(IFileViewerHost host)
     {
@@ -169,16 +284,17 @@ public sealed partial class FileViewerViewModel : ObservableObject
     /// <summary>The file shown (as <c>ViewChangesAsync</c>), <see langword="null"/> to clear.</summary>
     /// <param name="defaultText">The text shown if there are no changes (the <c>defaultText</c> of <c>ViewChangesAsync</c>).</param>
     public Task ShowChangesAsync(FileStatusEntry? entry, string? defaultText = null)
-        => LoadAsync(entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, EncodingName, cancellationToken), defaultText);
+        => LoadAsync(entry, entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, EncodingName, cancellationToken), defaultText);
 
     /// <summary>The file in the revision, or in the working directory for the artificial commits (as <c>ViewGitItemAsync</c>).</summary>
     public Task ShowFileAsync(GitItemStatus file, ObjectId objectId)
-        => LoadAsync(cancellationToken => _host.GetFileAsync(file, objectId, EncodingName, cancellationToken), defaultText: null);
+        => LoadAsync(entry: null, cancellationToken => _host.GetFileAsync(file, objectId, EncodingName, cancellationToken), defaultText: null);
 
     private string? EncodingName => SelectedEncoding is { } name && name != _host.FilesEncoding ? name : null;
 
-    private async Task LoadAsync(Func<CancellationToken, Task<FileViewContent>>? getContent, string? defaultText)
+    private async Task LoadAsync(FileStatusEntry? entry, Func<CancellationToken, Task<FileViewContent>>? getContent, string? defaultText)
     {
+        _entry = entry;
         _reload = getContent;
         _reloadDefaultText = defaultText;
 
@@ -230,6 +346,9 @@ public sealed partial class FileViewerViewModel : ObservableObject
 
     public void Show(FileViewContent content)
     {
+        // As TextLoaded: the lines can be patched again once the file is shown.
+        _content = content;
+        _allowLinePatching = content.SupportsLinePatching;
         Image = content.Kind == FileViewKind.Image ? content.Image : null;
         Kind = content.Kind;
         switch (content.Kind)
@@ -248,7 +367,7 @@ public sealed partial class FileViewerViewModel : ObservableObject
     {
         if (_reload is not null)
         {
-            _ = LoadAsync(_reload, _reloadDefaultText);
+            _ = LoadAsync(_entry, _reload, _reloadDefaultText);
         }
     }
 
@@ -289,6 +408,172 @@ public sealed partial class FileViewerViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenSettings() => _host.OpenSettings();
+
+    /// <summary>The hotkeys of the viewer (<c>FileViewer.HotkeySettingsName</c>).</summary>
+    public IReadOnlyList<Services.HotkeyBinding> Hotkeys => _host.Hotkeys;
+
+    /// <summary>
+    ///  As <c>LinePatchingBlocksUntilReload</c>: after a line patch, no other one until the diff is shown again (for the
+    ///  working directory and the index, whose diff the patch changes).
+    /// </summary>
+    public bool LinePatchingBlocksUntilReload { get; set; }
+
+    /// <summary>As <c>PatchApplied</c>: raised after a line patch, e.g. to show the changes again.</summary>
+    public event EventHandler? PatchApplied;
+
+    /// <summary>As <c>ViewItemStagedStatus</c>: what the shown diff changes (the working directory, the index or a commit).</summary>
+    public StagedStatus StagedStatus
+    {
+        get
+        {
+            if (_entry is null)
+            {
+                return StagedStatus.Unknown;
+            }
+
+            StagedStatus stagedStatus = _entry.Item.Staged;
+            if (stagedStatus == StagedStatus.Unknown)
+            {
+                stagedStatus = GitCommands.GitModule.GetStagedStatus(
+                    _entry.FirstRevision?.ObjectId ?? default,
+                    _entry.SecondRevision.ObjectId,
+                    _entry.SecondRevision.FirstParentId);
+                _entry.Item.Staged = stagedStatus;
+            }
+
+            return stagedStatus;
+        }
+    }
+
+    /// <summary>As <c>SetVisibilityDiffContextMenu</c>: stage and unstage depend on the diff, which looks the same to the user.</summary>
+    public FileViewerMenuState GetMenuState()
+    {
+        bool supportsLinePatching = _content.SupportsLinePatching && _entry is not null;
+        bool isIndex = supportsLinePatching && StagedStatus == StagedStatus.Index;
+        return new FileViewerMenuState(
+            CanStage: supportsLinePatching && !isIndex,
+            CanUnstage: isIndex,
+            CanReset: supportsLinePatching,
+            CanCopyPatch: IsDiff && _host.IsPatchAppearance,
+            IsDiff: IsDiff);
+    }
+
+    /// <summary>
+    ///  As <c>StageSelectedLines</c>, <c>UnstageSelectedLines</c> and <c>ResetSelectedLines</c> (also their hotkeys): the selected
+    ///  lines are applied.
+    /// </summary>
+    /// <returns><see langword="false"/> if the operation does not apply to the shown diff (the hotkey is not used).</returns>
+    public bool ApplyLinePatch(LinePatchOperation operation, int selectionStart, int selectionLength)
+    {
+        FileViewerMenuState state = GetMenuState();
+        bool applies = operation switch
+        {
+            LinePatchOperation.Stage => state.CanStage,
+            LinePatchOperation.Unstage => state.CanUnstage,
+            _ => state.CanReset,
+        };
+        if (!applies)
+        {
+            return false;
+        }
+
+        if (!_allowLinePatching || _entry is null)
+        {
+            // The diff is not shown again yet.
+            return true;
+        }
+
+        if (_host.ApplyLinePatch(operation, _entry, StagedStatus, Editor.Text, selectionStart, selectionLength, _content.FilePreamble))
+        {
+            if (LinePatchingBlocksUntilReload)
+            {
+                _allowLinePatching = false;
+            }
+
+            PatchApplied?.Invoke(this, EventArgs.Empty);
+        }
+
+        return true;
+    }
+
+    /// <summary>As <c>CopyToolStripMenuItemClick</c>: the selection, without the prefixes of the diff lines.</summary>
+    public void Copy(string selectedText, int selectionStart)
+    {
+        if (string.IsNullOrEmpty(selectedText))
+        {
+            return;
+        }
+
+        string text = IsDiff ? RemoveDiffPrefixes(Editor.Text, selectedText, selectionStart, IsCombinedDiff) : selectedText;
+        _host.CopyToClipboard(text, adjustLineEndings: true);
+    }
+
+    /// <summary>As <c>CopyPatchToolStripMenuItemClick</c>: the selection as it is, or all the patch.</summary>
+    public void CopyPatch(string selectedText)
+    {
+        string text = string.IsNullOrEmpty(selectedText) ? Editor.Text : selectedText;
+        if (!string.IsNullOrEmpty(text))
+        {
+            _host.CopyToClipboard(text, adjustLineEndings: false);
+        }
+    }
+
+    /// <summary>
+    ///  As <c>copyNewVersionToolStripMenuItem_Click</c> (<paramref name="newVersion"/>) and <c>copyOldVersionToolStripMenuItem_Click</c>:
+    ///  the selection (or all) without the removed (or added) lines.
+    /// </summary>
+    public void CopyVersion(string selectedText, int selectionStart, bool newVersion)
+        => _host.CopyToClipboard(GetVersionText(Editor.Text, selectedText, selectionStart, IsDiff, newVersion ? '-' : '+'), adjustLineEndings: true);
+
+    private bool IsCombinedDiff => _entry?.FirstRevision?.ObjectId == ObjectId.CombinedDiffId;
+
+    /// <summary>As <c>CopyToolStripMenuItemClick</c>: the prefixes are kept when the header is selected.</summary>
+    public static string RemoveDiffPrefixes(string fullText, string selectedText, int selectionStart, bool isCombinedDiff)
+    {
+        string[] prefixes = isCombinedDiff ? ["  ", "++", "+ ", " +", "--", "- ", " -"] : [" ", "+", "-"];
+        int headerEnd = fullText.IndexOf("\n@@", StringComparison.Ordinal);
+        if (headerEnd > selectionStart)
+        {
+            return selectedText;
+        }
+
+        // An artificial space if the selection does not start a line, removed with the prefixes.
+        string code = selectionStart > 0 && fullText[selectionStart - 1] != '\n' ? " " + selectedText : selectedText;
+        return string.Join("\n", code.Split('\n').Select(line => prefixes.FirstOrDefault(line.StartsWith) is { } prefix ? line[prefix.Length..] : line));
+    }
+
+    /// <summary>As <c>FileViewerInternal.CopyNotStartingWith</c>.</summary>
+    public static string GetVersionText(string fullText, string selectedText, int selectionStart, bool isDiff, char excludedStart)
+    {
+        string text = selectedText;
+        int position = selectionStart;
+        if (string.IsNullOrEmpty(text))
+        {
+            text = fullText;
+            position = 0;
+        }
+
+        if (!isDiff)
+        {
+            return text;
+        }
+
+        if (position > 0 && fullText[position - 1] != '\n')
+        {
+            text = " " + text;
+        }
+
+        IEnumerable<string> lines = text.Split('\n')
+            .Where(s => s.Length == 0 || s[0] != excludedStart || (s.Length > 2 && s[1] == s[0] && s[2] == s[0]));
+        int headerEnd = fullText.IndexOf("\n@@", StringComparison.Ordinal);
+        if (headerEnd <= position)
+        {
+            const string specials = " -+";
+            lines = lines.Select(s => s.Length > 0 && specials.Contains(s[0]) ? s[1..] : s);
+        }
+
+        return string.Join("\n", lines);
+    }
 
     partial void OnSelectedEncodingChanged(string? value) => Reload();
 

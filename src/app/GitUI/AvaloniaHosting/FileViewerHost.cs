@@ -1,13 +1,19 @@
+using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using GitCommands;
 using GitCommands.Git;
+using GitCommands.Patches;
 using GitCommands.Settings;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
 using GitUI.Avalonia.Hosting;
+using GitUI.CommandsDialogs;
+using GitUI.Editor;
 using GitUI.Editor.Diff;
 using GitUI.Presentation.Editor;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
 using ICSharpCode.TextEditor.Util;
@@ -21,13 +27,126 @@ namespace GitUI.AvaloniaHosting;
 ///  <c>FileViewer</c> it uses (docs/avalonia-port/PLAN.md, phase 3); keep it in sync. Range diffs, git grep and difftastic are
 ///  not ported yet.
 /// </summary>
-internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
+internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileViewerHost
 {
+    [GeneratedRegex(@"warning: .*has type .* expected .*", RegexOptions.ExplicitCapture)]
+    private static partial Regex FileModeWarningRegex { get; }
+
     private readonly FileViewerStrings _strings = ViewStrings.Load<FileViewerStrings>();
 
     private IGitModule Module => commands.Module;
 
     public IThemeColors ThemeColors => HostThemeColors.Instance;
+
+    /// <summary>The dialog of the viewer, the owner of its questions and errors.</summary>
+    public DialogWindow? Window { get; init; }
+
+    private IWin32Window? Owner => Window is null ? null : new AvaloniaDialogs.NativeWindowOwner(Window);
+
+    public bool IsPatchAppearance => AppSettings.DiffDisplayAppearance.Value == GitCommands.Settings.DiffDisplayAppearance.Patch;
+
+    public IReadOnlyList<HotkeyBinding> Hotkeys => field ??= [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(FileViewer.HotkeySettingsName)
+        .Select(hotkey => new HotkeyBinding(hotkey.CommandCode, (int)hotkey.KeyData))];
+
+    public void CopyToClipboard(string text, bool adjustLineEndings)
+        => ClipboardUtil.TrySetText(adjustLineEndings ? text.AdjustLineEndings(Module.GetEffectiveSetting<AutoCRLFType>("core.autocrlf")) : text);
+
+    /// <summary>
+    ///  As <c>StageSelectedLines</c>, <c>ResetNoncommittedSelectedLines</c> and <c>ApplySelectedLines</c> of <c>FileViewer</c>:
+    ///  the worktree and the index are staged / unstaged and reset in the index; the lines of a commit are applied (or
+    ///  reverted) to the working directory.
+    /// </summary>
+    public bool ApplyLinePatch(LinePatchOperation operation, FileStatusEntry entry, StagedStatus stagedStatus, string text, int selectionStart, int selectionLength, byte[]? filePreamble)
+    {
+        Encoding encoding = Module.FilesEncoding;
+        GitItemStatus item = entry.Item;
+        byte[]? patch;
+        GitArgumentBuilder args;
+        bool patchUpdatesDiff = true;
+        if (operation == LinePatchOperation.Reset && stagedStatus is StagedStatus.WorkTree or StagedStatus.Index)
+        {
+            // As ResetNoncommittedSelectedLines: reset only on an explicit confirmation.
+            if (!AvaloniaUi.RunInHostContext(() => MessageBoxes.Confirm(Owner, TranslatedStrings.ResetSelectedLinesConfirmation, TranslatedStrings.ResetChangesCaption, MessageBoxIcon.Warning)))
+            {
+                return false;
+            }
+
+            bool currentItemStaged = entry.SecondRevision.ObjectId == ObjectId.IndexId;
+            patch = item.IsNew
+                ? PatchManager.GetSelectedLinesAsNewPatch(Module, item.Name, text, selectionStart, selectionLength, encoding, reset: true, filePreamble ?? [], GetUpdateTreeId(item, entry.SecondRevision.ObjectId, default).ToString())
+                : currentItemStaged
+                    ? PatchManager.GetSelectedLinesAsPatch(text, selectionStart, selectionLength, isIndex: true, encoding, reset: true, item.IsNew, item.IsRenamed)
+                    : PatchManager.GetResetWorkTreeLinesAsPatch(text, selectionStart, selectionLength, encoding);
+            args = new GitArgumentBuilder("apply")
+            {
+                "--whitespace=nowarn",
+                { currentItemStaged, "--reverse --index" }
+            };
+        }
+        else if (operation != LinePatchOperation.Reset && stagedStatus is StagedStatus.WorkTree or StagedStatus.Index)
+        {
+            // As StageSelectedLines(stage).
+            bool stage = operation == LinePatchOperation.Stage;
+            patch = item.IsNew
+                ? PatchManager.GetSelectedLinesAsNewPatch(Module, item.Name, text, selectionStart, selectionLength, encoding, reset: false, filePreamble ?? [], GetUpdateTreeId(item, entry.SecondRevision.ObjectId, default).ToString())
+                : PatchManager.GetSelectedLinesAsPatch(text, selectionStart, selectionLength, isIndex: !stage, encoding, reset: false, item.IsNew, item.IsRenamed);
+            args = new GitArgumentBuilder("apply")
+            {
+                "--cached",
+                "--index",
+                "--whitespace=nowarn",
+                { !stage, "--reverse" }
+            };
+        }
+        else
+        {
+            // As ApplySelectedLines: the lines of a commit are cherry-picked (or reverted) into the working directory.
+            bool reverse = operation == LinePatchOperation.Reset;
+            patch = item.IsNew
+                ? PatchManager.GetSelectedLinesAsNewPatch(Module, item.Name, text, selectionStart, selectionLength, encoding, reset: reverse, filePreamble ?? [],
+                    (reverse ? GetUpdateTreeId(item, entry.SecondRevision.ObjectId, default) : default).ToString())
+                : !reverse
+                    ? PatchManager.GetSelectedLinesAsPatch(text, selectionStart, selectionLength, isIndex: false, encoding, reset: false, item.IsNew, item.IsRenamed)
+                    : PatchManager.GetResetWorkTreeLinesAsPatch(text, selectionStart, selectionLength, encoding);
+            args = new GitArgumentBuilder("apply")
+            {
+                "--3way",
+                "--index",
+                "--whitespace=nowarn"
+            };
+            patchUpdatesDiff = false;
+        }
+
+        if (patch?.Length is not > 0)
+        {
+            return false;
+        }
+
+        ProcessApplyOutput(args, patch, patchUpdatesDiff, encoding);
+        return true;
+    }
+
+    /// <summary>As <c>ProcessApplyOutput</c>.</summary>
+    private void ProcessApplyOutput(GitArgumentBuilder args, byte[] patch, bool patchUpdatesDiff, Encoding encoding)
+    {
+        ExecutionResult result = Module.GitExecutable.Execute(args, inputWriter => inputWriter.BaseStream.Write(patch), throwOnErrorExit: false);
+        string output = result.AllOutput.Trim();
+        if (OperatingSystem.IsWindows())
+        {
+            // remove file mode warnings
+            output = output.RemoveLines(FileModeWarningRegex.IsMatch);
+        }
+
+        if (!result.ExitedSuccessfully
+            && (patchUpdatesDiff || !AvaloniaUi.RunInHostContext(() => MergeConflictHandler.HandleMergeConflicts(commands, Owner, false, false))))
+        {
+            AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(Owner, $"{output}\n\n{encoding.GetString(patch)}", TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error));
+        }
+        else if (!result.ExitedSuccessfully || output.StartsWith("error: ") || output.StartsWith("warning: "))
+        {
+            Trace.WriteLineIf(!string.IsNullOrWhiteSpace(output), $"Patch output: {result.ExitCode}:{output} for: git {args}");
+        }
+    }
 
     public bool ReverseGitColoring => AppSettings.ReverseGitColoring.Value;
 
@@ -63,8 +182,27 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
     {
         await TaskScheduler.Default;
         FileViewContent content = GetChanges(entry, GetEncoding(encodingName), cancellationToken);
+        content = content with { SupportsLinePatching = SupportsLinePatching(entry, content) };
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
         return content;
+    }
+
+    /// <summary>
+    ///  As <c>SupportLinePatching</c> of <c>ResetView</c>: the diffs of existing files, and the added files of the working
+    ///  directory or the index (or that do not exist any more); not in a bare repository.
+    /// </summary>
+    private bool SupportsLinePatching(FileStatusEntry entry, FileViewContent content)
+    {
+        GitItemStatus item = entry.Item;
+        string? fullPath = new FullPathResolver(() => Module.WorkingDir).Resolve(item.Name);
+        bool isNormalDiff = content.Kind == FileViewKind.Diff && entry.FirstRevision?.ObjectId != ObjectId.CombinedDiffId;
+        bool isDiff = isNormalDiff
+            && content.Text.Contains("@@")
+            && AppSettings.DiffDisplayAppearance.Value != GitCommands.Settings.DiffDisplayAppearance.GitWordDiff
+            && File.Exists(fullPath);
+        bool isAdded = item.IsAdded && content.Kind == FileViewKind.Text
+            && (item.Staged is StagedStatus.WorkTree or StagedStatus.Index || !File.Exists(fullPath));
+        return (isDiff || isAdded) && !Module.IsBareRepository();
     }
 
     public async Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, string? encodingName, CancellationToken cancellationToken)
@@ -211,7 +349,7 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
                     bool stripAnsiEscapeCodes = !file.Name.EndsWith(".diff", StringComparison.OrdinalIgnoreCase) && !file.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase);
                     return Module.GetFileText(blobId, encoding, stripAnsiEscapeCodes) ?? "";
                 },
-                getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.ToString()));
+                getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.ToString())) with { FilePreamble = [] };
         }
 
         // As FileViewer.ViewFileAsync.
@@ -237,7 +375,8 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
             return new FileViewContent(FileViewKind.Text, $"File {fullPath} does not exist", file.Name);
         }
 
-        return GetItem(
+        byte[]? preamble = null;
+        FileViewContent content = GetItem(
             file.Name,
             isSubmodule,
             getImage: () => File.ReadAllBytes(fullPath),
@@ -245,9 +384,12 @@ internal sealed class FileViewerHost(IGitUICommands commands) : IFileViewerHost
             {
                 using FileStream stream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using StreamReader reader = FileReader.OpenStream(stream, encoding);
-                return reader.ReadToEnd();
+                string text = reader.ReadToEnd();
+                preamble = reader.CurrentEncoding.GetPreamble();
+                return text;
             },
             getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), ""));
+        return content with { FilePreamble = preamble };
     }
 
     /// <summary>As <c>FileViewer.ViewItemAsync</c> and the binary check of <c>ViewTextAsync</c> (without the hex dump).</summary>

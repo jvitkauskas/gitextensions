@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform;
+using Avalonia.VisualTree;
 using GitUI.Presentation;
 using GitUI.Presentation.Services;
 
@@ -15,7 +16,7 @@ namespace GitUI.Avalonia.Hosting;
 ///  <list type="bullet">
 ///   <item>Closes itself when its <see cref="DialogViewModel"/> requests it, and on Escape (like <c>GitExtensionsForm</c>).</item>
 ///   <item>Restores and saves its size and position under <see cref="PositionName"/> (like <c>WindowPositionManager</c>).</item>
-///   <item>Executes configured <see cref="Hotkeys"/> through <see cref="ExecuteHotkeyCommand"/>, before the focused control.</item>
+///   <item>Executes the hotkeys of the focused <see cref="IHotkeyControl"/>s, then the configured <see cref="Hotkeys"/> through <see cref="ExecuteHotkeyCommand"/>, before the focused control gets the key.</item>
 ///  </list>
 /// </remarks>
 public class DialogWindow : Window
@@ -167,13 +168,28 @@ public class DialogWindow : Window
 
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Handled || Hotkeys.Count == 0)
+        if (e.Handled)
         {
             return;
         }
 
         int keyData = KeyMapping.ToKeyData(e.Key, e.KeyModifiers);
-        HotkeyBinding? hotkey = keyData == 0 ? null : Hotkeys.FirstOrDefault(h => h.KeyData == keyData);
+        if (keyData == 0)
+        {
+            return;
+        }
+
+        // As ProcessCmdKey from the focused control up: the controls with their own hotkeys come first.
+        for (Visual? visual = FocusManager?.GetFocusedElement() as Visual; visual is not null && visual != this; visual = visual.GetVisualParent())
+        {
+            if (visual is IHotkeyControl control && control.ProcessHotkey(keyData))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        HotkeyBinding? hotkey = Hotkeys.FirstOrDefault(h => h.KeyData == keyData);
         if (hotkey is not null && ExecuteHotkeyCommand(hotkey.CommandCode))
         {
             e.Handled = true;

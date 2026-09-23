@@ -47,7 +47,7 @@ internal static partial class AvaloniaDialogs
                 CommitViewModel viewModel = new(
                     ViewStrings.Load<CommitStrings>(),
                     host,
-                    new FileViewerHost(commands),
+                    new FileViewerHost(commands) { Window = window },
                     ViewStrings.Load<FileStatusListStrings>(),
                     GetFileStatusTreeOptions(),
                     (CommitDialogKind)kind,
