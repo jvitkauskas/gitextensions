@@ -863,6 +863,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowSparseWorkingCopy(owner, this))
+            {
+                return true;
+            }
+
             using FormSparseWorkingCopy form = new(this);
             form.ShowDialog(owner);
             return true;

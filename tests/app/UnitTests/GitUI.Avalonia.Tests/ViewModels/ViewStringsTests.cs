@@ -78,6 +78,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new MailMapEditorStrings()).SetArgDisplayNames(nameof(MailMapEditorStrings));
         yield return new TestCaseData(new FileEditorStrings()).SetArgDisplayNames(nameof(FileEditorStrings));
         yield return new TestCaseData(new ViewPatchStrings()).SetArgDisplayNames(nameof(ViewPatchStrings));
+        yield return new TestCaseData(new SparseWorkingCopyStrings()).SetArgDisplayNames(nameof(SparseWorkingCopyStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

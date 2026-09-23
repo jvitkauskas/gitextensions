@@ -1,0 +1,67 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.SparseWorkingCopyWindow"
+                x:DataType="vm:SparseWorkingCopyViewModel"
+                Title="{Binding Strings.SparseWorkingCopy.PlainText}"
+                Width="800" Height="600" MinWidth="800" MinHeight="600">
+  <!-- The editor takes Enter for itself, so Ctrl+Enter saves (as FormSparseWorkingCopy). -->
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+Enter" Command="{Binding SaveCommand}" />
+  </Window.KeyBindings>
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" Padding="10">
+      <StackPanel Spacing="6">
+        <TextBlock Text="{Binding Strings.SparseWorkingCopy.Text}" FontWeight="Bold" />
+        <TextBlock Margin="15,0,0,0" Text="{Binding Strings.HeaderDetailsText.Text}" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+    <Rectangle DockPanel.Dock="Top" Height="2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+        <CheckBox Name="refreshCheckBox" VerticalAlignment="Center" IsChecked="{Binding IsRefreshWorkingCopyOnSave}"
+                  Content="{Binding Strings.RefreshWorkingCopyUsingTheCurrentSettingsAndRules.Text}"
+                  ToolTip.Tip="{Binding RefreshWorkingCopyToolTip}" />
+        <Button Name="saveButton" Grid.Column="1" Classes="accent"
+                Content="{Binding Strings.Save.AccessKeyText}" Command="{Binding SaveCommand}" />
+        <Button Name="cancelButton" Grid.Column="2"
+                Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </Grid>
+    </Border>
+    <Rectangle DockPanel.Dock="Bottom" Height="2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+
+    <!-- When disabled: a hint-like panel to enable. -->
+    <StackPanel Name="disabledPanel" DockPanel.Dock="Top" IsVisible="{Binding !IsSparseCheckoutEnabled}">
+      <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" Padding="10,5">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+          <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap"
+                     Text="{Binding Strings.SparseWorkingCopySupportHasNotBeenEnabledForThisRepository.Text}" />
+          <Button Name="enableButton" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.Enable.AccessKeyText}" Command="{Binding EnableCommand}" ToolTip.Tip="{Binding EnableToolTip}" />
+        </Grid>
+      </Border>
+      <Rectangle Height="2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </StackPanel>
+
+    <!-- When enabled: a less bold link to disable, the rules and their editor. -->
+    <DockPanel Name="enabledPanel" IsVisible="{Binding IsSparseCheckoutEnabled}">
+      <StackPanel DockPanel.Dock="Top" Margin="10,10,10,5" Orientation="Horizontal" Spacing="4">
+        <TextBlock Text="{Binding Strings.SparseWorkingCopySupportIsEnabled.Text}" VerticalAlignment="Center" />
+        <Button Name="disableLink" Classes="link" VerticalAlignment="Center" Command="{Binding DisableCommand}" ToolTip.Tip="{Binding DisableToolTip}">
+          <TextBlock Text="{Binding Strings.DisableForThisRepository.Text}" />
+        </Button>
+      </StackPanel>
+      <TextBlock DockPanel.Dock="Top" Margin="10,5,10,0" Text="{Binding Strings.SpecifyTheRules.Text}" TextWrapping="Wrap" />
+      <TextBlock DockPanel.Dock="Top" Margin="25,3,10,3" Text="{Binding Strings.SpecifyTheRulesLine2.Text}" TextWrapping="Wrap"
+                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+      <Rectangle DockPanel.Dock="Top" Height="2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Border ToolTip.Tip="{Binding Strings.EditsTheContentsOfTheGitInfoSparseCheckoutFile.Text}">
+        <ed:TextEditorView Name="rulesEditor" DataContext="{Binding Rules}" />
+      </Border>
+    </DockPanel>
+  </DockPanel>
+</h:DialogWindow>
