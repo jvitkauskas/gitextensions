@@ -125,6 +125,9 @@ internal static partial class AvaloniaDialogs
 
     private static AvaloniaUiOptions GetOptions()
     {
+        // As GitExtensionsDialog.OnHelpButtonClicked: F1 opens the section of the user manual.
+        DialogWindow.OpenManualSection ??= (subfolder, anchor) => OsShellUtil.OpenUrlInDefaultBrowser(UserManual.UserManual.UrlFor(subfolder, anchor));
+
         Font font = AppSettings.Font;
         return new AvaloniaUiOptions(
             IsDarkTheme: Application.IsDarkModeEnabled,

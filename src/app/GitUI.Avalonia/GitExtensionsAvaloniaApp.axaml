@@ -3,16 +3,27 @@
              x:Class="GitUI.Avalonia.GitExtensionsAvaloniaApp"
              RequestedThemeVariant="Light">
   <Application.Resources>
-    <!-- Hashes and code; replaced by AppSettings.MonospaceFont, see ApplyOptions. -->
-    <FontFamily x:Key="MonospaceFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
-    <!-- The file viewer and editor; replaced by AppSettings.FixedWidthFont, see ApplyOptions. -->
-    <FontFamily x:Key="EditorFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
-    <x:Double x:Key="EditorFontSize">13</x:Double>
-    <!-- Reference colors of the default theme (AppColorDefaults); replaced by the Git Extensions theme, see ApplyOptions. -->
-    <SolidColorBrush x:Key="AppColor.Branch" Color="#008000" />
-    <SolidColorBrush x:Key="AppColor.RemoteBranch" Color="#8B0009" />
-    <SolidColorBrush x:Key="AppColor.Tag" Color="#00008B" />
-    <SolidColorBrush x:Key="AppColor.OtherTag" Color="#808080" />
+    <ResourceDictionary>
+      <!-- Hashes and code; replaced by AppSettings.MonospaceFont, see ApplyOptions. -->
+      <FontFamily x:Key="MonospaceFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
+      <!-- The file viewer and editor; replaced by AppSettings.FixedWidthFont, see ApplyOptions. -->
+      <FontFamily x:Key="EditorFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
+      <x:Double x:Key="EditorFontSize">13</x:Double>
+      <!-- Reference colors of the default theme (AppColorDefaults); replaced by the Git Extensions theme, see ApplyOptions. -->
+      <SolidColorBrush x:Key="AppColor.Branch" Color="#008000" />
+      <SolidColorBrush x:Key="AppColor.RemoteBranch" Color="#8B0009" />
+      <SolidColorBrush x:Key="AppColor.Tag" Color="#00008B" />
+      <SolidColorBrush x:Key="AppColor.OtherTag" Color="#808080" />
+      <!-- SystemColors.Info (the tooltip yellow) of the WinForms info boxes, adapted to dark themes. -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#FFFFE1" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#3D3B24" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
   </Application.Resources>
   <Application.Styles>
     <!-- Compact density matches the information density of the WinForms UI. -->
@@ -35,6 +46,20 @@
       <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
       <Setter Property="MinHeight" Value="28" />
       <Setter Property="Padding" Value="10,0" />
+    </Style>
+
+    <!-- Equivalent of the WinForms boxes with the SystemColors.Info background (hints, messages). -->
+    <Style Selector="Border.info">
+      <Setter Property="Background" Value="{DynamicResource InfoBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="6,4" />
+    </Style>
+    <Style Selector="TextBox.info">
+      <Setter Property="Background" Value="{DynamicResource InfoBackgroundBrush}" />
+    </Style>
+    <Style Selector="TextBox.info:pointerover /template/ Border#PART_BorderElement, TextBox.info:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource InfoBackgroundBrush}" />
     </Style>
 
     <!-- Labels in form grids line up with their inputs. -->

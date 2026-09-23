@@ -67,6 +67,18 @@ public class DialogWindow : Window
     /// <summary>The configured hotkeys of this dialog.</summary>
     public IReadOnlyList<HotkeyBinding> Hotkeys { get; set; } = [];
 
+    /// <summary>
+    ///  The section of the user manual (as <c>GitExtensionsDialog.ManualSectionSubfolder</c> and
+    ///  <c>ManualSectionAnchorName</c>); F1 opens it, instead of the help button of the WinForms title bar.
+    /// </summary>
+    public string? ManualSectionSubfolder { get; set; }
+
+    /// <inheritdoc cref="ManualSectionSubfolder"/>
+    public string? ManualSectionAnchorName { get; set; }
+
+    /// <summary>Opens the section of the user manual (subfolder, anchor); set by the host.</summary>
+    public static Action<string, string>? OpenManualSection { get; set; }
+
     protected override void OnDataContextChanged(EventArgs e)
     {
         if (_viewModel is not null)
@@ -131,6 +143,14 @@ public class DialogWindow : Window
         {
             e.Handled = true;
             CloseDialog(accepted: false);
+            return;
+        }
+
+        if (e.Key == Key.F1 && e.KeyModifiers == KeyModifiers.None
+            && !string.IsNullOrWhiteSpace(ManualSectionSubfolder) && !string.IsNullOrWhiteSpace(ManualSectionAnchorName) && OpenManualSection is { } openManual)
+        {
+            e.Handled = true;
+            openManual(ManualSectionSubfolder, ManualSectionAnchorName);
             return;
         }
 

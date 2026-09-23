@@ -4,12 +4,12 @@
              x:Class="GitUI.Avalonia.Controls.CommitPickerView"
              x:DataType="vm:CommitPickerViewModel"
              IsEnabled="{Binding IsEnabled}">
-  <!-- Port of CommitPickerSmallControl: the commit hash, how it relates to the current checkout, and a button to choose it. -->
-  <Grid ColumnDefinitions="140,*,Auto" ColumnSpacing="6">
+  <!-- As its table: the hash (stretched), the button right after it, then the relation to the current checkout. -->
+  <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
     <TextBox Name="commitHashTextBox" MaxLength="100" Text="{Binding Text}" LostFocus="CommitHashTextBox_LostFocus" />
-    <TextBlock Name="commitCountText" Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+    <TextBlock Name="commitCountText" Grid.Column="2" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                Text="{Binding CommitCountText}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-    <Button Name="chooseCommitButton" Grid.Column="2" Padding="4" Command="{Binding ChooseCommitCommand}">
+    <Button Name="chooseCommitButton" Grid.Column="1" Padding="4" Command="{Binding ChooseCommitCommand}">
       <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
     </Button>
   </Grid>

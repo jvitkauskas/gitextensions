@@ -135,6 +135,8 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetWorkingDirChanges.png" Link="Assets\ResetWorkingDirChanges.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WorkingDirChanges.png" Link="Assets\WorkingDirChanges.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CommitTemplates.png" Link="Assets\CommitTemplates.png" />
-    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchCreate.png" Link="Assets\BranchCreate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GotoManual.png" Link="Assets\GotoManual.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RecentRepositories.png" Link="Assets\RecentRepositories.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Message.png" Link="Assets\Message.png" />
   </ItemGroup>
 </Project>

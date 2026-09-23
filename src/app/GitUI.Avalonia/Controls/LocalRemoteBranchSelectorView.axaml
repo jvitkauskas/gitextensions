@@ -4,15 +4,14 @@
              x:Class="GitUI.Avalonia.Controls.LocalRemoteBranchSelectorView"
              x:DataType="vm:LocalRemoteBranchSelectorViewModel">
   <!-- Port of GitUI.UserControls.BranchSelector: local or remote branches, and how the selected one relates to a commit. -->
-  <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
-    <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
-      <RadioButton Name="localRadioButton" GroupName="branchType" Content="{Binding Strings.LocalBranch.AccessKeyText}" IsChecked="{Binding IsLocal}" />
-      <RadioButton Name="remoteRadioButton" GroupName="branchType" Content="{Binding Strings.RemoteBranch.AccessKeyText}" IsChecked="{Binding IsRemote}" />
-    </StackPanel>
+  <!-- As its table: the radio buttons over the label and combo columns, the commit count right of the combo. -->
+  <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+    <RadioButton Name="localRadioButton" GroupName="branchType" Content="{Binding Strings.LocalBranch.AccessKeyText}" IsChecked="{Binding IsLocal}" />
+    <RadioButton Name="remoteRadioButton" Grid.Column="1" GroupName="branchType" Content="{Binding Strings.RemoteBranch.AccessKeyText}" IsChecked="{Binding IsRemote}" />
     <Label Grid.Row="1" VerticalAlignment="Center" Padding="0" Content="{Binding Strings.SelectBranch.AccessKeyText}" Target="branchesComboBox" />
     <ComboBox Name="branchesComboBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
               ItemsSource="{Binding Branches}" Text="{Binding BranchName}" />
-    <TextBlock Name="commitCountText" Grid.Row="2" Grid.Column="1" Text="{Binding CommitCountText}"
+    <TextBlock Name="commitCountText" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Text="{Binding CommitCountText}"
                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
   </Grid>
 </UserControl>
