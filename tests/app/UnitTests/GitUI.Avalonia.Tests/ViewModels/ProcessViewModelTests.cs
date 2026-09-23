@@ -316,7 +316,7 @@ public sealed class ProcessViewModelTests
 
         public bool ConfirmResult { get; set; } = true;
 
-        public bool Confirm(string text, string caption)
+        public bool Confirm(string text, string caption, bool defaultNo = false)
         {
             Confirmations.Add(text);
             return ConfirmResult;

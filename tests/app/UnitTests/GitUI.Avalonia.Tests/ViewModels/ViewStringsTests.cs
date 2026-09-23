@@ -5,6 +5,7 @@ using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
+using GitUI.Presentation.UserControls;
 
 namespace GitUI.AvaloniaTests.ViewModels;
 
@@ -40,6 +41,11 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new MergeSubmoduleStrings()).SetArgDisplayNames(nameof(MergeSubmoduleStrings));
         yield return new TestCaseData(new CreateWorktreeStrings()).SetArgDisplayNames(nameof(CreateWorktreeStrings));
         yield return new TestCaseData(new OpenDirectoryStrings()).SetArgDisplayNames(nameof(OpenDirectoryStrings));
+        yield return new TestCaseData(new BranchSelectorStrings()).SetArgDisplayNames(nameof(BranchSelectorStrings));
+        yield return new TestCaseData(new HelpImageStrings()).SetArgDisplayNames(nameof(HelpImageStrings));
+        yield return new TestCaseData(new DeleteBranchStrings()).SetArgDisplayNames(nameof(DeleteBranchStrings));
+        yield return new TestCaseData(new DeleteRemoteBranchStrings()).SetArgDisplayNames(nameof(DeleteRemoteBranchStrings));
+        yield return new TestCaseData(new MergeBranchStrings()).SetArgDisplayNames(nameof(MergeBranchStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

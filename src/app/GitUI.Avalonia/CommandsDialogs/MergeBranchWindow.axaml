@@ -1,0 +1,70 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.MergeBranchWindow"
+                x:DataType="vm:MergeBranchViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                MinWidth="478" SizeToContent="WidthAndHeight" CanResize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="mergeButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Merge.AccessKeyText}" Command="{Binding MergeCommand}" />
+    </Border>
+    <Grid Margin="9" ColumnDefinitions="Auto,Auto" ColumnSpacing="12">
+      <c:HelpImageView Name="helpImage" DataContext="{Binding HelpImage}"
+                       Image1="avares://GitUI.Avalonia/Assets/Help/HelpCommandMerge.png"
+                       Image2="avares://GitUI.Avalonia/Assets/Help/HelpCommandMergeFastForward.png" />
+      <StackPanel Grid.Column="1" Width="440" Spacing="8">
+        <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+          <Label Content="{Binding Strings.MergeBranch.AccessKeyText}" Target="branchSelector" />
+          <c:BranchSelector Name="branchSelector" Grid.Column="1" DataContext="{Binding Branches}" />
+          <Label Grid.Row="1" Content="{Binding Strings.IntoCurrentBranch.AccessKeyText}" />
+          <SelectableTextBlock Name="currentBranchText" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"
+                               Text="{Binding CurrentBranch}" FontWeight="Bold" />
+        </Grid>
+        <!-- Equivalent of the "Merge" group box -->
+        <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{Binding Strings.MergeGroup.Text}" FontWeight="SemiBold" Margin="0,0,0,2" />
+            <RadioButton Name="fastForwardRadioButton" GroupName="mergeKind"
+                         Content="{Binding Strings.FastForward.AccessKeyText}" IsChecked="{Binding IsFastForward}" />
+            <RadioButton Name="noFastForwardRadioButton" GroupName="mergeKind"
+                         Content="{Binding Strings.NoFastForward.AccessKeyText}" IsChecked="{Binding NoFastForward}" />
+            <CheckBox Name="noCommitCheckBox" Content="{Binding Strings.NoCommit.AccessKeyText}" IsChecked="{Binding NoCommit}" />
+            <CheckBox Name="advancedCheckBox" Content="{Binding Strings.ShowAdvanced.AccessKeyText}" IsChecked="{Binding ShowAdvanced}" />
+            <StackPanel Name="advancedPanel" Spacing="4" Margin="20,0,0,0" IsVisible="{Binding ShowAdvanced}">
+              <CheckBox Name="squashCheckBox" Content="{Binding Strings.Squash.AccessKeyText}"
+                        IsChecked="{Binding Squash}" IsEnabled="{Binding CanSquash}" />
+              <CheckBox Name="allowUnrelatedCheckBox" Content="{Binding Strings.AllowUnrelatedHistories.AccessKeyText}"
+                        IsChecked="{Binding AllowUnrelatedHistories}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <CheckBox Name="strategyCheckBox" Content="{Binding Strings.NonDefaultMergeStrategy.AccessKeyText}"
+                          IsChecked="{Binding UseNonDefaultStrategy}" />
+                <ComboBox Name="strategyComboBox" Width="120" IsEditable="True" VerticalAlignment="Center"
+                          ItemsSource="{Binding MergeStrategies}" Text="{Binding MergeStrategy}"
+                          IsVisible="{Binding UseNonDefaultStrategy}" />
+                <Button Name="strategyHelpLink" Classes="link" VerticalAlignment="Center"
+                        Command="{Binding OpenStrategyHelpCommand}" IsVisible="{Binding UseNonDefaultStrategy}">
+                  <TextBlock Text="{Binding Strings.StrategyHelp.PlainText}" />
+                </Button>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <CheckBox Name="addLogMessagesCheckBox" Content="{Binding Strings.AddLogMessages.AccessKeyText}"
+                          IsChecked="{Binding AddLogMessages}" />
+                <NumericUpDown Name="logMessagesUpDown" Width="110" Minimum="0" Maximum="100" FormatString="0"
+                               VerticalAlignment="Center" Value="{Binding LogMessagesCount}" IsEnabled="{Binding AddLogMessages}" />
+              </StackPanel>
+              <CheckBox Name="addMergeMessageCheckBox" Content="{Binding Strings.AddMergeMessage.AccessKeyText}"
+                        IsChecked="{Binding AddMergeMessage}" />
+              <TextBox Name="mergeMessageTextBox" Height="80" AcceptsReturn="True" TextWrapping="Wrap"
+                       Text="{Binding MergeMessage}" IsEnabled="{Binding AddMergeMessage}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.UserControls"
+             x:Class="GitUI.Avalonia.Controls.HelpImageView"
+             x:DataType="vm:HelpImageViewModel"
+             IsVisible="{Binding IsVisible}">
+  <!-- Port of HelpImageDisplayUserControl: collapsed, only the "show help" button is visible. -->
+  <Panel>
+    <Button Name="showHelpButton" VerticalAlignment="Top" HorizontalAlignment="Right" Padding="4"
+            IsVisible="{Binding !IsExpanded}" Command="{Binding ToggleExpandedCommand}"
+            ToolTip.Tip="{Binding Strings.ShowHelp.PlainText}">
+      <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+    </Button>
+    <StackPanel IsVisible="{Binding IsExpanded}" Spacing="4">
+      <Button Name="hideHelpLink" Classes="link" HorizontalAlignment="Right" Command="{Binding ToggleExpandedCommand}">
+        <TextBlock Text="{Binding Strings.HideHelp.PlainText}" />
+      </Button>
+      <Image Name="helpImage" Stretch="None" HorizontalAlignment="Center" />
+      <TextBlock Name="hoverNotice" Text="{Binding HoverNotice}" TextWrapping="Wrap" MaxWidth="300"
+                 IsVisible="{Binding IsOnHoverShowImage2}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+    </StackPanel>
+  </Panel>
+</UserControl>

@@ -150,6 +150,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowDeleteBranch(owner, this, branches))
+            {
+                return true;
+            }
+
             using FormDeleteBranch form = new(this, branches);
             form.ShowDialog(owner);
             return true;
@@ -160,6 +165,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowDeleteRemoteBranch(owner, this, remoteBranch))
+            {
+                return true;
+            }
+
             using FormDeleteRemoteBranch form = new(this, remoteBranch);
             form.ShowDialog(owner);
             return true;
@@ -1019,6 +1029,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowMergeBranch(owner, this, branch))
+            {
+                return true;
+            }
+
             using FormMergeBranch form = new(this, branch);
             form.ShowDialog(owner);
             return true;

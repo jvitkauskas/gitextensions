@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.UserControls"
+             x:Class="GitUI.Avalonia.Controls.BranchSelector"
+             x:DataType="vm:BranchSelectorViewModel">
+  <!-- Port of BranchComboBox: several branches can be entered separated by spaces, or checked in a dialog. -->
+  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+    <ComboBox Name="branchesComboBox" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding Branches}" Text="{Binding Text}" />
+    <Button Name="selectMultipleButton" Grid.Column="1" Padding="4" VerticalAlignment="Stretch"
+            Command="{Binding SelectMultipleCommand}">
+      <Image Source="avares://GitUI.Avalonia/Assets/SelectBranch.png" Width="16" Height="16" />
+    </Button>
+  </Grid>
+</UserControl>

@@ -1,0 +1,20 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.DeleteBranchWindow"
+                x:DataType="vm:DeleteBranchViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="420" MinWidth="420" MaxWidth="950" SizeToContent="Height" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="deleteButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Delete.AccessKeyText}" Command="{Binding DeleteCommand}" />
+    </Border>
+    <Grid Classes="form" ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="12">
+      <Label Content="{Binding Strings.SelectBranches.AccessKeyText}" Target="branchSelector" />
+      <c:BranchSelector Name="branchSelector" Grid.Column="1" DataContext="{Binding Branches}" />
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>
