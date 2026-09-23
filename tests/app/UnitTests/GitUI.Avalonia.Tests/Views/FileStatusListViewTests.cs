@@ -1,9 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using GitUI.Avalonia.Controls.FileStatusList;
+using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.UserControls.FileStatusList;
 using static GitUI.AvaloniaTests.ViewModels.FileStatusListViewModelTests;
 
@@ -54,6 +56,36 @@ public sealed class FileStatusListViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
         view.Tree.SelectedItems.Cast<FileStatusNode>().Select(n => n.Entry!.Item.Name).Should().Equal("src/Program.cs");
+        window.Close();
+    });
+
+    [Test]
+    public Task Context_menu_shows_the_items_of_the_state_and_runs_their_commands() => OnUiThreadAsync(() =>
+    {
+        (Window window, FileStatusListView view, FileStatusListViewModel viewModel) = Show();
+        FileStatusListMenuTests.FakeMenuHost host = new()
+        {
+            State = new FileStatusMenuState { ShowSaveAs = true, CanCopyPaths = true, ResetToParentText = "First: A a1a1a1a1" },
+        };
+        viewModel.MenuHost = host;
+
+        // As a right click or the menu key: the menu opens with the items for the selection.
+        view.Tree.RaiseEvent(new ContextRequestedEventArgs { RoutedEvent = Control.ContextRequestedEvent });
+        Dispatcher.UIThread.RunJobs();
+
+        MenuItem Item(string name) => view.Menu.Items.OfType<MenuItem>().SelectMany(i => i.Items.OfType<MenuItem>().Prepend(i)).Single(i => i.Name == name);
+        Item("saveAsMenuItem").IsVisible.Should().BeTrue();
+        Item("openWorkingDirectoryFileMenuItem").IsVisible.Should().BeFalse();
+        Item("resetFileToMenuItem").IsEnabled.Should().BeTrue();
+        Item("resetFileToParentMenuItem").Header.Should().Be("First: A a1a1a1a1");
+        Item("resetFileToSelectedMenuItem").IsVisible.Should().BeFalse();
+
+        MenuItem copy = Item("copyFullPathsNativeMenuItem");
+        copy.Command!.Execute(copy.CommandParameter);
+        MenuItem blame = Item("blameMenuItem");
+        blame.Command!.Execute(blame.CommandParameter);
+        host.Log.Should().Contain(["copy FullNative: docs/readme.md folder: ", "history blame: docs/readme.md"]);
+        view.Menu.Close();
         window.Close();
     });
 

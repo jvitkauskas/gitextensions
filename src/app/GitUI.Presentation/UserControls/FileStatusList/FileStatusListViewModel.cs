@@ -189,6 +189,95 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     private void SortBy(DiffListSortType sortType)
         => Options = Options with { SortType = IsFlatList ? Enum.Parse<DiffListSortType>(sortType + "Flat") : sortType };
 
+    /// <summary>As the items of "Sort and group by": the exact sorting.</summary>
+    [RelayCommand]
+    private void SetSortType(DiffListSortType sortType) => Options = Options with { SortType = sortType };
+
+    /// <summary>The actions of the menu, if the list has one (the host of the dialog provides them).</summary>
+    public IFileStatusListMenuHost? MenuHost
+    {
+        get;
+        set
+        {
+            field = value;
+            OnPropertyChanged(nameof(HasMenuHost));
+        }
+    }
+
+    public FileStatusListMenuStrings MenuStrings { get; } = ViewStrings.Load<FileStatusListMenuStrings>();
+
+    public CopyPathsStrings CopyPathsStrings { get; } = ViewStrings.Load<CopyPathsStrings>();
+
+    /// <summary>The menu items for the selection, updated when the menu opens.</summary>
+    [ObservableProperty]
+    public partial FileStatusMenuState MenuState { get; private set; } = FileStatusMenuState.None;
+
+    public bool HasMenuHost => MenuHost is not null;
+
+    /// <summary>The selected folder, if a single folder is selected (as <c>FileStatusList.SelectedFolder</c>).</summary>
+    public RelativePath? SelectedFolder => SelectedNodes is [{ Entry: null, FolderPath: { } path }] ? path : null;
+
+    /// <summary>Raised when an action of the menu changed the files (as <c>RequestRefresh</c>).</summary>
+    public event EventHandler? RefreshRequested;
+
+    /// <summary>Raised when the user changes the sorting, which the host keeps for all lists (<c>DiffListSortService</c>).</summary>
+    public event EventHandler? SortTypeChanged;
+
+    /// <summary>As <c>ItemContextMenu_Opening</c> / <c>UpdateStatusOfMenuItems</c>.</summary>
+    public void UpdateMenuState()
+        => MenuState = MenuHost?.GetMenuState(SelectedEntries, SelectedFolder) ?? FileStatusMenuState.None;
+
+    [RelayCommand]
+    private void OpenWithDifftool(DifftoolKind kind) => MenuHost?.OpenWithDifftool(SelectedEntries, kind);
+
+    [RelayCommand]
+    private void OpenWorkingDirectoryFile(bool openWith)
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.OpenWorkingDirectoryFile(entry, openWith);
+        }
+    }
+
+    [RelayCommand]
+    private void EditWorkingDirectoryFile()
+    {
+        if (SelectedEntry is { } entry && MenuHost?.EditWorkingDirectoryFile(entry) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenRevisionFile(bool openWith)
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.OpenRevisionFile(entry, openWith);
+        }
+    }
+
+    [RelayCommand]
+    private void SaveAs() => MenuHost?.SaveAs(SelectedEntries);
+
+    [RelayCommand]
+    private void CopyPaths(CopyPathKind kind) => MenuHost?.CopyPaths(SelectedEntries, SelectedFolder, kind);
+
+    [RelayCommand]
+    private void ShowInFolder() => MenuHost?.ShowInFolder(SelectedEntries, SelectedFolder);
+
+    [RelayCommand]
+    private void ShowFileHistory(bool blame) => MenuHost?.ShowFileHistory(SelectedEntry, SelectedFolder, blame);
+
+    [RelayCommand]
+    private void ResetFiles(bool toParent)
+    {
+        if (MenuHost?.ResetFiles(SelectedEntries, toParent) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     [RelayCommand]
     private void ExpandAll()
     {
@@ -210,9 +299,14 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     [RelayCommand]
     private void ClearFilter() => Filter = "";
 
-    partial void OnOptionsChanged(FileStatusTreeOptions value)
+    partial void OnOptionsChanged(FileStatusTreeOptions oldValue, FileStatusTreeOptions newValue)
     {
         OnPropertyChanged(nameof(IsFlatList));
+        if (oldValue is not null && oldValue.SortType != newValue.SortType)
+        {
+            SortTypeChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         Update(updateCausedByFilter: true);
     }
 

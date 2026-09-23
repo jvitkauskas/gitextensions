@@ -12,7 +12,13 @@ public partial class FileStatusListView : UserControl
     public FileStatusListView()
     {
         InitializeComponent();
+
+        // As ItemContextMenu_Opening: the items for the selection.
+        treeMenu.Opening += (_, _) => (DataContext as FileStatusListViewModel)?.UpdateMenuState();
     }
+
+    /// <summary>The context menu, e.g. for tests.</summary>
+    public ContextMenu Menu => treeMenu;
 
     /// <summary>The tree, e.g. for tests.</summary>
     public TreeView Tree => filesTree;

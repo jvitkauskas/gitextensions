@@ -56,7 +56,77 @@
       <TreeView Name="filesTree" ItemsSource="{Binding Nodes}" SelectionMode="Multiple"
                 IsVisible="{Binding !ShowNoFiles}">
         <TreeView.ContextMenu>
+          <!-- Equivalent of FileStatusList.ItemContextMenu (the items for any diff; the others come with the dialogs using them). -->
           <ContextMenu Name="treeMenu">
+            <MenuItem Name="openWithDifftoolMenuItem" Header="{Binding MenuStrings.OpenWithDifftool.AccessKeyText}"
+                      IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanOpenWithDifftool}">
+              <MenuItem Name="diffFirstToSelectedMenuItem" Header="{Binding MenuStrings.DiffFirstToSelected.AccessKeyText}"
+                        IsEnabled="{Binding MenuState.CanDiffFirstToSelected}"
+                        Command="{Binding OpenWithDifftoolCommand}" CommandParameter="{x:Static fs:DifftoolKind.FirstToSelected}" />
+              <MenuItem Name="diffFirstToLocalMenuItem" Header="{Binding MenuStrings.DiffFirstToLocal.AccessKeyText}"
+                        IsEnabled="{Binding MenuState.CanDiffFirstToLocal}" IsVisible="{Binding MenuState.ShowDiffToLocal}"
+                        Command="{Binding OpenWithDifftoolCommand}" CommandParameter="{x:Static fs:DifftoolKind.FirstToLocal}" />
+              <MenuItem Name="diffSelectedToLocalMenuItem" Header="{Binding MenuStrings.DiffSelectedToLocal.AccessKeyText}"
+                        IsEnabled="{Binding MenuState.CanDiffSelectedToLocal}" IsVisible="{Binding MenuState.ShowDiffToLocal}"
+                        Command="{Binding OpenWithDifftoolCommand}" CommandParameter="{x:Static fs:DifftoolKind.SelectedToLocal}" />
+            </MenuItem>
+            <MenuItem Name="openWorkingDirectoryFileMenuItem" Header="{Binding MenuStrings.OpenWorkingDirectoryFile.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFile}"
+                      Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:False}" />
+            <MenuItem Name="openWorkingDirectoryFileWithMenuItem" Header="{Binding MenuStrings.OpenWorkingDirectoryFileWith.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFile}"
+                      Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:True}" />
+            <MenuItem Name="editWorkingDirectoryFileMenuItem" Header="{Binding MenuStrings.EditWorkingDirectoryFile.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowEditWorkingDirectoryFile}" Command="{Binding EditWorkingDirectoryFileCommand}" />
+            <MenuItem Name="openRevisionFileMenuItem" Header="{Binding MenuStrings.OpenRevisionFile.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowOpenRevisionFile}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
+                      Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:False}" />
+            <MenuItem Name="openRevisionFileWithMenuItem" Header="{Binding MenuStrings.OpenRevisionFileWith.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowOpenRevisionFile}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
+                      Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:True}" />
+            <MenuItem Name="saveAsMenuItem" Header="{Binding MenuStrings.SaveAs.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowSaveAs}" Command="{Binding SaveAsCommand}" />
+            <MenuItem Name="resetFileToMenuItem" Header="{Binding MenuStrings.ResetFileTo.AccessKeyText}"
+                      IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanResetFileTo}">
+              <MenuItem Name="resetFileToSelectedMenuItem" Header="{Binding MenuState.ResetToSelectedText}"
+                        IsVisible="{Binding MenuState.ResetToSelectedText, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Command="{Binding ResetFilesCommand}" CommandParameter="{x:False}" />
+              <MenuItem Name="resetFileToParentMenuItem" Header="{Binding MenuState.ResetToParentText}"
+                        IsVisible="{Binding MenuState.ResetToParentText, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Command="{Binding ResetFilesCommand}" CommandParameter="{x:True}" />
+            </MenuItem>
+            <Separator IsVisible="{Binding HasMenuHost}" />
+            <MenuItem Name="copyPathsMenuItem" Header="{Binding MenuStrings.CopyPaths.AccessKeyText}"
+                      IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanCopyPaths}">
+              <MenuItem Name="copyFullPathsNativeMenuItem" Header="{Binding CopyPathsStrings.FullNative.AccessKeyText}" FontWeight="Bold"
+                        Command="{Binding CopyPathsCommand}" CommandParameter="{x:Static fs:CopyPathKind.FullNative}" />
+              <MenuItem Header="{Binding CopyPathsStrings.FullWsl.AccessKeyText}"
+                        Command="{Binding CopyPathsCommand}" CommandParameter="{x:Static fs:CopyPathKind.FullWsl}" />
+              <MenuItem Header="{Binding CopyPathsStrings.FullCygwin.AccessKeyText}"
+                        Command="{Binding CopyPathsCommand}" CommandParameter="{x:Static fs:CopyPathKind.FullCygwin}" />
+              <MenuItem Header="{Binding CopyPathsStrings.RelativeNative.AccessKeyText}"
+                        Command="{Binding CopyPathsCommand}" CommandParameter="{x:Static fs:CopyPathKind.RelativeNative}" />
+              <MenuItem Header="{Binding CopyPathsStrings.RelativePosix.AccessKeyText}"
+                        Command="{Binding CopyPathsCommand}" CommandParameter="{x:Static fs:CopyPathKind.RelativePosix}" />
+            </MenuItem>
+            <MenuItem Name="showInFolderMenuItem" Header="{Binding MenuStrings.ShowInFolder.AccessKeyText}"
+                      IsVisible="{Binding MenuState.ShowShowInFolder}" IsEnabled="{Binding MenuState.CanShowInFolder}" Command="{Binding ShowInFolderCommand}" />
+            <Separator IsVisible="{Binding HasMenuHost}" />
+            <MenuItem Name="fileHistoryMenuItem" Header="{Binding MenuStrings.FileHistory.AccessKeyText}"
+                      IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanShowFileHistory}"
+                      Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:False}" />
+            <MenuItem Name="blameMenuItem" Header="{Binding MenuStrings.Blame.AccessKeyText}"
+                      IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanBlame}"
+                      Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:True}" />
+            <Separator IsVisible="{Binding HasMenuHost}" />
+            <MenuItem Name="sortByMenuItem" Header="{Binding MenuStrings.SortBy.AccessKeyText}">
+              <MenuItem Header="{Binding MenuStrings.GroupByFilePathTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFilePathFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePathFlat}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtensionFlat}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFileStatusFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatusFlat}" />
+            </MenuItem>
             <MenuItem Name="expandAllMenuItem" Header="{Binding Strings.ExpandAll.AccessKeyText}" Command="{Binding ExpandAllCommand}" />
             <MenuItem Name="collapseAllMenuItem" Header="{Binding Strings.CollapseAll.AccessKeyText}" Command="{Binding CollapseAllCommand}" />
           </ContextMenu>

@@ -37,8 +37,16 @@ internal static partial class AvaloniaDialogs
             firstDisplayName,
             secondDisplayName,
             GetMergeBase(commands.Module, firstId, secondId));
+        UseFileStatusListMenu(((DiffViewModel)window.DataContext).Files, commands, window);
         AvaloniaDialogHost.Show(window, ownerHandle: 0);
         return true;
+    }
+
+    /// <summary>Gives the list its menu, and keeps its sorting for all lists (as <c>DiffListSortService</c>).</summary>
+    internal static void UseFileStatusListMenu(FileStatusListViewModel files, IGitUICommands commands, DialogWindow window)
+    {
+        files.MenuHost = new FileStatusListMenuHost(commands, window);
+        files.SortTypeChanged += (_, _) => DiffListSortService.Instance.DiffListSorting = files.Options.SortType;
     }
 
     /// <summary>The sorting and settings of the file status list (<c>DiffListSortService</c>, <c>AppSettings</c>).</summary>

@@ -202,7 +202,7 @@ partial class FileStatusList
     /// <param name="parentId">The parent commit id.</param>
     /// <param name="selectedItems">The selected file status items.</param>
     /// <returns><see langword="true"/> if it is possible to reset to first id.</returns>
-    private static bool CanResetToFirst(ObjectId parentId, IEnumerable<FileStatusItem> selectedItems)
+    internal static bool CanResetToFirst(ObjectId parentId, IEnumerable<FileStatusItem> selectedItems)
     {
         return CanResetToSecond(parentId) || (parentId == ObjectId.IndexId && selectedItems.SecondIds().All(i => i == ObjectId.WorkTreeId));
     }
@@ -212,7 +212,7 @@ partial class FileStatusList
     /// </summary>
     /// <param name="resetId">The selected commit id.</param>
     /// <returns><see langword="true"/> if it is possible to reset to first id.</returns>
-    private static bool CanResetToSecond(ObjectId resetId) => !resetId.IsZeroOrArtificial;
+    internal static bool CanResetToSecond(ObjectId resetId) => !resetId.IsZeroOrArtificial;
 
     private void CherryPickChanges_Click(object sender, EventArgs e)
     {
@@ -550,7 +550,7 @@ partial class FileStatusList
             ? _getLineNumber()
             : int.Parse(FindScriptOptionsProvider().GetValues(ScriptOptionsProvider._lineNumber).FirstOrDefault("0"));
 
-    private static ContextMenuSelectionInfo GetSelectionInfo(FileStatusItem[] selectedItems, RelativePath? selectedFolder, bool isBareRepository, bool supportLinePatching, IFullPathResolver fullPathResolver)
+    internal static ContextMenuSelectionInfo GetSelectionInfo(FileStatusItem[] selectedItems, RelativePath? selectedFolder, bool isBareRepository, bool supportLinePatching, IFullPathResolver fullPathResolver)
     {
         // Some items are not supported if more than one revision is selected
         List<GitRevision> revisions = [.. selectedItems.SecondRevs()];

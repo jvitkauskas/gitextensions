@@ -46,7 +46,7 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>Lets an Avalonia window own WinForms dialogs (e.g. progress or message boxes it opens).</summary>
-    private sealed class NativeWindowOwner(DialogWindow window) : IWin32Window
+    internal sealed class NativeWindowOwner(DialogWindow window) : IWin32Window
     {
         public nint Handle => window.NativeHandle;
     }

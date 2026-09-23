@@ -87,6 +87,9 @@ public sealed partial class DiffViewModel : DialogViewModel
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
         Viewer = new FileViewerViewModel(fileViewerHost);
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
+
+        // As RequestRefresh of the menu (e.g. after resetting files).
+        Files.RefreshRequested += (_, _) => _ = PopulateDiffFilesAsync();
     }
 
     public DiffStrings Strings { get; }

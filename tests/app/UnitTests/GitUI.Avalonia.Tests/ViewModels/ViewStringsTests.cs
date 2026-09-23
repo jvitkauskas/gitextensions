@@ -90,6 +90,8 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new FileStatusListStrings()).SetArgDisplayNames(nameof(FileStatusListStrings));
         yield return new TestCaseData(new DiffStrings()).SetArgDisplayNames(nameof(DiffStrings));
         yield return new TestCaseData(new FileViewerStrings()).SetArgDisplayNames(nameof(FileViewerStrings));
+        yield return new TestCaseData(new FileStatusListMenuStrings()).SetArgDisplayNames(nameof(FileStatusListMenuStrings));
+        yield return new TestCaseData(new CopyPathsStrings()).SetArgDisplayNames(nameof(CopyPathsStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]
