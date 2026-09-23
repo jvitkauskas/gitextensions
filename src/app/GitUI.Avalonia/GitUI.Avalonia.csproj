@@ -128,5 +128,13 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Branch.png" Link="Assets\Branch.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SolveMerge.png" Link="Assets\SolveMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Settings.png" Link="Assets\Settings.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateClean.png" Link="Assets\RepoStateClean.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ArrowUp.png" Link="Assets\ArrowUp.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetCurrentBranchToHere.png" Link="Assets\ResetCurrentBranchToHere.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\stash.png" Link="Assets\Stash.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetWorkingDirChanges.png" Link="Assets\ResetWorkingDirChanges.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\WorkingDirChanges.png" Link="Assets\WorkingDirChanges.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CommitTemplates.png" Link="Assets\CommitTemplates.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchCreate.png" Link="Assets\BranchCreate.png" />
   </ItemGroup>
 </Project>
