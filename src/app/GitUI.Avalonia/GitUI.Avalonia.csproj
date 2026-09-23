@@ -55,6 +55,10 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesUpdate.png" Link="Assets\SubmodulesUpdate.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Pull.png" Link="Assets\Pull.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CommitId.png" Link="Assets\CommitId.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RemoteAdd.png" Link="Assets\RemoteAdd.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RemoteDelete.png" Link="Assets\RemoteDelete.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileNew.png" Link="Assets\FileNew.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Save.png" Link="Assets\Save.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetCurrentBranchToHere.png" Link="Assets\ResetCurrentBranchToHere.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMerge.png" Link="Assets\Help\HelpCommandMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMergeFastForward.png" Link="Assets\Help\HelpCommandMergeFastForward.png" />

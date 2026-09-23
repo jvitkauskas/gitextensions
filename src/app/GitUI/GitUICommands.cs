@@ -1227,6 +1227,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowRemotes(owner, this, preselectRemote, preselectLocal))
+            {
+                return true;
+            }
+
             using FormRemotes form = new(this)
             {
                 PreselectRemoteOnLoad = preselectRemote,

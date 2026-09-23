@@ -1,0 +1,161 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:git="using:GitExtensions.Extensibility.Git"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RemotesWindow"
+                x:DataType="vm:RemotesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="960" Height="560" MinWidth="900" MinHeight="420">
+  <Window.Styles>
+    <Style Selector="TextBlock.disabledRemote">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
+    </Style>
+    <Style Selector="Border.groupBox">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+  </Window.Styles>
+  <TabControl Name="tabControl" Margin="6" SelectedIndex="{Binding SelectedTabIndex}">
+    <TabItem Header="{Binding Strings.RemotesTab.Text}">
+      <Grid ColumnDefinitions="220,*" ColumnSpacing="9" Margin="0,6,0,0">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,6,0,0">
+            <Button Name="newButton" Padding="6,4" ToolTip.Tip="{Binding Strings.NewTooltip.Text}" Command="{Binding NewCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/RemoteAdd.png" Width="16" Height="16" />
+            </Button>
+            <Button Name="deleteButton" Padding="6,4" ToolTip.Tip="{Binding Strings.DeleteTooltip.Text}" Command="{Binding DeleteCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/RemoteDelete.png" Width="16" Height="16" />
+            </Button>
+            <Button Name="toggleStateButton" Padding="6,4" ToolTip.Tip="{Binding ToggleStateTooltip}" Command="{Binding ToggleStateCommand}">
+              <Panel>
+                <Image Source="avares://GitUI.Avalonia/Assets/EyeOpened.png" Width="16" Height="16" IsVisible="{Binding IsSelectedDisabled}" />
+                <Image Source="avares://GitUI.Avalonia/Assets/EyeClosed.png" Width="16" Height="16" IsVisible="{Binding !IsSelectedDisabled}" />
+              </Panel>
+            </Button>
+          </StackPanel>
+          <ListBox Name="remotesListBox" ItemsSource="{Binding Remotes}" SelectedItem="{Binding SelectedRemote}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:RemoteListItem">
+                <StackPanel>
+                  <!-- Equivalent of the ListViewGroup headers -->
+                  <TextBlock Text="{Binding GroupHeader}" FontWeight="SemiBold" Margin="0,0,0,2"
+                             IsVisible="{Binding GroupHeader, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  <TextBlock Text="{Binding Name}" Margin="8,0,0,0" Classes.disabledRemote="{Binding IsDisabled}" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+        <Border Grid.Column="1" Classes="groupBox">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="{Binding ManagementHeader}" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <Button Name="saveButton" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Margin="0,6,0,0" Classes="accent"
+                    Command="{Binding SaveCommand}" IsEnabled="{Binding IsManagementEnabled}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Image Source="avares://GitUI.Avalonia/Assets/Save.png" Width="16" Height="16" />
+                <AccessText Text="{Binding Strings.Save.AccessKeyText}" />
+              </StackPanel>
+            </Button>
+            <StackPanel Spacing="6" IsEnabled="{Binding IsManagementEnabled}">
+              <Border Classes="groupBox">
+                <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+                  <Label Content="{Binding UrlLabel}" Target="urlComboBox" />
+                  <ComboBox Name="urlComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                            ItemsSource="{Binding UrlSuggestions}" Text="{Binding Url}" />
+                  <Button Name="browseUrlButton" Grid.Column="2" MinWidth="104" Content="{Binding Strings.BrowseUrl.AccessKeyText}" Command="{Binding BrowseUrlCommand}" />
+
+                  <Label Grid.Row="1" Content="{Binding Strings.Name.AccessKeyText}" Target="nameTextBox" />
+                  <TextBox Name="nameTextBox" Grid.Row="1" Grid.Column="1" Text="{Binding RemoteName}" />
+
+                  <Label Grid.Row="2" Content="{Binding Strings.Prefix.Text}" Target="prefixTextBox" IsVisible="{Binding ShowAdvancedOptions}" />
+                  <TextBox Name="prefixTextBox" Grid.Row="2" Grid.Column="1" Text="{Binding Prefix}" IsVisible="{Binding ShowAdvancedOptions}" />
+
+                  <Label Grid.Row="3" Content="{Binding Strings.Color.Text}" IsVisible="{Binding ShowAdvancedOptions}" />
+                  <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="6" IsVisible="{Binding ShowAdvancedOptions}">
+                    <Button Name="colorButton" MinWidth="60" Command="{Binding PickColorCommand}">
+                      <Panel>
+                        <AccessText Text="{Binding Strings.SetColor.AccessKeyText}" IsVisible="{Binding !HasColor}" />
+                        <Border Name="colorSwatch" Width="40" Height="14" IsVisible="{Binding HasColor}" />
+                      </Panel>
+                    </Button>
+                    <Button Name="resetColorButton" Content="{Binding Strings.DefaultColor.Text}" Command="{Binding ResetColorCommand}" IsVisible="{Binding HasColor}" />
+                  </StackPanel>
+
+                  <CheckBox Name="separatePushUrlCheckBox" Grid.Row="4" Grid.ColumnSpan="2" Content="{Binding Strings.SeparatePushUrl.AccessKeyText}" IsChecked="{Binding IsSeparatePushUrl}" />
+
+                  <Label Grid.Row="5" Content="{Binding Strings.PushUrl.AccessKeyText}" Target="pushUrlComboBox" IsVisible="{Binding IsSeparatePushUrl}" />
+                  <ComboBox Name="pushUrlComboBox" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                            ItemsSource="{Binding PushUrlSuggestions}" Text="{Binding PushUrl}" IsVisible="{Binding IsSeparatePushUrl}" />
+                  <Button Name="browsePushUrlButton" Grid.Row="5" Grid.Column="2" MinWidth="104" Content="{Binding Strings.BrowsePushUrl.AccessKeyText}"
+                          Command="{Binding BrowsePushUrlCommand}" IsVisible="{Binding IsSeparatePushUrl}" />
+                </Grid>
+              </Border>
+
+              <Border Classes="groupBox" IsVisible="{Binding IsPuttyEnabled}">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="{Binding Strings.PuttySsh.Text}" FontWeight="SemiBold" />
+                  <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+                    <Label Content="{Binding Strings.PrivateKeyFile.AccessKeyText}" Target="sshKeyTextBox" />
+                    <TextBox Name="sshKeyTextBox" Grid.Column="1" Text="{Binding PuttySshKey}" />
+                    <Button Name="sshBrowseButton" Grid.Column="2" MinWidth="104" Command="{Binding BrowseSshKeyCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Image Source="avares://GitUI.Avalonia/Assets/FileNew.png" Width="16" Height="16" />
+                        <AccessText Text="{Binding Strings.SshBrowse.AccessKeyText}" />
+                      </StackPanel>
+                    </Button>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+                      <Button Name="testConnectionButton" MinWidth="160" Command="{Binding TestConnectionCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <Image Source="avares://GitUI.Avalonia/Assets/Putty.png" Width="16" Height="16" />
+                          <AccessText Text="{Binding Strings.TestConnection.AccessKeyText}" />
+                        </StackPanel>
+                      </Button>
+                      <Button Name="loadSshKeyButton" MinWidth="160" Command="{Binding LoadSshKeyCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <Image Source="avares://GitUI.Avalonia/Assets/Putty.png" Width="16" Height="16" />
+                          <AccessText Text="{Binding Strings.LoadSshKey.AccessKeyText}" />
+                        </StackPanel>
+                      </Button>
+                    </StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+      </Grid>
+    </TabItem>
+
+    <TabItem Header="{Binding Strings.PullBehaviorTab.Text}">
+      <DockPanel Margin="0,6,0,0">
+        <Grid DockPanel.Dock="Bottom" Classes="form" Margin="0,6,0,0" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto"
+              ColumnSpacing="8" RowSpacing="6" IsEnabled="{Binding IsHeadSelected}">
+          <Label Content="{Binding Strings.LocalBranchName.AccessKeyText}" Target="localBranchTextBox" />
+          <TextBox Name="localBranchTextBox" Grid.Column="1" IsReadOnly="True" Text="{Binding LocalBranchName, Mode=OneWay}" />
+          <Label Grid.Row="1" Content="{Binding Strings.RemoteRepository.AccessKeyText}" Target="trackingRemoteComboBox" />
+          <ComboBox Name="trackingRemoteComboBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding TrackingRemoteNames}" SelectedItem="{Binding SelectedTrackingRemote}" />
+          <Label Grid.Row="2" Content="{Binding Strings.DefaultMergeWith.AccessKeyText}" Target="mergeWithComboBox" />
+          <ComboBox Name="mergeWithComboBox" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                    ItemsSource="{Binding MergeWithCandidates}" Text="{Binding MergeWith}" />
+          <Button Name="saveDefaultPushPullButton" Grid.Row="2" Grid.Column="2" MinWidth="130"
+                  Content="{Binding Strings.SaveDefaultPushPull.AccessKeyText}" Command="{Binding SaveDefaultPushPullCommand}" />
+        </Grid>
+        <DataGrid Name="headsGrid" ItemsSource="{Binding Heads}" SelectedItem="{Binding SelectedHead}"
+                  IsReadOnly="True" SelectionMode="Single" CanUserReorderColumns="False"
+                  HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <DataGrid.Columns>
+            <DataGridTextColumn Binding="{Binding LocalName}" Width="*" x:DataType="git:IGitRef" />
+            <DataGridTextColumn Binding="{Binding TrackingRemote}" Width="*" x:DataType="git:IGitRef" />
+            <DataGridTextColumn Binding="{Binding MergeWith}" Width="*" x:DataType="git:IGitRef" />
+          </DataGrid.Columns>
+        </DataGrid>
+      </DockPanel>
+    </TabItem>
+  </TabControl>
+</h:DialogWindow>
