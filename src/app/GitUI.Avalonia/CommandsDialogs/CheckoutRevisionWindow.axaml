@@ -1,0 +1,25 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CheckoutRevisionWindow"
+                x:DataType="vm:CheckoutRevisionViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="520" MinWidth="420" SizeToContent="Height" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="checkoutButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True" Command="{Binding CheckoutCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Image Source="avares://GitUI.Avalonia/Assets/Checkout.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Checkout.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+    </Border>
+    <Grid Margin="12" Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+      <Label Content="{Binding Strings.CheckoutThisRevision.AccessKeyText}" Target="commitPicker" />
+      <c:CommitPickerView Name="commitPicker" Grid.Column="1" DataContext="{Binding CommitPicker}" />
+      <CheckBox Name="forceCheckBox" Grid.Row="1" Grid.Column="1" Content="{Binding Strings.Force.AccessKeyText}" IsChecked="{Binding Force}" />
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

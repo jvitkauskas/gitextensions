@@ -245,9 +245,12 @@ public partial class InteractiveGitActionControl : GitModuleControl
                     return;
                 }
 
-                using (FormBisect frm = new(formBrowse.RevisionGridControl))
+                if (!AvaloniaHosting.AvaloniaDialogs.TryShowBisect(this, Form.UICommands, formBrowse.RevisionGridControl))
                 {
-                    frm.ShowDialog(this);
+                    using (FormBisect frm = new(formBrowse.RevisionGridControl))
+                    {
+                        frm.ShowDialog(this);
+                    }
                 }
 
                 Form.UICommands.RepoChangedNotifier.Notify();

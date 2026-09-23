@@ -1,0 +1,21 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.DashboardCategoryTitleWindow"
+                x:DataType="vm:DashboardCategoryTitleViewModel"
+                Title="{Binding Title}"
+                Width="400" MinWidth="320" SizeToContent="Height" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" Classes="accent" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" IsCancel="True" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <StackPanel Margin="12" Spacing="4">
+      <Label Content="{Binding Strings.CategoryName.AccessKeyText}" Target="categoryNameTextBox" Padding="0" />
+      <TextBox Name="categoryNameTextBox" Text="{Binding CategoryName}" />
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

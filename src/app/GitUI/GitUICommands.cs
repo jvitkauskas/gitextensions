@@ -180,6 +180,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCheckoutRevision(owner, this, revision, out bool checkedOut))
+            {
+                return checkedOut;
+            }
+
             using FormCheckoutRevision form = new(this);
             form.SetRevision(revision);
             return form.ShowDialog(owner) == DialogResult.OK;
@@ -1120,6 +1125,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowAddToGitIgnore(owner, this, localExclude, filePattern))
+            {
+                return true;
+            }
+
             using FormAddToGitIgnore frm = new(this, localExclude, filePattern);
             frm.ShowDialog(owner);
             return true;

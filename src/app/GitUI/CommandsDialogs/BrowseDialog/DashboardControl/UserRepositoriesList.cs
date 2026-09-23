@@ -524,6 +524,11 @@ public partial class UserRepositoriesList : GitExtensionsControl
 
     private bool PromptCategoryName(List<string> categories, string? originalName, [NotNullWhen(returnValue: true)] out string? name)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowDashboardCategoryTitle(this, categories, originalName, out name))
+        {
+            return name is not null;
+        }
+
         using FormDashboardCategoryTitle dialog = new(categories, originalName);
         if (dialog.ShowDialog(this) == DialogResult.OK)
         {

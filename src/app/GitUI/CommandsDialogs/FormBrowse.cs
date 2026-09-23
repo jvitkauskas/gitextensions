@@ -1810,9 +1810,12 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
 
     private void BisectClick(object sender, EventArgs e)
     {
-        using (FormBisect frm = new(RevisionGrid))
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowBisect(this, UICommands, RevisionGrid))
         {
-            frm.ShowDialog(this);
+            using (FormBisect frm = new(RevisionGrid))
+            {
+                frm.ShowDialog(this);
+            }
         }
 
         RefreshRevisions();

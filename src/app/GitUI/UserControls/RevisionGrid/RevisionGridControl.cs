@@ -3279,18 +3279,22 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             return;
         }
 
-        using FormCompareToBranch form = new(UICommands, headCommit.ObjectId);
-        if (form.ShowDialog(ParentForm) == DialogResult.OK)
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowCompareToBranch(ParentForm, UICommands, headCommit.ObjectId, out string? branchName))
         {
-            Validates.NotNull(form.BranchName);
-            ObjectId baseCommit = Module.RevParse(form.BranchName);
+            using FormCompareToBranch form = new(UICommands, headCommit.ObjectId);
+            branchName = form.ShowDialog(ParentForm) == DialogResult.OK ? form.BranchName : null;
+        }
+
+        if (branchName is not null)
+        {
+            ObjectId baseCommit = Module.RevParse(branchName);
             if (baseCommit.IsZero)
             {
                 MessageBoxes.ShowError(this, _noRevisionFoundError.Text);
                 return;
             }
 
-            ShowFormDiff(baseCommit, headCommit.ObjectId, form.BranchName, headCommit.Subject);
+            ShowFormDiff(baseCommit, headCommit.ObjectId, branchName, headCommit.Subject);
         }
     }
 

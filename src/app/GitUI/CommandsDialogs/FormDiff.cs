@@ -217,11 +217,16 @@ public partial class FormDiff : GitModuleForm
 
     private void PickAnotherBranch(GitRevision preSelectCommit, ref string? displayStr, ref GitRevision? revision)
     {
-        using FormCompareToBranch form = new(UICommands, preSelectCommit.ObjectId);
-        if (form.ShowDialog(this) == DialogResult.OK)
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowCompareToBranch(this, UICommands, preSelectCommit.ObjectId, out string? branchName))
         {
-            displayStr = form.BranchName;
-            ObjectId objectId = Module.RevParse(form.BranchName!);
+            using FormCompareToBranch form = new(UICommands, preSelectCommit.ObjectId);
+            branchName = form.ShowDialog(this) == DialogResult.OK ? form.BranchName : null;
+        }
+
+        if (branchName is not null)
+        {
+            displayStr = branchName;
+            ObjectId objectId = Module.RevParse(branchName);
             revision = objectId.IsZero ? null : new GitRevision(objectId);
             PopulateDiffFiles();
         }

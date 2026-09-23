@@ -517,13 +517,23 @@ internal sealed class RevisionGridMenuCommands : MenuCommandsBase
 
     public void GotoCommitExecute()
     {
-        using FormGoToCommit formGoToCommit = new(_revisionGrid.UICommands);
-        if (formGoToCommit.ShowDialog(_revisionGrid) != DialogResult.OK)
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowGoToCommit(_revisionGrid, _revisionGrid.UICommands, out bool accepted, out ObjectId commitId))
         {
-            return;
+            if (!accepted)
+            {
+                return;
+            }
         }
+        else
+        {
+            using FormGoToCommit formGoToCommit = new(_revisionGrid.UICommands);
+            if (formGoToCommit.ShowDialog(_revisionGrid) != DialogResult.OK)
+            {
+                return;
+            }
 
-        ObjectId commitId = formGoToCommit.ValidateAndGetSelectedObjectId();
+            commitId = formGoToCommit.ValidateAndGetSelectedObjectId();
+        }
 
         if (!commitId.IsZero)
         {

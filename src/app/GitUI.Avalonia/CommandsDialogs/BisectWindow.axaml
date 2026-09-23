@@ -1,0 +1,26 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.BisectWindow"
+                x:DataType="vm:BisectViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="280" SizeToContent="Height" CanResize="False">
+  <Window.Styles>
+    <Style Selector="StackPanel#buttons > Button">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </Window.Styles>
+  <StackPanel Name="buttons" Margin="12" Spacing="6">
+    <Button Name="startButton" Content="{Binding Strings.Start.AccessKeyText}" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" />
+    <Button Name="goodButton" Content="{Binding Strings.Good.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Good}"
+            IsEnabled="{Binding IsInTheMiddleOfBisect}" />
+    <Button Name="badButton" Content="{Binding Strings.Bad.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Bad}"
+            IsEnabled="{Binding IsInTheMiddleOfBisect}" />
+    <Button Name="skipButton" Content="{Binding Strings.Skip.AccessKeyText}" Command="{Binding MarkCommand}" CommandParameter="{x:Static vm:BisectMark.Skip}"
+            IsEnabled="{Binding IsInTheMiddleOfBisect}" />
+    <Button Name="stopButton" Margin="0,6,0,0" Content="{Binding Strings.Stop.AccessKeyText}" Command="{Binding StopCommand}"
+            IsEnabled="{Binding IsInTheMiddleOfBisect}" />
+  </StackPanel>
+</h:DialogWindow>

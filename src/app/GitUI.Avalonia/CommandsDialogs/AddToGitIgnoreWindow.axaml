@@ -1,0 +1,33 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.AddToGitIgnoreWindow"
+                x:DataType="vm:AddToGitIgnoreViewModel"
+                Title="{Binding Title}"
+                Width="560" Height="480" MinWidth="400" MinHeight="360">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="ignoreButton" Classes="accent" IsDefault="True" Content="{Binding Strings.Ignore.AccessKeyText}" Command="{Binding IgnoreCommand}" />
+        <Button Name="cancelButton" IsCancel="True" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <Grid Margin="12" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="6">
+      <Label Content="{Binding Strings.FilePattern.AccessKeyText}" Target="patternsTextBox" Padding="0" />
+      <TextBox Name="patternsTextBox" Grid.Row="1" Height="80" AcceptsReturn="True" TextWrapping="NoWrap" Text="{Binding Patterns}" />
+      <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Margin="0,6,0,0">
+        <TextBlock Text="{Binding Strings.Preview.Text}" FontWeight="SemiBold" />
+        <TextBlock Name="matchStatusText" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding MatchStatus}"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+      </Grid>
+      <Grid Grid.Row="3" RowDefinitions="Auto,*" RowSpacing="4">
+        <StackPanel Name="noMatchPanel" Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasNoMatch}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Unmerged.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding Strings.NoMatch.Text}" />
+        </StackPanel>
+        <ListBox Name="previewListBox" Grid.Row="1" ItemsSource="{Binding PreviewFiles}" IsEnabled="{Binding !IsUpdating}" />
+      </Grid>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>
