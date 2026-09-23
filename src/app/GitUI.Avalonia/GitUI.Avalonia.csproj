@@ -63,6 +63,13 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetCurrentBranchToHere.png" Link="Assets\ResetCurrentBranchToHere.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMerge.png" Link="Assets\Help\HelpCommandMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMergeFastForward.png" Link="Assets\Help\HelpCommandMergeFastForward.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Help\HelpPullFetch.png" Link="Assets\Help\HelpPullFetch.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Help\HelpPullMerge.png" Link="Assets\Help\HelpPullMerge.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Help\HelpPullMergeFastForward.png" Link="Assets\Help\HelpPullMergeFastForward.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Help\HelpPullRebase.png" Link="Assets\Help\HelpPullRebase.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Merge.png" Link="Assets\Merge.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Rebase.png" Link="Assets\Rebase.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Remotes.png" Link="Assets\Remotes.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Diff.png" Link="Assets\Diff.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffA.png" Link="Assets\DiffA.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffB.png" Link="Assets\DiffB.png" />

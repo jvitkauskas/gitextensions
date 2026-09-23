@@ -1,0 +1,140 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.PullWindow"
+                x:DataType="vm:PullViewModel"
+                Title="{Binding Title}"
+                MinWidth="674" SizeToContent="WidthAndHeight" CanResize="False">
+  <Window.Styles>
+    <Style Selector="Border.groupBox">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+    <Style Selector="Border.groupBox > StackPanel > TextBlock.header">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,2" />
+    </Style>
+  </Window.Styles>
+  <DockPanel IsEnabled="{Binding IsIdle}">
+    <!-- Equivalent of the right-to-left ControlsPanel: Pull on the right, the spacer, then Auto stash, Stash and Solve conflicts. -->
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="mergetoolButton" MinWidth="141" Content="{Binding Strings.Mergetool.AccessKeyText}" Command="{Binding SolveConflictsCommand}" />
+        <Button Name="stashButton" MinWidth="132" Content="{Binding Strings.Stash.AccessKeyText}" Command="{Binding StashCommand}" />
+        <CheckBox Name="autoStashCheckBox" VerticalAlignment="Center" Content="{Binding Strings.AutoStash.AccessKeyText}" IsChecked="{Binding AutoStash}" />
+        <Panel Width="100" />
+        <Button Name="pullButton" MinWidth="120" Classes="accent" IsDefault="True" Command="{Binding PullCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/ArrowDown.png" Width="16" Height="16" />
+            <AccessText Text="{Binding PullButtonText}" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Border>
+    <!-- Equivalent of MainLayout: the help image left of PanelRightInner. -->
+    <Grid Margin="9" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
+      <c:HelpImageView Name="helpImage" DataContext="{Binding HelpImage}" VerticalAlignment="Top" />
+      <StackPanel Grid.Column="1" Width="604" Spacing="6" Grid.IsSharedSizeScope="True">
+        <!-- Equivalent of the "Pull from" group box -->
+        <Border Classes="groupBox">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="header" Text="{Binding Strings.GroupPullFrom.Text}" />
+            <Grid RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="captions" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="buttons" />
+              </Grid.ColumnDefinitions>
+              <RadioButton Name="pullFromRemoteRadioButton" GroupName="pullFrom" VerticalAlignment="Center"
+                           Content="{Binding Strings.PullFromRemote.AccessKeyText}" IsChecked="{Binding IsPullFromRemote}"
+                           ToolTip.Tip="{Binding Strings.PullFromRemoteToolTip.Text}" />
+              <ComboBox Name="remotesComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                        ItemsSource="{Binding Remotes}" Text="{Binding Remote}" IsEnabled="{Binding IsPullFromRemote}" />
+              <Button Name="manageRemotesButton" Grid.Column="2" MinWidth="150" Command="{Binding ManageRemotesCommand}"
+                      IsEnabled="{Binding IsPullFromRemote}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Image Source="avares://GitUI.Avalonia/Assets/Remotes.png" Width="16" Height="16" />
+                  <AccessText Text="{Binding Strings.AddRemote.AccessKeyText}" />
+                </StackPanel>
+              </Button>
+              <RadioButton Name="pullFromUrlRadioButton" Grid.Row="1" GroupName="pullFrom" VerticalAlignment="Center"
+                           Content="{Binding Strings.PullFromUrl.AccessKeyText}" IsChecked="{Binding IsPullFromUrl}"
+                           ToolTip.Tip="{Binding Strings.PullFromUrlToolTip.Text}" />
+              <ComboBox Name="pullSourceComboBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                        ItemsSource="{Binding UrlHistory}" Text="{Binding PullSource}" IsEnabled="{Binding IsPullFromUrl}" />
+              <Button Name="browseButton" Grid.Row="1" Grid.Column="2" MinWidth="150" Command="{Binding BrowseSourceCommand}"
+                      IsEnabled="{Binding IsPullFromUrl}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+                  <AccessText Text="{Binding Strings.Browse.AccessKeyText}" />
+                </StackPanel>
+              </Button>
+            </Grid>
+          </StackPanel>
+        </Border>
+        <!-- Equivalent of the "Branch" group box -->
+        <Border Classes="groupBox">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="header" Text="{Binding Strings.GroupBranch.Text}" />
+            <Grid Classes="form" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="captions" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="buttons" />
+              </Grid.ColumnDefinitions>
+              <Label Content="{Binding Strings.LocalBranch.AccessKeyText}" Target="localBranchTextBox"
+                     ToolTip.Tip="{Binding Strings.LocalBranchToolTip.Text}" />
+              <TextBox Name="localBranchTextBox" Grid.Column="1" Text="{Binding LocalBranch}" IsEnabled="{Binding IsLocalBranchEnabled}"
+                       LostFocus="LocalBranchTextBox_LostFocus" />
+              <Label Grid.Row="1" Content="{Binding Strings.RemoteBranch.AccessKeyText}" Target="remoteBranchComboBox"
+                     ToolTip.Tip="{Binding Strings.RemoteBranchToolTip.Text}" />
+              <!-- The remote branches are listed when the list drops down. -->
+              <ComboBox Name="remoteBranchComboBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                        ItemsSource="{Binding RemoteBranches}" Text="{Binding RemoteBranch}" DropDownOpened="RemoteBranchComboBox_DropDownOpened" />
+            </Grid>
+          </StackPanel>
+        </Border>
+        <!-- Equivalent of the "Merge options" group box -->
+        <Border Classes="groupBox">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="header" Text="{Binding Strings.GroupMergeOptions.Text}" />
+            <RadioButton Name="mergeRadioButton" GroupName="mergeOptions" IsChecked="{Binding IsMerge}" IsEnabled="{Binding CanMergeOrRebase}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Image Source="avares://GitUI.Avalonia/Assets/Merge.png" Width="16" Height="16" />
+                <AccessText Text="{Binding Strings.Merge.AccessKeyText}" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton Name="rebaseRadioButton" GroupName="mergeOptions" IsChecked="{Binding IsRebase}" IsEnabled="{Binding CanMergeOrRebase}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Image Source="avares://GitUI.Avalonia/Assets/Rebase.png" Width="16" Height="16" />
+                <AccessText Text="{Binding Strings.Rebase.AccessKeyText}" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton Name="fetchRadioButton" GroupName="mergeOptions" Content="{Binding Strings.Fetch.AccessKeyText}" IsChecked="{Binding IsFetch}" />
+          </StackPanel>
+        </Border>
+        <!-- Equivalent of the "Tag options" group box -->
+        <Border Classes="groupBox">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="header" Text="{Binding Strings.GroupTagOptions.Text}" />
+            <RadioButton Name="reachableTagsRadioButton" GroupName="tagOptions" Content="{Binding Strings.ReachableTags.AccessKeyText}" IsChecked="{Binding IsReachableTags}" />
+            <RadioButton Name="noTagsRadioButton" GroupName="tagOptions" Content="{Binding Strings.NoTags.AccessKeyText}" IsChecked="{Binding IsNoTags}" />
+            <RadioButton Name="allTagsRadioButton" GroupName="tagOptions" Content="{Binding Strings.AllTags.AccessKeyText}" IsChecked="{Binding IsAllTags}"
+                         IsEnabled="{Binding IsAllTagsEnabled}" />
+          </StackPanel>
+        </Border>
+        <StackPanel Margin="7,0,0,0">
+          <CheckBox Name="unshallowCheckBox" Content="{Binding Strings.Unshallow.AccessKeyText}" IsChecked="{Binding Unshallow}" IsVisible="{Binding ShowUnshallow}" />
+          <CheckBox Name="pruneCheckBox" Content="{Binding Strings.Prune.AccessKeyText}" IsChecked="{Binding Prune}" IsEnabled="{Binding IsPruneEnabled}"
+                    ToolTip.Tip="{Binding Strings.PruneToolTip.Text}" />
+          <CheckBox Name="pruneTagsCheckBox" Content="{Binding Strings.PruneTags.AccessKeyText}" IsChecked="{Binding PruneTags}" IsEnabled="{Binding IsPruneTagsEnabled}"
+                    ToolTip.Tip="{Binding Strings.PruneTagsToolTip.Text}" />
+        </StackPanel>
+      </StackPanel>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

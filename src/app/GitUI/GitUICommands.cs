@@ -819,6 +819,12 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowPull(owner, this, remoteBranch, remote, pullAction, pullOnShow, out bool accepted, out bool errorOccurred))
+            {
+                pulled = accepted && !errorOccurred;
+                return accepted;
+            }
+
             using FormPull formPull = new(this, remoteBranch, remote, pullAction);
             DialogResult dlgResult = pullOnShow
                 ? formPull.PullAndShowDialogWhenFailed(owner, remote, pullAction)
