@@ -93,6 +93,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new FileStatusListMenuStrings()).SetArgDisplayNames(nameof(FileStatusListMenuStrings));
         yield return new TestCaseData(new CopyPathsStrings()).SetArgDisplayNames(nameof(CopyPathsStrings));
         yield return new TestCaseData(new StashStrings()).SetArgDisplayNames(nameof(StashStrings));
+        yield return new TestCaseData(new CommitInfoStrings()).SetArgDisplayNames(nameof(CommitInfoStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

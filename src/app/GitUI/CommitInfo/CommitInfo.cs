@@ -965,7 +965,7 @@ public partial class CommitInfo : GitModuleControl
         }
     }
 
-    private sealed class TagsComparer : IComparer<string>
+    internal sealed class TagsComparer : IComparer<string>
     {
         private readonly IDictionary<string, int> _orderDict;
         private readonly string _prefix;
