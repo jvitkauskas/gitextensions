@@ -100,6 +100,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new BlameStrings()).SetArgDisplayNames(nameof(BlameStrings));
         yield return new TestCaseData(new FileHistoryStrings()).SetArgDisplayNames(nameof(FileHistoryStrings));
         yield return new TestCaseData(new CommitStrings()).SetArgDisplayNames(nameof(CommitStrings));
+        yield return new TestCaseData(new PushStrings()).SetArgDisplayNames(nameof(PushStrings));
         yield return new TestCaseData(new SpellCheckStrings()).SetArgDisplayNames(nameof(SpellCheckStrings));
     }
 

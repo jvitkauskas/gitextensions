@@ -1,0 +1,140 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:remotes="using:GitCommands.Remotes"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.PushWindow"
+                x:DataType="vm:PushViewModel"
+                Title="{Binding Title}"
+                Width="700" Height="340" MinWidth="600" MinHeight="330">
+  <Window.Styles>
+    <Style Selector="Border.groupBox">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="12,6,12,10" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+    <Style Selector="DataGrid#branchGrid DataGridColumnHeader">
+      <Setter Property="Padding" Value="6,0" />
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="DataGrid#branchGrid CheckBox">
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+  </Window.Styles>
+  <!-- Equivalent of FormPush: the destination (groupBox2), the tabs (TabControlTagBranch) and the buttons below them. -->
+  <DockPanel Margin="12">
+    <!-- Pull on the left, Load SSH key and Push on the right. -->
+    <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0" LastChildFill="False">
+      <Button Name="pullButton" DockPanel.Dock="Left" MinWidth="101" Content="{Binding Strings.Pull.AccessKeyText}" Command="{Binding PullCommand}" />
+      <Button Name="pushButton" DockPanel.Dock="Right" MinWidth="101" IsDefault="True" Command="{Binding PushCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/Push.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Title.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+      <Button Name="loadSshKeyButton" DockPanel.Dock="Right" MinWidth="137" Margin="0,0,18,0" IsVisible="{Binding CanLoadSshKey}"
+              Content="{Binding Strings.LoadSshKey.AccessKeyText}" Command="{Binding LoadSshKeyCommand}" />
+    </DockPanel>
+
+    <!-- Equivalent of groupBox2 "Push to": a remote or a URL. -->
+    <Border DockPanel.Dock="Top" Classes="groupBox">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Strings.PushTo.PlainText}" FontWeight="SemiBold" />
+        <Grid ColumnDefinitions="110,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+          <RadioButton Name="pushToRemote" GroupName="pushTo" Content="{Binding Strings.PushToRemote.AccessKeyText}"
+                       ToolTip.Tip="{Binding Strings.PushToRemoteToolTip.Text}" IsChecked="{Binding IsPushToRemote}" VerticalAlignment="Center" />
+          <ComboBox Name="remotes" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Remotes}" SelectedItem="{Binding SelectedRemote}"
+                    IsEnabled="{Binding IsPushToRemote}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="remotes:ConfigFileRemote">
+                <TextBlock Text="{Binding Name}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Name="manageRemotesButton" Grid.Column="2" MinWidth="150" Content="{Binding Strings.ManageRemotes.AccessKeyText}"
+                  Command="{Binding ManageRemotesCommand}" IsEnabled="{Binding IsPushToRemote}" />
+          <RadioButton Name="pushToUrl" Grid.Row="1" GroupName="pushTo" Content="{Binding Strings.PushToUrl.AccessKeyText}"
+                       ToolTip.Tip="{Binding Strings.PushToUrlToolTip.Text}" IsChecked="{Binding IsPushToUrl}" VerticalAlignment="Center" />
+          <ComboBox Name="pushDestination" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                    ItemsSource="{Binding RecentUrls}" Text="{Binding PushDestination}" IsEnabled="{Binding IsPushToUrl}" />
+          <Button Name="browseButton" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Content="{Binding Strings.Browse.AccessKeyText}"
+                  Command="{Binding BrowseCommand}" IsEnabled="{Binding IsPushToUrl}" />
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- Equivalent of TabControlTagBranch. -->
+    <TabControl Name="tabs" Margin="0,6,0,0" SelectedIndex="{Binding SelectedTabIndex}">
+      <TabItem Name="branchTab" Header="{Binding Strings.BranchTab.Text}" ToolTip.Tip="{Binding Strings.BranchTabToolTip.Text}">
+        <StackPanel Spacing="6" Margin="0,6,0,0">
+          <Grid ColumnDefinitions="110,*,Auto,*" ColumnSpacing="6">
+            <Label Content="{Binding Strings.BranchToPush.AccessKeyText}" Target="branch" VerticalAlignment="Center" Padding="0" />
+            <ComboBox Name="branch" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True" ItemsSource="{Binding Branches}" Text="{Binding Branch}" />
+            <Label Grid.Column="2" Content="{Binding Strings.To.AccessKeyText}" Target="remoteBranch" VerticalAlignment="Center" Padding="0" />
+            <ComboBox Name="remoteBranch" Grid.Column="3" HorizontalAlignment="Stretch" IsEditable="True" ItemsSource="{Binding RemoteBranches}"
+                      Text="{Binding RemoteBranch}" IsEnabled="{Binding IsRemoteBranchEnabled}" />
+          </Grid>
+          <Button Name="showOptions" Classes="link" Content="{Binding Strings.ShowOptions.Text}" Command="{Binding ShowAllOptionsCommand}"
+                  IsVisible="{Binding !ShowOptions}" />
+          <!-- Equivalent of PushOptionsPanel: the force options with the recursive submodules on the right, then the others. -->
+          <StackPanel Name="pushOptions" Spacing="4" IsVisible="{Binding ShowOptions}">
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                <Label Content="{Binding Strings.RecursiveSubmodules.AccessKeyText}" Target="recursiveSubmodules" VerticalAlignment="Center" Padding="0" />
+                <ComboBox Name="recursiveSubmodules" MinWidth="98" ItemsSource="{Binding RecursiveSubmoduleModes}" SelectedIndex="{Binding RecursiveSubmodules}" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <CheckBox Name="forceWithLease" Content="{Binding Strings.ForceWithLease.AccessKeyText}" IsChecked="{Binding ForceWithLease}"
+                          ToolTip.Tip="{Binding Strings.ForceWithLeaseToolTip.Text}" />
+                <CheckBox Name="forcePushBranches" Content="{Binding Strings.ForcePushBranches.AccessKeyText}" IsChecked="{Binding ForcePushBranches}" />
+              </StackPanel>
+            </DockPanel>
+            <CheckBox Name="replaceTrackingReference" Content="{Binding Strings.ReplaceTrackingReference.AccessKeyText}" IsChecked="{Binding ReplaceTrackingReference}" />
+            <CheckBox Name="createPullRequest" Content="{Binding Strings.CreatePullRequest.AccessKeyText}" IsChecked="{Binding CreatePullRequest}"
+                      IsEnabled="{Binding CanCreatePullRequest}" />
+          </StackPanel>
+        </StackPanel>
+      </TabItem>
+      <TabItem Name="tagTab" Header="{Binding Strings.TagTab.Text}" ToolTip.Tip="{Binding Strings.TagTabToolTip.Text}">
+        <Grid ColumnDefinitions="110,262" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="8" Margin="0,6,0,0">
+          <Label Content="{Binding Strings.TagToPush.AccessKeyText}" Target="tag" VerticalAlignment="Center" Padding="0" />
+          <ComboBox Name="tag" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True" ItemsSource="{Binding Tags}" Text="{Binding Tag}" />
+          <CheckBox Name="forcePushTags" Grid.Row="1" Grid.Column="1" Content="{Binding Strings.ForcePushTags.AccessKeyText}" IsChecked="{Binding ForcePushTags}" />
+        </Grid>
+      </TabItem>
+      <TabItem Name="multipleBranchTab" Header="{Binding Strings.MultipleBranchTab.Text}">
+        <DataGrid Name="branchGrid" Margin="0,6,0,0" ItemsSource="{Binding MultipleBranches}" AutoGenerateColumns="False" HeadersVisibility="Column"
+                  CanUserSortColumns="False" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <DataGrid.Columns>
+            <DataGridTextColumn Binding="{Binding LocalBranch}" IsReadOnly="True" Width="*" x:DataType="vm:PushBranchRow" />
+            <DataGridTextColumn Binding="{Binding RemoteBranch}" Width="*" x:DataType="vm:PushBranchRow" />
+            <DataGridTextColumn Binding="{Binding AheadBehind}" IsReadOnly="True" Width="120" x:DataType="vm:PushBranchRow" />
+            <!-- The header of the push column opens menuPushSelection, also on a left click (set in the code). -->
+            <DataGridTemplateColumn Width="76">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:PushBranchRow">
+                  <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Push}" IsVisible="{Binding CanPush}" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="76">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:PushBranchRow">
+                  <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Force}" IsVisible="{Binding CanPush}" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="160">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:PushBranchRow">
+                  <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Delete}" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+          </DataGrid.Columns>
+        </DataGrid>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</h:DialogWindow>

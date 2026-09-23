@@ -1510,6 +1510,12 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowPush(owner, this, pushOnShow, forceWithLease, branchName, out bool accepted, out bool avaloniaPushed))
+            {
+                pushed = avaloniaPushed;
+                return accepted;
+            }
+
             using FormPush form = new(this, branchName);
             if (forceWithLease)
             {
