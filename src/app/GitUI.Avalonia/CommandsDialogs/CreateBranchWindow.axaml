@@ -6,7 +6,8 @@
                 x:Class="GitUI.Avalonia.CommandsDialogs.CreateBranchWindow"
                 x:DataType="vm:CreateBranchViewModel"
                 Title="{Binding Strings.Title.PlainText}"
-                Width="520" MinWidth="480" SizeToContent="Height" CanMaximize="False">
+                Width="520" MinWidth="480" SizeToContent="Height" CanMaximize="False"
+                ManualSectionSubfolder="branches" ManualSectionAnchorName="create-branch">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
       <Button Name="createButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True" Command="{Binding CreateCommand}">
@@ -16,33 +17,34 @@
         </StackPanel>
       </Button>
     </Border>
-    <StackPanel Margin="9" Spacing="8">
-      <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-        <Label Content="{Binding Strings.BranchName.AccessKeyText}" Target="branchNameTextBox" />
-        <TextBox Name="branchNameTextBox" Grid.Column="1" Text="{Binding BranchName}" LostFocus="BranchNameTextBox_LostFocus" />
-        <Label Grid.Row="1" Content="{Binding CreateBranchCaption}" Target="commitPicker" />
-        <Panel Grid.Row="1" Grid.Column="1" IsVisible="{Binding !IsOrphanOnly}">
-          <c:CommitPickerView Name="commitPicker" DataContext="{Binding CommitPicker}" />
-        </Panel>
-      </Grid>
-      <Panel IsVisible="{Binding !IsOrphanOnly}">
+    <!-- Equivalent of the tableLayout: name, revision, "Checkout after create" in the input column, then the commit summary and the "Orphan" group box. -->
+    <Grid Margin="9" Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+      <Label Content="{Binding Strings.BranchName.AccessKeyText}" Target="branchNameTextBox" />
+      <TextBox Name="branchNameTextBox" Grid.Column="1" Text="{Binding BranchName}" LostFocus="BranchNameTextBox_LostFocus" />
+      <Label Grid.Row="1" Content="{Binding CreateBranchCaption}" Target="commitPicker" />
+      <Panel Grid.Row="1" Grid.Column="1" IsVisible="{Binding !IsOrphanOnly}">
+        <c:CommitPickerView Name="commitPicker" DataContext="{Binding CommitPicker}" />
+      </Panel>
+      <CheckBox Name="checkoutCheckBox" Grid.Row="2" Grid.Column="1" Content="{Binding Strings.CheckoutAfterCreate.AccessKeyText}"
+                IsChecked="{Binding CheckoutAfterCreate}" IsEnabled="{Binding CanChangeCheckout}" />
+      <Panel Grid.Row="3" Grid.ColumnSpan="2" IsVisible="{Binding !IsOrphanOnly}">
         <c:CommitSummaryView Name="commitSummary" DataContext="{Binding Summary}" />
       </Panel>
-      <CheckBox Name="checkoutCheckBox" Content="{Binding Strings.CheckoutAfterCreate.AccessKeyText}"
-                IsChecked="{Binding CheckoutAfterCreate}" IsEnabled="{Binding CanChangeCheckout}" />
       <!-- Equivalent of the "Orphan" group box -->
-      <Border BorderThickness="1" CornerRadius="4" Padding="12,8" IsEnabled="{Binding CanCreateOrphan}"
+      <Border Grid.Row="4" Grid.ColumnSpan="2" BorderThickness="1" CornerRadius="4" Padding="12,8" IsEnabled="{Binding CanCreateOrphan}"
               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
         <StackPanel Spacing="4">
           <TextBlock Text="{Binding Strings.Orphan.Text}" FontWeight="SemiBold" />
-          <CheckBox Name="createOrphanCheckBox" Content="{Binding Strings.CreateOrphan.AccessKeyText}"
-                    ToolTip.Tip="{Binding Strings.CreateOrphanTooltip.Text}"
-                    IsChecked="{Binding CreateOrphan}" IsEnabled="{Binding CanChangeCreateOrphan}" />
-          <CheckBox Name="clearOrphanCheckBox" Content="{Binding Strings.ClearOrphan.AccessKeyText}"
-                    ToolTip.Tip="{Binding Strings.ClearOrphanTooltip.Text}"
-                    IsChecked="{Binding ClearOrphan}" IsEnabled="{Binding CanChangeClearOrphan}" />
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <CheckBox Name="createOrphanCheckBox" Content="{Binding Strings.CreateOrphan.AccessKeyText}"
+                      ToolTip.Tip="{Binding Strings.CreateOrphanTooltip.Text}"
+                      IsChecked="{Binding CreateOrphan}" IsEnabled="{Binding CanChangeCreateOrphan}" />
+            <CheckBox Name="clearOrphanCheckBox" Content="{Binding Strings.ClearOrphan.AccessKeyText}"
+                      ToolTip.Tip="{Binding Strings.ClearOrphanTooltip.Text}"
+                      IsChecked="{Binding ClearOrphan}" IsEnabled="{Binding CanChangeClearOrphan}" />
+          </StackPanel>
         </StackPanel>
       </Border>
-    </StackPanel>
+    </Grid>
   </DockPanel>
 </h:DialogWindow>

@@ -16,40 +16,48 @@
     </Style>
   </Window.Styles>
   <DockPanel Margin="6">
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4" Margin="0,0,0,6">
-      <!-- Equivalent of firstCommitGroup -->
-      <HeaderedContentControl Header="{Binding Strings.FirstCommit.Text}">
-        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
-          <Border Name="firstCommitBorder" Padding="4,2" CornerRadius="2">
-            <TextBlock Name="firstCommitText" Text="{Binding FirstDisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="Black" />
-          </Border>
-          <Button Name="firstBranchButton" Grid.Column="1" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherBranchToolTip.Text}" Command="{Binding PickFirstBranchCommand}">
-            <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
-          </Button>
-          <Button Name="firstCommitButton" Grid.Column="2" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherCommitToolTip.Text}" Command="{Binding PickFirstCommitCommand}">
-            <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
-          </Button>
-        </Grid>
-      </HeaderedContentControl>
-      <Button Name="swapButton" Grid.Column="1" VerticalAlignment="Bottom" Classes="pick" ToolTip.Tip="{Binding Strings.SwapToolTip.Text}" Command="{Binding SwapCommand}">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,Auto" RowSpacing="4" Margin="0,0,0,6">
+      <!-- Equivalent of firstCommitGroup: a group box whose name label is only as wide as its text, followed by the buttons. -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="8,4,8,6"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding Strings.FirstCommit.Text}" FontWeight="SemiBold" />
+          <WrapPanel Orientation="Horizontal">
+            <Border Name="firstCommitBorder" MinWidth="200" Margin="0,0,6,0" Padding="4,2" CornerRadius="2" VerticalAlignment="Center">
+              <TextBlock Name="firstCommitText" Text="{Binding FirstDisplayName}" VerticalAlignment="Center" Foreground="Black" />
+            </Border>
+            <Button Name="firstBranchButton" Margin="0,0,6,0" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherBranchToolTip.Text}" Command="{Binding PickFirstBranchCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
+            </Button>
+            <Button Name="firstCommitButton" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherCommitToolTip.Text}" Command="{Binding PickFirstCommitCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
+            </Button>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+      <Button Name="swapButton" Grid.Column="1" Margin="10,15,10,0" VerticalAlignment="Center" Classes="pick" ToolTip.Tip="{Binding Strings.SwapToolTip.Text}" Command="{Binding SwapCommand}">
         <Image Source="avares://GitUI.Avalonia/Assets/Renamed.png" Width="16" Height="16" />
       </Button>
       <!-- Equivalent of secondCommitGroup -->
-      <HeaderedContentControl Grid.Column="2" Header="{Binding Strings.SecondCommit.Text}">
-        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
-          <Border Name="secondCommitBorder" Padding="4,2" CornerRadius="2">
-            <TextBlock Name="secondCommitText" Text="{Binding SecondDisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="Black" />
-          </Border>
-          <Button Name="secondBranchButton" Grid.Column="1" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherBranchToolTip.Text}" Command="{Binding PickSecondBranchCommand}">
-            <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
-          </Button>
-          <Button Name="secondCommitButton" Grid.Column="2" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherCommitToolTip.Text}" Command="{Binding PickSecondCommitCommand}">
-            <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
-          </Button>
-        </Grid>
-      </HeaderedContentControl>
-      <!-- Equivalent of diffOptionsPanel -->
-      <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="12">
+      <Border Grid.Column="2" BorderThickness="1" CornerRadius="4" Padding="8,4,8,6"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding Strings.SecondCommit.Text}" FontWeight="SemiBold" />
+          <WrapPanel Orientation="Horizontal">
+            <Border Name="secondCommitBorder" MinWidth="200" Margin="0,0,6,0" Padding="4,2" CornerRadius="2" VerticalAlignment="Center">
+              <TextBlock Name="secondCommitText" Text="{Binding SecondDisplayName}" VerticalAlignment="Center" Foreground="Black" />
+            </Border>
+            <Button Name="secondBranchButton" Margin="0,0,6,0" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherBranchToolTip.Text}" Command="{Binding PickSecondBranchCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
+            </Button>
+            <Button Name="secondCommitButton" Classes="pick" ToolTip.Tip="{Binding Strings.AnotherCommitToolTip.Text}" Command="{Binding PickSecondCommitCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
+            </Button>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+      <!-- Equivalent of diffOptionsPanel (in the first column, under BASE) -->
+      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
         <CheckBox Name="compareToMergeBaseCheckBox" IsChecked="{Binding CompareToMergeBase}" IsEnabled="{Binding HasMergeBase}"
                   Content="{Binding CompareToMergeBaseText}" />
         <Button Name="directoryDiffButton" Content="{Binding Strings.CompareDirectoriesWithDiffTool.AccessKeyText}"

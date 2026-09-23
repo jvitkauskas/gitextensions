@@ -9,13 +9,14 @@
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
-        <Button Name="okButton" Classes="accent" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
         <Button Name="cancelButton" IsCancel="True" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+        <Button Name="okButton" Classes="accent" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
       </StackPanel>
     </Border>
-    <StackPanel Margin="12" Spacing="4">
-      <Label Content="{Binding Strings.CategoryName.AccessKeyText}" Target="categoryNameTextBox" Padding="0" />
-      <TextBox Name="categoryNameTextBox" Text="{Binding CategoryName}" />
-    </StackPanel>
+    <!-- Equivalent of tableLayoutPanel1: the label left of the text box. -->
+    <Grid Margin="9" Classes="form" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+      <Label Content="{Binding Strings.CategoryName.AccessKeyText}" Target="categoryNameTextBox" />
+      <TextBox Name="categoryNameTextBox" Grid.Column="1" Text="{Binding CategoryName}" />
+    </Grid>
   </DockPanel>
 </h:DialogWindow>

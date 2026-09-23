@@ -9,29 +9,31 @@
                 Width="560" Height="360" MinWidth="480" MinHeight="320">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-        <CheckBox Name="pushTagCheckBox" Content="{Binding PushToText}" IsChecked="{Binding PushTag}" />
-        <Button Name="createButton" Grid.Column="1" Classes="accent" IsDefault="True" Command="{Binding CreateCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <Image Source="avares://GitUI.Avalonia/Assets/TagCreate.png" Width="16" Height="16" />
-            <AccessText Text="{Binding Strings.CreateTag.AccessKeyText}" />
-          </StackPanel>
-        </Button>
-      </Grid>
+      <Button Name="createButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True" Command="{Binding CreateCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Image Source="avares://GitUI.Avalonia/Assets/TagCreate.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.CreateTag.AccessKeyText}" />
+        </StackPanel>
+      </Button>
     </Border>
-    <Grid Margin="9" Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="8" RowSpacing="8">
+    <!--
+      Equivalent of tableLayoutPanel2. FormCreateTag never shows its "Force" check box (ForceTag is not added to the
+      controls), so neither does this window.
+    -->
+    <Grid Margin="9" Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnSpacing="8" RowSpacing="8">
       <Label Content="{Binding Strings.TagName.AccessKeyText}" Target="tagNameTextBox" />
       <TextBox Name="tagNameTextBox" Grid.Column="1" Text="{Binding TagName}" />
-      <CheckBox Name="forceCheckBox" Grid.Column="2" Content="{Binding Strings.Force.AccessKeyText}" IsChecked="{Binding Force}" />
       <Label Grid.Row="1" Content="{Binding Strings.CreateTagAtRevision.AccessKeyText}" Target="commitPicker" />
-      <c:CommitPickerView Name="commitPicker" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" DataContext="{Binding CommitPicker}" />
-      <ComboBox Name="kindComboBox" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch"
+      <c:CommitPickerView Name="commitPicker" Grid.Row="1" Grid.Column="1" DataContext="{Binding CommitPicker}" />
+      <CheckBox Name="pushTagCheckBox" Grid.Row="2" Grid.Column="1" Content="{Binding PushToText}" IsChecked="{Binding PushTag}" />
+      <ComboBox Name="kindComboBox" Grid.Row="3" Grid.Column="1" Width="150"
                 ItemsSource="{Binding Kinds}" SelectedIndex="{Binding SelectedKindIndex}" />
-      <Label Grid.Row="3" Content="{Binding Strings.KeyId.AccessKeyText}" Target="keyIdTextBox" IsEnabled="{Binding CanEnterKeyId}" />
-      <TextBox Name="keyIdTextBox" Grid.Row="3" Grid.Column="1" Text="{Binding KeyId}" IsEnabled="{Binding CanEnterKeyId}" />
-      <Label Grid.Row="4" VerticalAlignment="Top" Content="{Binding Strings.Message.AccessKeyText}" Target="messageTextBox" />
+      <Label Grid.Row="4" Content="{Binding Strings.KeyId.AccessKeyText}" Target="keyIdTextBox" IsEnabled="{Binding CanEnterKeyId}" />
+      <TextBox Name="keyIdTextBox" Grid.Row="4" Grid.Column="1" Width="80" HorizontalAlignment="Left" MaxLength="16"
+               Text="{Binding KeyId}" IsEnabled="{Binding CanEnterKeyId}" />
+      <Label Grid.Row="5" VerticalAlignment="Top" Content="{Binding Strings.Message.AccessKeyText}" Target="messageTextBox" />
       <!-- A plain text box until the spell-checking commit message editor (EditNetSpell) is ported (phase 5). -->
-      <TextBox Name="messageTextBox" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" AcceptsReturn="True" TextWrapping="Wrap"
+      <TextBox Name="messageTextBox" Grid.Row="5" Grid.Column="1" AcceptsReturn="True" TextWrapping="Wrap"
                Text="{Binding Message}" IsEnabled="{Binding CanEnterMessage}" />
     </Grid>
   </DockPanel>

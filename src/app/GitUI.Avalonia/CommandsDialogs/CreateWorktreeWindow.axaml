@@ -35,8 +35,13 @@
       <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
         <Label Content="{Binding Strings.NewWorktreeDirectory.AccessKeyText}" Target="worktreeDirectoryTextBox" />
         <TextBox Name="worktreeDirectoryTextBox" Grid.Column="1" Text="{Binding WorktreeDirectory}" />
-        <Button Name="browseButton" Grid.Column="2" MinWidth="100"
-                Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+        <!-- Equivalent of the FolderBrowserButton -->
+        <Button Name="browseButton" Grid.Column="2" MinWidth="100" Command="{Binding BrowseCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Browse.AccessKeyText}" />
+          </StackPanel>
+        </Button>
       </Grid>
     </StackPanel>
   </DockPanel>

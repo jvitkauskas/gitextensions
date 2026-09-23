@@ -6,7 +6,8 @@
                 x:Class="GitUI.Avalonia.CommandsDialogs.DeleteBranchWindow"
                 x:DataType="vm:DeleteBranchViewModel"
                 Title="{Binding Strings.Title.PlainText}"
-                Width="420" MinWidth="420" MaxWidth="950" SizeToContent="Height" CanMaximize="False">
+                Width="420" MinWidth="420" MaxWidth="950" SizeToContent="Height" CanMaximize="False"
+                ManualSectionSubfolder="branches" ManualSectionAnchorName="delete-branch">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
       <Button Name="deleteButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"

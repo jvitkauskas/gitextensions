@@ -8,27 +8,32 @@
                 Width="470" MinWidth="470" MaxWidth="1000" SizeToContent="Height" CanMaximize="False">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
+      <!-- Equivalent of flowLayoutPanel1: the manual link and its note. -->
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
         <!-- Equivalent of GotoUserManualControl -->
         <Button Name="helpLink" Classes="link" VerticalAlignment="Center"
                 Command="{Binding OpenHelpCommand}" ToolTip.Tip="{Binding HelpTooltip}">
-          <TextBlock Text="{Binding Strings.Help.PlainText}" />
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/GotoManual.png" Width="16" Height="16" />
+            <TextBlock Text="{Binding Strings.Help.PlainText}" VerticalAlignment="Center" />
+          </StackPanel>
         </Button>
         <TextBlock Grid.Column="1" Text="{Binding Strings.HelpNote.Text}" VerticalAlignment="Center"
                    TextWrapping="Wrap" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-        <Button Name="deleteButton" Grid.Column="2" Classes="accent" IsDefault="True"
-                Content="{Binding Strings.Delete.AccessKeyText}" Command="{Binding DeleteCommand}" />
       </Grid>
     </Border>
-    <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto"
+    <!-- The Delete button is at the top right, on the "Select tag" row, as in FormDeleteTag. -->
+    <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto"
           ColumnSpacing="12" RowSpacing="8" Margin="8">
       <Label Content="{Binding Strings.SelectTag.AccessKeyText}" Target="tagsComboBox" />
       <ComboBox Name="tagsComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
                 ItemsSource="{Binding Tags}" Text="{Binding TagName}" />
-      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Strings.Explanation.Text}" TextWrapping="Wrap" />
-      <CheckBox Name="deleteFromRemoteCheckBox" Grid.Row="2" Grid.ColumnSpan="2"
+      <Button Name="deleteButton" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Delete.AccessKeyText}" Command="{Binding DeleteCommand}" />
+      <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding Strings.Explanation.Text}" TextWrapping="Wrap" />
+      <CheckBox Name="deleteFromRemoteCheckBox" Grid.Row="2" Grid.ColumnSpan="3"
                 Content="{Binding Strings.DeleteFromRemotes.AccessKeyText}" IsChecked="{Binding DeleteFromRemote}" />
-      <ComboBox Name="remotesComboBox" Grid.Row="3" Grid.ColumnSpan="2" Width="270" HorizontalAlignment="Left"
+      <ComboBox Name="remotesComboBox" Grid.Row="3" Grid.ColumnSpan="3" Width="270" HorizontalAlignment="Left"
                 ItemsSource="{Binding Remotes}" SelectedItem="{Binding SelectedRemote}"
                 IsEnabled="{Binding DeleteFromRemote}" />
     </Grid>

@@ -5,7 +5,8 @@
                 x:Class="GitUI.Avalonia.CommandsDialogs.CloneWindow"
                 x:DataType="vm:CloneViewModel"
                 Title="{Binding Strings.Title.PlainText}"
-                Width="640" MinWidth="520" SizeToContent="Height" CanMaximize="False">
+                Width="640" MinWidth="520" SizeToContent="Height" CanMaximize="False"
+                ManualSectionSubfolder="getting_started" ManualSectionAnchorName="clone-repository">
   <Window.Styles>
     <Style Selector="SelectableTextBlock.warning">
       <Setter Property="Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
@@ -13,16 +14,17 @@
   </Window.Styles>
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <Button Name="loadSshKeyButton" IsVisible="{Binding CanLoadSshKey}" Command="{Binding LoadSshKeyCommand}">
+      <!-- Equivalent of the right-to-left ControlsPanel: "Load SSH key" immediately left of Clone. -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="loadSshKeyButton" MinWidth="120" IsVisible="{Binding CanLoadSshKey}" Command="{Binding LoadSshKeyCommand}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Image Source="avares://GitUI.Avalonia/Assets/Putty.png" Width="16" Height="16" />
             <AccessText Text="{Binding Strings.LoadSshKey.AccessKeyText}" />
           </StackPanel>
         </Button>
-        <Button Name="cloneButton" Grid.Column="2" Classes="accent" IsDefault="True"
+        <Button Name="cloneButton" Classes="accent" IsDefault="True"
                 Content="{Binding Strings.CloneButton.AccessKeyText}" Command="{Binding CloneCommand}" />
-      </Grid>
+      </StackPanel>
     </Border>
     <StackPanel Margin="12" Spacing="8">
       <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
@@ -51,8 +53,11 @@
         <ComboBox Name="branchComboBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
                   ItemsSource="{Binding Branches}" Text="{Binding Branch}" DropDownOpened="BranchComboBox_DropDownOpened" />
       </Grid>
-      <SelectableTextBlock Name="infoText" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding InfoText}"
-                           Classes.warning="{Binding IsInfoWarning}" />
+      <!-- Equivalent of the Info label: a bordered box with the SystemColors.Info background. -->
+      <Border Classes="info" Margin="0,4,0,0" MinHeight="42">
+        <SelectableTextBlock Name="infoText" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding InfoText}"
+                             Classes.warning="{Binding IsInfoWarning}" />
+      </Border>
       <!-- Equivalent of the "Repository type" group box -->
       <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">

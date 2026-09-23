@@ -8,16 +8,20 @@
                 Title="{Binding Strings.Title.PlainText}"
                 Width="1030" Height="520" MinWidth="600" MinHeight="300">
   <DockPanel>
+    <!-- Equivalent of the last row of tableLayoutPanelForm: the current branch on the left, "Create patch(es)" on the right. -->
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
-        <Label Content="{Binding Strings.Patch.AccessKeyText}" Target="outputPathTextBox" VerticalAlignment="Center" Padding="0" />
-        <TextBox Name="outputPathTextBox" Grid.Column="1" Text="{Binding OutputPath}" />
-        <Button Name="browseButton" Grid.Column="2" MinWidth="80" Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
-        <Button Name="formatPatchButton" Grid.Column="3" Classes="accent" IsDefault="True"
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBlock Name="currentBranchText" VerticalAlignment="Center" Text="{Binding CurrentBranchText}" />
+        <Button Name="formatPatchButton" Grid.Column="1" MinWidth="175" Classes="accent" IsDefault="True"
                 Content="{Binding Strings.CreatePatches.AccessKeyText}" Command="{Binding FormatPatchCommand}" />
       </Grid>
     </Border>
-    <TextBlock DockPanel.Dock="Top" Margin="6,6,6,2" Text="{Binding CurrentBranchText}" />
+    <!-- Equivalent of tableLayoutPanelSaveTo: "Patch: [path] [Browse]" above the revision grid. -->
+    <Grid DockPanel.Dock="Top" Margin="8,8,8,2" Classes="form" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+      <Label Content="{Binding Strings.Patch.AccessKeyText}" Target="outputPathTextBox" />
+      <TextBox Name="outputPathTextBox" Grid.Column="1" Text="{Binding OutputPath}" />
+      <Button Name="browseButton" Grid.Column="2" MinWidth="80" Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+    </Grid>
     <rg:RevisionGridView Name="revisionGrid" Margin="4" DataContext="{Binding Grid}" />
   </DockPanel>
 </h:DialogWindow>

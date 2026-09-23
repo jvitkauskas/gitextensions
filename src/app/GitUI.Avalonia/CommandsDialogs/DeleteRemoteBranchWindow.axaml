@@ -6,22 +6,22 @@
                 x:Class="GitUI.Avalonia.CommandsDialogs.DeleteRemoteBranchWindow"
                 x:DataType="vm:DeleteRemoteBranchViewModel"
                 Title="{Binding Strings.Title.PlainText}"
-                Width="440" MinWidth="403" SizeToContent="Height" CanMaximize="False">
+                Width="440" MinWidth="403" SizeToContent="Height" CanMaximize="False"
+                ManualSectionSubfolder="branches" ManualSectionAnchorName="delete-branch">
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
       <Button Name="deleteButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
               Content="{Binding Strings.Delete.AccessKeyText}" Command="{Binding DeleteCommand}" />
     </Border>
-    <StackPanel Margin="12" Spacing="8">
-      <Grid Classes="form" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-        <Label Content="{Binding Strings.SelectBranches.AccessKeyText}" Target="branchSelector" />
-        <c:BranchSelector Name="branchSelector" Grid.Column="1" DataContext="{Binding Branches}" />
-      </Grid>
-      <CheckBox Name="deleteRemoteCheckBox" Content="{Binding Strings.DeleteRemote.AccessKeyText}" IsChecked="{Binding DeleteRemote}" />
-      <CheckBox Name="deleteTrackingCheckBox" Content="{Binding Strings.DeleteLocalTrackingBranch.AccessKeyText}"
+    <!-- Equivalent of tlpnlMain: the check boxes and the candidates under the branches, in the input column. -->
+    <Grid Margin="12" Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+      <Label Content="{Binding Strings.SelectBranches.AccessKeyText}" Target="branchSelector" />
+      <c:BranchSelector Name="branchSelector" Grid.Column="1" DataContext="{Binding Branches}" />
+      <CheckBox Name="deleteRemoteCheckBox" Grid.Row="1" Grid.Column="1" Content="{Binding Strings.DeleteRemote.AccessKeyText}" IsChecked="{Binding DeleteRemote}" />
+      <CheckBox Name="deleteTrackingCheckBox" Grid.Row="2" Grid.Column="1" Content="{Binding Strings.DeleteLocalTrackingBranch.AccessKeyText}"
                 IsChecked="{Binding DeleteLocalTrackingBranch}" IsEnabled="{Binding CanDeleteLocalTrackingBranch}" />
-      <TextBlock Name="trackingBranchesText" Text="{Binding TrackingBranchesText}" TextWrapping="Wrap"
+      <TextBlock Name="trackingBranchesText" Grid.Row="3" Grid.Column="1" Text="{Binding TrackingBranchesText}" TextWrapping="Wrap"
                  IsVisible="{Binding CanDeleteLocalTrackingBranch}" />
-    </StackPanel>
+    </Grid>
   </DockPanel>
 </h:DialogWindow>
