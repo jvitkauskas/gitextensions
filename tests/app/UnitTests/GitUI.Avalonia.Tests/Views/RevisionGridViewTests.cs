@@ -118,6 +118,9 @@ public sealed class RevisionGridViewTests : HeadlessTest
     {
         public string CurrentBranch => "main";
 
+        public bool MatchesQuickSearch(GitRevision revision, string criteria)
+            => revision.Subject.Contains(criteria, StringComparison.OrdinalIgnoreCase) || (revision.Author?.Contains(criteria, StringComparison.OrdinalIgnoreCase) ?? false);
+
         public void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken)
         {
             graph.HeadId = revisions[0].ObjectId;

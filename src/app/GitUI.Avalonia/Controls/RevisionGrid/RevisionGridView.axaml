@@ -31,6 +31,12 @@
     <Style Selector="Border.ref.current TextBlock">
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
+    <Style Selector="Border#quickSearchLabel TextBlock">
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+    <Style Selector="Border#quickSearchLabel TextBlock.noMatch">
+      <Setter Property="Foreground" Value="DarkRed" />
+    </Style>
     <Style Selector="DataGridCell">
       <Setter Property="MinHeight" Value="22" />
     </Style>
@@ -39,55 +45,63 @@
       <Setter Property="Height" Value="22" />
     </Style>
   </UserControl.Styles>
-  <DataGrid Name="revisionsGrid" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
-            IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserReorderColumns="False"
-            HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="1"
-            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-    <DataGrid.Columns>
-      <DataGridTemplateColumn Width="64" CanUserResize="False">
-        <DataGridTemplateColumn.CellTemplate>
-          <DataTemplate x:DataType="vm:RevisionGridRow">
-            <rg:RevisionGraphCell Graph="{Binding $parent[rg:RevisionGridView].Graph}"
-                                  Renderer="{Binding $parent[rg:RevisionGridView].Renderer}" />
-          </DataTemplate>
-        </DataGridTemplateColumn.CellTemplate>
-      </DataGridTemplateColumn>
-      <DataGridTemplateColumn Width="*">
-        <DataGridTemplateColumn.CellTemplate>
-          <DataTemplate x:DataType="vm:RevisionGridRow">
-            <StackPanel Orientation="Horizontal" Margin="4,0" ClipToBounds="True">
-              <ItemsControl ItemsSource="{Binding Refs}" VerticalAlignment="Center">
-                <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
-                  </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="vm:RevisionRefItem">
-                    <Border Classes="ref"
-                            Classes.branch="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Branch}}"
-                            Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
-                            Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
-                            Classes.current="{Binding IsCurrentBranch}">
-                      <TextBlock Text="{Binding Name}" />
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-              <TextBlock Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-          </DataTemplate>
-        </DataGridTemplateColumn.CellTemplate>
-      </DataGridTemplateColumn>
-      <DataGridTextColumn Binding="{Binding AuthorName}" Width="150" x:DataType="vm:RevisionGridRow" />
-      <DataGridTextColumn Binding="{Binding Date}" Width="130" x:DataType="vm:RevisionGridRow" />
-      <DataGridTemplateColumn Width="80">
-        <DataGridTemplateColumn.CellTemplate>
-          <DataTemplate x:DataType="vm:RevisionGridRow">
-            <TextBlock Text="{Binding ShortId}" FontFamily="{DynamicResource MonospaceFontFamily}" VerticalAlignment="Center" Margin="4,0" />
-          </DataTemplate>
-        </DataGridTemplateColumn.CellTemplate>
-      </DataGridTemplateColumn>
-    </DataGrid.Columns>
-  </DataGrid>
+  <Panel>
+    <DataGrid Name="revisionsGrid" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+              IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserReorderColumns="False"
+              HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="1"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DataGrid.Columns>
+        <DataGridTemplateColumn Width="64" CanUserResize="False">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <rg:RevisionGraphCell Graph="{Binding $parent[rg:RevisionGridView].Graph}"
+                                    Renderer="{Binding $parent[rg:RevisionGridView].Renderer}" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTemplateColumn Width="*">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <StackPanel Orientation="Horizontal" Margin="4,0" ClipToBounds="True">
+                <ItemsControl ItemsSource="{Binding Refs}" VerticalAlignment="Center">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RevisionRefItem">
+                      <Border Classes="ref"
+                              Classes.branch="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Branch}}"
+                              Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
+                              Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
+                              Classes.current="{Binding IsCurrentBranch}">
+                        <TextBlock Text="{Binding Name}" />
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTextColumn Binding="{Binding AuthorName}" Width="150" x:DataType="vm:RevisionGridRow" />
+        <DataGridTextColumn Binding="{Binding Date}" Width="130" x:DataType="vm:RevisionGridRow" />
+        <DataGridTemplateColumn Width="80">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <TextBlock Text="{Binding ShortId}" FontFamily="{DynamicResource MonospaceFontFamily}" VerticalAlignment="Center" Margin="4,0" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+    <!-- The quick search string, as QuickSearchProvider's label. -->
+    <Border Name="quickSearchLabel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1" Padding="7,5,5,5"
+            Background="#FFFFE1" IsVisible="{Binding IsQuickSearchVisible}" IsHitTestVisible="False">
+      <TextBlock Text="{Binding QuickSearchLabel}" FontWeight="Bold" FontSize="14"
+                 Classes.noMatch="{Binding !IsQuickSearchMatched}" />
+    </Border>
+  </Panel>
 </UserControl>

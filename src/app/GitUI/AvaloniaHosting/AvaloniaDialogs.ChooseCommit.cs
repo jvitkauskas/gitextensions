@@ -1,4 +1,5 @@
 using GitCommands;
+using GitCommands.Git;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.HelperDialogs;
@@ -21,8 +22,7 @@ namespace GitUI.AvaloniaHosting;
 internal static partial class AvaloniaDialogs
 {
     /// <summary>
-    ///  Shows the Avalonia port of <c>FormChooseCommit</c>; returns <see langword="false"/> if it is disabled or does not
-    ///  support the options yet (artificial commits).
+    ///  Shows the Avalonia port of <c>FormChooseCommit</c>; returns <see langword="false"/> if it is disabled.
     /// </summary>
     /// <param name="selected">The chosen commit, or <see langword="null"/> if cancelled.</param>
     public static bool TryChooseCommit(
@@ -35,7 +35,7 @@ internal static partial class AvaloniaDialogs
         string? lastRevisionToDisplayHash = null)
     {
         selected = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormChooseCommit)) || showArtificial)
+        if (!AvaloniaUi.IsEnabledFor(nameof(FormChooseCommit)))
         {
             return false;
         }
@@ -47,7 +47,7 @@ internal static partial class AvaloniaDialogs
             toBeSelected = objectId;
         }
 
-        RevisionGridHost gridHost = new(commands, GetRevisionFilterFactory(showCurrentBranchOnly, lastRevisionToDisplayHash));
+        RevisionGridHost gridHost = new(commands, GetRevisionFilterFactory(showCurrentBranchOnly, lastRevisionToDisplayHash), showArtificial);
         ChooseCommitViewModel? viewModel = null;
         try
         {
@@ -55,7 +55,7 @@ internal static partial class AvaloniaDialogs
                 () =>
                 {
                     ChooseCommitWindow window = new();
-                    RevisionGridViewModel grid = new(gridHost, new RevisionGridDisplayOptions(AppSettings.RelativeDate, AppSettings.ShowAuthorDate));
+                    RevisionGridViewModel grid = new(gridHost, new RevisionGridDisplayOptions(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout));
                     viewModel = new ChooseCommitViewModel(ViewStrings.Load<ChooseCommitStrings>(), grid, new ChooseCommitHost(commands, window));
                     window.DataContext = viewModel;
                     grid.Load(toBeSelected);
@@ -128,8 +128,13 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>Loads the revisions for the Avalonia revision grid, as <c>RevisionGridControl.PerformRefreshRevisions</c> does.</summary>
-    private sealed class RevisionGridHost(IGitUICommands commands, Func<ObjectId, ArgumentString> getRevisionFilter) : IRevisionGridHost
+    /// <param name="showArtificial">Whether to show the working directory and index changes (<c>ShowUncommittedChangesIfPossible</c>).</param>
+    private sealed class RevisionGridHost(IGitUICommands commands, Func<ObjectId, ArgumentString> getRevisionFilter, bool showArtificial) : IRevisionGridHost
     {
+        private readonly GitRevisionTester _revisionTester = new(new FullPathResolver(() => commands.Module.WorkingDir));
+
+        public bool MatchesQuickSearch(GitRevision revision, string criteria) => _revisionTester.Matches(revision, criteria);
+
         public string CurrentBranch => commands.Module.GetSelectedBranch(emptyIfDetached: true);
 
         public void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken)
@@ -149,11 +154,22 @@ internal static partial class AvaloniaDialogs
                         .Where(gitRef => !gitRef.ObjectId.IsZero && gitRef.CompleteName != GitRefName.RefsStashPrefix)
                         .ToLookup(gitRef => gitRef.ObjectId);
 
+                    // As RevisionGridControl.ShowArtificialRevisions: the artificial commits are inserted before HEAD.
+                    bool addArtificial = showArtificial && AppSettings.RevisionGraphShowArtificialCommits && !module.IsBareRepository();
+                    bool headIsHandled = false;
                     RevisionBatchObserver observer = new(batch =>
                     {
                         foreach (GitRevision revision in batch)
                         {
                             revision.Refs = [.. refsByObjectId[revision.ObjectId]];
+                            if (addArtificial && !headIsHandled && (revision.ObjectId == currentCheckout || currentCheckout.IsZero))
+                            {
+                                headIsHandled = true;
+                                (GitRevision workTree, GitRevision index) = CreateArtificialRevisions(module, currentCheckout);
+                                graph.Add(workTree);
+                                graph.Add(index);
+                            }
+
                             graph.Add(revision);
                         }
 
@@ -168,6 +184,14 @@ internal static partial class AvaloniaDialogs
                         ResourceManager.TranslatedStrings.Autostash,
                         cancellationToken);
                     observer.Failure?.Throw();
+
+                    if (addArtificial && !headIsHandled)
+                    {
+                        // HEAD is not listed (filtered): show the artificial commits first.
+                        (GitRevision workTree, GitRevision index) = CreateArtificialRevisions(module, currentCheckout);
+                        graph.Insert(workTree, index, []);
+                        ReportOnUiThread(reportBatch);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -198,6 +222,34 @@ internal static partial class AvaloniaDialogs
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 then();
             });
+    }
+
+    /// <summary>The working directory and index commits, as <c>RevisionGridControl.AddArtificialRevisions</c> creates them.</summary>
+    private static (GitRevision WorkTree, GitRevision Index) CreateArtificialRevisions(IGitModule module, ObjectId currentCheckout)
+    {
+        string userName = module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.UserName);
+        string userEmail = module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.UserEmail);
+        GitRevision workTree = new(ObjectId.WorkTreeId)
+        {
+            Author = userName,
+            AuthorEmail = userEmail,
+            Committer = userName,
+            CommitterEmail = userEmail,
+            Subject = ResourceManager.TranslatedStrings.Workspace,
+            ParentIds = [ObjectId.IndexId],
+            Notes = "",
+        };
+        GitRevision index = new(ObjectId.IndexId)
+        {
+            Author = userName,
+            AuthorEmail = userEmail,
+            Committer = userName,
+            CommitterEmail = userEmail,
+            Subject = ResourceManager.TranslatedStrings.Index,
+            ParentIds = currentCheckout.IsZero ? null : [currentCheckout],
+            Notes = "",
+        };
+        return (workTree, index);
     }
 
     /// <summary>Receives the batches of <c>RevisionReader.GetLog</c> on its reading thread.</summary>

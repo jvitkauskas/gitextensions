@@ -27,7 +27,9 @@ public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsC
 /// <summary>How the revisions are shown (the <c>AppSettings</c> of the WinForms columns).</summary>
 /// <param name="RelativeDate">Whether dates are relative (<c>AppSettings.RelativeDate</c>).</param>
 /// <param name="ShowAuthorDate">Whether the author date rather than the commit date is shown (<c>AppSettings.ShowAuthorDate</c>).</param>
-public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate);
+/// <param name="QuickSearchLabel">The text before the quick search string (<c>TranslatedStrings.SearchingFor</c>).</param>
+/// <param name="QuickSearchTimeout">How long the quick search string is kept after typing (<c>AppSettings.RevisionGridQuickSearchTimeout</c>).</param>
+public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000);
 
 /// <summary>A row of the revision grid: a revision and its row in the <see cref="RevisionGraph"/>.</summary>
 public sealed class RevisionGridRow
@@ -36,7 +38,7 @@ public sealed class RevisionGridRow
     {
         Index = index;
         Revision = revision;
-        ShortId = revision.ObjectId.ToShortString();
+        ShortId = revision.IsArtificial ? "" : revision.ObjectId.ToShortString();
         Date = FormatDate(options.ShowAuthorDate ? revision.AuthorDate : revision.CommitDate, options.RelativeDate);
         Refs = [.. revision.Refs
             .OrderBy(r => r.IsTag ? 2 : r.IsRemote ? 1 : 0)
@@ -107,6 +109,9 @@ public interface IRevisionGridHost
     /// </summary>
     void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken);
 
+    /// <summary>Whether the revision matches the quick search criteria (<c>IGitRevisionTester.Matches</c>).</summary>
+    bool MatchesQuickSearch(GitRevision revision, string criteria);
+
     /// <summary>Runs <paramref name="work"/> in the background, then <paramref name="then"/> on the UI thread.</summary>
     void RunInBackground(Action work, Action then);
 }
@@ -137,6 +142,32 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
 
     [ObservableProperty]
     public partial RevisionGridRow? SelectedRow { get; set; }
+
+    /// <summary>Whether several revisions can be selected (<c>RevisionGridControl.MultiSelect</c>).</summary>
+    public bool MultiSelect { get; init; }
+
+    /// <summary>The selected rows, in the order selected; the view reports them.</summary>
+    public IReadOnlyList<RevisionGridRow> SelectedRows { get; private set; } = [];
+
+    /// <summary>Raised when <see cref="SelectedRows"/> changed.</summary>
+    public event EventHandler? SelectionChanged;
+
+    /// <summary>Sets the selected rows (from the view).</summary>
+    public void SetSelectedRows(IEnumerable<RevisionGridRow> rows)
+    {
+        SelectedRows = [.. rows];
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    ///  The selected revisions, newest first or (<paramref name="descending"/>) oldest first, as
+    ///  <c>RevisionGridControl.GetSelectedRevisions</c> sorts them by row.
+    /// </summary>
+    public IReadOnlyList<GitRevision> GetSelectedRevisions(bool descending)
+    {
+        IEnumerable<RevisionGridRow> rows = SelectedRows.Count > 0 ? SelectedRows : SelectedRow is { } row ? [row] : [];
+        return [.. (descending ? rows.OrderByDescending(r => r.Index) : rows.OrderBy(r => r.Index)).Select(r => r.Revision)];
+    }
 
     [ObservableProperty]
     public partial bool IsLoading { get; private set; }
@@ -255,6 +286,103 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
                     EnsureGraphCached(_cacheRequestedTo);
                 }
             });
+    }
+
+    // Quick search: typing in the grid selects the next revision matching the typed text (as QuickSearchProvider).
+
+    private string _lastQuickSearch = "";
+
+    /// <summary>The typed quick search string; empty when not searching.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QuickSearchLabel))]
+    public partial string QuickSearchText { get; private set; } = "";
+
+    [ObservableProperty]
+    public partial bool IsQuickSearchVisible { get; private set; }
+
+    /// <summary>Whether a revision matches the quick search string (the label is red otherwise).</summary>
+    [ObservableProperty]
+    public partial bool IsQuickSearchMatched { get; private set; } = true;
+
+    public string QuickSearchLabel => _options.QuickSearchLabel + QuickSearchText;
+
+    /// <summary>How long the quick search string is kept after typing, in milliseconds.</summary>
+    public int QuickSearchTimeout => _options.QuickSearchTimeout;
+
+    /// <summary>Raised when the quick search string changed, so that the view restarts its timeout.</summary>
+    public event EventHandler? QuickSearchRestarted;
+
+    /// <summary>Adds typed characters (lowercase, as <c>QuickSearchProvider.OnKeyPress</c>) to the quick search string.</summary>
+    public void QuickSearchType(string text) => UpdateQuickSearch(QuickSearchText + text.ToLowerInvariant());
+
+    /// <summary>Adds pasted text to the quick search string.</summary>
+    public void QuickSearchPaste(string text) => UpdateQuickSearch(QuickSearchText + text);
+
+    /// <summary>Removes the last character; returns <see langword="false"/> (and ends the search) if nothing would remain.</summary>
+    public bool QuickSearchBackspace()
+    {
+        if (QuickSearchText.Length > 1)
+        {
+            UpdateQuickSearch(QuickSearchText[..^1]);
+            return true;
+        }
+
+        HideQuickSearch();
+        return false;
+    }
+
+    public void HideQuickSearch()
+    {
+        QuickSearchText = "";
+        IsQuickSearchVisible = false;
+    }
+
+    /// <summary>Selects the next (or previous) revision matching the last quick search string.</summary>
+    public void QuickSearchNext(bool down)
+    {
+        int currentIndex = SelectedRow?.Index ?? -1;
+        int nextIndex = currentIndex < 0 ? 0 : down ? currentIndex + 1 : currentIndex - 1;
+        QuickSearchText = _lastQuickSearch;
+        FindNextMatch(nextIndex, QuickSearchText, reverse: !down);
+        IsQuickSearchVisible = true;
+        QuickSearchRestarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateQuickSearch(string text)
+    {
+        QuickSearchText = text;
+        FindNextMatch(Math.Max(SelectedRow?.Index ?? 0, 0), text, reverse: false);
+        _lastQuickSearch = text;
+        IsQuickSearchVisible = true;
+        QuickSearchRestarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>As <c>QuickSearchProvider.FindNextMatch</c>: searches from the start index, wrapping around.</summary>
+    private void FindNextMatch(int startIndex, string criteria, bool reverse)
+    {
+        int count = Rows.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+        if (startIndex < 0 || startIndex >= count)
+        {
+            startIndex = reverse ? count - 1 : 0;
+        }
+
+        for (int step = 0; step < count; step++)
+        {
+            int index = reverse ? (startIndex - step + count) % count : (startIndex + step) % count;
+            if (_host.MatchesQuickSearch(Rows[index].Revision, criteria))
+            {
+                IsQuickSearchMatched = true;
+                SelectedRow = Rows[index];
+                return;
+            }
+        }
+
+        IsQuickSearchMatched = false;
     }
 
     public void Dispose()

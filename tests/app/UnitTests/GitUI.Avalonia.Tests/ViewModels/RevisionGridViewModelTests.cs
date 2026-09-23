@@ -108,6 +108,44 @@ public sealed class RevisionGridViewModelTests
         host.NotFound.Should().Be(1, "a cancelled go to commit does nothing");
     }
 
+    [Test]
+    public void Quick_search_selects_the_next_match_and_wraps_around()
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel viewModel = new(new RevisionGridViewTests.FakeRevisionGridHost(history), _options with { QuickSearchLabel = "Search: " });
+        int restarts = 0;
+        viewModel.QuickSearchRestarted += (_, _) => restarts++;
+        viewModel.Load();
+
+        viewModel.QuickSearchType("B");
+        viewModel.QuickSearchText.Should().Be("b", "typed characters are lowercased");
+        viewModel.SelectedRow!.Subject.Should().Be("Merge branch 'feature'", "the first match from the top");
+        viewModel.QuickSearchLabel.Should().Be("Search: b");
+        viewModel.IsQuickSearchVisible.Should().BeTrue();
+
+        viewModel.QuickSearchType("ob");
+        viewModel.SelectedRow!.AuthorName.Should().Be("Bob", "the current row is searched first");
+
+        viewModel.QuickSearchNext(down: true);
+        viewModel.SelectedRow!.Subject.Should().Be("Start feature");
+        viewModel.QuickSearchNext(down: true);
+        viewModel.SelectedRow!.Subject.Should().Be("Finish feature", "the search wraps around");
+        viewModel.QuickSearchNext(down: false);
+        viewModel.SelectedRow!.Subject.Should().Be("Start feature");
+
+        viewModel.QuickSearchPaste("XYZ");
+        viewModel.IsQuickSearchMatched.Should().BeFalse();
+        viewModel.SelectedRow!.Subject.Should().Be("Start feature", "the selection stays without a match");
+
+        viewModel.QuickSearchBackspace().Should().BeTrue();
+        viewModel.QuickSearchText.Should().Be("bobXY");
+        restarts.Should().Be(7);
+
+        viewModel.HideQuickSearch();
+        viewModel.IsQuickSearchVisible.Should().BeFalse();
+        viewModel.QuickSearchBackspace().Should().BeFalse("nothing is left to remove");
+    }
+
     /// <summary>Adds the revisions in batches on request, as <c>RevisionReader</c> reports them.</summary>
     private sealed class BatchedHost(IReadOnlyList<GitRevision> revisions) : IRevisionGridHost
     {
@@ -118,6 +156,9 @@ public sealed class RevisionGridViewModelTests
         public Action? ReportBatch { get; private set; }
 
         public string CurrentBranch => "main";
+
+        public bool MatchesQuickSearch(GitRevision revision, string criteria)
+            => revision.Subject.Contains(criteria, StringComparison.OrdinalIgnoreCase) || (revision.Author?.Contains(criteria, StringComparison.OrdinalIgnoreCase) ?? false);
 
         public void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken)
         {

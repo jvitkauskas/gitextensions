@@ -880,6 +880,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowFormatPatch(owner, this))
+            {
+                return true;
+            }
+
             using FormFormatPatch form = new(this);
             form.ShowDialog(owner);
             return true;

@@ -44,8 +44,33 @@ public sealed partial class AvaloniaHostingTests
     }
 
     [Test]
-    public void Choose_commit_with_artificial_commits_stays_on_WinForms()
+    public void Choose_commit_lists_the_uncommitted_changes_before_HEAD_when_asked()
     {
-        AvaloniaDialogs.TryChooseCommit(_owner, _commands, null, out _, showArtificial: true).Should().BeFalse();
+        bool showArtificial = AppSettings.RevisionGraphShowArtificialCommits;
+        AppSettings.RevisionGraphShowArtificialCommits = true;
+        try
+        {
+            List<GitExtensions.Extensibility.Git.ObjectId>? ids = null;
+            DriveNextDialog(window =>
+            {
+                ChooseCommitViewModel viewModel = (ChooseCommitViewModel)window.DataContext!;
+                WaitUntil(() => !viewModel.Grid.IsLoading, () =>
+                {
+                    ids = [.. viewModel.Grid.Rows.Select(r => r.ObjectId)];
+                    viewModel.Grid.SelectRevision(GitExtensions.Extensibility.Git.ObjectId.WorkTreeId);
+                    viewModel.OkCommand.Execute(null);
+                });
+            });
+
+            AvaloniaDialogs.TryChooseCommit(_owner, _commands, null, out GitRevision? chosen, showArtificial: true).Should().BeTrue();
+
+            ids.Should().StartWith([GitExtensions.Extensibility.Git.ObjectId.WorkTreeId, GitExtensions.Extensibility.Git.ObjectId.IndexId]);
+            ids![2].ToString().Should().Be(_referenceRepository.CommitHash);
+            chosen!.IsArtificial.Should().BeTrue();
+        }
+        finally
+        {
+            AppSettings.RevisionGraphShowArtificialCommits = showArtificial;
+        }
     }
 }

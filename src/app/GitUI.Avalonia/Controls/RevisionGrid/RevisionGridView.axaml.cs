@@ -4,7 +4,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Avalonia.Hosting;
@@ -28,6 +30,7 @@ public partial class RevisionGridView : UserControl
     private RevisionGridViewModel? _viewModel;
     private int _maxLaneCount = 1;
     private int _laneCountScannedTo;
+    private readonly DispatcherTimer _quickSearchTimer = new();
 
     public RevisionGridView()
     {
@@ -39,6 +42,15 @@ public partial class RevisionGridView : UserControl
         // Before the grid, which moves to the next row on Enter.
         revisionsGrid.AddHandler(KeyDownEvent, OnGridKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         revisionsGrid.HeadersVisibility = DataGridHeadersVisibility.None;
+        revisionsGrid.SelectionChanged += (_, _) => _viewModel?.SetSelectedRows(revisionsGrid.SelectedItems.OfType<RevisionGridRow>());
+
+        // Quick search (as RevisionGridControl with QuickSearchProvider).
+        revisionsGrid.AddHandler(TextInputEvent, OnGridTextInput, handledEventsToo: true);
+        _quickSearchTimer.Tick += (_, _) =>
+        {
+            _quickSearchTimer.Stop();
+            _viewModel?.HideQuickSearch();
+        };
     }
 
     /// <summary>Raised when a revision is double clicked or Enter is pressed on it.</summary>
@@ -65,9 +77,12 @@ public partial class RevisionGridView : UserControl
     protected override void OnDataContextChanged(EventArgs e)
     {
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel?.QuickSearchRestarted -= OnQuickSearchRestarted;
         _viewModel = DataContext as RevisionGridViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
+        _viewModel?.QuickSearchRestarted += OnQuickSearchRestarted;
         Graph = _viewModel?.Graph;
+        revisionsGrid.SelectionMode = _viewModel?.MultiSelect == true ? DataGridSelectionMode.Extended : DataGridSelectionMode.Single;
         _maxLaneCount = 1;
         _laneCountScannedTo = 0;
         base.OnDataContextChanged(e);
@@ -120,12 +135,58 @@ public partial class RevisionGridView : UserControl
         revisionsGrid.Columns[0].Width = new DataGridLength(RevisionGraphRenderer.GetWidth(_maxLaneCount) + 4);
     }
 
-    private void OnGridKeyDown(object? sender, KeyEventArgs e)
+    private void OnQuickSearchRestarted(object? sender, EventArgs e)
     {
-        if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.None)
+        _quickSearchTimer.Stop();
+        _quickSearchTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(1, _viewModel?.QuickSearchTimeout ?? 4000));
+        _quickSearchTimer.Start();
+    }
+
+    private void OnGridTextInput(object? sender, TextInputEventArgs e)
+    {
+        if (_viewModel is not null && !string.IsNullOrEmpty(e.Text) && !e.Text.Any(char.IsControl))
         {
             e.Handled = true;
-            ActivateSelected(null);
+            _viewModel.QuickSearchType(e.Text);
+        }
+    }
+
+    private void OnGridKeyDown(object? sender, KeyEventArgs e)
+    {
+        switch (e.Key, e.KeyModifiers)
+        {
+            case (Key.Enter, KeyModifiers.None):
+                e.Handled = true;
+                ActivateSelected(null);
+                break;
+
+            case (Key.Back, KeyModifiers.None) when _viewModel?.IsQuickSearchVisible == true:
+                e.Handled = true;
+                _viewModel.QuickSearchBackspace();
+                break;
+
+            case (Key.Escape, KeyModifiers.None) when _viewModel?.IsQuickSearchVisible == true:
+                e.Handled = true;
+                _viewModel.HideQuickSearch();
+                break;
+
+            case (Key.Down, KeyModifiers.Alt) or (Key.Up, KeyModifiers.Alt) when _viewModel is not null:
+                e.Handled = true;
+                _viewModel.QuickSearchNext(down: e.Key == Key.Down);
+                break;
+
+            case (Key.V, KeyModifiers.Control) when _viewModel is not null:
+                e.Handled = true;
+                _ = PasteIntoQuickSearchAsync(_viewModel);
+                break;
+        }
+    }
+
+    private async Task PasteIntoQuickSearchAsync(RevisionGridViewModel viewModel)
+    {
+        if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard && await clipboard.TryGetTextAsync() is { Length: > 0 } text)
+        {
+            viewModel.QuickSearchPaste(text);
         }
     }
 

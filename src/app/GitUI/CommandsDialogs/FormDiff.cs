@@ -234,6 +234,18 @@ public partial class FormDiff : GitModuleForm
 
     private void PickAnotherCommit(GitRevision preSelect, ref string? displayStr, ref GitRevision? revision)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryChooseCommit(this, UICommands, preSelect.Guid, out GitRevision? chosen, showArtificial: true))
+        {
+            if (chosen is not null)
+            {
+                revision = chosen;
+                displayStr = chosen.Subject;
+                PopulateDiffFiles();
+            }
+
+            return;
+        }
+
         using FormChooseCommit form = new(UICommands, preselectCommit: preSelect.Guid, showArtificial: true);
         if (form.ShowDialog(this) == DialogResult.OK)
         {
