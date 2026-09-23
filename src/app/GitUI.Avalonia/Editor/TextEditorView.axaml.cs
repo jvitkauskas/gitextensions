@@ -2,7 +2,10 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.Editor;
 
 namespace GitUI.Avalonia.Editor;
@@ -16,6 +19,8 @@ public partial class TextEditorView : UserControl
     private TextEditorViewModel? _viewModel;
     private bool _updatingText;
     private readonly DarkThemeHighlightingAdapter _darkThemeAdapter = new();
+    private readonly DiffLineNumberMargin _diffLineNumbers = new();
+    private DiffBackgroundRenderer? _diffBackground;
 
     public TextEditorView()
     {
@@ -101,6 +106,7 @@ public partial class TextEditorView : UserControl
     private void OnTextLoaded(object? sender, EventArgs e)
     {
         SetText(_viewModel!.Text);
+        ShowDiff(_viewModel.DiffLines);
 
         // Show the requested line with the caret on it, or the start.
         if (_viewModel.LineToShow is int line && line > 0 && line <= editor.Document.LineCount)
@@ -113,6 +119,44 @@ public partial class TextEditorView : UserControl
             editor.TextArea.Caret.Offset = 0;
             editor.ScrollToHome();
         }
+    }
+
+    /// <summary>A diff shows its line numbers in the old and new file, and its added and removed lines colored.</summary>
+    private void ShowDiff(IReadOnlyList<DiffLine>? lines)
+    {
+        TextView textView = editor.TextArea.TextView;
+        bool isDiff = lines is not null;
+        editor.ShowLineNumbers = !isDiff;
+        if (!isDiff)
+        {
+            editor.TextArea.LeftMargins.Remove(_diffLineNumbers);
+            if (_diffBackground is not null)
+            {
+                textView.BackgroundRenderers.Remove(_diffBackground);
+                _diffBackground = null;
+            }
+
+            return;
+        }
+
+        if (!editor.TextArea.LeftMargins.Contains(_diffLineNumbers))
+        {
+            editor.TextArea.LeftMargins.Insert(0, _diffLineNumbers);
+        }
+
+        if (_diffBackground is null)
+        {
+            // The colors of a patch without git's colors, as DiffHighlightService.HighlightAddedAndDeletedLines.
+            _diffBackground = new DiffBackgroundRenderer(
+                AppColorResources.GetBrush(this, AppColor.AnsiTerminalGreenBackNormal),
+                AppColorResources.GetBrush(this, AppColor.AnsiTerminalRedBackNormal),
+                AppColorResources.GetBrush(this, AppColor.DiffSection));
+            textView.BackgroundRenderers.Add(_diffBackground);
+        }
+
+        _diffLineNumbers.Lines = lines!;
+        _diffBackground.Lines = lines!;
+        textView.InvalidateLayer(KnownLayer.Background);
     }
 
     private void SetText(string text)

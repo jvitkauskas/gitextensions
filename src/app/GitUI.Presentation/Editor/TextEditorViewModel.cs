@@ -36,9 +36,22 @@ public sealed partial class TextEditorViewModel : ObservableObject
     /// <summary>Raised when a text is loaded, which the view shows from its start (or <see cref="LineToShow"/>).</summary>
     public event EventHandler? TextLoaded;
 
-    /// <summary>Loads a text, which is unchanged afterwards (as <c>FileViewer.TextLoaded</c>).</summary>
-    public void Load(string text, string? fileName = null, int? line = null)
+    /// <summary>The lines of the diff shown (with their line numbers), or <see langword="null"/> for a plain text.</summary>
+    public IReadOnlyList<DiffLine>? DiffLines { get; private set; }
+
+    /// <summary>Shows a diff, read-only, with the added and removed lines colored (as <c>FileViewer.ViewFixedPatch</c>).</summary>
+    public void LoadDiff(string text)
     {
+        IsReadOnly = true;
+        LoadText(text, fileName: null, line: null, DiffLinesAnalyzer.Analyze(text));
+    }
+
+    /// <summary>Loads a text, which is unchanged afterwards (as <c>FileViewer.TextLoaded</c>).</summary>
+    public void Load(string text, string? fileName = null, int? line = null) => LoadText(text, fileName, line, diffLines: null);
+
+    private void LoadText(string text, string? fileName, int? line, IReadOnlyList<DiffLine>? diffLines)
+    {
+        DiffLines = diffLines;
         FileName = fileName;
         LineToShow = line;
         _loadedText = text;

@@ -823,6 +823,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowViewPatch(owner, this, patchFile))
+            {
+                return true;
+            }
+
             using FormViewPatch viewPatch = new(this);
             if (!string.IsNullOrEmpty(patchFile))
             {
