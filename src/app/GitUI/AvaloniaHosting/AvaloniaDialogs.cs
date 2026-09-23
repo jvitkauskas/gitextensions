@@ -130,7 +130,8 @@ internal static partial class AvaloniaDialogs
             IsDarkTheme: Application.IsDarkModeEnabled,
             FontFamily: font.FontFamily.Name,
             FontSize: font.SizeInPoints * 96 / 72,
-            Colors: GetThemeColors());
+            Colors: GetThemeColors(),
+            MonospaceFontFamily: AppSettings.MonospaceFont.FontFamily.Name);
     }
 
     private sealed class AboutDialogHost(DialogWindow window) : IAboutDialogHost

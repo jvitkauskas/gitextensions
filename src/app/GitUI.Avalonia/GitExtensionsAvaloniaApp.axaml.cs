@@ -31,6 +31,11 @@ public partial class GitExtensionsAvaloniaApp : Application
             Resources["ContentControlThemeFontFamily"] = new FontFamily(options.FontFamily);
         }
 
+        if (!string.IsNullOrWhiteSpace(options.MonospaceFontFamily))
+        {
+            Resources["MonospaceFontFamily"] = new FontFamily(options.MonospaceFontFamily);
+        }
+
         if (options.FontSize > 0)
         {
             // Fluent sizes most controls from this resource.

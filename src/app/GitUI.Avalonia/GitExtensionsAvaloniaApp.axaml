@@ -2,9 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="GitUI.Avalonia.GitExtensionsAvaloniaApp"
              RequestedThemeVariant="Light">
+  <Application.Resources>
+    <!-- Hashes and code; replaced by AppSettings.MonospaceFont, see ApplyOptions. -->
+    <FontFamily x:Key="MonospaceFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
+  </Application.Resources>
   <Application.Styles>
     <!-- Compact density matches the information density of the WinForms UI. -->
     <FluentTheme DensityStyle="Compact" />
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
     <!-- Equivalent of GitExtensionsDialog.ControlsPanel: the OK/Cancel strip at the bottom of a dialog. -->
     <Style Selector="Border.dialogFooter">
@@ -38,6 +43,19 @@
     </Style>
     <Style Selector="CheckBox.captionFirst /template/ Path">
       <Setter Property="FlowDirection" Value="LeftToRight" />
+    </Style>
+
+    <!-- Grids use the dialog font and the row height of the compact density (Fluent's DataGrid is sized for touch). -->
+    <Style Selector="DataGridCell">
+      <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+    <Style Selector="DataGridRow">
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+      <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+      <Setter Property="MinHeight" Value="26" />
     </Style>
 
     <!-- Link-style buttons, the equivalent of WinForms LinkLabel. -->

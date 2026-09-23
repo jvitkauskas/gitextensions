@@ -1,0 +1,74 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.SubmodulesWindow"
+                x:DataType="vm:SubmodulesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="782" Height="372" MinWidth="560" MinHeight="300">
+  <Window.Styles>
+    <Style Selector="Grid.details > TextBox">
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </Window.Styles>
+  <Grid Margin="9" ColumnDefinitions="222,Auto,*">
+    <DockPanel>
+      <Button Name="addButton" DockPanel.Dock="Bottom" Margin="0,6,0,0" HorizontalAlignment="Left"
+              Content="{Binding Strings.AddSubmodule.AccessKeyText}" Command="{Binding AddCommand}" />
+      <DataGrid Name="submodulesGrid" ItemsSource="{Binding Submodules}" SelectedItem="{Binding SelectedSubmodule}"
+                IsReadOnly="True" SelectionMode="Single" CanUserReorderColumns="False"
+                HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DataGrid.Columns>
+          <DataGridTextColumn Binding="{Binding Name}" Width="*" x:DataType="vm:SubmoduleItem" />
+          <DataGridTextColumn Binding="{Binding Status}" Width="Auto" x:DataType="vm:SubmoduleItem" />
+        </DataGrid.Columns>
+      </DataGrid>
+    </DockPanel>
+    <GridSplitter Grid.Column="1" Width="6" Background="Transparent" ResizeDirection="Columns" />
+    <DockPanel Grid.Column="2">
+      <StackPanel DockPanel.Dock="Bottom" Margin="0,6,0,0" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="synchronizeButton" Command="{Binding SynchronizeCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/SubmodulesSync.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Synchronize.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Button Name="updateButton" Command="{Binding UpdateCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/SubmodulesUpdate.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Update.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Button Name="removeButton" Content="{Binding Strings.Remove.AccessKeyText}" Command="{Binding RemoveCommand}" />
+      </StackPanel>
+      <!-- Equivalent of the "Details" group box -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" Text="{Binding Strings.Details.Text}" FontWeight="SemiBold" />
+          <Grid Classes="form details" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                ColumnSpacing="8" RowSpacing="6" VerticalAlignment="Top">
+            <Label Content="{Binding Strings.Name.AccessKeyText}" Target="nameTextBox" />
+            <TextBox Name="nameTextBox" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SelectedSubmodule.Name, Mode=OneWay, FallbackValue=''}" />
+            <Label Grid.Row="1" Content="{Binding Strings.RemotePath.AccessKeyText}" Target="remotePathTextBox" />
+            <TextBox Name="remotePathTextBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SelectedSubmodule.RemotePath, Mode=OneWay, FallbackValue=''}" />
+            <Label Grid.Row="2" Content="{Binding Strings.LocalPath.AccessKeyText}" Target="localPathTextBox" />
+            <TextBox Name="localPathTextBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SelectedSubmodule.LocalPath, Mode=OneWay, FallbackValue=''}" />
+            <Label Grid.Row="3" Content="{Binding Strings.Commit.AccessKeyText}" Target="commitTextBox" />
+            <TextBox Name="commitTextBox" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" FontFamily="{DynamicResource MonospaceFontFamily}"
+                     Text="{Binding SelectedSubmodule.CurrentCommit, Mode=OneWay, FallbackValue=''}" />
+            <Label Grid.Row="4" Content="{Binding Strings.Branch.AccessKeyText}" Target="branchTextBox" />
+            <TextBox Name="branchTextBox" Grid.Row="4" Grid.Column="1" Text="{Binding SelectedSubmodule.Branch, Mode=OneWay, FallbackValue=''}" />
+            <Button Name="pullButton" Grid.Row="4" Grid.Column="2" Padding="4" Command="{Binding PullCommand}">
+              <Image Source="avares://GitUI.Avalonia/Assets/Pull.png" Width="16" Height="16" />
+            </Button>
+            <Label Grid.Row="5" Content="{Binding Strings.Status.AccessKeyText}" Target="statusTextBox" />
+            <TextBox Name="statusTextBox" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SelectedSubmodule.Status, Mode=OneWay, FallbackValue=''}" />
+          </Grid>
+        </DockPanel>
+      </Border>
+    </DockPanel>
+  </Grid>
+</h:DialogWindow>

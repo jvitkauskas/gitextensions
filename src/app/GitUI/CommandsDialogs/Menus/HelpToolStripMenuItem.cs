@@ -37,6 +37,11 @@ internal partial class HelpToolStripMenuItem : ToolStripMenuItemEx
 
     private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TrySearchForUpdatesAndShow(Owner, alwaysShow: true))
+        {
+            return;
+        }
+
         FormUpdates updateForm = new(AppSettings.AppVersion);
         updateForm.SearchForUpdatesAndShow(Owner!, true);
     }

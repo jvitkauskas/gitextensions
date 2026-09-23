@@ -945,8 +945,11 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
             if (AppSettings.CheckForUpdates && AppSettings.LastUpdateCheck.AddDays(7) < DateTime.Now)
             {
                 AppSettings.LastUpdateCheck = DateTime.Now;
-                FormUpdates updateForm = new(AppSettings.AppVersion);
-                updateForm.SearchForUpdatesAndShow(ownerWindow: this, alwaysShow: false);
+                if (!AvaloniaHosting.AvaloniaDialogs.TrySearchForUpdatesAndShow(this, alwaysShow: false))
+                {
+                    FormUpdates updateForm = new(AppSettings.AppVersion);
+                    updateForm.SearchForUpdatesAndShow(ownerWindow: this, alwaysShow: false);
+                }
             }
 
             bool hasWorkingDir = !string.IsNullOrEmpty(Module.WorkingDir);
@@ -2953,9 +2956,14 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
 
     private void manageWorktreeToolStripMenuItem_Click(object? sender, EventArgs e)
     {
-        using FormManageWorktree formManageWorktree = new(UICommands);
-        formManageWorktree.ShowDialog(this);
-        if (formManageWorktree.ShouldRefreshRevisionGrid)
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowManageWorktree(this, UICommands, out bool shouldRefreshRevisionGrid))
+        {
+            using FormManageWorktree formManageWorktree = new(UICommands);
+            formManageWorktree.ShowDialog(this);
+            shouldRefreshRevisionGrid = formManageWorktree.ShouldRefreshRevisionGrid;
+        }
+
+        if (shouldRefreshRevisionGrid)
         {
             RefreshRevisions();
         }

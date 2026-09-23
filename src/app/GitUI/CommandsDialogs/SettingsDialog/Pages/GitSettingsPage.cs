@@ -103,8 +103,9 @@ public partial class GitSettingsPage : SettingsPageWithHeader
     private void ChangeHomeButton_Click(object sender, EventArgs e)
     {
         PageHost.SaveAll();
-        using (FormFixHome frm = new())
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowFixHome(this))
         {
+            using FormFixHome frm = new();
             frm.ShowDialog(this);
         }
 

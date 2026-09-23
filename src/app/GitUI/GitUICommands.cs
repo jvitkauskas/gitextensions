@@ -1298,6 +1298,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowSubmodules(owner, this))
+            {
+                return true;
+            }
+
             using FormSubmodules form = new(this);
             form.ShowDialog(owner);
             return true;

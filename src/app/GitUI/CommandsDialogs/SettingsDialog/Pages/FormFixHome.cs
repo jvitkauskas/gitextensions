@@ -33,7 +33,7 @@ public partial class FormFixHome : GitExtensionsForm
         InitializeComplete();
     }
 
-    private static bool HasGlobalGitConfig(string? path)
+    internal static bool HasGlobalGitConfig(string? path)
     {
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
         {
@@ -135,7 +135,8 @@ public partial class FormFixHome : GitExtensionsForm
     public void ShowIfUserWant()
     {
         if (MessageBoxes.Show(string.Format(_gitGlobalConfigNotFound.Text, Environment.GetEnvironmentVariable("HOME")),
-                 _gitGlobalConfigNotFoundCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
+                 _gitGlobalConfigNotFoundCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes
+            && !AvaloniaHosting.AvaloniaDialogs.TryShowFixHome(owner: null))
         {
             ShowDialog();
         }

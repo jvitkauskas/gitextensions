@@ -1,0 +1,35 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.FixHomeWindow"
+                x:DataType="vm:FixHomeViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="604" SizeToContent="Height" CanResize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="okButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+    </Border>
+    <!-- Equivalent of the "Environment" group box -->
+    <Border Margin="9" BorderThickness="1" CornerRadius="4" Padding="12,8"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <StackPanel Spacing="6">
+        <TextBlock Text="{Binding Strings.Environment.Text}" FontWeight="SemiBold" />
+        <TextBlock Name="explanationText" Text="{Binding Strings.Explanation.Text}" TextWrapping="Wrap" Margin="0,0,0,4" />
+        <RadioButton Name="defaultHomeRadioButton" GroupName="home"
+                     Content="{Binding DefaultHomeText}" IsChecked="{Binding IsDefaultHome}" />
+        <RadioButton Name="userProfileHomeRadioButton" GroupName="home"
+                     Content="{Binding UserProfileHomeText}" IsChecked="{Binding IsUserProfileHome}" />
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+          <RadioButton Name="otherHomeRadioButton" GroupName="home"
+                       Content="{Binding Strings.OtherHome.AccessKeyText}" IsChecked="{Binding IsOtherHome}" />
+          <TextBox Name="otherHomeTextBox" Grid.Column="1" MaxLength="250" VerticalAlignment="Center"
+                   Text="{Binding OtherHomeDir}" />
+          <Button Name="browseButton" Grid.Column="2" MinWidth="100"
+                  Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+        </Grid>
+      </StackPanel>
+    </Border>
+  </DockPanel>
+</h:DialogWindow>

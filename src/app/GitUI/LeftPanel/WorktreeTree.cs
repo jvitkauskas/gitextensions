@@ -199,9 +199,14 @@ internal sealed class WorktreeTree(TreeNode treeNode, IGitUICommandsSource uiCom
 
     public void ManageWorktrees(IWin32Window owner)
     {
-        using FormManageWorktree form = new(UICommands);
-        form.ShowDialog(owner);
-        if (form.ShouldRefreshRevisionGrid)
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowManageWorktree(owner, UICommands, out bool shouldRefreshRevisionGrid))
+        {
+            using FormManageWorktree form = new(UICommands);
+            form.ShowDialog(owner);
+            shouldRefreshRevisionGrid = form.ShouldRefreshRevisionGrid;
+        }
+
+        if (shouldRefreshRevisionGrid)
         {
             UICommands.RepoChangedNotifier.Notify();
         }

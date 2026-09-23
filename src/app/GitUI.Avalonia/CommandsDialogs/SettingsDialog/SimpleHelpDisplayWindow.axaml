@@ -1,0 +1,12 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.SimpleHelpDisplayWindow"
+                x:DataType="vm:SimpleHelpDisplayViewModel"
+                Title="{Binding Title}"
+                Width="299" Height="439" MinWidth="200" MinHeight="150" CanMaximize="False">
+  <TextBox Name="contentTextBox" Text="{Binding Content, Mode=OneWay}" IsReadOnly="True"
+           AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" CornerRadius="0"
+           ScrollViewer.VerticalScrollBarVisibility="Auto" />
+</h:DialogWindow>

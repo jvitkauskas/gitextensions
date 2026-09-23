@@ -1,0 +1,61 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:git="using:GitExtensions.Extensibility.Git"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.ManageWorktreeWindow"
+                x:DataType="vm:ManageWorktreeViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="697" Height="361" MinWidth="500" MinHeight="250">
+  <Window.Styles>
+    <!-- As FormManageWorktree.Initialize: deleted worktrees are struck out. -->
+    <Style Selector="DataGridRow.deleted TextBlock">
+      <Setter Property="TextDecorations" Value="Strikethrough" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="pruneButton" Content="{Binding Strings.Prune.AccessKeyText}" Command="{Binding PruneCommand}" />
+        <Button Name="createButton" Command="{Binding CreateCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/FileStatusAdded.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Create.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Border>
+    <StackPanel DockPanel.Dock="Bottom" Margin="9,0,9,6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+      <Button Name="openButton" Command="{Binding OpenCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Open.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+      <Button Name="deleteButton" Command="{Binding DeleteCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/DeleteFile.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Delete.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+    </StackPanel>
+    <DataGrid Name="worktreesGrid" Margin="9,9,9,6" ItemsSource="{Binding Worktrees}" SelectedItem="{Binding SelectedWorktree}"
+              IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserReorderColumns="False"
+              HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DataGrid.Columns>
+        <DataGridTextColumn Binding="{Binding Path}" Width="Auto" x:DataType="git:GitWorktree" />
+        <DataGridTextColumn Binding="{Binding HeadType}" Width="Auto" x:DataType="git:GitWorktree" />
+        <DataGridTextColumn Binding="{Binding Branch}" Width="Auto" x:DataType="git:GitWorktree" />
+        <DataGridTemplateColumn Width="*" MinWidth="90">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="git:GitWorktree">
+              <TextBlock Text="{Binding Sha1}" FontFamily="{DynamicResource MonospaceFontFamily}" TextTrimming="CharacterEllipsis"
+                         VerticalAlignment="Center" Margin="12,0" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+</h:DialogWindow>

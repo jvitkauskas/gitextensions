@@ -25,6 +25,7 @@
 
   <ItemGroup Label="Avalonia UI (see docs/avalonia-port/PLAN.md)">
     <PackageVersion Include="Avalonia" Version="12.1.3" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
     <PackageVersion Include="Avalonia.HarfBuzz" Version="12.1.3" />
     <PackageVersion Include="Avalonia.Headless" Version="12.1.3" />
     <PackageVersion Include="Avalonia.Skia" Version="12.1.3" />

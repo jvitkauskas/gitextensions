@@ -1,6 +1,7 @@
 using System.Xml.Linq;
 using GitExtensions.Extensibility.Translations;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.HelperDialogs;
@@ -64,6 +65,10 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new CheckoutBranchStrings()).SetArgDisplayNames(nameof(CheckoutBranchStrings));
         yield return new TestCaseData(new CloneStrings()).SetArgDisplayNames(nameof(CloneStrings));
         yield return new TestCaseData(new RevisionFilterStrings()).SetArgDisplayNames(nameof(RevisionFilterStrings));
+        yield return new TestCaseData(new FixHomeStrings()).SetArgDisplayNames(nameof(FixHomeStrings));
+        yield return new TestCaseData(new UpdatesStrings()).SetArgDisplayNames(nameof(UpdatesStrings));
+        yield return new TestCaseData(new ManageWorktreeStrings()).SetArgDisplayNames(nameof(ManageWorktreeStrings));
+        yield return new TestCaseData(new SubmodulesStrings()).SetArgDisplayNames(nameof(SubmodulesStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

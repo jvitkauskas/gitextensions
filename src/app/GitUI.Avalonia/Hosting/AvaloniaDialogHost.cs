@@ -89,6 +89,36 @@ public static class AvaloniaDialogHost
         return window.DialogResult;
     }
 
+    /// <summary>
+    ///  Shows <paramref name="window"/> modelessly over a native owner, as WinForms' <c>Form.Show(owner)</c>:
+    ///  it stays above the owner and is minimised with it, but the owner stays usable.
+    /// </summary>
+    /// <param name="window">The window to show.</param>
+    /// <param name="ownerHandle">Native handle of the owner (any window or control of it), or 0 for none.</param>
+    public static void Show(DialogWindow window, nint ownerHandle)
+    {
+        AvaloniaUi.VerifyUiThread();
+        AvaloniaUi.RememberHostContext();
+
+        nint owner = ownerHandle == 0 ? 0 : NativeMethods.GetAncestor(ownerHandle, NativeMethods.GA_ROOT);
+        nint handle = window.NativeHandle;
+        if (owner != 0 && handle != 0)
+        {
+            NativeMethods.SetWindowLongPtr(handle, NativeMethods.GWLP_HWNDPARENT, owner);
+            window.ShowInTaskbar = false;
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.IsCenteredOnOwner = true;
+            CenterOver(window, owner);
+        }
+        else
+        {
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        DialogShowingForTests?.Invoke(window);
+        window.Show();
+    }
+
     private static void CenterOver(Window window, nint owner)
     {
         if (!NativeMethods.GetWindowRect(owner, out NativeMethods.RECT ownerRect))

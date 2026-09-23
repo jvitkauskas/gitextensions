@@ -321,6 +321,11 @@ Diff selection:
 
     private void btnArgumentsHelp_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowSimpleHelpDisplay(this, _scriptSettingsPageHelpDisplayArgumentsHelp.Text, _scriptSettingsPageHelpDisplayContent.Text.Replace("\n", Environment.NewLine)))
+        {
+            return;
+        }
+
         if (_argumentsCheatSheet?.Visible ?? false)
         {
             _argumentsCheatSheet.BringToFront();

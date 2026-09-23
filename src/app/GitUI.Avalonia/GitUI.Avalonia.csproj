@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="Avalonia.HarfBuzz" />
     <PackageReference Include="Avalonia.Skia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
@@ -48,6 +49,11 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\TagCreate.png" Link="Assets\TagCreate.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\checkout.png" Link="Assets\Checkout.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Unmerged.png" Link="Assets\Unmerged.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DeleteFile.png" Link="Assets\DeleteFile.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FileStatusAdded.png" Link="Assets\FileStatusAdded.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesSync.png" Link="Assets\SubmodulesSync.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SubmodulesUpdate.png" Link="Assets\SubmodulesUpdate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Pull.png" Link="Assets\Pull.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMerge.png" Link="Assets\Help\HelpCommandMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandMergeFastForward.png" Link="Assets\Help\HelpCommandMergeFastForward.png" />
   </ItemGroup>
