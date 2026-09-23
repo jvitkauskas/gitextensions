@@ -312,6 +312,14 @@ public sealed class ProcessViewModelTests
 
         public void ShowInformation(string text, string caption) => Informations.Add(text);
 
-        public bool Confirm(string text, string caption) => true;
+        public List<string> Confirmations { get; } = [];
+
+        public bool ConfirmResult { get; set; } = true;
+
+        public bool Confirm(string text, string caption)
+        {
+            Confirmations.Add(text);
+            return ConfirmResult;
+        }
     }
 }

@@ -1,0 +1,43 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.CreateWorktreeWindow"
+                x:DataType="vm:CreateWorktreeViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="610" MinWidth="500" SizeToContent="Height" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="createButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Create.AccessKeyText}" Command="{Binding CreateCommand}" />
+    </Border>
+    <StackPanel Margin="9" Spacing="8">
+      <!-- Equivalent of the "What to checkout" group box -->
+      <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="6">
+          <TextBlock Text="{Binding Strings.WhatToCheckout.Text}" FontWeight="SemiBold" />
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+            <RadioButton Name="checkoutExistingRadioButton" GroupName="whatToCheckout" VerticalAlignment="Center"
+                         Content="{Binding Strings.CheckoutExistingBranch.AccessKeyText}"
+                         IsChecked="{Binding IsCheckoutExistingBranch}" IsEnabled="{Binding CanCheckoutExistingBranch}" />
+            <ComboBox Name="branchesComboBox" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                      ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}"
+                      IsEnabled="{Binding IsCheckoutExistingBranch}" />
+            <RadioButton Name="createNewRadioButton" Grid.Row="1" GroupName="whatToCheckout" VerticalAlignment="Center"
+                         Content="{Binding Strings.CreateNewBranch.AccessKeyText}" IsChecked="{Binding IsCreateNewBranch}" />
+            <TextBox Name="newBranchNameTextBox" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"
+                     Text="{Binding NewBranchName}" IsEnabled="{Binding IsCreateNewBranch}"
+                     LostFocus="NewBranchNameTextBox_LostFocus" />
+          </Grid>
+        </StackPanel>
+      </Border>
+      <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <Label Content="{Binding Strings.NewWorktreeDirectory.AccessKeyText}" Target="worktreeDirectoryTextBox" />
+        <TextBox Name="worktreeDirectoryTextBox" Grid.Column="1" Text="{Binding WorktreeDirectory}" />
+        <Button Name="browseButton" Grid.Column="2" MinWidth="100"
+                Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+      </Grid>
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

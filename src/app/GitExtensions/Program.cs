@@ -119,7 +119,7 @@ internal static class Program
             FormFixHome.CheckHomePath();
         }
 
-        if (string.IsNullOrEmpty(AppSettings.Translation))
+        if (string.IsNullOrEmpty(AppSettings.Translation) && !GitUI.AvaloniaHosting.AvaloniaStartupDialogs.TryShowChooseTranslation())
         {
             using FormChooseTranslation formChoose = new();
             formChoose.ShowDialog();

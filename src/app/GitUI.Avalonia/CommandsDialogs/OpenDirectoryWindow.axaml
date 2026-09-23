@@ -1,0 +1,34 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.OpenDirectoryWindow"
+                x:DataType="vm:OpenDirectoryViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="615" MinWidth="450" MaxWidth="800" SizeToContent="Height" CanMaximize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Button Name="openButton" HorizontalAlignment="Right" Classes="accent" IsDefault="True" Command="{Binding OpenCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Image Source="avares://GitUI.Avalonia/Assets/RepoOpen.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Open.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+    </Border>
+    <Grid Classes="form" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6" Margin="12">
+      <Label Content="{Binding Strings.Directory.AccessKeyText}" Target="directoryComboBox" />
+      <ComboBox Name="directoryComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                ItemsSource="{Binding Directories}" Text="{Binding Directory}" />
+      <Button Name="goUpButton" Grid.Column="2" Padding="6,4" Command="{Binding GoUpCommand}"
+              ToolTip.Tip="{Binding Strings.GoUpTooltip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/NavigateUp.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="browseButton" Grid.Column="3" MinWidth="120" Command="{Binding BrowseCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+          <AccessText Text="{Binding Strings.Browse.AccessKeyText}" />
+        </StackPanel>
+      </Button>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

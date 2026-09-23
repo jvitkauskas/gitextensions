@@ -167,9 +167,12 @@ public partial class ChecklistSettingsPage : SettingsPageWithHeader
 
     private void translationConfig_Click(object sender, EventArgs e)
     {
-        using (FormChooseTranslation frm = new())
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowChooseTranslation(this))
         {
-            frm.ShowDialog(this); // will set Settings.Translation
+            using (FormChooseTranslation frm = new())
+            {
+                frm.ShowDialog(this); // will set Settings.Translation
+            }
         }
 
         PageHost.LoadAll();

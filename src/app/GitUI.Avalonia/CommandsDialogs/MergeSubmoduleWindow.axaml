@@ -1,0 +1,44 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.MergeSubmoduleWindow"
+                x:DataType="vm:MergeSubmoduleViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="600" SizeToContent="Height" CanResize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6">
+        <Button Name="stageCurrentButton" Content="{Binding Strings.StageCurrent.AccessKeyText}" Command="{Binding StageCurrentCommand}" />
+        <Button Name="checkoutBranchButton" Grid.Column="1" IsEnabled="{Binding CanCheckoutBranch}"
+                Content="{Binding Strings.CheckoutBranch.AccessKeyText}" Command="{Binding CheckoutBranchCommand}" />
+        <!-- As in FormMergeSubmodule, "Open submodule" is the accept button. -->
+        <Button Name="openSubmoduleButton" Grid.Column="3" Classes="accent" IsDefault="True" Command="{Binding OpenSubmoduleCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/FolderSubmodule.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.OpenSubmodule.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+    <StackPanel Margin="12" Spacing="10">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <TextBlock Text="{Binding Strings.ConflictOnSubmodule.Text}" />
+        <SelectableTextBlock Name="submoduleText" Text="{Binding Submodule}" FontWeight="SemiBold" />
+      </StackPanel>
+      <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+        <Label Content="{Binding Strings.Base.AccessKeyText}" Target="baseTextBox" />
+        <TextBox Name="baseTextBox" Grid.Column="1" IsReadOnly="True" Text="{Binding Base, Mode=OneWay}" />
+        <Label Grid.Row="1" Content="{Binding Strings.Local.AccessKeyText}" Target="localTextBox" />
+        <TextBox Name="localTextBox" Grid.Row="1" Grid.Column="1" IsReadOnly="True" Text="{Binding Local, Mode=OneWay}" />
+        <Label Grid.Row="2" Content="{Binding Strings.Remote.AccessKeyText}" Target="remoteTextBox" />
+        <TextBox Name="remoteTextBox" Grid.Row="2" Grid.Column="1" IsReadOnly="True" Text="{Binding Remote, Mode=OneWay}" />
+        <Label Grid.Row="3" Content="{Binding Strings.Current.AccessKeyText}" Target="currentTextBox" />
+        <TextBox Name="currentTextBox" Grid.Row="3" Grid.Column="1" IsReadOnly="True" Text="{Binding Current, Mode=OneWay}" />
+        <Button Name="refreshButton" Grid.Row="3" Grid.Column="2" Padding="4" Command="{Binding RefreshCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
+        </Button>
+      </Grid>
+    </StackPanel>
+  </DockPanel>
+</h:DialogWindow>

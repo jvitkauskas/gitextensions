@@ -27,7 +27,7 @@ namespace GitExtensions.UITests.AvaloniaHosting;
 // Avalonia binds to a single UI thread per process, hence one thread for all tests of this fixture.
 [Apartment(ApartmentState.STA)]
 [SingleThreaded]
-public sealed class AvaloniaHostingTests
+public sealed partial class AvaloniaHostingTests
 {
     private const int WM_KEYDOWN = 0x0100;
     private const int WM_KEYUP = 0x0101;

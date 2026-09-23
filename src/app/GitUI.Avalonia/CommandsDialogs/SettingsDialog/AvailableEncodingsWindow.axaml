@@ -1,0 +1,37 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:text="using:System.Text"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.AvailableEncodingsWindow"
+                x:DataType="vm:AvailableEncodingsViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="605" Height="360" MinWidth="400" MinHeight="250">
+  <Window.Resources>
+    <DataTemplate x:Key="EncodingTemplate" x:DataType="text:Encoding">
+      <TextBlock Text="{Binding EncodingName}" />
+    </DataTemplate>
+  </Window.Resources>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" IsCancel="True"
+                Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <Grid Margin="9" ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*" ColumnSpacing="6" RowSpacing="4">
+      <Label Content="{Binding Strings.Selected.AccessKeyText}" Target="includedListBox" Padding="0" />
+      <Label Grid.Column="2" Content="{Binding Strings.Available.AccessKeyText}" Target="availableListBox" Padding="0" />
+      <ListBox Name="includedListBox" Grid.Row="1" ItemsSource="{Binding Included}" SelectedItem="{Binding SelectedIncluded}"
+               ItemTemplate="{StaticResource EncodingTemplate}" />
+      <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+        <Button Name="excludeButton" Width="32" HorizontalContentAlignment="Center" Content="&gt;" Command="{Binding ExcludeCommand}" />
+        <Button Name="includeButton" Width="32" HorizontalContentAlignment="Center" Content="&lt;" Command="{Binding IncludeCommand}" />
+      </StackPanel>
+      <ListBox Name="availableListBox" Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Available}" SelectedItem="{Binding SelectedAvailable}"
+               ItemTemplate="{StaticResource EncodingTemplate}" />
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

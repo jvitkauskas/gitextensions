@@ -80,6 +80,11 @@ public partial class FormOpenDirectory : GitExtensionsForm
 
     public static IGitModule? OpenModule(IWin32Window owner, IGitExecutorProvider executorProvider, IGitModule? currentModule)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowOpenDirectory(owner, executorProvider, currentModule, out IGitModule? module))
+        {
+            return module;
+        }
+
         using FormOpenDirectory open = new(executorProvider, currentModule);
         open.ShowDialog(owner);
         return open._chosenModule;
@@ -152,7 +157,7 @@ public partial class FormOpenDirectory : GitExtensionsForm
         }
     }
 
-    private static IGitModule? OpenGitRepository(IGitExecutorProvider executorProvider, string path, ILocalRepositoryManager localRepositoryManager)
+    internal static IGitModule? OpenGitRepository(IGitExecutorProvider executorProvider, string path, ILocalRepositoryManager localRepositoryManager)
     {
         if (!Directory.Exists(path))
         {

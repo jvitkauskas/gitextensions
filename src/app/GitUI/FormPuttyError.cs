@@ -10,6 +10,11 @@ public partial class FormPuttyError : GitExtensionsForm
     /// <summary>Shows the "SSH error" dialog modally, and returns the path to the key, if one was loaded.</summary>
     public static bool AskForKey(IWin32Window parent, [NotNullWhen(returnValue: true)] out string? keyPath)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowPuttyError(parent, out bool retry, out keyPath))
+        {
+            return retry;
+        }
+
         using FormPuttyError form = new();
         DialogResult result = form.ShowDialog(parent);
         keyPath = form.KeyPath;

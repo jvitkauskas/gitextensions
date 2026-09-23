@@ -2,6 +2,7 @@ using System.Xml.Linq;
 using GitExtensions.Extensibility.Translations;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
+using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 
@@ -30,6 +31,15 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new InitStrings()).SetArgDisplayNames(nameof(InitStrings));
         yield return new TestCaseData(new GoToLineStrings()).SetArgDisplayNames(nameof(GoToLineStrings));
         yield return new TestCaseData(new FilePromptStrings()).SetArgDisplayNames(nameof(FilePromptStrings));
+        yield return new TestCaseData(new PuttyErrorStrings()).SetArgDisplayNames(nameof(PuttyErrorStrings));
+        yield return new TestCaseData(new SelectMultipleBranchesStrings()).SetArgDisplayNames(nameof(SelectMultipleBranchesStrings));
+        yield return new TestCaseData(new ChooseTranslationStrings()).SetArgDisplayNames(nameof(ChooseTranslationStrings));
+        yield return new TestCaseData(new AvailableEncodingsStrings()).SetArgDisplayNames(nameof(AvailableEncodingsStrings));
+        yield return new TestCaseData(new AddSubmoduleStrings()).SetArgDisplayNames(nameof(AddSubmoduleStrings));
+        yield return new TestCaseData(new CleanupRepositoryStrings()).SetArgDisplayNames(nameof(CleanupRepositoryStrings));
+        yield return new TestCaseData(new MergeSubmoduleStrings()).SetArgDisplayNames(nameof(MergeSubmoduleStrings));
+        yield return new TestCaseData(new CreateWorktreeStrings()).SetArgDisplayNames(nameof(CreateWorktreeStrings));
+        yield return new TestCaseData(new OpenDirectoryStrings()).SetArgDisplayNames(nameof(OpenDirectoryStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

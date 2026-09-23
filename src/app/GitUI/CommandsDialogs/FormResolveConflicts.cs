@@ -549,6 +549,16 @@ public partial class FormResolveConflicts : GitModuleForm
         ItemType itemType = GetItemType(item.Filename);
         if (itemType == ItemType.Submodule)
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowMergeSubmodule(this, UICommands, item.Filename, out bool accepted))
+            {
+                if (accepted)
+                {
+                    StageFile(item.Filename);
+                }
+
+                return;
+            }
+
             using FormMergeSubmodule form = new(UICommands, item.Filename);
             if (await form.ShowDialogAsync() == DialogResult.OK)
             {

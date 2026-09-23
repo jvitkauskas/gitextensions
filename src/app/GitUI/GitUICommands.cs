@@ -337,6 +337,17 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateWorktree(owner, this, mainWorktreePath, out string? worktreeDirectory))
+            {
+                if (worktreeDirectory is null)
+                {
+                    return false;
+                }
+
+                WorktreeSwitch(owner, worktreeDirectory);
+                return true;
+            }
+
             using FormCreateWorktree form = new(this, mainWorktreePath);
             if (form.ShowDialog(owner) != DialogResult.OK)
             {
@@ -596,6 +607,11 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartCleanupRepositoryDialog(IWin32Window? owner = null, string? path = null)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowCleanupRepository(owner, this, path))
+        {
+            return true;
+        }
+
         using FormCleanupRepository form = new(this);
         form.SetPathArgument(path);
         form.ShowDialog(owner);

@@ -50,9 +50,12 @@ public partial class FormSubmodules : GitModuleForm
 
     private void AddSubmoduleClick(object sender, EventArgs e)
     {
-        using (FormAddSubmodule formAddSubmodule = new(UICommands))
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowAddSubmodule(this, UICommands))
         {
-            formAddSubmodule.ShowDialog(this);
+            using (FormAddSubmodule formAddSubmodule = new(UICommands))
+            {
+                formAddSubmodule.ShowDialog(this);
+            }
         }
 
         Initialize();

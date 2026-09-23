@@ -287,6 +287,11 @@ public sealed class BuildServerWatcher : IBuildServerWatcher, IDisposable
     {
         await _revisionGrid.SwitchToMainThreadAsync();
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowBuildServerCredentials(_revisionGrid, buildServerUniqueKey, buildServerCredentials, out bool accepted))
+        {
+            return accepted ? buildServerCredentials : null;
+        }
+
         using FormBuildServerCredentials form = new(buildServerUniqueKey);
         form.BuildServerCredentials = buildServerCredentials;
 

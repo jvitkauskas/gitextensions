@@ -447,6 +447,17 @@ public partial class GitConfigSettingsPage : GitConfigBaseSettingsPage
 
     private void ConfigureEncoding_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowAvailableEncodings(this, out bool accepted))
+        {
+            if (accepted)
+            {
+                Global_FilesEncoding.Items.Clear();
+                CommonLogic.FillEncodings(Global_FilesEncoding);
+            }
+
+            return;
+        }
+
         using FormAvailableEncodings encodingDlg = new();
         if (encodingDlg.ShowDialog() == DialogResult.OK)
         {

@@ -1,0 +1,27 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.AddSubmoduleWindow"
+                x:DataType="vm:AddSubmoduleViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="520" MinWidth="420" SizeToContent="Height" CanMaximize="False">
+  <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto"
+        ColumnSpacing="8" RowSpacing="6" Margin="12">
+    <Label Content="{Binding Strings.PathToSubmodule.AccessKeyText}" Target="directoryComboBox" />
+    <ComboBox Name="directoryComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding RecentRepositories}" Text="{Binding Directory}" />
+    <Button Name="browseButton" Grid.Column="2" MinWidth="90"
+            Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+    <Label Grid.Row="1" Content="{Binding Strings.LocalPath.AccessKeyText}" Target="localPathTextBox" />
+    <TextBox Name="localPathTextBox" Grid.Row="1" Grid.Column="1" Text="{Binding LocalPath}" />
+    <Button Name="addButton" Grid.Row="1" Grid.Column="2" MinWidth="90" Classes="accent" IsDefault="True"
+            Content="{Binding Strings.AddSubmodule.AccessKeyText}" Command="{Binding AddSubmoduleCommand}" />
+    <Label Grid.Row="2" Content="{Binding Strings.Branch.AccessKeyText}" Target="branchComboBox" />
+    <!-- The branches of the repository are listed (git ls-remote) when the list drops down. -->
+    <ComboBox Name="branchComboBox" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding RemoteBranches}" Text="{Binding Branch}" DropDownOpened="BranchComboBox_DropDownOpened" />
+    <CheckBox Name="forceCheckBox" Grid.Row="3" Grid.Column="1"
+              Content="{Binding Strings.Force.AccessKeyText}" IsChecked="{Binding Force}" />
+  </Grid>
+</h:DialogWindow>

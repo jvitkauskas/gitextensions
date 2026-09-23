@@ -30,5 +30,14 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\StatusBadgeError.png" Link="Assets\StatusBadgeError.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\EyeClosed.png" Link="Assets\EyeClosed.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\EyeOpened.png" Link="Assets\EyeOpened.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\pageant.png" Link="Assets\Pageant.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\putty.png" Link="Assets\Putty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Preview.png" Link="Assets\Preview.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CleanupRepo.png" Link="Assets\CleanupRepo.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FolderSubmodule.png" Link="Assets\FolderSubmodule.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ReloadRevisions.png" Link="Assets\ReloadRevisions.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoOpen.png" Link="Assets\RepoOpen.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BrowseFileExplorer.png" Link="Assets\BrowseFileExplorer.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\NavigateUp.png" Link="Assets\NavigateUp.png" />
   </ItemGroup>
 </Project>

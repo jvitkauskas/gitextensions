@@ -134,7 +134,7 @@ public sealed partial class FormCreateWorktree : GitExtensionsDialog
         DialogResult = UICommands.StartGitCommandProcessDialog(this, CreateWorktreeCommand(Module, relativePath, newBranchOption!)) ? DialogResult.OK : DialogResult.None;
     }
 
-    private GitArgumentBuilder CreateWorktreeCommand(IGitModule module, string relativePath, string newBranchOption)
+    internal static GitArgumentBuilder CreateWorktreeCommand(IGitModule module, string relativePath, string newBranchOption)
     {
         // https://git-scm.com/docs/git-worktree
 

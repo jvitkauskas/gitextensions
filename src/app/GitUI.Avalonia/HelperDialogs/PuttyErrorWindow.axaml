@@ -1,0 +1,33 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.HelperDialogs"
+                x:Class="GitUI.Avalonia.HelperDialogs.PuttyErrorWindow"
+                x:DataType="vm:PuttyErrorViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                MinWidth="353" SizeToContent="WidthAndHeight" CanResize="False">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+        <Button Name="loadKeyButton" MinWidth="140" Command="{Binding LoadSshKeyCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/Putty.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.LoadSshKey.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Button Name="retryButton" Grid.Column="2" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Retry.AccessKeyText}" Command="{Binding RetryCommand}" />
+        <Button Name="cancelButton" Grid.Column="3" IsCancel="True"
+                Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </Grid>
+    </Border>
+    <Grid Margin="16" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+      <Image Source="avares://GitUI.Avalonia/Assets/Pageant.png" Width="32" Height="32" VerticalAlignment="Top" />
+      <StackPanel Grid.Column="1" Spacing="8">
+        <TextBlock Text="{Binding Strings.PleaseLoadKey.Text}" FontWeight="Bold"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        <TextBlock Text="{Binding Strings.MustAuthenticate.Text}" TextWrapping="Wrap" />
+      </StackPanel>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

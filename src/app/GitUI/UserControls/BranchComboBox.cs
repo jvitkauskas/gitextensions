@@ -84,6 +84,13 @@ public partial class BranchComboBox : GitExtensionsControl
     {
         Validates.NotNull(_branchesToSelect);
 
+        if (AvaloniaHosting.AvaloniaDialogs.TrySelectMultipleBranches(this, _branchesToSelect, GetSelectedBranches(), out IReadOnlyList<IGitRef> selected))
+        {
+            branches.Text = string.Join(" ", selected.Select(branch => branch.Name));
+            OnSelectedValueChanged();
+            return;
+        }
+
         using FormSelectMultipleBranches formSelectMultipleBranches = new(_branchesToSelect);
         foreach (IGitRef branch in GetSelectedBranches())
         {

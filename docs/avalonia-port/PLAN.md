@@ -6,7 +6,7 @@
 |---|---|
 | 0: Foundations | **Done** except `ThreadHelper` overloads for Avalonia controls, which will be added when a ported view needs them. Done so far: new projects, packages, installer/publish, translation reuse (with access-key conversion), dialog base window, window position restore/save (shared `WindowPositions.xml`), hotkeys, `IMessageBoxService`, theme bridge (Fluent palette from the Git Extensions theme, `AppColor` brushes), embedding of native WinForms controls. |
 | 1: Hybrid spike | **Done, go.** Approach (A) works: Avalonia windows are modal over WinForms owners. Ported: `FormAbout`, `FormRenameBranch`, `FormCommitTemplateSettings`. |
-| 2: Lightweight dialogs | **In progress: 11 of ~40 done.** The progress dialog (`FormStatus`/`FormProcess`) covers the ~70 `FormProcess.ShowDialog`/`ReadDialog` and `FormStatus.ShowErrorDialog` call sites. Batch 1 adds command line help, add files, donate, contributors, reset changes, delete tag, init, go to line, and the script input and file prompts. `FormRemoteProcess` stays WinForms until Push/Pull/Clone are ported (phase 5). See the [ledger](ledger.md). |
+| 2: Lightweight dialogs | **In progress: 21 of ~40 done.** The progress dialog (`FormStatus`/`FormProcess`) covers the ~70 `FormProcess.ShowDialog`/`ReadDialog` and `FormStatus.ShowErrorDialog` call sites. Batch 1 adds command line help, add files, donate, contributors, reset changes, delete tag, init, go to line, and the script input and file prompts. Batch 2 adds the SSH key prompt, build server credentials, branch multi-selection, language selection, encodings, add submodule, clean working directory, submodule conflict, create worktree and open repository. `FormRemoteProcess` stays WinForms until Push/Pull/Clone are ported (phase 5). See the [ledger](ledger.md). |
 | 3+ | Not started. |
 
 Using the port:
@@ -56,6 +56,9 @@ Code layout:
 19. **File and folder pickers** go through `IFileDialogService` (Avalonia `StorageProvider`), not `OpenFileDialog` / `OsShellUtil.PickFolder`.
 20. **Compute application-level values lazily in view models**, like the user-manual URL, which needs `AppSettings.DocumentationBaseUrl` (set at startup but not in tests). The WinForms controls did the same.
 21. **WinForms forms whose strings never reached `English.xlf`** (`FormContributors`, `SimplePrompt`) show English. Their ports use constants, so the XLIFF test still holds.
+22. **Reuse small WinForms helpers by widening them to `internal`** (e.g. `FormCreateWorktree.CreateWorktreeCommand`, `FormOpenDirectory.OpenGitRepository`) instead of copying their logic. It is a one-word upstream diff and keeps a single implementation. Copy only logic that is tangled with controls.
+23. **Dialogs shown by `GitExtensions.exe` itself** (e.g. the language selection on first start) go through the public `AvaloniaStartupDialogs`, because `AvaloniaDialogs` is internal to GitUI.
+24. **Avalonia details that differ from WinForms:** a button disabled by its command's `CanExecute` still has `IsEnabled = true` (check `IsEffectivelyEnabled`), and a `ListBox` doesn't take focus itself (focus an item container).
 
 ## Context
 
