@@ -1,9 +1,11 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.Editor;
+using GitUI.Presentation.SpellChecker;
+using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUIPluginInterfaces;
 
@@ -39,9 +41,11 @@ public sealed partial class CommitViewModel : DialogViewModel
         FileStatusListStrings fileStatusListStrings,
         FileStatusTreeOptions fileStatusTreeOptions,
         CommitDialogKind kind = CommitDialogKind.Normal,
-        GitRevision? editedCommit = null)
+        GitRevision? editedCommit = null,
+        ISpellCheckHost? spellCheckHost = null)
     {
         Strings = strings;
+        SpellCheck = spellCheckHost is null ? null : new SpellCheckViewModel(ViewStrings.Load<SpellCheckStrings>(), spellCheckHost);
         _host = host;
         _settings = host.Settings;
         _editedCommit = editedCommit;
@@ -81,6 +85,9 @@ public sealed partial class CommitViewModel : DialogViewModel
 
     /// <summary>The diff of the selected file.</summary>
     public FileViewerViewModel Diff { get; }
+
+    /// <summary>The spell checking and auto-completion of the message (<c>EditNetSpell</c>), if available.</summary>
+    public SpellCheckViewModel? SpellCheck { get; }
 
     /// <summary>The commit message.</summary>
     public TextEditorViewModel Message { get; } = new() { ShowLineNumbers = false };
@@ -199,6 +206,9 @@ public sealed partial class CommitViewModel : DialogViewModel
         if (!_initialized)
         {
             Initialize();
+
+            // As OnRuntimeLoad of EditNetSpell (ToggleAutoCompletion).
+            SpellCheck?.LoadAutoCompleteWords();
         }
 
         _ = UpdateAuthorInfoAsync();
@@ -508,6 +518,7 @@ public sealed partial class CommitViewModel : DialogViewModel
     private void RescanChanges()
     {
         Initialize();
+        SpellCheck?.LoadAutoCompleteWords();
     }
 
     /// <summary>As <c>StageClick</c>: stages the selected unstaged files.</summary>

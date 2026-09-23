@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using GitCommands;
 using GitCommands.Config;
 using GitCommands.Git;
@@ -51,7 +51,8 @@ internal static partial class AvaloniaDialogs
                     ViewStrings.Load<FileStatusListStrings>(),
                     GetFileStatusTreeOptions(),
                     (CommitDialogKind)kind,
-                    editedCommit);
+                    editedCommit,
+                    new SpellCheckHost(commands));
                 UseFileStatusListMenu(viewModel.Unstaged, commands, window);
                 UseFileStatusListMenu(viewModel.Staged, commands, window);
                 EventHandler<GitUIEventArgs> onRepositoryChanged = (_, _) => ThreadHelper.FileAndForget(async () =>

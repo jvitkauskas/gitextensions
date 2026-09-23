@@ -6,6 +6,7 @@ using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.Editor;
 using GitUI.Presentation.HelperDialogs;
+using GitUI.Presentation.SpellChecker;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
 using GitUI.Presentation.UserControls.Blame;
@@ -99,6 +100,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new BlameStrings()).SetArgDisplayNames(nameof(BlameStrings));
         yield return new TestCaseData(new FileHistoryStrings()).SetArgDisplayNames(nameof(FileHistoryStrings));
         yield return new TestCaseData(new CommitStrings()).SetArgDisplayNames(nameof(CommitStrings));
+        yield return new TestCaseData(new SpellCheckStrings()).SetArgDisplayNames(nameof(SpellCheckStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

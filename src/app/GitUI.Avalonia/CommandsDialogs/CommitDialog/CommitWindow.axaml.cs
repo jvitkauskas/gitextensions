@@ -29,6 +29,7 @@ public partial class CommitWindow : DialogWindow
         // As OnShown: the files and the message are loaded once the window is shown.
         Opened += (_, _) => Dispatcher.UIThread.Post(() => _ = _viewModel?.InitializeAsync());
         Activated += (_, _) => _viewModel?.OnActivated();
+        Closed += (_, _) => _viewModel?.SpellCheck?.CancelAutoComplete();
 
         AvaloniaEdit.TextEditor editor = message.Editor;
         editor.TextChanged += (_, _) => UpdateWatermark();
@@ -47,26 +48,6 @@ public partial class CommitWindow : DialogWindow
 
         // As Message_TextChanged: the message is formatted as it is typed (not when undoing) and when set.
         editor.TextArea.TextEntered += (_, _) => FormatMessage();
-        ContextMenu messageMenu = new();
-        MenuItem wordWrapItem = new();
-        wordWrapItem.Click += (_, _) => WordWrapBody();
-        MenuItem cutItem = new() { Header = "Cu_t" };
-        cutItem.Click += (_, _) => editor.Cut();
-        MenuItem copyItem = new() { Header = "_Copy" };
-        copyItem.Click += (_, _) => editor.Copy();
-        MenuItem pasteItem = new() { Header = "_Paste" };
-        pasteItem.Click += (_, _) =>
-        {
-            editor.Paste();
-            FormatMessage();
-        };
-        messageMenu.Items.Add(wordWrapItem);
-        messageMenu.Items.Add(new Separator());
-        messageMenu.Items.Add(cutItem);
-        messageMenu.Items.Add(copyItem);
-        messageMenu.Items.Add(pasteItem);
-        messageMenu.Opening += (_, _) => wordWrapItem.Header = _viewModel?.Strings.WordWrapCommitMessageBody.AccessKeyText;
-        editor.ContextMenu = messageMenu;
 
         author.LostFocus += (_, _) => _viewModel?.UpdateAuthorInfo();
         ((MenuFlyout)commitMessageButton.Flyout!).Opening += (_, _) => FillCommitMessageMenu();
@@ -113,6 +94,7 @@ public partial class CommitWindow : DialogWindow
         _colorizer = new CommitMessageColorizer(options.MaxFirstLineLength, options.MaxLineLength, options.SecondLineMustBeEmpty, Brushes.Red);
         message.Editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         message.Editor.WordWrap = false;
+        UseMessageMenu();
         UpdateMessageEditable();
         UpdateFilterImages();
         UpdateWatermark();
@@ -250,6 +232,57 @@ public partial class CommitWindow : DialogWindow
                 }
             },
             DispatcherPriority.Loaded);
+    }
+
+    /// <summary>The spell checking of the message, if the view model has it.</summary>
+    public SpellCheckController? SpellCheck { get; private set; }
+
+    /// <summary>
+    ///  The context menu of the message: the one of <c>EditNetSpell</c> with the item of <c>Message_ContextMenuPopulating</c>,
+    ///  or only the edit items without spell checking.
+    /// </summary>
+    private void UseMessageMenu()
+    {
+        AvaloniaEdit.TextEditor editor = message.Editor;
+        if (SpellCheck is not null)
+        {
+            return;
+        }
+
+        if (_viewModel?.SpellCheck is { } spellCheck)
+        {
+            SpellCheck = new SpellCheckController(editor, spellCheck);
+            SpellCheck.Pasted += (_, _) => FormatMessage();
+            SpellCheck.ContextMenuPopulating += (_, menu) =>
+            {
+                int insertAt = menu.Items.OfType<Separator>().FirstOrDefault() is { } firstSeparator ? menu.Items.IndexOf(firstSeparator) : 0;
+                MenuItem wordWrapItem = new() { Header = _viewModel?.Strings.WordWrapCommitMessageBody.AccessKeyText };
+                wordWrapItem.Click += (_, _) => WordWrapBody();
+                menu.Items.Insert(insertAt, wordWrapItem);
+            };
+            return;
+        }
+
+        ContextMenu messageMenu = new();
+        MenuItem wordWrap = new();
+        wordWrap.Click += (_, _) => WordWrapBody();
+        MenuItem cutItem = new() { Header = "Cu_t" };
+        cutItem.Click += (_, _) => editor.Cut();
+        MenuItem copyItem = new() { Header = "_Copy" };
+        copyItem.Click += (_, _) => editor.Copy();
+        MenuItem pasteItem = new() { Header = "_Paste" };
+        pasteItem.Click += (_, _) =>
+        {
+            editor.Paste();
+            FormatMessage();
+        };
+        messageMenu.Items.Add(wordWrap);
+        messageMenu.Items.Add(new Separator());
+        messageMenu.Items.Add(cutItem);
+        messageMenu.Items.Add(copyItem);
+        messageMenu.Items.Add(pasteItem);
+        messageMenu.Opening += (_, _) => wordWrap.Header = _viewModel?.Strings.WordWrapCommitMessageBody.AccessKeyText;
+        editor.ContextMenu = messageMenu;
     }
 
     /// <summary>As <c>FormatAllText</c>: the edits of <see cref="CommitMessageFormatter"/>, as one undo step.</summary>
