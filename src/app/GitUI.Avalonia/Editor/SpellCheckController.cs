@@ -154,6 +154,9 @@ public sealed class SpellCheckController
         };
         _completionWindow = window;
         window.Show();
+
+        // As the list box of EditNetSpell: the first word is selected, which Tab and Enter accept.
+        window.CompletionList.SelectedItem = window.CompletionList.CompletionData[0];
     }
 
     private void CloseAutoComplete()

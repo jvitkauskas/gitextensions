@@ -198,24 +198,26 @@
                 </MenuFlyout>
               </DropDownButton.Flyout>
             </DropDownButton>
-            <StackPanel Orientation="Horizontal" Spacing="2">
+            <!-- Clipped when too narrow, instead of drawn below the options (the overflow of the ToolStrip). -->
+            <StackPanel Orientation="Horizontal" Spacing="2" ClipToBounds="True">
               <DropDownButton Name="commitMessageButton" Classes="toolbar" IsEnabled="{Binding IsMessageEditable}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                   <Image Source="avares://GitUI.Avalonia/Assets/WorkingDirChanges.png" Width="16" Height="16" />
                   <AccessText Text="{Binding Strings.CommitMessageMenu.AccessKeyText}" />
                 </StackPanel>
-                <DropDownButton.Flyout>
-                  <MenuFlyout Placement="BottomEdgeAlignedLeft" />
-                </DropDownButton.Flyout>
+                <!-- A context menu opened by the button: the items of a MenuFlyout filled when opening are not shown. -->
+                <DropDownButton.ContextMenu>
+                  <ContextMenu Placement="BottomEdgeAlignedLeft" />
+                </DropDownButton.ContextMenu>
               </DropDownButton>
               <DropDownButton Name="commitTemplatesButton" Classes="toolbar" IsEnabled="{Binding IsMessageEditable}" ToolTip.Tip="{Binding Strings.CommitTemplatesToolTip.Text}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                   <Image Source="avares://GitUI.Avalonia/Assets/CommitTemplates.png" Width="16" Height="16" />
                   <AccessText Text="{Binding Strings.CommitTemplates.AccessKeyText}" />
                 </StackPanel>
-                <DropDownButton.Flyout>
-                  <MenuFlyout Placement="BottomEdgeAlignedLeft" />
-                </DropDownButton.Flyout>
+                <DropDownButton.ContextMenu>
+                  <ContextMenu Placement="BottomEdgeAlignedLeft" />
+                </DropDownButton.ContextMenu>
               </DropDownButton>
               <Button Name="createBranchButton" Classes="toolbar" Command="{Binding CreateBranchCommand}" ToolTip.Tip="{Binding Strings.CreateBranchToolTip.Text}">
                 <StackPanel Orientation="Horizontal" Spacing="4">

@@ -85,6 +85,15 @@ public sealed class SpellCheckViewTests : HeadlessTest
         window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.Control);
         controller.CompletionWindow.Should().NotBeNull();
         controller.CompletionWindow!.CompletionList.CompletionData.Select(d => d.Text).Should().Equal("FileStatusList", "FileViewer");
+        controller.CompletionWindow.CompletionList.SelectedItem!.Text.Should().Be("FileStatusList", "the first word is selected");
+        window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        editor.Text.Should().Be("Fix FileStatusList", "Tab accepts the selected word");
+
+        editor.Text = "Fix Fi";
+        editor.CaretOffset = editor.Text.Length;
+        window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.Control);
+        controller.CompletionWindow.Should().NotBeNull();
 
         window.KeyTextInput(" ");
         Dispatcher.UIThread.RunJobs();

@@ -71,9 +71,11 @@ public partial class CommitWindow : DialogWindow
         editor.TextArea.TextEntered += (_, _) => FormatMessage();
 
         author.LostFocus += (_, _) => _viewModel?.UpdateAuthorInfo();
-        ((MenuFlyout)commitMessageButton.Flyout!).Opening += (_, _) => FillCommitMessageMenu();
-        ((MenuFlyout)commitTemplatesButton.Flyout!).Opening += (_, _) => FillCommitTemplatesMenu();
-        ((MenuFlyout)commitTemplatesButton.Flyout!).Closed += (_, _) => _insertScope = false;
+        commitMessageButton.ContextMenu!.Opening += (_, _) => FillCommitMessageMenu();
+        commitTemplatesButton.ContextMenu!.Opening += (_, _) => FillCommitTemplatesMenu();
+        commitTemplatesButton.ContextMenu!.Closed += (_, _) => _insertScope = false;
+        commitMessageButton.Click += (_, _) => OpenMenu(commitMessageButton, FillCommitMessageMenu);
+        commitTemplatesButton.Click += (_, _) => OpenMenu(commitTemplatesButton, FillCommitTemplatesMenu);
     }
 
     public FileStatusListView UnstagedFiles => unstagedFiles;
@@ -87,10 +89,19 @@ public partial class CommitWindow : DialogWindow
     public TextBlock Watermark => messageWatermark;
 
     /// <summary>The items of the templates menu, as last filled (e.g. for tests).</summary>
-    public IReadOnlyList<object> CommitTemplatesMenuItems => [.. ((MenuFlyout)commitTemplatesButton.Flyout!).Items.OfType<object>()];
+    public IReadOnlyList<object> CommitTemplatesMenuItems => [.. commitTemplatesButton.ContextMenu!.Items.OfType<object>()];
 
     /// <summary>The items of the message menu (e.g. for tests).</summary>
-    public IReadOnlyList<object> CommitMessageMenuItems => [.. ((MenuFlyout)commitMessageButton.Flyout!).Items.OfType<object>()];
+    public IReadOnlyList<object> CommitMessageMenuItems => [.. commitMessageButton.ContextMenu!.Items.OfType<object>()];
+
+    /// <summary>The menu of a drop-down button below it (as the drop-down of a <c>ToolStripDropDownButton</c>).</summary>
+    private static void OpenMenu(Button button, Action fill)
+    {
+        fill();
+        ContextMenu menu = button.ContextMenu!;
+        menu.PlacementTarget = button;
+        menu.Open(button);
+    }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -227,8 +238,8 @@ public partial class CommitWindow : DialogWindow
         }
 
         _insertScope = insertScope;
-        MenuFlyout flyout = (MenuFlyout)commitTemplatesButton.Flyout!;
-        flyout.ShowAt(commitTemplatesButton);
+        ContextMenu flyout = commitTemplatesButton.ContextMenu!;
+        OpenMenu(commitTemplatesButton, FillCommitTemplatesMenu);
         Dispatcher.UIThread.Post(
             () =>
             {
@@ -443,7 +454,7 @@ public partial class CommitWindow : DialogWindow
 
         CommitViewModel viewModel = _viewModel;
         bool insertScope = _insertScope;
-        MenuFlyout flyout = (MenuFlyout)commitTemplatesButton.Flyout!;
+        ContextMenu flyout = commitTemplatesButton.ContextMenu!;
         flyout.Items.Clear();
         (IReadOnlyList<GitCommands.CommitTemplateItem> registered, IReadOnlyList<GitCommands.CommitTemplateItem> fromSettings) = viewModel.GetCommitTemplates();
         foreach (IReadOnlyList<GitCommands.CommitTemplateItem> templates in new[] { registered, fromSettings })
@@ -503,7 +514,7 @@ public partial class CommitWindow : DialogWindow
     public IReadOnlyList<object> OpenCommitTemplatesMenu()
     {
         FillCommitTemplatesMenu();
-        return [.. ((MenuFlyout)commitTemplatesButton.Flyout!).Items.OfType<object>()];
+        return [.. commitTemplatesButton.ContextMenu!.Items.OfType<object>()];
     }
 
     /// <summary>As <c>CommitMessageToolStripMenuItemDropDownOpening</c>: the previous messages, and whose to show.</summary>
@@ -515,7 +526,7 @@ public partial class CommitWindow : DialogWindow
         }
 
         const int maxLabelLength = 72;
-        MenuFlyout flyout = (MenuFlyout)commitMessageButton.Flyout!;
+        ContextMenu flyout = commitMessageButton.ContextMenu!;
         flyout.Items.Clear();
         foreach (string previous in _viewModel.GetPreviousMessages())
         {
