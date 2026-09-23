@@ -2803,6 +2803,11 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
 
     private void toolStripMenuItemReflog_Click(object sender, EventArgs e)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowReflog(this, UICommands))
+        {
+            return;
+        }
+
         using FormReflog formReflog = new(UICommands);
         formReflog.ShowDialog();
     }

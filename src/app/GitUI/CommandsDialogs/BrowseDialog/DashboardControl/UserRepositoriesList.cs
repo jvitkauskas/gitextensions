@@ -740,9 +740,13 @@ public partial class UserRepositoriesList : GitExtensionsControl
 
     private void mnuConfigure_Click(object sender, EventArgs e)
     {
-        using FormRecentReposSettings frm = new();
-        DialogResult result = frm.ShowDialog(this);
-        if (result == DialogResult.OK)
+        if (!AvaloniaHosting.AvaloniaDialogs.TryShowRecentReposSettings(this, out bool saved))
+        {
+            using FormRecentReposSettings frm = new();
+            saved = frm.ShowDialog(this) == DialogResult.OK;
+        }
+
+        if (saved)
         {
             ShowRecentRepositories();
         }

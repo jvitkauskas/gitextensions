@@ -153,8 +153,9 @@ internal sealed class WorkingDirectoryToolStripSplitButton : ToolStripSplitButto
             };
             _tsmiRecentReposSettings.Click += (hs, he) =>
             {
-                using (FormRecentReposSettings frm = new())
+                if (!AvaloniaHosting.AvaloniaDialogs.TryShowRecentReposSettings(ActiveOrOpenForm, out _))
                 {
+                    using FormRecentReposSettings frm = new();
                     frm.ShowDialog(ActiveOrOpenForm);
                 }
 

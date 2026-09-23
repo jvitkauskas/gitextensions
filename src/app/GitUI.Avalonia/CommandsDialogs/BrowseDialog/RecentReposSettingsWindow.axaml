@@ -1,0 +1,68 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.BrowseDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.BrowseDialog.RecentReposSettingsWindow"
+                x:DataType="vm:RecentReposSettingsViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="860" Height="440" MinWidth="720" MinHeight="400">
+  <Window.Styles>
+    <!-- Anchored repositories are bold, missing ones red, as FormRecentReposSettings.GetRepositoryListViewItem. -->
+    <Style Selector="TextBlock.anchored">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.missing">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+    </Style>
+    <Style Selector="ListBox.repos ListBoxItem">
+      <Setter Property="Padding" Value="6,2" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" Classes="accent" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" IsCancel="True" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <Grid Margin="9" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+      <StackPanel Spacing="6" Width="400">
+        <Grid Classes="form" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+          <Label Content="{Binding Strings.MaxTopRepositories.AccessKeyText}" Target="maxTopUpDown" />
+          <NumericUpDown Name="maxTopUpDown" Grid.Column="1" Width="110" Minimum="0" Maximum="1000000" Increment="1"
+                         FormatString="0" ParsingNumberStyle="Integer" Value="{Binding MaxTopRepositories}" />
+          <Label Grid.Row="1" Content="{Binding Strings.HistorySize.AccessKeyText}" Target="historySizeUpDown" />
+          <NumericUpDown Name="historySizeUpDown" Grid.Row="1" Grid.Column="1" Width="110" Minimum="10" Maximum="999" Increment="1"
+                         FormatString="0" ParsingNumberStyle="Integer" Value="{Binding RecentRepositoriesHistorySize}" />
+        </Grid>
+        <CheckBox Name="hideTopCheckBox" IsChecked="{Binding HideTopRepositoriesFromRecentList}">
+          <AccessText Text="{Binding Strings.HideTopRepositoriesFromRecentList.AccessKeyText}" TextWrapping="Wrap" />
+        </CheckBox>
+        <CheckBox Name="sortTopCheckBox" Content="{Binding Strings.SortTopRepos.AccessKeyText}" IsChecked="{Binding SortTopRepos}" />
+        <CheckBox Name="sortRecentCheckBox" Content="{Binding Strings.SortRecentRepos.AccessKeyText}" IsChecked="{Binding SortRecentRepos}" />
+        <!-- Equivalent of the "Shortening strategy" group box -->
+        <Border BorderThickness="1" CornerRadius="4" Padding="12,8"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{Binding Strings.ShorteningStrategy.Text}" FontWeight="SemiBold" />
+            <RadioButton Name="dontShortenRadioButton" GroupName="shortening" Content="{Binding Strings.DontShorten.AccessKeyText}" IsChecked="{Binding IsDontShorten}" />
+            <RadioButton Name="mostSignificantDirRadioButton" GroupName="shortening" Content="{Binding Strings.MostSignificantDir.AccessKeyText}" IsChecked="{Binding IsMostSignificantDir}" />
+            <RadioButton Name="middleDotsRadioButton" GroupName="shortening" Content="{Binding Strings.MiddleDots.AccessKeyText}" IsChecked="{Binding IsMiddleDots}" />
+          </StackPanel>
+        </Border>
+        <Grid Classes="form" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <Label Content="{Binding Strings.ComboMinWidth.AccessKeyText}" Target="comboMinWidthUpDown" />
+          <NumericUpDown Name="comboMinWidthUpDown" Grid.Column="1" Width="110" Minimum="0" Maximum="800" Increment="1"
+                         FormatString="0" ParsingNumberStyle="Integer" Value="{Binding ComboMinWidth}" />
+        </Grid>
+        <TextBlock Text="{Binding Strings.ComboMinWidthNote.Text}" TextWrapping="Wrap" Opacity="0.8" />
+      </StackPanel>
+      <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto,*" RowSpacing="4">
+        <TextBlock Text="{Binding Strings.TopRepositories.Text}" FontWeight="SemiBold" />
+        <ListBox Name="topListBox" Grid.Row="1" Classes="repos" SelectionMode="Multiple" ItemsSource="{Binding TopRepos}" />
+        <TextBlock Grid.Row="2" Margin="0,4,0,0" Text="{Binding Strings.RecentRepositories.Text}" FontWeight="SemiBold" />
+        <ListBox Name="recentListBox" Grid.Row="3" Classes="repos" SelectionMode="Multiple" ItemsSource="{Binding RecentRepos}" />
+      </Grid>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>
