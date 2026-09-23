@@ -2235,6 +2235,16 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
     public void ShowRevisionFilterDialog()
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowRevisionFilter(ParentForm, _filterInfo, out bool accepted))
+        {
+            if (accepted)
+            {
+                PerformRefreshRevisions();
+            }
+
+            return;
+        }
+
         using FormRevisionFilter form = new(UICommands, _filterInfo);
         if (form.ShowDialog(ParentForm) == DialogResult.OK)
         {
