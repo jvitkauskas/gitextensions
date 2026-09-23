@@ -99,6 +99,7 @@
     <Project Path="src/app/GitUI/GitUI.csproj" />
     <Project Path="src/app/GitUI.Avalonia/GitUI.Avalonia.csproj" />
     <Project Path="src/app/GitUI.Presentation/GitUI.Presentation.csproj" />
+    <Project Path="src/app/GitUI.RevisionGraph/GitUI.RevisionGraph.csproj" />
     <Project Path="src/app/ResourceManager/ResourceManager.csproj" />
   </Folder>
   <Folder Name="/src/plugins/">

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The UI-toolkit-agnostic layout of the revision graph (lanes, segments, rows), shared by the WinForms revision grid
+    and its Avalonia port (docs/avalonia-port/PLAN.md, phase 4). The sources stay in GitUI, where upstream changes them;
+    this project compiles them and GitUI excludes them, so upstream merges apply to the same files.
+    The rendering (Graph/Rendering), the theme colors (RevisionGraphLaneColor) and the translated lane tooltips
+    (LaneInfoProvider, with BranchFinder) stay in GitUI.
+  -->
+  <PropertyGroup>
+    <UseWindowsForms>false</UseWindowsForms>
+    <RootNamespace>GitUI.UserControls.RevisionGrid.Graph</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GitUI\UserControls\RevisionGrid\Graph\*.cs"
+             Exclude="..\GitUI\UserControls\RevisionGrid\Graph\RevisionGraphLaneColor.cs;..\GitUI\UserControls\RevisionGrid\Graph\LaneInfoProvider.cs;..\GitUI\UserControls\RevisionGrid\Graph\BranchFinder.cs"
+             Link="Graph\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GitCommands\GitCommands.csproj" />
+    <ProjectReference Include="..\GitExtensions.Extensibility\GitExtensions.Extensibility.csproj" />
+    <ProjectReference Include="..\GitExtUtils\GitExtUtils.csproj" />
+  </ItemGroup>
+</Project>

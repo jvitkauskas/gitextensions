@@ -15,6 +15,9 @@
 
   <ItemGroup>
     <Compile Include="..\GitExtUtils\Validates.cs" Link="Utils\Validates.cs" />
+    <!-- The layout of the revision graph is compiled by GitUI.RevisionGraph (docs/avalonia-port/PLAN.md, phase 4). -->
+    <Compile Remove="UserControls\RevisionGrid\Graph\*.cs" />
+    <Compile Include="UserControls\RevisionGrid\Graph\RevisionGraphLaneColor.cs;UserControls\RevisionGrid\Graph\LaneInfoProvider.cs;UserControls\RevisionGrid\Graph\BranchFinder.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +42,7 @@
     <ProjectReference Include="..\GitCommands\GitCommands.csproj" />
     <ProjectReference Include="..\GitExtUtils\GitExtUtils.csproj" />
     <ProjectReference Include="..\GitUI.Avalonia\GitUI.Avalonia.csproj" />
+    <ProjectReference Include="..\GitUI.RevisionGraph\GitUI.RevisionGraph.csproj" />
     <ProjectReference Include="..\ResourceManager\ResourceManager.csproj" />
     <ProjectReference Include="..\..\plugins\GitUIPluginInterfaces\GitUIPluginInterfaces.csproj" />
   </ItemGroup>

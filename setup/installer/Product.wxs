@@ -889,6 +889,9 @@
       <Component Id="GitUI.Presentation.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\GitUI.Presentation.dll" />
       </Component>
+      <Component Id="GitUI.RevisionGraph.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\GitUI.RevisionGraph.dll" />
+      </Component>
       <Component Id="HarfBuzzSharp.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\HarfBuzzSharp.dll" />
       </Component>
@@ -943,6 +946,7 @@
       <ComponentRef Id="CommunityToolkit.Mvvm.dll" />
       <ComponentRef Id="GitUI.Avalonia.dll" />
       <ComponentRef Id="GitUI.Presentation.dll" />
+      <ComponentRef Id="GitUI.RevisionGraph.dll" />
       <ComponentRef Id="HarfBuzzSharp.dll" />
       <ComponentRef Id="MicroCom.Runtime.dll" />
       <ComponentRef Id="SkiaSharp.dll" />

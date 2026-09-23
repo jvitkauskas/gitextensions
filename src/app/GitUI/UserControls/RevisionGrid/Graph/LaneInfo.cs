@@ -26,7 +26,7 @@ public sealed class LaneInfo
         int? rightLaneColor = segmentToTheRight?.LaneInfo?.Color;
         for (; ; ++colorSeed)
         {
-            int color = RevisionGraphLaneColor.GetColorForLane(colorSeed);
+            int color = RevisionGraphLanePalette.GetColorForLane(colorSeed);
             if (color != leftLaneColor && color != rightLaneColor && color != derivedFromColor)
             {
                 return color;
