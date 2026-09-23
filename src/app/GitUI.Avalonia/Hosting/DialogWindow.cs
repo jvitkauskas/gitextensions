@@ -32,6 +32,11 @@ public class DialogWindow : Window
     {
         CanMinimize = false;
         Icon = _applicationIcon.Value;
+
+        if (OperatingSystem.IsWindows())
+        {
+            Win32Properties.AddWndProcHookCallback(this, WndProcHook);
+        }
     }
 
     /// <summary>
@@ -134,6 +139,30 @@ public class DialogWindow : Window
         }
     }
 
+    /// <summary>
+    ///  A dialog whose height follows its content can only be resized horizontally (as the WinForms forms that fix
+    ///  their height through <c>MinimumSize</c> / <c>MaximumSize</c>): the top and bottom borders do not resize it.
+    /// </summary>
+    private nint WndProcHook(nint handle, uint msg, nint wordParameter, nint longParameter, ref bool handled)
+    {
+        if (msg != NativeMethods.WM_NCHITTEST || !CanResize || SizeToContent != SizeToContent.Height)
+        {
+            return 0;
+        }
+
+        nint hit = NativeMethods.DefWindowProc(handle, msg, wordParameter, longParameter);
+        nint horizontalHit = hit switch
+        {
+            NativeMethods.HTTOP or NativeMethods.HTBOTTOM => NativeMethods.HTBORDER,
+            NativeMethods.HTTOPLEFT or NativeMethods.HTBOTTOMLEFT => NativeMethods.HTLEFT,
+            NativeMethods.HTTOPRIGHT or NativeMethods.HTBOTTOMRIGHT => NativeMethods.HTRIGHT,
+            _ => hit
+        };
+
+        handled = horizontalHit != hit;
+        return horizontalHit;
+    }
+
     private void OnCloseRequested(object? sender, bool accepted) => CloseDialog(accepted);
 
     private void CloseDialog(bool accepted)
@@ -151,13 +180,17 @@ public class DialogWindow : Window
             return;
         }
 
-        // Only dialogs that do not size to their content restore their size: a size saved by the WinForms form
+        // Dialogs restore only the dimensions that do not follow their content: a size saved by the WinForms form
         // (or for other content) would crop a layout sized to content.
-        if (CanResize && SizeToContent == SizeToContent.Manual)
+        // Stored in pixels at the DPI of the time; device-independent units are pixels * 96 / DPI.
+        if (CanResize && !SizeToContent.HasFlag(SizeToContent.Width))
         {
-            // Stored in pixels at the DPI of the time; device-independent units are pixels * 96 / DPI.
-            Width = Math.Max(MinWidth, (placement.Width * 96.0 / placement.Dpi) - _frameThickness.Width);
-            Height = Math.Max(MinHeight, (placement.Height * 96.0 / placement.Dpi) - _frameThickness.Height);
+            Width = Math.Min(MaxWidth, Math.Max(MinWidth, (placement.Width * 96.0 / placement.Dpi) - _frameThickness.Width));
+        }
+
+        if (CanResize && !SizeToContent.HasFlag(SizeToContent.Height))
+        {
+            Height = Math.Min(MaxHeight, Math.Max(MinHeight, (placement.Height * 96.0 / placement.Dpi) - _frameThickness.Height));
         }
 
         if (!IsCenteredOnOwner)

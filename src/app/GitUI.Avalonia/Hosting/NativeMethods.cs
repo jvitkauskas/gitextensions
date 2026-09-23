@@ -10,6 +10,16 @@ internal static class NativeMethods
 {
     public const uint GA_ROOT = 2;
     public const int GWLP_HWNDPARENT = -8;
+    public const uint WM_NCHITTEST = 0x0084;
+    public const nint HTLEFT = 10;
+    public const nint HTRIGHT = 11;
+    public const nint HTTOP = 12;
+    public const nint HTTOPLEFT = 13;
+    public const nint HTTOPRIGHT = 14;
+    public const nint HTBOTTOM = 15;
+    public const nint HTBOTTOMLEFT = 16;
+    public const nint HTBOTTOMRIGHT = 17;
+    public const nint HTBORDER = 18;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT
@@ -24,6 +34,9 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern nint GetAncestor(nint hwnd, uint gaFlags);
+
+    [DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
+    public static extern nint DefWindowProc(nint hWnd, uint msg, nint wParam, nint lParam);
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
     public static extern nint SetWindowLongPtr(nint hWnd, int nIndex, nint dwNewLong);

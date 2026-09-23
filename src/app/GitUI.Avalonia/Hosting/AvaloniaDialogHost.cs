@@ -98,8 +98,12 @@ public static class AvaloniaDialogHost
 
         void Center()
         {
-            Size size = window.FrameSize ?? window.ClientSize;
-            PixelSize pixels = PixelSize.FromSize(size, window.DesktopScaling);
+            // A size restored on opening is set but not laid out yet: use it rather than the current client size.
+            Size clientSize = new(
+                double.IsNaN(window.Width) || window.SizeToContent.HasFlag(SizeToContent.Width) ? window.ClientSize.Width : window.Width,
+                double.IsNaN(window.Height) || window.SizeToContent.HasFlag(SizeToContent.Height) ? window.ClientSize.Height : window.Height);
+            Size frame = window.FrameSize is { } frameSize ? new Size(frameSize.Width - window.ClientSize.Width, frameSize.Height - window.ClientSize.Height) : default;
+            PixelSize pixels = PixelSize.FromSize(new Size(clientSize.Width + frame.Width, clientSize.Height + frame.Height), window.DesktopScaling);
             window.Position = new PixelPoint(
                 ownerRect.Left + ((ownerRect.Right - ownerRect.Left - pixels.Width) / 2),
                 ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top - pixels.Height) / 2));

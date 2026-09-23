@@ -102,7 +102,7 @@ internal static partial class AvaloniaDialogs
             ViewStrings.Load<SelectMultipleBranchesStrings>(),
             branches.Select(b => ((object)b, b.Name)),
             selectedBranches.Select(b => b.Name));
-        ShowDialog(() => new SelectMultipleBranchesWindow { DataContext = viewModel }, owner);
+        ShowDialog(() => new SelectMultipleBranchesWindow { DataContext = viewModel }, owner, positionName: nameof(FormSelectMultipleBranches));
 
         // As FormSelectMultipleBranches, which has no cancel button: closing the dialog keeps the checked branches.
         selected = [.. viewModel.SelectedBranches.Cast<IGitRef>()];
