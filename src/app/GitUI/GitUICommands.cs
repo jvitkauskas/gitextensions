@@ -1341,6 +1341,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowRebase(owner, this, from, to, onto, interactive, startRebaseImmediately))
+            {
+                return true;
+            }
+
             using FormRebase form = new(this, from, to, onto, interactive, startRebaseImmediately);
             form.ShowDialog(owner);
             return true;
@@ -1556,6 +1561,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
             {
+                if (AvaloniaHosting.AvaloniaDialogs.TryShowApplyPatch(owner, this, patchFile))
+                {
+                    return true;
+                }
+
                 using FormApplyPatch form = new(this);
                 if (Directory.Exists(patchFile!))
                 {

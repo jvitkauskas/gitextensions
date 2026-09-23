@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.UserControls"
+             x:Class="GitUI.Avalonia.Controls.PatchGridView"
+             x:DataType="vm:PatchGridViewModel">
+  <UserControl.Styles>
+    <!-- As PatchGrid.SelectCurrentlyApplyingPatch: the commit or patch being applied is orange red. -->
+    <Style Selector="DataGridRow.next TextBlock">
+      <Setter Property="Foreground" Value="OrangeRed" />
+    </Style>
+  </UserControl.Styles>
+  <!-- Port of PatchGrid: the columns of the rebase (action, commit hash) or of the patches (name) are chosen in code-behind. -->
+  <DataGrid Name="patchesGrid" ItemsSource="{Binding Patches}" SelectedItem="{Binding SelectedPatch}"
+            IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserReorderColumns="False"
+            HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+    <DataGrid.Columns>
+      <DataGridTextColumn Binding="{Binding Status}" Width="Auto" MinWidth="95" x:DataType="vm:PatchItem" />
+      <DataGridTextColumn Binding="{Binding Action}" Width="Auto" x:DataType="vm:PatchItem" />
+      <DataGridTextColumn Binding="{Binding Name}" Width="75" x:DataType="vm:PatchItem" />
+      <DataGridTemplateColumn Width="*" MinWidth="100">
+        <DataGridTemplateColumn.CellTemplate>
+          <DataTemplate x:DataType="vm:PatchItem">
+            <TextBlock Text="{Binding Subject}" MaxLines="1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0"
+                       ToolTip.Tip="{Binding Subject}" />
+          </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
+      <DataGridTextColumn Binding="{Binding Author}" Width="140" x:DataType="vm:PatchItem" />
+      <DataGridTextColumn Binding="{Binding Date}" Width="Auto" x:DataType="vm:PatchItem" />
+      <DataGridTemplateColumn Width="115">
+        <DataGridTemplateColumn.CellTemplate>
+          <DataTemplate x:DataType="vm:PatchItem">
+            <TextBlock Text="{Binding CommitHash}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0"
+                       FontFamily="{DynamicResource MonospaceFontFamily}" ToolTip.Tip="{Binding CommitHash}" />
+          </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
+    </DataGrid.Columns>
+  </DataGrid>
+</UserControl>

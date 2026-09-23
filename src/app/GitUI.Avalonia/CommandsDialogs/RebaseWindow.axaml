@@ -1,0 +1,142 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RebaseWindow"
+                x:DataType="vm:RebaseViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="1034" Height="461" MinWidth="1034" MinHeight="461">
+  <Window.Resources>
+    <ResourceDictionary>
+      <!-- As FormRebase.EnableButtons: the solve conflicts button is framed in yellow while there are conflicts. -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="RebaseMergeToolHighlightBrush" Color="Yellow" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="RebaseMergeToolHighlightBrush" Color="#888800" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="Border#mergeToolPanel.highlight">
+      <Setter Property="BorderBrush" Value="{DynamicResource RebaseMergeToolHighlightBrush}" />
+    </Style>
+    <Style Selector="WrapPanel#optionsPanelTop > CheckBox">
+      <Setter Property="Margin" Value="0,0,12,0" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <!-- Equivalent of ControlsPanel (right to left: Abort, Continue, the solve conflicts panel, Rebase) and btnSolveMergeconflicts at the left. -->
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Name="unresolvedConflictsButton" Background="#C0E66363" IsVisible="{Binding HasConflicts}"
+                Command="{Binding SolveConflictsCommand}">
+          <TextBlock Text="{Binding UnresolvedMergeConflictsText}" />
+        </Button>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+          <Button Name="rebaseButton" MinWidth="100" IsVisible="{Binding IsRebaseVisible}" IsDefault="{Binding IsRebaseDefault}"
+                  Command="{Binding RebaseCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Rebase.png" Width="16" Height="16" />
+              <AccessText Text="{Binding Strings.Rebase.AccessKeyText}" />
+            </StackPanel>
+          </Button>
+          <Border Name="mergeToolPanel" BorderThickness="2" CornerRadius="5" Classes.highlight="{Binding HasConflicts}"
+                  IsVisible="{Binding IsSolveConflictsVisible}">
+            <Button Name="solveConflictsButton" MinWidth="100" Content="{Binding SolveConflictsText}"
+                    IsDefault="{Binding IsSolveConflictsDefault}" Command="{Binding SolveConflictsCommand}" />
+          </Border>
+          <Button Name="continueButton" MinWidth="103" Content="{Binding ContinueText}" IsVisible="{Binding IsContinueVisible}"
+                  IsDefault="{Binding IsContinueDefault}" Command="{Binding ContinueRebaseCommand}" />
+          <Button Name="abortButton" Content="{Binding Strings.Abort.AccessKeyText}" IsVisible="{Binding IsRebasing}"
+                  Command="{Binding AbortCommand}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <!-- Equivalent of MainLayout: the help image, then PanelMiddle. -->
+    <Grid Margin="9" ColumnDefinitions="Auto,*" ColumnSpacing="6">
+      <c:HelpImageView Name="helpImage" VerticalAlignment="Top" DataContext="{Binding HelpImage}"
+                       Image1="avares://GitUI.Avalonia/Assets/Help/HelpCommandRebase.png" />
+      <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,8,Auto,*,Auto">
+        <TextBlock Text="{Binding Strings.RebaseDescription.Text}" />
+        <!-- Equivalent of PanelCurrentBranch. -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,5">
+          <TextBlock Text="{Binding Strings.CurrentBranch.Text}" />
+          <SelectableTextBlock Name="currentBranchText" Text="{Binding CurrentBranch}" />
+        </StackPanel>
+        <!-- Equivalent of rebasePanel. -->
+        <StackPanel Name="rebasePanel" Grid.Row="2" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6"
+                    IsVisible="{Binding IsRebasePanelVisible}">
+          <Label VerticalAlignment="Center" Padding="0" Content="{Binding Strings.RebaseOn.AccessKeyText}" Target="branchesComboBox" />
+          <ComboBox Name="branchesComboBox" Width="270" IsEditable="True" VerticalAlignment="Center"
+                    ItemsSource="{Binding Branches}" Text="{Binding Branch}" IsEnabled="{Binding IsRebaseVisible}" />
+          <Button Name="showOptionsLink" Classes="link" VerticalAlignment="Center" Command="{Binding ShowOptionsCommand}"
+                  IsVisible="{Binding IsShowOptionsVisible}">
+            <TextBlock Text="{Binding Strings.ShowOptions.PlainText}" />
+          </Button>
+        </StackPanel>
+        <!-- Equivalent of flpnlOptionsPanelTop. -->
+        <WrapPanel Name="optionsPanelTop" Grid.Row="3" Margin="0,0,0,4">
+          <CheckBox Name="interactiveCheckBox" Content="{Binding Strings.Interactive.AccessKeyText}" IsChecked="{Binding IsInteractive}"
+                    IsEnabled="{Binding CanInteractive}" />
+          <CheckBox Name="preserveMergesCheckBox" Content="{Binding Strings.PreserveMerges.AccessKeyText}" IsChecked="{Binding PreserveMerges}"
+                    IsEnabled="{Binding CanInteractive}" />
+          <CheckBox Name="autosquashCheckBox" Content="{Binding Strings.Autosquash.AccessKeyText}" IsChecked="{Binding Autosquash}"
+                    IsEnabled="{Binding CanAutosquash}" />
+          <CheckBox Name="autoStashCheckBox" Content="{Binding Strings.AutoStash.AccessKeyText}" IsChecked="{Binding AutoStash}"
+                    IsEnabled="{Binding CanAutoStash}" />
+          <CheckBox Name="ignoreDateCheckBox" Content="{Binding Strings.IgnoreDate.AccessKeyText}" IsChecked="{Binding IgnoreDate}"
+                    IsEnabled="{Binding CanIgnoreDate}" ToolTip.Tip="{Binding Strings.IgnoreDateToolTip.Text}" />
+          <CheckBox Name="committerDateCheckBox" Content="{Binding Strings.CommitterDateIsAuthorDate.AccessKeyText}"
+                    IsChecked="{Binding CommitterDateIsAuthorDate}" IsEnabled="{Binding CanCommitterDateIsAuthorDate}"
+                    ToolTip.Tip="{Binding Strings.CommitterDateIsAuthorDateToolTip.Text}" />
+          <CheckBox Name="updateRefsCheckBox" Content="{Binding Strings.UpdateRefs.AccessKeyText}" IsChecked="{Binding UpdateRefs}"
+                    IsVisible="{Binding IsUpdateRefsVisible}" />
+        </WrapPanel>
+        <!-- Equivalent of flpnlOptionsPanelBottom. -->
+        <StackPanel Name="optionsPanelBottom" Grid.Row="4" Orientation="Horizontal" Spacing="6">
+          <CheckBox Name="specificRangeCheckBox" Content="{Binding Strings.SpecificRange.AccessKeyText}" IsChecked="{Binding IsSpecificRange}" />
+          <Label VerticalAlignment="Center" Padding="0" Content="{Binding Strings.RangeFrom.AccessKeyText}" Target="fromTextBox" />
+          <TextBox Name="fromTextBox" Width="80" VerticalAlignment="Center" Text="{Binding From}" IsEnabled="{Binding IsSpecificRange}" />
+          <Button Name="chooseFromRevisionButton" Padding="4" VerticalAlignment="Center" IsEnabled="{Binding IsSpecificRange}"
+                  Command="{Binding ChooseFromRevisionCommand}">
+            <Image Source="avares://GitUI.Avalonia/Assets/SelectRevision.png" Width="16" Height="16" />
+          </Button>
+          <Label VerticalAlignment="Center" Padding="0" Content="{Binding Strings.RangeTo.AccessKeyText}" Target="toComboBox" />
+          <ComboBox Name="toComboBox" Width="184" IsEditable="True" VerticalAlignment="Center"
+                    ItemsSource="{Binding ToBranches}" Text="{Binding To}" IsEnabled="{Binding IsSpecificRange}" />
+        </StackPanel>
+        <TextBlock Grid.Row="6" Text="{Binding Strings.CommitsToReapply.Text}" Margin="0,0,0,4" />
+        <c:PatchGridView Name="patchGrid" Grid.Row="7" MinHeight="100" DataContext="{Binding PatchGrid}" />
+        <!-- Equivalent of tlpnlSecondaryControls: the rebase actions below the commits. -->
+        <Grid Grid.Row="8" ColumnDefinitions="*,*" Margin="0,6,0,0" IsVisible="{Binding IsRebasing}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Name="addFilesButton" Command="{Binding AddFilesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Image Source="avares://GitUI.Avalonia/Assets/BulletAdd.png" Width="16" Height="16" />
+                <AccessText Text="{Binding Strings.AddFiles.AccessKeyText}" />
+              </StackPanel>
+            </Button>
+            <Button Name="commitButton" Command="{Binding CommitCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Image Source="avares://GitUI.Avalonia/Assets/RepoStateStaged.png" Width="16" Height="16" />
+                <AccessText Text="{Binding Strings.Commit.AccessKeyText}" />
+              </StackPanel>
+            </Button>
+            <Button Name="editTodoButton" Command="{Binding EditTodoCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Image Source="avares://GitUI.Avalonia/Assets/EditFile.png" Width="16" Height="16" />
+                <AccessText Text="{Binding Strings.EditTodo.AccessKeyText}" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+          <Button Name="skipButton" Grid.Column="1" HorizontalAlignment="Right" MinWidth="183" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.Skip.AccessKeyText}" Command="{Binding SkipCommand}" />
+        </Grid>
+      </Grid>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

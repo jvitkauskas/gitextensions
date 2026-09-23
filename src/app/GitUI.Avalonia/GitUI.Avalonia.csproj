@@ -70,6 +70,10 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Merge.png" Link="Assets\Merge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Rebase.png" Link="Assets\Rebase.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Remotes.png" Link="Assets\Remotes.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Help\HelpCommandRebase.png" Link="Assets\Help\HelpCommandRebase.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BulletAdd.png" Link="Assets\BulletAdd.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateStaged.png" Link="Assets\RepoStateStaged.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\EditFile.png" Link="Assets\EditFile.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Diff.png" Link="Assets\Diff.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffA.png" Link="Assets\DiffA.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\DiffB.png" Link="Assets\DiffB.png" />

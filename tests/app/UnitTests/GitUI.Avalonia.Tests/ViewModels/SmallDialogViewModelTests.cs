@@ -291,6 +291,15 @@ public sealed class SmallDialogViewModelTests
             return Task.FromResult(Files);
         }
 
+        public List<(string Title, string FilterName, string Pattern)> FilePickers { get; } = [];
+
+        public Task<string?> PickFileAsync(string title, string filterName, string pattern, string? startDirectory = null)
+        {
+            FilePickers.Add((title, filterName, pattern));
+            StartDirectories.Add(startDirectory);
+            return Task.FromResult(Files.FirstOrDefault());
+        }
+
         public Task<string?> PickFolderAsync(string? startDirectory = null)
         {
             StartDirectories.Add(startDirectory);

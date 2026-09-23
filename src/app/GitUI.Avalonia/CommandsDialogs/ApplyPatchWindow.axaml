@@ -1,0 +1,70 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.ApplyPatchWindow"
+                x:DataType="vm:ApplyPatchViewModel"
+                Title="{Binding Title}"
+                Width="711" Height="436" MinWidth="704" MinHeight="371">
+  <Window.Styles>
+    <!-- As FormApplyPatch.EnableButtons: the default button is framed (MergeToolPanel, ContinuePanel with ControlText). -->
+    <Style Selector="Border.buttonFrame">
+      <Setter Property="BorderThickness" Value="3" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.buttonFrame.highlight">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    </Style>
+    <Style Selector="StackPanel#actionsPanel Button">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </Window.Styles>
+  <!-- Equivalent of MainLayoutPanel: the patch and its options above the patches and their actions. -->
+  <Grid Margin="3" ColumnDefinitions="*,Auto" RowDefinitions="Auto,*" ColumnSpacing="6" RowSpacing="6">
+    <!-- Equivalent of PanelTL. -->
+    <Grid Margin="7,6,0,0" MinWidth="560" ColumnDefinitions="150,*,100" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+      <RadioButton Name="patchFileModeRadioButton" GroupName="patchMode" VerticalAlignment="Center"
+                   Content="{Binding Strings.PatchFileMode.AccessKeyText}" IsChecked="{Binding IsPatchFileMode}" IsEnabled="{Binding CanApply}" />
+      <TextBox Name="patchFileTextBox" Grid.Column="1" VerticalAlignment="Center" Text="{Binding PatchFile}" IsEnabled="{Binding IsPatchFileEnabled}" />
+      <Button Name="browsePatchButton" Grid.Column="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.BrowsePatch.AccessKeyText}" IsEnabled="{Binding IsPatchFileEnabled}" Command="{Binding BrowsePatchCommand}" />
+      <RadioButton Name="patchDirModeRadioButton" Grid.Row="1" GroupName="patchMode" VerticalAlignment="Center"
+                   Content="{Binding Strings.PatchDirMode.AccessKeyText}" IsChecked="{Binding IsPatchDirectoryMode}" IsEnabled="{Binding CanApply}" />
+      <TextBox Name="patchDirTextBox" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Text="{Binding PatchDirectory}"
+               IsEnabled="{Binding IsPatchDirectoryEnabled}" />
+      <Button Name="browseDirButton" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.BrowseDir.AccessKeyText}" IsEnabled="{Binding IsPatchDirectoryEnabled}" Command="{Binding BrowseDirectoryCommand}" />
+    </Grid>
+    <!-- Equivalent of PanelTR. -->
+    <StackPanel Grid.Column="1" Width="131" Margin="0,3,3,0" Spacing="4">
+      <Button Name="applyButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="{Binding Strings.Apply.AccessKeyText}"
+              IsDefault="{Binding IsApplyDefault}" IsEnabled="{Binding CanApply}" Command="{Binding ApplyCommand}" />
+      <CheckBox Name="ignoreWhitespaceCheckBox" Content="{Binding Strings.IgnoreWhitespace.AccessKeyText}" IsChecked="{Binding IgnoreWhitespace}"
+                IsEnabled="{Binding CanApply}" />
+      <CheckBox Name="signOffCheckBox" Content="{Binding Strings.SignOff.AccessKeyText}" IsChecked="{Binding SignOff}" IsEnabled="{Binding CanApply}" />
+    </StackPanel>
+    <c:PatchGridView Name="patchGrid" Grid.Row="1" Margin="3,0,0,3" DataContext="{Binding PatchGrid}" />
+    <!-- Equivalent of PanelBR (top down). -->
+    <StackPanel Name="actionsPanel" Grid.Row="1" Grid.Column="1" Width="131" Margin="0,0,3,3" Spacing="6">
+      <Border Name="mergeToolPanel" Classes="buttonFrame" Classes.highlight="{Binding HasConflicts}">
+        <Button Name="mergetoolButton" Content="{Binding MergetoolText}" IsDefault="{Binding IsMergetoolDefault}"
+                IsEnabled="{Binding CanRunMergetool}" Command="{Binding MergetoolCommand}" />
+      </Border>
+      <Button Name="addFilesButton" Margin="0,15,0,0" Content="{Binding Strings.AddFiles.AccessKeyText}" IsEnabled="{Binding CanContinue}"
+              Command="{Binding AddFilesCommand}" />
+      <Border Name="continuePanel" Margin="0,15,0,0" Classes="buttonFrame" Classes.highlight="{Binding CanResolve}">
+        <Button Name="resolvedButton" Content="{Binding ResolvedText}" IsDefault="{Binding IsResolvedDefault}"
+                IsEnabled="{Binding CanResolve}" Command="{Binding ResolvedCommand}" />
+      </Border>
+      <Button Name="skipButton" Content="{Binding Strings.Skip.AccessKeyText}" IsEnabled="{Binding CanContinue}" Command="{Binding SkipCommand}" />
+      <Button Name="abortButton" Content="{Binding Strings.Abort.AccessKeyText}" IsEnabled="{Binding CanContinue}" Command="{Binding AbortCommand}" />
+      <Button Name="solveMergeConflictsButton" MinHeight="78" Background="#C0E66363" IsVisible="{Binding HasConflicts}"
+              Command="{Binding MergetoolCommand}">
+        <TextBlock Text="{Binding SolveMergeConflictsText}" TextWrapping="Wrap" TextAlignment="Center" />
+      </Button>
+    </StackPanel>
+  </Grid>
+</h:DialogWindow>

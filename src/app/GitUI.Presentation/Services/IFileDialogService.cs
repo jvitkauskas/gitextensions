@@ -9,6 +9,14 @@ public interface IFileDialogService
     /// <summary>Lets the user pick existing files; returns their full paths, or an empty list if cancelled.</summary>
     Task<IReadOnlyList<string>> PickFilesAsync(bool allowMultiple, string? startDirectory = null);
 
+    /// <summary>
+    ///  Lets the user pick an existing file of one type (as an <c>OpenFileDialog</c> with a title and a filter); returns its full
+    ///  path, or <see langword="null"/> if cancelled.
+    /// </summary>
+    /// <param name="filterName">The name of the file type, e.g. "Patch file (*.Patch)".</param>
+    /// <param name="pattern">The pattern of the file type, e.g. "*.patch".</param>
+    Task<string?> PickFileAsync(string title, string filterName, string pattern, string? startDirectory = null);
+
     /// <summary>Lets the user pick a folder; returns its full path, or <see langword="null"/> if cancelled.</summary>
     Task<string?> PickFolderAsync(string? startDirectory = null);
 
