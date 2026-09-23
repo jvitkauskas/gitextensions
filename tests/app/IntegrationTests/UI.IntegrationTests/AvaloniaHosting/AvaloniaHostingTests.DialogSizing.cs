@@ -67,6 +67,56 @@ public sealed partial class AvaloniaHostingTests
         }
     }
 
+    [Test]
+    public void Content_sized_dialog_keeps_its_height_on_other_resizes_but_follows_its_content()
+    {
+        bool alwaysShow = AppSettings.AlwaysShowCheckoutBranchDlg;
+        AppSettings.AlwaysShowCheckoutBranchDlg = true;
+        try
+        {
+            RECT before = default;
+            RECT afterStretch = default;
+            RECT afterGrowth = default;
+            Avalonia.Controls.SizeToContent sizeToContent = Avalonia.Controls.SizeToContent.Manual;
+            DriveNextDialog(window =>
+            {
+                GetWindowRect(window.NativeHandle, out before);
+
+                // As Win+Shift+Up (stretch vertically): a resize from outside Avalonia's layout.
+                SetWindowPos(window.NativeHandle, 0, before.Left, before.Top - 100, before.Right - before.Left, before.Bottom - before.Top + 300, SWP_NOZORDER | SWP_NOACTIVATE);
+                GetWindowRect(window.NativeHandle, out afterStretch);
+                sizeToContent = window.SizeToContent;
+
+                // The layout still sizes the dialog to its content.
+                ((Avalonia.Controls.Control)window.Content!).Margin = new Avalonia.Thickness(0, 0, 0, 100);
+                DispatcherTimer.RunOnce(
+                    () =>
+                    {
+                        GetWindowRect(window.NativeHandle, out afterGrowth);
+                        window.Close();
+                    },
+                    TimeSpan.FromMilliseconds(300));
+            });
+
+            _commands.StartCheckoutBranch(_owner, "");
+
+            afterStretch.Should().Be(before);
+            sizeToContent.Should().Be(Avalonia.Controls.SizeToContent.Height);
+            (afterGrowth.Bottom - afterGrowth.Top).Should().BeGreaterThan(before.Bottom - before.Top + 90);
+        }
+        finally
+        {
+            AppSettings.AlwaysShowCheckoutBranchDlg = alwaysShow;
+        }
+    }
+
+    private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_NOACTIVATE = 0x0010;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint handle, nint insertAfter, int x, int y, int width, int height, uint flags);
+
     private static nint HitTest(nint handle, int x, int y)
         => SendMessage(handle, WM_NCHITTEST, 0, (nint)(((y & 0xFFFF) << 16) | (x & 0xFFFF)));
 

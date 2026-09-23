@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -141,15 +142,30 @@ public class DialogWindow : Window
 
     /// <summary>
     ///  A dialog whose height follows its content can only be resized horizontally (as the WinForms forms that fix
-    ///  their height through <c>MinimumSize</c> / <c>MaximumSize</c>): the top and bottom borders do not resize it.
+    ///  their height through <c>MinimumSize</c> / <c>MaximumSize</c>).
     /// </summary>
     private nint WndProcHook(nint handle, uint msg, nint wordParameter, nint longParameter, ref bool handled)
     {
-        if (msg != NativeMethods.WM_NCHITTEST || !CanResize || SizeToContent != SizeToContent.Height)
+        if (!CanResize || SizeToContent != SizeToContent.Height)
         {
             return 0;
         }
 
+        switch (msg)
+        {
+            case NativeMethods.WM_NCHITTEST:
+                return HitTestHorizontalBordersOnly(handle, msg, wordParameter, longParameter, ref handled);
+            case NativeMethods.WM_WINDOWPOSCHANGING:
+                KeepContentHeight(handle, longParameter);
+                return 0;
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>The top and bottom borders do not resize the dialog.</summary>
+    private static nint HitTestHorizontalBordersOnly(nint handle, uint msg, nint wordParameter, nint longParameter, ref bool handled)
+    {
         nint hit = NativeMethods.DefWindowProc(handle, msg, wordParameter, longParameter);
         nint horizontalHit = hit switch
         {
@@ -161,6 +177,42 @@ public class DialogWindow : Window
 
         handled = horizontalHit != hit;
         return horizontalHit;
+    }
+
+    /// <summary>
+    ///  Other resizes that are not the layout sizing the dialog to its content (e.g. Win+Shift+Up, or sizing
+    ///  with the keyboard) keep its height, and then its vertical position.
+    /// </summary>
+    /// <remarks>
+    ///  Avalonia would otherwise drop <see cref="SizeToContent.Height"/> on such a resize.
+    /// </remarks>
+    private void KeepContentHeight(nint handle, nint windowPosPointer)
+    {
+        NativeMethods.WINDOWPOS windowPos = Marshal.PtrToStructure<NativeMethods.WINDOWPOS>(windowPosPointer);
+        if ((windowPos.Flags & NativeMethods.SWP_NOSIZE) != 0
+            || DesiredSize.Height <= 0
+            || !NativeMethods.GetWindowRect(handle, out NativeMethods.RECT windowRect)
+            || !NativeMethods.GetClientRect(handle, out NativeMethods.RECT clientRect))
+        {
+            return;
+        }
+
+        int frameHeight = (windowRect.Bottom - windowRect.Top) - (clientRect.Bottom - clientRect.Top);
+        int contentHeight = (int)Math.Round(DesiredSize.Height * RenderScaling) + frameHeight;
+
+        // Allow for rounding: the layout resizes the window to its content, anything else is vetoed.
+        if (Math.Abs(windowPos.Cy - contentHeight) <= 2)
+        {
+            return;
+        }
+
+        windowPos.Cy = windowRect.Bottom - windowRect.Top;
+        if ((windowPos.Flags & NativeMethods.SWP_NOMOVE) == 0)
+        {
+            windowPos.Y = windowRect.Top;
+        }
+
+        Marshal.StructureToPtr(windowPos, windowPosPointer, fDeleteOld: false);
     }
 
     private void OnCloseRequested(object? sender, bool accepted) => CloseDialog(accepted);

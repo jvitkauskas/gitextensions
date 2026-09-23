@@ -60,7 +60,7 @@ Code layout:
 23. **Dialogs shown by `GitExtensions.exe` itself** (e.g. the language selection on first start) go through the public `AvaloniaStartupDialogs`, because `AvaloniaDialogs` is internal to GitUI.
 24. **Avalonia details that differ from WinForms:** a button disabled by its command's `CanExecute` still has `IsEnabled = true` (check `IsEffectivelyEnabled`), and a `ListBox` doesn't take focus itself (focus an item container).
 25. **Dialogs that can act without being shown** (e.g. checkout branch with the default action) run the same view model without a window, owned by the caller; the view model gets an `isVisible` flag where the WinForms code checked `Visible`.
-26. **Dialogs sized to their content (`SizeToContent="Height"`) resize only horizontally**, as the WinForms forms that pin their height with `MinimumSize` / `MaximumSize`. Avalonia drops `SizeToContent` once the user drags a top or bottom border, so `DialogWindow` remaps those borders to non-resizing ones in `WM_NCHITTEST` (Windows only). Such dialogs restore their saved width but not their height, and are still centred over the owner.
+26. **Dialogs sized to their content (`SizeToContent="Height"`) resize only horizontally**, as the WinForms forms that pin their height with `MinimumSize` / `MaximumSize`. Avalonia drops `SizeToContent` once the user drags a top or bottom border, so `DialogWindow` remaps those borders to non-resizing ones in `WM_NCHITTEST` (Windows only). Other resizes (Win+Shift+Up, keyboard sizing) are vetoed in `WM_WINDOWPOSCHANGING` unless they size the window to its content (`DesiredSize`), which is what Avalonia's own layout resizes do. Such dialogs restore their saved width but not their height, and are still centred over the owner.
 
 ## Context
 

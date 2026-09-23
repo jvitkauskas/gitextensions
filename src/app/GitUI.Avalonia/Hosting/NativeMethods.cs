@@ -10,7 +10,10 @@ internal static class NativeMethods
 {
     public const uint GA_ROOT = 2;
     public const int GWLP_HWNDPARENT = -8;
+    public const uint WM_WINDOWPOSCHANGING = 0x0046;
     public const uint WM_NCHITTEST = 0x0084;
+    public const uint SWP_NOSIZE = 0x0001;
+    public const uint SWP_NOMOVE = 0x0002;
     public const nint HTLEFT = 10;
     public const nint HTRIGHT = 11;
     public const nint HTTOP = 12;
@@ -30,7 +33,23 @@ internal static class NativeMethods
         public int Bottom;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WINDOWPOS
+    {
+        public nint Hwnd;
+        public nint HwndInsertAfter;
+        public int X;
+        public int Y;
+        public int Cx;
+        public int Cy;
+        public uint Flags;
+    }
+
     private delegate bool EnumWindowsProc(nint hWnd, nint lParam);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetClientRect(nint hWnd, out RECT lpRect);
 
     [DllImport("user32.dll")]
     public static extern nint GetAncestor(nint hwnd, uint gaFlags);
