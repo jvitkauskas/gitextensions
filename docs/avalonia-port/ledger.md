@@ -97,6 +97,21 @@ The WinForms forms are kept (not deleted) until phase 8, so upstream merges appl
 | File viewer changes (not a form) | `src/app/GitUI/GitUIExtensions.cs` (`ViewChangesAsync`), `Editor/FileViewer.cs` (`ViewGitItemAsync`, `ViewFileAsync`, `ViewItemAsync`, `GetExtraDiffArguments`, `GetUpdateTreeId`) | `66050831e` | `GitUI/AvaloniaHosting/FileViewerHost.cs`, `GitUI.Presentation/Editor/FileViewerViewModel.cs`, `GitUI.Avalonia/Editor/FileViewerView.axaml` | (used by the ported diff dialogs) | Not ported yet: range diffs, git grep, difftastic, the git word diff, the hex dump of binary files, the toolbar (whitespace, context lines). |
 | Commit info (not a form) | `src/app/GitUI/CommitInfo/CommitInfo.cs` (`ReloadCommitInfo`, `UpdateRevisionInfo`, `GetSortedTags`; `TagsComparer` made internal), `CommitInfoHeader.cs` | `66050831e` | `GitUI/AvaloniaHosting/CommitInfoHost.cs`, `GitUI.Presentation/UserControls/CommitInfoViewModel.cs`, `GitUI.Avalonia/Controls/CommitInfoView.axaml`, `XhtmlTextBlock.cs` | (used by the ported commit dialogs) | The renderers (`CommitDataHeaderRenderer`, `CommitDataBodyRenderer`, `RefsFormatter`, `LinkFactory`) are used as they are; `XhtmlTextBlock` shows their XHTML as `RichTextBoxXhtmlSupportExtension` does. The avatar (`CommitInfoHeader.LoadAuthorImage`, from `AvatarService`) and the context menu (copy link, copy commit info, the settings of the refs, notes; `commitInfoContextMenuStrip`) are ported. Not ported yet: the menu of the avatar (provider, fallback, cache). |
 
+## Layout
+
+The windows follow the layout of their WinForms forms (checked against each Designer.cs in September 2026: the rows, toolbars,
+order, group boxes and icons). Deliberate differences:
+
+- The help button of the WinForms title bar is F1 (`DialogWindow.ManualSectionSubfolder` and `ManualSectionAnchorName`).
+- The OK/Cancel buttons of a few forms that have them inside their table (`FormCreateTag`, `FormFormatPatch`, `FormMergeBranch`,
+  `FormAvailableEncodings`) are in the footer strip, as in the other dialogs.
+- Some fixed widths are larger where the Fluent controls need the room (the key id of `FormCreateTag`, the columns of
+  `FormViewPatch`, the number boxes of `FormRevisionFilter`).
+- `FormStash` has a refresh button for its F5 hotkey.
+
+Not ported yet: the options toolbar that the WinForms `FileViewer` shows when the mouse moves over it (whitespace, context
+lines, encoding, settings), in every window with a file viewer or editor.
+
 ## Translations
 
 Each view's strings class (`GitUI.Presentation/**/*Strings.cs`) declares the XLIFF ids of the form it replaces.
