@@ -16,7 +16,7 @@ internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, Con
     private ConEmuHost? _conEmu;
 
     /// <summary>The window in which ConEmu runs (in place of the WinForms <c>ConEmuControl</c>).</summary>
-    public IEmbeddedNativeView View => _window;
+    public IEmbeddedView View => _window;
 
     public bool IsShellRunning => _conEmu?.RunningSession is not null;
 

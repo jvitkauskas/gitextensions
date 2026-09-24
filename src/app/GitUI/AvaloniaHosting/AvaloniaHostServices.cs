@@ -162,7 +162,7 @@ internal static partial class AvaloniaDialogs
 
         public bool IsPlainText => _runner is IPlainTextConsoleCommandRunner;
 
-        public IEmbeddedNativeView? View => _runner.View;
+        public IEmbeddedView? View => _runner.View;
 
         public string Process => _process;
 

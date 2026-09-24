@@ -22,7 +22,7 @@ internal sealed class MinttyShellRunner : IConsoleShellRunner
     public bool IsShellRunning => _control.IsShellRunning;
 
     /// <summary>The window in which mintty runs (in place of the WinForms panel).</summary>
-    public IEmbeddedNativeView View => _window;
+    public IEmbeddedView View => _window;
 
     public void StartShell(string workDir)
     {

@@ -16,7 +16,7 @@ public interface IConsoleProcess
     bool IsPlainText { get; }
 
     /// <summary>The native window of the console to embed in the dialog; <see langword="null"/> for the plain text console.</summary>
-    IEmbeddedNativeView? View { get; }
+    IEmbeddedView? View { get; }
 
     /// <summary>Raised with the text the plain text console shows (see <see cref="IsPlainText"/>); may be raised on any thread.</summary>
     event EventHandler<string>? PlainTextWritten;

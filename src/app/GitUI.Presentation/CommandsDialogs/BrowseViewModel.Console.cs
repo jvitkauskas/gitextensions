@@ -6,7 +6,7 @@ namespace GitUI.Presentation.CommandsDialogs;
 /// <summary>An interactive shell in a terminal emulator (the WinForms <c>IConsoleShellRunner</c>), shown as a native view.</summary>
 public interface IBrowseTerminal : IDisposable
 {
-    IEmbeddedNativeView View { get; }
+    IEmbeddedView View { get; }
 
     bool IsShellRunning { get; }
 
@@ -37,7 +37,7 @@ public sealed partial class BrowseViewModel : IDisposable
 
     /// <summary>The terminal, created when the tab is first shown.</summary>
     [ObservableProperty]
-    public partial IEmbeddedNativeView? ConsoleView { get; private set; }
+    public partial IEmbeddedView? ConsoleView { get; private set; }
 
     public void Dispose()
     {

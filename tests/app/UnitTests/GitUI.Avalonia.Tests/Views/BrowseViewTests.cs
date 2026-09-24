@@ -803,7 +803,7 @@ public sealed class BrowseViewTests : HeadlessTest
     {
         public List<string> Calls { get; } = [];
 
-        public IEmbeddedNativeView View => this;
+        public IEmbeddedView View => this;
 
         public bool IsShellRunning { get; set; }
 

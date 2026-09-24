@@ -4,7 +4,7 @@ namespace GitUI.Presentation.Services;
 ///  A native (Win32) view that a host control embeds as a child window, e.g. a terminal emulator.
 ///  Lets Avalonia views host existing WinForms controls during the port.
 /// </summary>
-public interface IEmbeddedNativeView
+public interface IEmbeddedNativeView : IEmbeddedView
 {
     /// <summary>Parents the view into <paramref name="parentWindow"/> and returns its native handle.</summary>
     nint Attach(nint parentWindow);

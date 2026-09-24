@@ -25,7 +25,7 @@ public sealed class PlainTextConsoleCommandRunner : IPlainTextConsoleCommandRunn
     private bool _isDisposed;
 
     /// <summary>The progress dialog shows the output (<see cref="OutputTextWritten"/>), there is no window.</summary>
-    public IEmbeddedNativeView? View => null;
+    public IEmbeddedView? View => null;
 
     public event EventHandler<string>? OutputTextWritten;
 

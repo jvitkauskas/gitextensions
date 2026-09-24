@@ -3,10 +3,11 @@
     ============================================================
                        _CleanupAvaloniaNativeAssets
 
-    Avalonia port (docs/avalonia-port/PLAN.md): SkiaSharp and HarfBuzzSharp ship native binaries (and their
-    symbols) for every OS. The app is Windows-only until the cross-platform phase, so only the win-x64 and
-    win-arm64 binaries are packed. Both are kept in every package because the AnyCPU app runs natively on
-    ARM64 even when installed from the x64 package.
+    Avalonia port (docs/avalonia-port/PLAN.md): SkiaSharp, HarfBuzzSharp, Onigwrap (TextMate) and ConPTY (the
+    built-in terminal) ship native binaries (and their symbols) for every OS. The app is Windows-only until the
+    cross-platform phase, so only the win-x64 and win-arm64 binaries are packed, with the console host that the
+    ConPTY of each starts (OpenConsole.exe, in a folder next to it). Both are kept in every package because the
+    AnyCPU app runs natively on ARM64 even when installed from the x64 package.
     ============================================================
     -->
   <Target Name="_CleanupAvaloniaNativeAssets" AfterTargets="_CleanupBeforePack" BeforeTargets="_CheckBundlesConsistent">
@@ -16,7 +17,7 @@
 
     <ItemGroup>
       <_AvaloniaUnneededNativeFiles Include="$(_AppRuntimesPublishDir)**\*"
-                                    Exclude="$(_AppRuntimesPublishDir)win-x64\native\*.dll;$(_AppRuntimesPublishDir)win-arm64\native\*.dll" />
+                                    Exclude="$(_AppRuntimesPublishDir)win-x64\native\*.dll;$(_AppRuntimesPublishDir)win-arm64\native\*.dll;$(_AppRuntimesPublishDir)win-x64\native\x64\OpenConsole.exe;$(_AppRuntimesPublishDir)win-arm64\native\arm64\OpenConsole.exe" />
       <_AvaloniaUnneededRuntimeDirs Include="$([System.IO.Directory]::GetDirectories('$(_AppRuntimesPublishDir)'))"
                                     Condition="Exists('$(_AppRuntimesPublishDir)')" />
       <_AvaloniaUnneededRuntimeDirs Remove="$(_AppRuntimesPublishDir)win-x64;$(_AppRuntimesPublishDir)win-arm64" />

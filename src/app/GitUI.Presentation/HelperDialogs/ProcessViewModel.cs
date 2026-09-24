@@ -95,7 +95,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
     }
 
     /// <summary>The native window of the console; <see langword="null"/> for the plain text console (see <see cref="PlainText"/>).</summary>
-    public IEmbeddedNativeView? ConsoleView => _console.View;
+    public IEmbeddedView? ConsoleView => _console.View;
 
     /// <summary>Whether the console is plain text, shown by the dialog (<see cref="PlainText"/>).</summary>
     public bool IsPlainText => _console.IsPlainText;

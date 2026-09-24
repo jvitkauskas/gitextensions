@@ -55,8 +55,8 @@
                  Value="{Binding ProgressValue, FallbackValue=0, TargetNullValue=0}" Maximum="100" />
 
     <Panel Margin="12">
-      <!-- The terminal (ConEmu, Mintty) runs in a native child window; the plain text console is shown here. -->
-      <c:EmbeddedNativeViewHost Name="consoleHost" View="{Binding ConsoleView}" IsVisible="{Binding !IsPlainText}" />
+      <!-- The terminal: the built-in one, or ConEmu or Mintty in a native child window; the plain text console is shown here. -->
+      <c:EmbeddedNativeViewPresenter Name="consoleHost" View="{Binding ConsoleView}" IsVisible="{Binding !IsPlainText}" />
       <TextBox Name="plainTextBox" IsVisible="{Binding IsPlainText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
                FontFamily="{DynamicResource MonospaceFontFamily}" VerticalContentAlignment="Top"
                ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"

@@ -1,4 +1,5 @@
 using GitCommands.Settings;
+using GitUI.ConsoleEmulation.BuiltIn;
 using GitUI.ConsoleEmulation.ConEmu;
 using GitUI.ConsoleEmulation.PlainText;
 
@@ -82,6 +83,8 @@ internal sealed class ConsoleEmulatorsRegistry(
 
     private IConsoleEmulator? TryGetFallbackConsoleEmulator()
     {
-        return AvailableConsoleEmulators.OfType<ConEmuConsoleEmulator>().FirstOrDefault();
+        // The built-in terminal, else ConEmu.
+        return AvailableConsoleEmulators.OfType<BuiltInTerminalEmulator>().FirstOrDefault<IConsoleEmulator>()
+            ?? AvailableConsoleEmulators.OfType<ConEmuConsoleEmulator>().FirstOrDefault();
     }
 }

@@ -11,7 +11,7 @@ public interface IConsoleCommandRunner : IDisposable
     ///  Gets the native window of the console, which the progress dialog embeds; <see langword="null"/> for the plain text
     ///  console, whose output the dialog shows itself.
     /// </summary>
-    IEmbeddedNativeView? View { get; }
+    IEmbeddedView? View { get; }
 
     /// <summary>
     ///  Occurs when the process writes output.

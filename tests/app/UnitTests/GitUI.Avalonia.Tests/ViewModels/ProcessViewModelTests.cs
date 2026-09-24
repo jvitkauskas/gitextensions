@@ -330,7 +330,10 @@ public sealed class ProcessViewModelTests
 
         public bool IsPlainText { get; set; } = true;
 
-        public IEmbeddedNativeView? View => IsPlainText ? null : this;
+        public IEmbeddedView? View => ControlView is { } controlView ? controlView : IsPlainText ? null : this;
+
+        /// <summary>A terminal that is a control of the dialog (as the built-in terminal), instead of a native window.</summary>
+        public IEmbeddedControlView? ControlView { get; set; }
 
         public bool Started { get; private set; }
 

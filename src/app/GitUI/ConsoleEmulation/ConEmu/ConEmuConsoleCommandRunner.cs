@@ -26,7 +26,7 @@ internal sealed class ConEmuConsoleCommandRunner : IConsoleCommandRunner
     }
 
     /// <summary>The window in which ConEmu runs (in place of the WinForms panel of <c>ConEmuControl</c>).</summary>
-    public IEmbeddedNativeView? View => _window;
+    public IEmbeddedView? View => _window;
 
     public event EventHandler<ConsoleOutputEventArgs>? CommandOutputReceived;
     public event EventHandler<ConsoleProcessExitEventArgs>? CommandProcessExited;

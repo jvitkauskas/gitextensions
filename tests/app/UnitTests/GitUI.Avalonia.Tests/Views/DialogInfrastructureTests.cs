@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using GitUI.Avalonia.Controls;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.HelperDialogs;
@@ -121,6 +122,21 @@ public sealed class DialogInfrastructureTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task Process_dialog_shows_a_terminal_that_is_a_control_of_the_dialog() => OnUiThreadAsync(() =>
+    {
+        TextBlock terminal = new() { Text = "terminal" };
+        ProcessViewModelTests.FakeConsole console = new() { IsPlainText = false, ControlView = new ControlView(terminal) };
+        ProcessWindow window = new() { DataContext = CreateProcessViewModel(console) };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        window.FindControl<EmbeddedNativeViewPresenter>("consoleHost")!.Content.Should().BeSameAs(terminal);
+        terminal.IsEffectivelyVisible.Should().BeTrue();
+        window.FindControl<TextBox>("plainTextBox")!.IsVisible.Should().BeFalse();
+        window.Close();
+    });
+
     private static ProcessViewModel CreateProcessViewModel(ProcessViewModelTests.FakeConsole? console = null)
         => new(
             new ProcessStrings(),
@@ -130,6 +146,11 @@ public sealed class DialogInfrastructureTests : HeadlessTest
             new ProcessViewModelTests.FakeMessageBoxes(),
             useDialogSettings: true,
             postToUiThread: action => action());
+
+    private sealed class ControlView(Control control) : IEmbeddedControlView
+    {
+        public object Control => control;
+    }
 
     private sealed class InMemoryPositionStore : IWindowPositionStore
     {

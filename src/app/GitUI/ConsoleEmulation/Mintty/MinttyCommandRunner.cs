@@ -23,7 +23,7 @@ internal sealed partial class MinttyCommandRunner : IConsoleCommandRunner
     }
 
     /// <summary>The window in which mintty runs (in place of the WinForms panel).</summary>
-    public IEmbeddedNativeView? View => _window;
+    public IEmbeddedView? View => _window;
 
     public event EventHandler<ConsoleOutputEventArgs>? CommandOutputReceived;
     public event EventHandler<ConsoleProcessExitEventArgs>? CommandProcessExited;

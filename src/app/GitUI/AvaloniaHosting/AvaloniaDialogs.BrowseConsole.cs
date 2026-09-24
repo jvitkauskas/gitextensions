@@ -23,7 +23,7 @@ internal static partial class AvaloniaDialogs
     /// <summary>The shell runner of the console emulator, whose native window the tab embeds.</summary>
     private sealed class BrowseTerminal(IConsoleShellRunner runner, Func<string> getWorkingDir) : IBrowseTerminal
     {
-        public IEmbeddedNativeView View => runner.View;
+        public IEmbeddedView View => runner.View;
 
         public bool IsShellRunning => runner.IsShellRunning;
 

@@ -10,7 +10,7 @@ public interface IConsoleShellRunner : IDisposable
     /// <summary>
     ///  Gets the native window of the terminal, which the terminal tab embeds.
     /// </summary>
-    IEmbeddedNativeView View { get; }
+    IEmbeddedView View { get; }
 
     /// <summary>
     ///  Gets a value indicating whether the shell running inside the terminal is still active.
