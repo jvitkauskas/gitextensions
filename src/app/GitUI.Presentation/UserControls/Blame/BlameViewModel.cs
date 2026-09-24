@@ -2,6 +2,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.Editor;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUIPluginInterfaces;
 
@@ -65,6 +66,15 @@ public interface IBlameHost
     void ShowRevisionFiltered(ObjectId objectId);
 
     void CopyToClipboard(string text);
+
+    /// <summary>
+    ///  The items of the repository host plugin for a line (plugin API v2, <c>IBlameContextMenuProvider</c>), added at the end
+    ///  of the context menu (as <c>ConfigureContextMenu</c> for the WinForms blame); none by default.
+    /// </summary>
+    /// <param name="fileName">The blamed file.</param>
+    /// <param name="lineIndex">The 0-based index of the line of the menu.</param>
+    /// <param name="blameId">The blamed revision.</param>
+    IReadOnlyList<MenuModelItem> GetRepositoryHostMenuItems(string fileName, int lineIndex, ObjectId blameId) => [];
 }
 
 /// <summary>The revision grid that shows the blamed revision (<c>IRevisionGridInfo</c> and <c>IRevisionGridFileUpdate</c>).</summary>
@@ -260,6 +270,10 @@ public sealed partial class BlameViewModel : ObservableObject
     /// <summary>The commit of <paramref name="line"/> (1-based).</summary>
     public GitBlameCommit? GetCommit(int line)
         => Blame is { } blame && line >= 1 && line <= blame.Lines.Count ? blame.Lines[line - 1].Commit : null;
+
+    /// <summary>The items of the repository host plugin for the 1-based <paramref name="line"/>, at the end of the context menu.</summary>
+    public IReadOnlyList<MenuModelItem> GetRepositoryHostMenuItems(int line)
+        => _loaded is { } loaded && line > 0 ? _host.GetRepositoryHostMenuItems(loaded.FileName, line - 1, loaded.Id) : [];
 
     /// <summary>As <c>contextMenu_Opened</c>: what the menu enables for the line under the mouse.</summary>
     public BlameMenuState GetMenuState(int line)

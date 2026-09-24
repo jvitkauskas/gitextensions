@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaEdit;
+using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.UserControls.Blame;
 
 namespace GitUI.Avalonia.Controls.Blame;
@@ -32,6 +33,9 @@ public partial class BlameView : UserControl
     private BlameViewModel? _viewModel;
     private int _menuLine;
 
+    /// <summary>The items of the repository host plugin at the end of the menu, replaced for each line.</summary>
+    private List<Control> _hostItems = [];
+
     public BlameView()
     {
         InitializeComponent();
@@ -55,9 +59,15 @@ public partial class BlameView : UserControl
         // As BlameControl, which attaches the menu only to the author viewer: it opens on the author gutter, not on the
         // file text. The line is taken before the menu (subscribed when attached) opens.
         file.ContextMenu = null;
-        _margin.ContextRequested += (_, e) => _menuLine = e.TryGetPosition(editor.TextArea.TextView, out Point position)
-            ? _margin.GetLineAt(position.Y)
-            : editor.TextArea.Caret.Line;
+        _margin.ContextRequested += (_, e) =>
+        {
+            _menuLine = e.TryGetPosition(editor.TextArea.TextView, out Point position)
+                ? _margin.GetLineAt(position.Y)
+                : editor.TextArea.Caret.Line;
+
+            // Before the menu opens, as the items added while it opens are not shown.
+            UpdateHostItems();
+        };
         _margin.ContextMenu = menu;
         menu.Opening += (_, _) => UpdateMenu();
         blameRevisionItem.Click += (_, _) => _viewModel?.BlameRevisionOf(_menuLine);
@@ -82,7 +92,23 @@ public partial class BlameView : UserControl
     public void OpenMenuFor(int line)
     {
         _menuLine = line;
+        UpdateHostItems();
         UpdateMenu();
+    }
+
+    // As ConfigureContextMenu (plugin API v2): the items of the repository host plugin for the line of the menu.
+    private void UpdateHostItems()
+    {
+        foreach (Control item in _hostItems)
+        {
+            menu.Items.Remove(item);
+        }
+
+        _hostItems = _viewModel is null ? [] : MenuModelRenderer.CreateItems(_viewModel.GetRepositoryHostMenuItems(_menuLine));
+        foreach (Control item in _hostItems)
+        {
+            menu.Items.Add(item);
+        }
     }
 
     protected override void OnDataContextChanged(EventArgs e)

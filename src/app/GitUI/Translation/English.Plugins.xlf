@@ -1,5 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.0" GitExVersion="">
+  <file datatype="plaintext" original="AppVeyorSettingsProvider" source-language="en">
+    <body>
+      <trans-unit id="_accountName.Text">
+        <source>Account name</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_apiToken.Text">
+        <source>Api token</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_apiTokenHint.Text">
+        <source>Token used to be able to query AppVeyor rest Api. You will find out in the user account menu.</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_loadTestResults.Text">
+        <source>Display test results in build status summary for each build result (network intensive!)</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_projectNames.Text">
+        <source>Project(s) Name(s)</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_projectNamesHint.Text">
+        <source>If you want to use the result of different projects, separate your different projects names by a '|'.</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="AppVeyorSettingsUserControl" source-language="en">
     <body>
       <trans-unit id="cbLoadTestResults.Text">
@@ -508,6 +536,30 @@ Are you sure you want to continue?</source>
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="GitHubActionsSettingsProvider" source-language="en">
+    <body>
+      <trans-unit id="_apiToken.Text">
+        <source>API Token</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_apiUrl.Text">
+        <source>API URL</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_owner.Text">
+        <source>Owner</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_repository.Text">
+        <source>Repository</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_tokenManagement.Text">
+        <source>Create a GitHub personal access token</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="GitHubActionsSettingsUserControl" source-language="en">
     <body>
       <trans-unit id="lblApiToken.Text">
@@ -684,6 +736,22 @@ Do you want to reset the configured path?</source>
       </trans-unit>
       <trans-unit id="linkLabel2.Text">
         <source>Gource command line</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="JenkinsSettingsProvider" source-language="en">
+    <body>
+      <trans-unit id="_ignoreBuildBranch.Text">
+        <source>Ignore build for branch</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_projectName.Text">
+        <source>Project name</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_serverUrl.Text">
+        <source>Jenkins server URL</source>
         <target />
       </trans-unit>
     </body>
@@ -920,6 +988,70 @@ Please ensure that the url is valid and that the API token has access to build a
       </trans-unit>
       <trans-unit id="labelRegexError.Text">
         <source>The 'Build definition name' regular expression is not valid and won't be saved!</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="TeamCitySettingsProvider" source-language="en">
+    <body>
+      <trans-unit id="_buildIdFilter.Text">
+        <source>Build Id Filter</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_buildIdFilterComment.Text">
+        <source>Regexp</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_chooseBuild.Text">
+        <source>Choose the project and the build...</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_extractFromClipboard.Text">
+        <source>Extract the data from the build url copied in the clipboard</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_failToExtractDataFromClipboardCaption.Text">
+        <source>Build url not valid</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_failToExtractDataFromClipboardMessage.Text">
+        <source>The clipboard doesn't contain a valid build url.
+
+Please copy in the clipboard the url of the build before retrying.
+(Should contain at least the "buildTypeId" parameter)</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_failToLoadProjectCaption.Text">
+        <source>Error when loading the projects and build list</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_failToLoadProjectMessage.Text">
+        <source>Failed to load the projects and build list.
+Please verify the server url.</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_logAsGuest.Text">
+        <source>Log as guest to display the build report</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_noServerUrlMessage.Text">
+        <source>Please enter the TeamCity server URL first.</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_projectName.Text">
+        <source>Project name</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_projectNameComment.Text">
+        <source>Several names splitted by | char</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_regexError.Text">
+        <source>The "Build Id Filter" regular expression is not valid and won't be saved!</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_serverUrl.Text">
+        <source>TeamCity server URL</source>
         <target />
       </trans-unit>
     </body>

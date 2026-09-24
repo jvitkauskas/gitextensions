@@ -30,7 +30,7 @@ internal static class GitStatisticsDialog
                     directoriesToIgnore,
                     AvaloniaPluginDialogs.BackgroundRunner),
             },
-            args.OwnerForm);
+            args.Owner);
         return true;
     }
 }

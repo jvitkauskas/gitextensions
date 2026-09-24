@@ -125,6 +125,15 @@ public partial class BuildServerIntegrationSettingsPage : DistributedSettingsPag
 
         string defaultProjectName = Module.WorkingDir.Split(Delimiters.PathSeparators, StringSplitOptions.RemoveEmptyEntries)[^1];
 
+        // Plugin API v2: the settings declared by the plugin, rather than its WinForms control.
+        if (BuildServerSettingsProviderControl.FindProvider(GetSelectedBuildServerType()) is { } provider)
+        {
+            Validates.NotNull(_remotesManager);
+            BuildServerSettingsProviderControl providerControl = new(provider);
+            providerControl.Initialize(defaultProjectName, _remotesManager.LoadRemotes(false).Select(r => string.IsNullOrEmpty(r.PushUrl) ? r.Url! : r.PushUrl!));
+            return providerControl;
+        }
+
         IEnumerable<Lazy<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>> exports = ManagedExtensibility.GetExports<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>();
         Lazy<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>? selectedExport = exports.SingleOrDefault(export => export.Metadata.BuildServerType == GetSelectedBuildServerType());
         if (selectedExport is not null)

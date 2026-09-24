@@ -232,19 +232,15 @@ Detail of the error:");
             {
                 _projectOnErrorKey = CacheKey;
 
-                TaskDialogButton btnOpenSettings = new(_openSettingsButton.Text);
-                TaskDialogButton btnIgnore = new(_ignoreButton.Text);
-                TaskDialogPage page = new()
-                {
-                    Heading = errorMessage,
-                    Icon = TaskDialogIcon.Error,
-                    AllowCancel = true,
-                    Caption = _buildIntegrationErrorCaption.Text,
-                    Buttons = { btnOpenSettings, btnIgnore }
-                };
-
-                TaskDialogButton result = await TaskDialog.ShowDialogAsync(page);
-                if (result == btnOpenSettings)
+                const int openSettings = 0;
+                int result = await PluginMessageBoxes.ShowChoiceAsync(
+                    WindowOwner.None,
+                    _buildIntegrationErrorCaption.Text,
+                    heading: errorMessage,
+                    text: null,
+                    PluginMessageBoxIcon.Error,
+                    [_openSettingsButton.Text, _ignoreButton.Text]);
+                if (result == openSettings)
                 {
                     _projectOnErrorKey = null;
                     Validates.NotNull(_openSettings);
@@ -260,7 +256,7 @@ Detail of the error:");
             if (_projectOnErrorKey is null || _projectOnErrorKey != CacheKey)
             {
                 _projectOnErrorKey = CacheKey;
-                MessageBoxes.ShowError(owner: null, errorMessage, _buildIntegrationErrorCaption.Text);
+                PluginMessageBoxes.ShowError(WindowOwner.None, errorMessage, _buildIntegrationErrorCaption.Text);
             }
         }
 

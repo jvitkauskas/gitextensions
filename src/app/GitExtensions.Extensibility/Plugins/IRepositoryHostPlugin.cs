@@ -13,6 +13,12 @@ public interface IRepositoryHostPlugin : IGitPlugin
 
     IReadOnlyList<IHostedRepository> GetMyRepos();
 
+    /// <summary>Adds the items of the plugin to the WinForms context menu of the blame (plugin API v1).</summary>
+    /// <remarks>
+    ///  Plugin API v2: implement <c>GitUIPluginInterfaces.RepositoryHosts.IBlameContextMenuProvider</c> instead, whose menu
+    ///  model the host renders in any UI framework; the host then does not call this method.
+    /// </remarks>
+    [Obsolete("Use IBlameContextMenuProvider.GetBlameContextMenuItems (plugin API v2).")]
     void ConfigureContextMenu(ContextMenuStrip contextMenu);
 
     bool ConfigurationOk { get; }

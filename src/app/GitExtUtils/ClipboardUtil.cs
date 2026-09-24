@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace GitExtUtils;
 
@@ -30,5 +31,25 @@ public static class ClipboardUtil
             // The clipboard is being used by another process
             return false;
         }
+    }
+
+    /// <summary>Reads the text of the clipboard, if it has text (e.g. for the plugins, which need no WinForms type then).</summary>
+    public static bool TryGetText([NotNullWhen(returnValue: true)] out string? text)
+    {
+        try
+        {
+            if (Clipboard.ContainsText())
+            {
+                text = Clipboard.GetText();
+                return true;
+            }
+        }
+        catch (ExternalException)
+        {
+            // The clipboard is being used by another process
+        }
+
+        text = null;
+        return false;
     }
 }

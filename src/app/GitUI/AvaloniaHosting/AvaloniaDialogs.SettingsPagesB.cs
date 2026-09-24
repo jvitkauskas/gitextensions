@@ -12,6 +12,7 @@ using GitUI.CommandsDialogs.SettingsDialog.ShellExtension;
 using GitUI.NBugReports;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.Services;
+using GitUI.Presentation.Translations;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
 using Microsoft.Win32;
@@ -182,11 +183,45 @@ internal static partial class AvaloniaDialogs
             }
 
             IBuildServerSettingsUserControl buildServerSettingsUserControl = selectedExport.Value;
-            ConfigFileRemoteSettingsManager remotesManager = new(() => Module);
-            IEnumerable<string> remoteUrls = remotesManager.LoadRemotes(false).Select(r => string.IsNullOrEmpty(r.PushUrl) ? r.Url! : r.PushUrl!);
-
-            buildServerSettingsUserControl.Initialize(defaultProjectName, remoteUrls);
+            buildServerSettingsUserControl.Initialize(defaultProjectName, GetRemoteUrls());
             return new BuildServerSettingsControl(buildServerSettingsUserControl);
+        }
+
+        /// <summary>
+        ///  Plugin API v2: the settings the plugin declares (<see cref="IBuildServerSettingsProvider"/>), as the settings of the
+        ///  plugins, with the values it suggests for the repository.
+        /// </summary>
+        public BuildServerPluginSettings? CreatePluginSettings(string buildServerType)
+        {
+            if (string.IsNullOrEmpty(Module.WorkingDir) || BuildServerSettingsProviderControl.FindProvider(buildServerType) is not { } provider)
+            {
+                return null;
+            }
+
+            string defaultProjectName = Module.WorkingDir.Split(Delimiters.PathSeparators, StringSplitOptions.RemoveEmptyEntries)[^1];
+            BuildServerSettingsContext context = new(defaultProjectName, GetRemoteUrls());
+            PluginSettingsPageViewModel page = new(
+                ViewStrings.Load<PluginSettingsPageStrings>(),
+                ViewStrings.Load<SettingValueStrings>(),
+                buildServerType,
+                pageName: "BuildServerIntegrationSettingsPage",
+                pluginSettings: settings => settings);
+            foreach (ISetting setting in provider.GetSettings(context))
+            {
+                page.AddRow(CreatePluginSettingRow(setting, () => Window is { } window ? AvaloniaPluginDialogs.GetWindowOwner(window) : WindowOwner.None));
+            }
+
+            return new BuildServerPluginSettings(
+                page,
+                context.WithSuggestedValues,
+                provider.Validate,
+                error => AvaloniaUi.RunInHostContext(() => MessageBoxes.ShowError(Owner, error)));
+        }
+
+        private IEnumerable<string> GetRemoteUrls()
+        {
+            ConfigFileRemoteSettingsManager remotesManager = new(() => Module);
+            return remotesManager.LoadRemotes(false).Select(r => string.IsNullOrEmpty(r.PushUrl) ? r.Url! : r.PushUrl!);
         }
 
         // RevisionLinksSettingsPage

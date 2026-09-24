@@ -6,6 +6,7 @@ using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Controls.Blame;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.Blame;
 
 namespace GitUI.AvaloniaTests.Views;
@@ -60,6 +61,34 @@ public sealed class BlameViewTests : HeadlessTest
 
         view.OpenMenuFor(0);
         showChanges.IsEnabled.Should().BeFalse("not on a line");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_menu_ends_with_the_items_of_the_repository_host_plugin_for_the_line() => OnUiThreadAsync(() =>
+    {
+        int clicks = 0;
+        BlameViewModelTests.FakeHost host = new()
+        {
+            HostMenuItems = [new MenuModelItem("View in GitHub", Children: [new MenuModelItem("origin", () => clicks++)])],
+        };
+        BlameViewModel viewModel = BlameViewModelTests.Create(host);
+        BlameView view = new() { DataContext = viewModel };
+        Window window = new() { Content = view, Width = 700, Height = 400 };
+        window.Show();
+        _ = viewModel.LoadAsync(BlameViewModelTests.Revision, children: null, "src/file.cs");
+        Dispatcher.UIThread.RunJobs();
+        int ownItems = view.Menu.Items.Count;
+
+        view.OpenMenuFor(3);
+        view.OpenMenuFor(2);
+
+        view.Menu.Items.Count.Should().Be(ownItems + 1, "the items are replaced for each line");
+        MenuItem hostItem = view.Menu.Items.OfType<MenuItem>().Last();
+        hostItem.Header.Should().Be("View in GitHub");
+        host.HostMenus.Select(m => m.LineIndex).Should().Equal(2, 1);
+        hostItem.ItemsSource!.Cast<MenuItem>().Single().RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        clicks.Should().Be(1);
         window.Close();
     });
 

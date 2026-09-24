@@ -71,7 +71,7 @@ internal static class GitHubLoginInfo
 [Export(typeof(IGitPlugin))]
 [Export(typeof(IRepositoryHostPlugin))]
 [Export(typeof(IGitPluginForCommit))]
-public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginForCommit
+public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginForCommit, IBlameContextMenuProvider
 {
     private readonly TranslationString _viewInWebSite = new("View in {0}");
     private readonly TranslationString _tokenAlreadyExist = new("You already have an personal access token. To get a new one, delete your old one in Plugins > Plugin Settings first.");
@@ -98,7 +98,10 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
     internal static GitHubRemoteParser _gitHubRemoteParser = new();
 
     private IGitUICommands? _currentGitUiCommands;
-    private IReadOnlyList<IHostedRemote>? _hostedRemotesForModule;
+
+    // The hosted remotes of a repository, for the blame context menu (read once per repository, as ConfigureContextMenu did
+    // when the blame was configured).
+    private (IGitModule Module, IReadOnlyList<IHostedRemote> Remotes)? _hostedRemotesForModule;
     private List<string> _currentMessages = [];
 
     public GitHub3Plugin() : base(true)
@@ -116,13 +119,9 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
     {
         yield return PersonalAccessToken;
 
-        LinkLabel generateTokenLink = new() { Text = _generateToken.Text };
-        generateTokenLink.Click += GenerateTokenLink_Click;
-        yield return new PseudoSetting(generateTokenLink);
+        yield return new ActionSetting(_generateToken.Text, context => OpenLink(context.Owner, $"https://{GitHubHost.ValueOrDefault(Instance.Settings)}/settings/tokens/new?description=Token%20for%20GitExtensions&scopes=repo,public_repo"));
 
-        LinkLabel manageTokenLink = new() { Text = _manageToken.Text };
-        manageTokenLink.Click += ManageTokenLink_Click;
-        yield return new PseudoSetting(manageTokenLink);
+        yield return new ActionSetting(_manageToken.Text, context => OpenLink(context.Owner, $"https://{GitHubHost.ValueOrDefault(Instance.Settings)}/settings/tokens"));
 
         yield return new PseudoSetting(_noteRestartNeeded.Text);
 
@@ -131,17 +130,7 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
         yield return _issueCommitMessageHelperMaxCount;
     }
 
-    private void GenerateTokenLink_Click(object? sender, EventArgs e)
-    {
-        OpenLink($"https://{GitHubHost.ValueOrDefault(Instance.Settings)}/settings/tokens/new?description=Token%20for%20GitExtensions&scopes=repo,public_repo");
-    }
-
-    private void ManageTokenLink_Click(object? sender, EventArgs e)
-    {
-        OpenLink($"https://{GitHubHost.ValueOrDefault(Instance.Settings)}/settings/tokens");
-    }
-
-    private void OpenLink(string url)
+    private void OpenLink(WindowOwner owner, string url)
     {
         try
         {
@@ -149,13 +138,14 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
         }
         catch (Exception ex)
         {
-            MessageBoxes.Show(owner: null, _openLinkFailed.Text + ex.Message, caption: string.Empty, MessageBoxButtons.OK, MessageBoxIcon.None);
+            PluginMessageBoxes.Show(owner, _openLinkFailed.Text + ex.Message, caption: string.Empty);
         }
     }
 
     public override void Register(IGitUICommands gitUiCommands)
     {
         _currentGitUiCommands = gitUiCommands;
+        _hostedRemotesForModule = null;
         if (!string.IsNullOrEmpty(GitHubLoginInfo.OAuthToken))
         {
             GitHub.setOAuth2Token(GitHubLoginInfo.OAuthToken);
@@ -243,7 +233,7 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
         }
         else
         {
-            MessageBoxes.ShowError(args.OwnerForm, _tokenAlreadyExist.Text, _error.Text);
+            PluginMessageBoxes.ShowError(args.Owner, _tokenAlreadyExist.Text, _error.Text);
         }
 
         return false;
@@ -341,44 +331,47 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
         }
     }
 
-    public void ConfigureContextMenu(ContextMenuStrip contextMenu)
+    /// <summary>Plugin API v1: the host uses <see cref="GetBlameContextMenuItems"/> instead (plugin API v2).</summary>
+    void IRepositoryHostPlugin.ConfigureContextMenu(ContextMenuStrip contextMenu)
     {
-        const string HostedRemoteMenuItem = "HostedRemoteMenuItem";
+    }
 
-        for (int i = contextMenu.Items.Count - 1; i >= 0; i--)
+    /// <summary>"View in GitHub", with the blame of the line on each GitHub remote of the repository.</summary>
+    public IReadOnlyList<PluginMenuItem> GetBlameContextMenuItems(GitBlameContext context)
+    {
+        IReadOnlyList<IHostedRemote> hostedRemotes = GetHostedRemotesForBlame();
+        if (hostedRemotes.Count == 0)
         {
-            ToolStripItem item = contextMenu.Items[i];
-            if (item is ToolStripMenuItem tsmi && tsmi.Tag as string == HostedRemoteMenuItem)
-            {
-                contextMenu.Items.RemoveAt(i);
-            }
+            return [];
         }
 
-        _hostedRemotesForModule = GetHostedRemotesForModule();
-        if (_hostedRemotesForModule.Count == 0)
+        return
+        [
+            new PluginMenuItem(
+                string.Format(_viewInWebSite.Text, Name),
+                icon: Icon,
+                children: [.. hostedRemotes
+                    .OrderBy(r => r.Data)
+                    .Select(hostedRemote => new PluginMenuItem(
+                        hostedRemote.DisplayData,
+                        () => OsShellUtil.OpenUrlInDefaultBrowser(hostedRemote.GetBlameUrl(context.BlameId.ToString(), context.FileName, context.LineIndex + 1))))])
+        ];
+    }
+
+    private IReadOnlyList<IHostedRemote> GetHostedRemotesForBlame()
+    {
+        IGitModule? module = _currentGitUiCommands?.Module;
+        if (module is null)
         {
-            return;
+            return [];
         }
 
-        ToolStripMenuItem toolStripMenuItem = new(string.Format(_viewInWebSite.Text, Name), Icon)
+        if (_hostedRemotesForModule is not { } cached || !ReferenceEquals(cached.Module, module))
         {
-            Tag = HostedRemoteMenuItem
-        };
-        contextMenu.Items.Add(toolStripMenuItem);
-
-        foreach (IHostedRemote hostedRemote in _hostedRemotesForModule.OrderBy(r => r.Data))
-        {
-            ToolStripItem toolStripItem = toolStripMenuItem.DropDownItems.Add(hostedRemote.DisplayData);
-            toolStripItem.Click += (s, e) =>
-            {
-                if (contextMenu.Tag is GitBlameContext blameContext)
-                {
-                    OsShellUtil.OpenUrlInDefaultBrowser(hostedRemote.GetBlameUrl(
-                            blameContext.BlameId.ToString(),
-                            blameContext.FileName,
-                            blameContext.LineIndex + 1));
-                }
-            };
+            cached = (module, GetHostedRemotesForModule());
+            _hostedRemotesForModule = cached;
         }
+
+        return cached.Remotes;
     }
 }

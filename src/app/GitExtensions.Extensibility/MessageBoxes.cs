@@ -6,6 +6,9 @@
 ///  Projects within GitUI should prefer the <c>GitUI.MessageBoxes</c> class
 ///  which provides additional domain-specific methods with translatable strings.
 /// </summary>
+/// <remarks>
+///  Plugin API v2: plugins use <see cref="PluginMessageBoxes"/> instead, which needs no WinForms type.
+/// </remarks>
 public static class MessageBoxes
 {
     /// <summary>

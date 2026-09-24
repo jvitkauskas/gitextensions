@@ -34,11 +34,17 @@ public partial class PluginSettingsPage : AutoLayoutSettingsPage
 
             state.Append($" with {settingsArray.Length} setting(s)");
 
+            List<ISettingControlBinding> bindings = [];
             foreach (ISetting setting in settingsArray)
             {
-                AddSettingControl(SettingControlBindingsProvider.CreateControlBinding(setting));
+                ISettingControlBinding binding = SettingControlBindingsProvider.CreateControlBinding(setting);
+                bindings.Add(binding);
+                AddSettingControl(binding);
                 state.Append('.');
             }
+
+            // The links of plugin API v2 act on the values being edited.
+            EditedSettingValues.Connect(bindings, () => GetCurrentSettings().SettingLevel);
         }
         catch (Exception ex)
         {

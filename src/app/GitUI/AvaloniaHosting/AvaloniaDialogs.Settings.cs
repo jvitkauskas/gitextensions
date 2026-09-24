@@ -1,6 +1,7 @@
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Settings;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Settings;
 using GitExtUtils;
@@ -173,7 +174,7 @@ internal static partial class AvaloniaDialogs
         const string plugins = nameof(PluginsSettingsGroup);
         viewModel.AddPage(new GroupSettingsPageViewModel(strings.PluginsGroup.Text, plugins), null, "Plugin", none);
         Add(IntroductionSettingsPageViewModel.CreatePluginRoot(), plugins, null, none, asRoot: true);
-        foreach ((PluginSettingsPageViewModel page, byte[]? icon) in CreatePluginSettingsPages())
+        foreach ((PluginSettingsPageViewModel page, byte[]? icon) in CreatePluginSettingsPages(() => getOwner().ToWindowOwner()))
         {
             Add(page, plugins, icon, distributedLevels);
         }

@@ -24,7 +24,7 @@ internal static class ImpactDialog
                     new ImpactLoader(args.GitModule) { RespectMailmap = true },
                     AvaloniaPluginDialogs.BackgroundRunner),
             },
-            args.OwnerForm);
+            args.Owner);
         return true;
     }
 }

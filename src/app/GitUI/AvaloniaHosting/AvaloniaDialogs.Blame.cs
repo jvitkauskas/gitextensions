@@ -2,16 +2,19 @@ using System.Text;
 using GitCommands;
 using GitCommands.Git;
 using GitExtensions.Extensibility.Git;
+using GitExtensions.Extensibility.Plugins;
 using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.Blame;
 using GitUI.UserControls;
 using GitUIPluginInterfaces;
+using GitUIPluginInterfaces.RepositoryHosts;
 using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.AvaloniaHosting;
@@ -54,6 +57,10 @@ internal static partial class AvaloniaDialogs
     internal sealed class BlameHost(IGitUICommands commands, DialogWindow window, Func<Encoding>? getEncoding = null) : IBlameHost
     {
         private readonly GitRevisionSummaryBuilder _summaryBuilder = new();
+
+        // As ConfigureRepositoryHostPlugin: the repository host plugin of the repository, found once.
+        private IRepositoryHostPlugin? _gitHoster;
+        private bool _gitHosterFound;
 
         private IGitModule Module => commands.Module;
 
@@ -99,5 +106,37 @@ internal static partial class AvaloniaDialogs
         public void ShowRevisionFiltered(ObjectId objectId) => AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(Owner, objectId));
 
         public void CopyToClipboard(string text) => ClipboardUtil.TrySetText(text);
+
+        // As ConfigureContextMenu, for the repository host plugins of API v2 (IBlameContextMenuProvider): their items for the line.
+        public IReadOnlyList<MenuModelItem> GetRepositoryHostMenuItems(string fileName, int lineIndex, ObjectId blameId)
+            => AvaloniaUi.RunInHostContext<IReadOnlyList<MenuModelItem>>(() =>
+            {
+                if (!_gitHosterFound)
+                {
+                    _gitHosterFound = true;
+                    _gitHoster = PluginRegistry.TryGetGitHosterForModule(Module);
+                }
+
+                if (_gitHoster is not IBlameContextMenuProvider provider || blameId.IsZero)
+                {
+                    return [];
+                }
+
+                return ToMenuModel(provider.GetBlameContextMenuItems(new GitBlameContext(fileName, lineIndex, lineIndex, blameId)));
+            });
     }
+
+    /// <summary>The menu items of a plugin (plugin API v2) as a menu model, run in the host context.</summary>
+    internal static IReadOnlyList<MenuModelItem> ToMenuModel(IEnumerable<PluginMenuItem> items)
+        => [.. items.Select(ToMenuModel)];
+
+    private static MenuModelItem ToMenuModel(PluginMenuItem item)
+        => item.IsSeparator
+            ? MenuModelItem.Separator
+            : new MenuModelItem(
+                TranslatedText.ToAccessKeyText(item.Text),
+                item.OnClick is null ? null : () => AvaloniaUi.RunInHostContext(item.Click),
+                ToPng(item.Icon),
+                item.Children.Count == 0 ? null : ToMenuModel(item.Children),
+                IsEnabled: item.IsEnabled);
 }

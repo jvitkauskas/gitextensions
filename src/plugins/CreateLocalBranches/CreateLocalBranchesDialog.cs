@@ -25,7 +25,7 @@ internal static class CreateLocalBranchesDialog
                     AvaloniaPluginDialogs.CreateMessageBoxService(window));
                 return window;
             },
-            args.OwnerForm);
+            args.Owner);
         return true;
     }
 }

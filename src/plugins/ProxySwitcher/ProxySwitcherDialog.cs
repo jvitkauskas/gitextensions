@@ -29,13 +29,13 @@ internal static class ProxySwitcherDialog
         // As ProxySwitcherForm_Load, which closed the form before it was shown.
         if (!ProxySwitcherViewModel.IsConfigured(proxySettings))
         {
-            MessageBoxes.ShowError(args.OwnerForm, strings.PleaseSetProxy.Text, strings.Title.Text);
+            PluginMessageBoxes.ShowError(args.Owner, strings.PleaseSetProxy.Text, strings.Title.Text);
             return true;
         }
 
         AvaloniaPluginDialogs.ShowDialog(
             () => new ProxySwitcherWindow { DataContext = new ProxySwitcherViewModel(strings, proxySettings, new Git(args.GitModule)) },
-            args.OwnerForm);
+            args.Owner);
         return true;
     }
 

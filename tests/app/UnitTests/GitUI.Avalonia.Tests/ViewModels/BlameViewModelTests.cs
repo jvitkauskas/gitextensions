@@ -1,6 +1,7 @@
 using System.Globalization;
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.Blame;
 using GitUIPluginInterfaces;
 
@@ -105,6 +106,20 @@ public sealed class BlameViewModelTests
         viewModel.File.Text.Should().Be("fatal: no such path");
         viewModel.Blame.Should().BeNull();
         viewModel.IsLoading.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task The_menu_has_the_items_of_the_repository_host_plugin_for_the_line()
+    {
+        FakeHost host = new() { HostMenuItems = [new MenuModelItem("View in GitHub")] };
+        BlameViewModel viewModel = Create(host);
+        viewModel.GetRepositoryHostMenuItems(1).Should().BeEmpty("nothing is blamed yet");
+
+        await viewModel.LoadAsync(Revision, children: null, "src/file.cs");
+
+        viewModel.GetRepositoryHostMenuItems(3).Should().Equal(host.HostMenuItems);
+        host.HostMenus.Should().Equal(("src/file.cs", 2, Recent.ObjectId));
+        viewModel.GetRepositoryHostMenuItems(0).Should().BeEmpty("not on a line");
     }
 
     [Test]
@@ -220,6 +235,17 @@ public sealed class BlameViewModelTests
         public void ShowRevisionFiltered(ObjectId objectId) => Filtered.Add(objectId);
 
         public void CopyToClipboard(string text) => Copied.Add(text);
+
+        /// <summary>The items of a repository host plugin (plugin API v2), by default none.</summary>
+        public IReadOnlyList<MenuModelItem> HostMenuItems { get; init; } = [];
+
+        public List<(string FileName, int LineIndex, ObjectId BlameId)> HostMenus { get; } = [];
+
+        public IReadOnlyList<MenuModelItem> GetRepositoryHostMenuItems(string fileName, int lineIndex, ObjectId blameId)
+        {
+            HostMenus.Add((fileName, lineIndex, blameId));
+            return HostMenuItems;
+        }
     }
 
     private sealed class FakeGrid : IBlameRevisionGrid

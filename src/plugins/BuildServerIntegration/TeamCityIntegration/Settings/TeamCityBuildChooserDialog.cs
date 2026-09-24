@@ -1,3 +1,4 @@
+using GitExtensions.Extensibility;
 using GitUI.AvaloniaHosting;
 
 namespace TeamCityIntegration.Settings;
@@ -11,6 +12,10 @@ internal static class TeamCityBuildChooserDialog
     ///  cannot be read from the server.
     /// </summary>
     public static bool TryShow(IWin32Window owner, string serverUrl, string projectName, string buildIdFilter, out (string ProjectName, string BuildIdFilter)? chosen)
+        => TryShow(owner.ToWindowOwner(), serverUrl, projectName, buildIdFilter, out chosen);
+
+    /// <summary>As the other overload, owned by a window of plugin API v2 (<see cref="WindowOwner"/>).</summary>
+    public static bool TryShow(WindowOwner owner, string serverUrl, string projectName, string buildIdFilter, out (string ProjectName, string BuildIdFilter)? chosen)
     {
         chosen = null;
         if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(TeamCityBuildChooser)))

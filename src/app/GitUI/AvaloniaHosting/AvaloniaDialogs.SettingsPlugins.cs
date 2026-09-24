@@ -16,7 +16,8 @@ namespace GitUI.AvaloniaHosting;
 internal static partial class AvaloniaDialogs
 {
     /// <summary>As the end of <c>FormSettings.OnRuntimeLoad</c>: a page for each plugin with settings, sorted by title.</summary>
-    private static IEnumerable<(PluginSettingsPageViewModel Page, byte[]? Icon)> CreatePluginSettingsPages()
+    /// <param name="getOwner">The owner of the dialogs of the links of the plugins (<see cref="ActionSetting"/>): the settings window.</param>
+    private static IEnumerable<(PluginSettingsPageViewModel Page, byte[]? Icon)> CreatePluginSettingsPages(Func<WindowOwner> getOwner)
     {
         PluginSettingsPageStrings strings = ViewStrings.Load<PluginSettingsPageStrings>();
         SettingValueStrings valueStrings = ViewStrings.Load<SettingValueStrings>();
@@ -25,14 +26,14 @@ internal static partial class AvaloniaDialogs
         {
             pages = [.. PluginRegistry.Plugins
                 .Where(plugin => plugin.HasSettings)
-                .Select(plugin => (CreatePluginSettingsPage(plugin, strings, valueStrings), ToPng(plugin.Icon)))];
+                .Select(plugin => (CreatePluginSettingsPage(plugin, strings, valueStrings, getOwner), ToPng(plugin.Icon)))];
         }
 
         return pages.OrderBy(entry => entry.Page.Title, StringComparer.CurrentCultureIgnoreCase);
     }
 
     /// <summary>As <c>PluginSettingsPage.CreateSettingsPageFromPlugin</c>.</summary>
-    internal static PluginSettingsPageViewModel CreatePluginSettingsPage(IGitPlugin plugin, PluginSettingsPageStrings strings, SettingValueStrings valueStrings)
+    internal static PluginSettingsPageViewModel CreatePluginSettingsPage(IGitPlugin plugin, PluginSettingsPageStrings strings, SettingValueStrings valueStrings, Func<WindowOwner>? getOwner = null)
     {
         Validates.NotNull(plugin.Description);
 
@@ -52,7 +53,7 @@ internal static partial class AvaloniaDialogs
             state.Append($", enumerable with {settings.Length} setting(s)");
             foreach (ISetting setting in settings)
             {
-                page.AddRow(CreatePluginSettingRow(setting));
+                page.AddRow(CreatePluginSettingRow(setting, getOwner));
                 state.Append('.');
             }
         }
@@ -65,7 +66,8 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>As <c>SettingControlBindingsProvider.CreateControlBinding</c>: the value model of the type of the setting.</summary>
-    private static PluginSettingRow CreatePluginSettingRow(ISetting setting)
+    /// <param name="getOwner">The owner of the dialogs of an <see cref="ActionSetting"/>.</param>
+    internal static PluginSettingRow CreatePluginSettingRow(ISetting setting, Func<WindowOwner>? getOwner = null)
     {
         string? caption = string.IsNullOrWhiteSpace(setting.Caption) ? null : setting.Caption;
         if (setting.CreateControlBinding() is not null)
@@ -82,6 +84,10 @@ internal static partial class AvaloniaDialogs
             StringSetting s => PluginSettingRow.ForValue(caption, new StringSettingValue(s)),
             ChoiceSetting s => PluginSettingRow.ForValue(caption, new ChoiceSettingValue(s)),
             PseudoSetting s => CreatePseudoSettingRow(caption, s),
+
+            // Plugin API v2: a link that runs its action in the host context, on the values being edited.
+            ActionSetting s => PluginSettingRow.ForAction(caption, s.Text, values => AvaloniaUi.RunInHostContext(
+                () => s.Execute(new SettingActionContext(getOwner?.Invoke() ?? WindowOwner.None, values)))),
             NumberSetting<int> s when s.CustomControl is not TextBox => PluginSettingRow.ForValue(caption, new IntSettingValue(s)),
             NumberSetting<int> s => PluginSettingRow.ForValue(caption, new NumberTextSettingValue<int>(s)),
             NumberSetting<float> s => PluginSettingRow.ForValue(caption, new NumberTextSettingValue<float>(s)),

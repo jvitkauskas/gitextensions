@@ -80,6 +80,7 @@ public sealed partial class BlameControl : GitModuleControl
         BlameFile.EnableAutomaticContinuousScroll = false;
 
         CommitInfo.CommandClicked += commitInfo_CommandClicked;
+        contextMenu.Opening += contextMenu_Opening;
 
         _commitHighlightColor = Application.IsDarkModeEnabled ? AppColor.EditorBackground.GetThemeColor().MakeDarkerBy(-0.06) : SystemColors.ControlLight;
         _gitRevisionSummaryBuilder = new GitRevisionSummaryBuilder();
@@ -96,7 +97,15 @@ public sealed partial class BlameControl : GitModuleControl
     public void ConfigureRepositoryHostPlugin(IRepositoryHostPlugin? gitHoster)
     {
         _gitHoster = gitHoster;
-        _gitHoster?.ConfigureContextMenu(contextMenu);
+
+        // Plugin API v2: the plugin items are added each time the menu opens (contextMenu_Opening).
+        PluginMenuItemRenderer.ReplaceItems(contextMenu, []);
+        if (_gitHoster is not IBlameContextMenuProvider)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete: plugin API v1, for the plugins that have no v2
+            _gitHoster?.ConfigureContextMenu(contextMenu);
+#pragma warning restore CS0618
+        }
     }
 
     public void UpdateShowLineNumbers()
@@ -554,6 +563,20 @@ public sealed partial class BlameControl : GitModuleControl
         return line;
     }
 
+    // As ConfigureContextMenu for the repository host plugins of plugin API v2: their items for the line of the menu.
+    private void contextMenu_Opening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (_gitHoster is not IBlameContextMenuProvider provider)
+        {
+            return;
+        }
+
+        IReadOnlyList<PluginMenuItem> items = _fileName is null || _blameId.IsZero
+            ? []
+            : provider.GetBlameContextMenuItems(new GitBlameContext(_fileName, _lineIndex, GetBlameLine(), _blameId));
+        PluginMenuItemRenderer.ReplaceItems(contextMenu, items);
+    }
+
     private void contextMenu_Opened(object sender, EventArgs e)
     {
         Validates.NotNull(_fileName);
@@ -755,6 +778,17 @@ public sealed partial class BlameControl : GitModuleControl
         }
 
         public FileViewer BlameFile => _control.BlameFile;
+
+        public ContextMenuStrip ContextMenu => _control.contextMenu;
+
+        /// <summary>Sets the blamed file and revision, as <c>LoadBlameAsync</c>.</summary>
+        public void SetBlamed(string fileName, ObjectId blameId)
+        {
+            _control._fileName = fileName;
+            _control._blameId = blameId;
+        }
+
+        public void OnContextMenuOpening() => _control.contextMenu_Opening(_control.contextMenu, new System.ComponentModel.CancelEventArgs());
 
         public DateTime ArtificialOldBoundary => _control.ArtificialOldBoundary;
 

@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using GitExtensions.Extensibility.Git;
+using GitExtensions.Extensibility.Settings;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.AvaloniaTests.ViewModels;
@@ -106,6 +107,37 @@ public sealed class SettingsPagesBatchBViewTests : HeadlessTest
         view.FindControl<Border>("invalidGitPath")!.IsVisible.Should().BeTrue("git does not run");
         view.FindControl<TextBox>("userName")!.IsEnabled.Should().BeFalse();
         view.FindControl<TextBox>("diffToolPath")!.IsEnabled.Should().BeFalse("no diff tool is set");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_build_server_page_shows_the_settings_declared_by_a_plugin_of_API_v2() => OnUiThreadAsync(() =>
+    {
+        (SettingsDialogViewModel viewModel, _, SettingsDialogViewModelTests.FakeSources sources) = SettingsDialogViewModelTests.Create();
+        sources.Local.SetValue("BuildServer.Type", "AppVeyor");
+        sources.Local.SetValue("BuildServer.AppVeyor.AppVeyorAccountName", "account");
+        FakePagesHost host = new();
+        host.PluginSettingsFactory = buildServerType =>
+        {
+            PluginSettingsPageViewModel settings = new(new PluginSettingsPageStrings(), new SettingValueStrings(), buildServerType, "BuildServerIntegrationSettingsPage", s => s);
+            settings.AddRow(PluginSettingRow.ForValue("Account name", new StringSettingValue(new StringSetting("AppVeyorAccountName", "Account name", defaultValue: ""))));
+            settings.AddRow(PluginSettingRow.ForAction(null, "Open the web site", _ => { }));
+            return new BuildServerPluginSettings(settings, s => s, _ => null, _ => { });
+        };
+        host.BuildServerTypes.SetResult(["AppVeyor"]);
+        viewModel.AddPage(new BuildServerIntegrationSettingsPageViewModel(new BuildServerIntegrationSettingsPageStrings(), host), "GitExtensionsSettingsGroup", "Integration", sources.Distributed);
+        SettingsWindow window = new() { DataContext = viewModel };
+        window.Show();
+        viewModel.Open("BuildServerIntegrationSettingsPage");
+        viewModel.SelectedPage!.Level = SettingsLevel.Local;
+        Dispatcher.UIThread.RunJobs();
+
+        BuildServerIntegrationSettingsPageView view = window.PageContent.GetLogicalDescendants().OfType<BuildServerIntegrationSettingsPageView>().Single();
+        PluginSettingsPageView settingsView = view.GetLogicalDescendants().OfType<PluginSettingsPageView>().Single();
+        settingsView.Name.Should().Be("buildServerPluginSettings");
+        settingsView.GetLogicalDescendants().OfType<TextBox>().Single().Text.Should().Be("account");
+        settingsView.GetLogicalDescendants().OfType<HyperlinkButton>().Single(b => b.IsVisible).Content.Should().Be("Open the web site");
+        view.GetLogicalDescendants().OfType<GitUI.Avalonia.Controls.EmbeddedNativeViewHost>().Should().BeEmpty("no WinForms control is embedded");
         window.Close();
     });
 

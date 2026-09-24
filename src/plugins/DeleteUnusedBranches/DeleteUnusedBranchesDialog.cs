@@ -37,7 +37,7 @@ internal static class DeleteUnusedBranchesDialog
                 window.DataContext = viewModel;
                 return window;
             },
-            args.OwnerForm);
+            args.Owner);
 
         hasDeletedBranch = viewModel?.HasDeletedBranch == true;
         if (viewModel?.SettingsRequested == true)

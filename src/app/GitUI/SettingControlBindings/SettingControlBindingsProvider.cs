@@ -58,6 +58,13 @@ public static class SettingControlBindingsProvider
         => new PseudoSettingControlBinding(setting, setting.CustomControl);
 
     /// <summary>
+    ///  Creates a control binding for the given <see cref="ActionSetting"/> (plugin API v2): a link that runs its action.
+    /// </summary>
+    /// <param name="setting">The setting to bind.</param>
+    public static ISettingControlBinding CreateControlBinding(ActionSetting setting)
+        => new ActionSettingControlBinding(setting);
+
+    /// <summary>
     ///  Creates a control binding for the given <see cref="NumberSetting{T}"/> where T is <see cref="int"/>.
     ///  Uses a <see cref="NumericUpDown"/> binding when <paramref name="control"/> is a <see cref="NumericUpDown"/>,
     ///  or a <see cref="TextBox"/> binding otherwise.
@@ -100,6 +107,7 @@ public static class SettingControlBindingsProvider
             StringSetting s => CreateControlBinding(s, s.CustomControl),
             ChoiceSetting s => CreateControlBinding(s, s.CustomControl),
             PseudoSetting s => CreateControlBinding(s),
+            ActionSetting s => CreateControlBinding(s),
             NumberSetting<int> s => CreateControlBinding(s, s.CustomControl),
             NumberSetting<float> s => CreateControlBinding(s, s.CustomControl as TextBox),
             NumberSetting<double> s => CreateControlBinding(s, s.CustomControl as TextBox),
