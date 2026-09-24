@@ -83,6 +83,12 @@ internal static partial class AvaloniaDialogs
             GetFileStatusTreeOptions());
         browseViewModel = viewModel;
         UseFileStatusListMenu(viewModel.Files, commands, window);
+        if (viewModel.FileTree is { } fileTree)
+        {
+            // Not UseFileStatusListMenu: the sorting of the file tree is not the one of the diff lists.
+            fileTree.MenuHost = new FileStatusListMenuHost(commands, window);
+        }
+
         window.DataContext = viewModel;
 
         // As FormBrowse (IBrowseRepo): the scripts and the plugins see the selection of the grid.
@@ -108,7 +114,7 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>The dialogs and the git operations of the menus of <c>FormBrowse</c>, for the Avalonia main window.</summary>
-    private sealed class BrowseHost : IBrowseHost, IDisposable
+    private sealed partial class BrowseHost : IBrowseHost, IDisposable
     {
         private readonly IGitUICommands _commands;
         private readonly BrowseWindow _window;

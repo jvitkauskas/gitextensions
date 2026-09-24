@@ -404,6 +404,7 @@ public enum BrowseTab
 {
     Commit,
     Diff,
+    FileTree,
 }
 
 /// <summary>
@@ -432,6 +433,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         Viewer = new FileViewerViewModel(fileViewerHost);
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
+        InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
         Grid.Loaded += (_, _) =>
@@ -531,6 +533,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
         CommitInfo.SetRevision(selected.Count == 0 ? null : selected[0]);
         _ = ShowDiffsAsync(selected);
+        UpdateFileTree(revisionChanged: true);
     }
 
     private async Task ShowDiffsAsync(IReadOnlyList<GitRevision> revisions)

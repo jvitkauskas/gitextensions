@@ -98,6 +98,21 @@
             </Border>
           </Grid>
         </TabItem>
+        <TabItem Name="treeTab" IsVisible="{Binding FileTree, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/FileTree.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.TreeTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <Grid ColumnDefinitions="300,Auto,*">
+            <fs:FileStatusListView Name="treeFiles" DataContext="{Binding FileTree}" />
+            <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+            <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+              <ed:FileViewerView Name="treeViewer" DataContext="{Binding TreeViewer}" />
+            </Border>
+          </Grid>
+        </TabItem>
       </TabControl>
     </Grid>
   </DockPanel>

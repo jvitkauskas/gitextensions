@@ -35,19 +35,19 @@
                   IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         </TextBox.InnerRightContent>
       </TextBox>
-      <Button Name="byPathButton" Grid.Column="1" Classes="toolbar" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
+      <Button Name="byPathButton" Grid.Column="1" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
               Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
         <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
       </Button>
-      <Button Name="byExtensionButton" Grid.Column="2" Classes="toolbar" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
+      <Button Name="byExtensionButton" Grid.Column="2" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
               Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
         <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
       </Button>
-      <Button Name="byStatusButton" Grid.Column="3" Classes="toolbar" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
+      <Button Name="byStatusButton" Grid.Column="3" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
               Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
         <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
       </Button>
-      <ToggleButton Name="flatListButton" Grid.Column="4" Classes="toolbar" ToolTip.Tip="{Binding Strings.AsTreeToolTip.Text}"
+      <ToggleButton Name="flatListButton" Grid.Column="4" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.AsTreeToolTip.Text}"
                     IsChecked="{Binding IsFlatList, Mode=OneWay}" Command="{Binding ToggleFlatListCommand}">
         <Image Source="avares://GitUI.Avalonia/Assets/DocumentTree.png" Width="16" Height="16" />
       </ToggleButton>

@@ -121,6 +121,12 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     /// <summary>Whether the first file is selected when the files are set (as <c>SelectFirstItemOnSetItems</c>).</summary>
     public bool SelectFirstItemOnSetItems { get; init; } = true;
 
+    /// <summary>
+    ///  Whether the list shows all the files of a commit (the file tree tab, <c>isFileTreeMode</c> of <c>Bind</c>): the
+    ///  folders stay collapsed unless filtered, and no "no files" text is shown.
+    /// </summary>
+    public bool IsFileTreeMode { get; init; }
+
     /// <summary>Raised when the selected files change (as <c>SelectedIndexChanged</c>).</summary>
     public event EventHandler? SelectionChanged;
 
@@ -163,9 +169,20 @@ public sealed partial class FileStatusListViewModel : ObservableObject
 
     public void Clear() => SetGroups([]);
 
-    /// <summary>Selects the files (as setting <c>SelectedItems</c>).</summary>
+    /// <summary>Selects the files (as setting <c>SelectedItems</c>), expanding their parents (as <c>TreeView</c> shows a selected node).</summary>
     public void Select(Func<FileStatusEntry, bool> predicate)
-        => SetSelection([.. Nodes.SelectMany(n => n.DescendantsAndSelf()).Where(n => n.Entry is { } entry && predicate(entry))]);
+    {
+        List<FileStatusNode> nodes = [.. Nodes.SelectMany(n => n.DescendantsAndSelf()).Where(n => n.Entry is { } entry && predicate(entry))];
+        foreach (FileStatusNode node in nodes)
+        {
+            for (FileStatusNode? parent = node.Parent; parent is not null; parent = parent.Parent)
+            {
+                parent.IsExpanded = true;
+            }
+        }
+
+        SetSelection(nodes);
+    }
 
     /// <summary>As <c>SelectFirstVisibleItem</c>: the first file, expanding its parents.</summary>
     public void SelectFirstVisibleItem()
@@ -360,8 +377,8 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     {
         HashSet<GitItemStatus>? previouslySelectedItems = updateCausedByFilter ? [.. SelectedEntries.Select(e => e.Item)] : null;
 
-        (List<FileStatusNode> nodes, _, bool filesPresent) = FileStatusTreeBuilder.Build(_groups, Options, IsFilterMatch, _noItemStatus);
-        ShowNoFiles = !filesPresent && _groups.Count <= 1;
+        (List<FileStatusNode> nodes, _, bool filesPresent) = FileStatusTreeBuilder.Build(_groups, Options, IsFilterMatch, _noItemStatus, expandIfFewFiles: !IsFileTreeMode || IsFilterActive);
+        ShowNoFiles = !filesPresent && _groups.Count <= 1 && !IsFileTreeMode;
 
         Nodes.Clear();
         foreach (FileStatusNode node in nodes)

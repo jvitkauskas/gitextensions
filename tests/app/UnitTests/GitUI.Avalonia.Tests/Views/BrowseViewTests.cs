@@ -75,6 +75,48 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task The_file_tree_tab_shows_all_the_files_of_the_selected_revision() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        DiffViewModelTests.FakeViewerHost viewerHost = host.ViewerHost;
+        GitRevision first = viewModel.Grid.SelectedRow!.Revision;
+        host.TreesRequested.Should().BeEmpty("the tree is loaded when its tab is shown (FillFileTree)");
+
+        window.Tabs.SelectedIndex = 2;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.FileTree);
+        host.TreesRequested.Should().Equal(first.Subject);
+        FileStatusListViewModel tree = viewModel.FileTree!;
+        tree.AllEntries.Select(e => e.Item.Name).Should().BeEquivalentTo("README.md", "src/a.cs", "src/b.cs");
+
+        // As the WinForms file tree: the files and folders of the root, the folders collapsed, and no file selected.
+        tree.Nodes.Should().HaveCount(2);
+        tree.Nodes.Single(n => n.Entry is null).IsExpanded.Should().BeFalse();
+        tree.SelectedEntries.Should().BeEmpty();
+        tree.ShowNoFiles.Should().BeFalse();
+
+        tree.Select(e => e.Item.Name == "src/b.cs");
+        Dispatcher.UIThread.RunJobs();
+        viewerHost.Requested[^1].Should().Be($"src/b.cs@{first.ObjectId.ToShortString()}", "the file is shown as it is in the revision");
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-file-tree");
+
+        // Another revision: the same file stays selected, shown in that revision.
+        GitRevision other = viewModel.Grid.Rows.Select(r => r.Revision).First(r => !r.IsArtificial && r.ObjectId != first.ObjectId);
+        viewModel.Grid.SelectRevision(other.ObjectId);
+        Dispatcher.UIThread.RunJobs();
+        host.TreesRequested.Should().Equal(first.Subject, other.Subject);
+        tree.SelectedEntry!.Item.Name.Should().Be("src/b.cs");
+        viewerHost.Requested[^1].Should().Be($"src/b.cs@{other.ObjectId.ToShortString()}");
+
+        // On another tab, selecting a revision does not load the tree.
+        window.Tabs.SelectedIndex = 1;
+        viewModel.Grid.SelectRevision(first.ObjectId);
+        Dispatcher.UIThread.RunJobs();
+        host.TreesRequested.Should().HaveCount(2);
+        window.Close();
+    });
+
     private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show()
     {
         FakeBrowseHost host = new();
@@ -87,7 +129,7 @@ public sealed class BrowseViewTests : HeadlessTest
             host,
             grid,
             new CommitInfoViewTests.FakeHost(),
-            new DiffViewModelTests.FakeViewerHost(),
+            host.ViewerHost,
             new FileStatusListStrings(),
             new FileStatusTreeOptions());
         BrowseWindow window = new() { Width = 1100, Height = 760, DataContext = viewModel };
@@ -96,8 +138,12 @@ public sealed class BrowseViewTests : HeadlessTest
         return (window, viewModel, host);
     }
 
-    private sealed class FakeBrowseHost : IBrowseHost
+    private sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost
     {
+        public DiffViewModelTests.FakeViewerHost ViewerHost { get; } = new();
+
+        public List<string> TreesRequested { get; } = [];
+
         public event EventHandler? RepositoryChanged;
 
         public string Branch { get; set; } = "main";
@@ -119,6 +165,13 @@ public sealed class BrowseViewTests : HeadlessTest
             GitRevision first = new(second.FirstParentId);
             GitItemStatus file = new(name: "src/file.cs") { IsTracked = true, IsChanged = true };
             return Task.FromResult<IReadOnlyList<FileStatusGroup>>([new FileStatusGroup(first, second, "Parent", [file])]);
+        }
+
+        public Task<FileStatusGroup> GetTreeFilesAsync(GitRevision revision, CancellationToken cancellationToken)
+        {
+            TreesRequested.Add(revision.Subject);
+            GitItemStatus[] files = [.. new[] { "README.md", "src/a.cs", "src/b.cs" }.Select(name => new GitItemStatus(name) { IsTracked = true })];
+            return Task.FromResult(new FileStatusGroup(null, revision, $"grep:  {revision.ObjectId.ToShortString()}", files, IconName: FileStatusIcons.GitGrepIconName));
         }
 
         public void RaiseRepositoryChanged() => RepositoryChanged?.Invoke(this, EventArgs.Empty);
