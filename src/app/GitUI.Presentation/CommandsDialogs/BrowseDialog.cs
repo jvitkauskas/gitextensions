@@ -6,6 +6,7 @@ using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
 using GitUI.Presentation.UserControls.FileStatusList;
+using GitUI.Presentation.UserControls.LeftPanel;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 
@@ -457,6 +458,10 @@ public sealed partial class BrowseViewModel : DialogViewModel
     public FileStatusListViewModel Files { get; }
 
     public FileViewerViewModel Viewer { get; }
+
+    /// <summary>The left panel (<c>RepoObjectsTree</c>) beside the grid, with its toggle (<c>toggleLeftPanel</c>); none in the dashboard.</summary>
+    [ObservableProperty]
+    public partial LeftPanelViewModel? LeftPanel { get; set; }
 
     /// <summary>The main menu (<c>mainMenuStrip</c>).</summary>
     public IReadOnlyList<BrowseMenuItem> Menus { get; }

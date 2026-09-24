@@ -61,9 +61,12 @@ internal static partial class AvaloniaDialogs
             SelectedId = args.SelectedId.IsZero ? null : args.SelectedId,
         };
         BrowseHost host = new(commands, window);
+
+        // The filter of the grid, whose branch filter the left panel sets ("filter for selected").
+        FilterInfo filter = new();
         RevisionGridHost gridHost = new(
             commands,
-            currentCheckout => new FilterInfo().GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
+            currentCheckout => filter.GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
             showArtificial: true);
         RevisionGridViewModel grid = new(gridHost, new RevisionGridDisplayOptions(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout))
         {
@@ -77,6 +80,7 @@ internal static partial class AvaloniaDialogs
             new FileViewerHost(commands),
             ViewStrings.Load<FileStatusListStrings>(),
             GetFileStatusTreeOptions());
+        AttachLeftPanel(commands, window, viewModel, grid, filter);
         UseFileStatusListMenu(viewModel.Files, commands, window);
         window.DataContext = viewModel;
 

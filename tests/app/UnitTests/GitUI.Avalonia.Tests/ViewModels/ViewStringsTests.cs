@@ -12,6 +12,7 @@ using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
 using GitUI.Presentation.UserControls.Blame;
 using GitUI.Presentation.UserControls.FileStatusList;
+using GitUI.Presentation.UserControls.LeftPanel;
 using GitUI.Presentation.UserControls.RevisionGrid;
 
 namespace GitUI.AvaloniaTests.ViewModels;
@@ -144,6 +145,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new QuickItemSelectorStrings()).SetArgDisplayNames(nameof(QuickItemSelectorStrings));
         yield return new TestCaseData(new LogStrings()).SetArgDisplayNames(nameof(LogStrings));
         yield return new TestCaseData(new FindAndReplaceStrings()).SetArgDisplayNames(nameof(FindAndReplaceStrings));
+        yield return new TestCaseData(new LeftPanelStrings()).SetArgDisplayNames(nameof(LeftPanelStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

@@ -4,6 +4,7 @@
                 xmlns:c="using:GitUI.Avalonia.Controls"
                 xmlns:ed="using:GitUI.Avalonia.Editor"
                 xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:lp="using:GitUI.Avalonia.Controls.LeftPanel"
                 xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
                 xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
                 x:Class="GitUI.Avalonia.CommandsDialogs.BrowseDialog.BrowseWindow"
@@ -12,7 +13,7 @@
                 ShowInTaskbar="True"
                 Width="1300" Height="900" MinWidth="600" MinHeight="400">
   <Window.Styles>
-    <Style Selector="Button.toolbar, SplitButton.toolbar">
+    <Style Selector="Button.toolbar, SplitButton.toolbar, ToggleButton.toolbar">
       <Setter Property="Padding" Value="4,3" />
       <Setter Property="MinWidth" Value="0" />
       <Setter Property="Background" Value="Transparent" />
@@ -27,6 +28,11 @@
         <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
       </Button>
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <ToggleButton Name="toggleLeftPanel" Classes="toolbar" IsChecked="{Binding LeftPanel.IsVisible}" ToolTip.Tip="{Binding LeftPanel.Strings.ToggleLeftPanel.Text}"
+                    IsVisible="{Binding LeftPanel, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Image Source="avares://GitUI.Avalonia/Assets/LayoutSidebarLeft.png" Width="16" Height="16" />
+      </ToggleButton>
+      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding LeftPanel, Converter={x:Static ObjectConverters.IsNotNull}}" />
       <Button Name="branchButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.CheckoutBranch}" ToolTip.Tip="{Binding Strings.BranchToolTip.Text}">
         <StackPanel Orientation="Horizontal" Spacing="4">
           <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
@@ -66,7 +72,11 @@
         <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" Width="16" Height="16" />
       </Button>
     </StackPanel>
-    <Grid RowDefinitions="*,Auto,320" Margin="4,0,4,4">
+    <!-- The left panel (RepoObjectsTree in MainSplitContainer.Panel1) beside the grid and the tabs. -->
+    <Grid Name="mainSplit" ColumnDefinitions="260,Auto,*" Margin="4,0,4,4">
+    <lp:LeftPanelView Name="leftPanel" DataContext="{Binding LeftPanel}" />
+    <GridSplitter Name="leftPanelSplitter" Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+    <Grid Grid.Column="2" RowDefinitions="*,Auto,320">
       <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
         <rg:RevisionGridView Name="revisionGrid" DataContext="{Binding Grid}" />
       </Border>
@@ -99,6 +109,7 @@
           </Grid>
         </TabItem>
       </TabControl>
+    </Grid>
     </Grid>
   </DockPanel>
 </h:DialogWindow>

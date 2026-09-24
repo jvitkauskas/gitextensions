@@ -206,5 +206,26 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ShellExtensions.png" Link="Assets\ShellExtensions.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\github.png" Link="Assets\GitHub.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\VisualStudioTeamServices.png" Link="Assets\VisualStudioTeamServices.png" />
+    <!-- The left panel (RepoObjectsTree) -->
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BitBucket.png" Link="Assets\BitBucket.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchLocal.png" Link="Assets\BranchLocal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchLocalMerged.png" Link="Assets\BranchLocalMerged.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\LocalBranchRoot.png" Link="Assets\BranchLocalRoot.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchRemote.png" Link="Assets\BranchRemote.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchRemoteMerged.png" Link="Assets\BranchRemoteMerged.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RemoteBranchRoot.png" Link="Assets\BranchRemoteRoot.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Remote.png" Link="Assets\Remote.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RemoteEnableAndFetch.png" Link="Assets\RemoteEnableAndFetch.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\TagHorizontal.png" Link="Assets\TagHorizontal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Tag.png" Link="Assets\Tag.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowThisBranchOnly.png" Link="Assets\ShowThisBranchOnly.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullFetchPrune.png" Link="Assets\PullFetchPrune.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Globe.png" Link="Assets\Globe.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateDirtySubmodules.png" Link="Assets\RepoStateDirtySubmodules.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CollapseAll.png" Link="Assets\CollapseAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ExpandAll.png" Link="Assets\ExpandAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\LayoutSidebarLeft.png" Link="Assets\LayoutSidebarLeft.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Author.png" Link="Assets\Author.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Date.png" Link="Assets\Date.png" />
   </ItemGroup>
 </Project>
