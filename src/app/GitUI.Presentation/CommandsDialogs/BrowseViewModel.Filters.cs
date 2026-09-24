@@ -15,6 +15,13 @@ public sealed partial class BrowseViewModel
 
             // As the items of ToolStripMain: the visibility of the items is read when first shown.
             value?.ItemVisibility.LoadVisibility = key => _toolbarItemsHost?.GetToolbarItemVisibility(GetFilterSettingKey(key), defaultValue: true) ?? true;
+
+            // As the filterFileInGrid of RevisionDiffControl.BindContextMenu: the item of the diff and file tree tabs.
+            if (value is not null)
+            {
+                Files.FilterFileInGridAction = () => FilterFileInGrid(Files);
+                FileTree?.FilterFileInGridAction = () => FilterFileInGrid(FileTree!);
+            }
         }
     }
 }

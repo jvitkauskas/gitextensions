@@ -37,6 +37,40 @@ public sealed class FileStatusListMenuStrings : ViewStrings
         GroupByFileExtensionFlat = Add("tsmiGroupByFileExtensionFlat", "Text", "Group by file e&xtension - flat");
         GroupByFileStatusTree = Add("tsmiGroupByFileStatusTree", "Text", "Group by file &status - tree");
         GroupByFileStatusFlat = Add("tsmiGroupByFileStatusFlat", "Text", "Group by file s&tatus - flat");
+        StageFile = Add("tsmiStageFile", "Text", "&Stage selected");
+        UnstageFile = Add("tsmiUnstageFile", "Text", "&Unstage selected");
+        ResetChunkOfFile = Add("tsmiResetChunkOfFile", "Text", "Reset chunk of file...");
+        InteractiveAdd = Add("tsmiInteractiveAdd", "Text", "Interactive add...");
+        CherryPickChanges = Add("tsmiCherryPickChanges", "Text", "Cherr&y pick changes");
+        DiffTwoSelected = Add("tsmiDiffTwoSelected", "Text", "&Diff the selected files");
+        RememberSecondRevDiff = Add("tsmiRememberSecondRevDiff", "Text", "&Remember Second for diff");
+        RememberFirstRevDiff = Add("tsmiRememberFirstRevDiff", "Text", "R&emember First for diff");
+        DiffSelectedWithRememberedFile = Add("_diffSelectedWithRememberedFile", "Text", "&Diff with \"{0}\"", category: "TranslatedStrings");
+        OpenInVisualStudio = Add("tsmiOpenInVisualStudio", "Text", "Open in &Visual Studio");
+        Move = Add("tsmiMove", "Text", "Rena&me / move");
+        NewName = Add("_newName", "Text", "New name");
+        DeleteSelectedFilesCaption = Add("_deleteSelectedFilesCaption", "Text", "Delete");
+        DeleteSelectedFiles = Add("_deleteSelectedFiles", "Text", "Are you sure you want to delete the selected file(s)?");
+        DeleteFailed = Add("_deleteFailed", "Text", "Delete file failed");
+        ShowInFileTree = Add("tsmiShowInFileTree", "Text", "Show in File &tree");
+        FilterFileInGrid = Add("tsmiFilterFileInGrid", "Text", "Filter file in &grid");
+        FindFile = Add("tsmiFindFile", "Text", "&Find file...");
+        AddFileToGitIgnore = Add("tsmiAddFileToGitIgnore", "Text", "Add file to &.gitignore");
+        AddFileToGitInfoExclude = Add("tsmiAddFileToGitInfoExclude", "Text", "Add file to .git/info/exclude");
+        SkipWorktree = Add("tsmiSkipWorktree", "Text", "S&kip worktree");
+        AssumeUnchanged = Add("tsmiAssumeUnchanged", "Text", "Assu&me unchanged");
+        StopTracking = Add("tsmiStopTracking", "Text", "Stop tracking this file");
+        StopTrackingFail = Add("_stopTrackingFail", "Text", "Fail to stop tracking the file '{0}'.");
+        SkipWorktreeToolTip = Add("_skipWorktreeToolTip", "Text", "Hide already tracked files that will change but that you don't want to commit."
+            + Environment.NewLine + "Suitable for some config files modified locally.");
+        AssumeUnchangedToolTip = Add("_assumeUnchangedToolTip", "Text", "Tell git to not check the status of this file for performance benefits."
+            + Environment.NewLine + "Use this feature when a file is big and never change."
+            + Environment.NewLine + "Git will never check if the file has changed that will improve status check performance.");
+        UpdateSubmodule = Add("tsmiUpdateSubmodule", "Text", "&Update submodule");
+        ResetSubmoduleChanges = Add("tsmiResetSubmoduleChanges", "Text", "R&eset submodule changes");
+        StashSubmoduleChanges = Add("tsmiStashSubmoduleChanges", "Text", "S&tash submodule changes");
+        CommitSubmoduleChanges = Add("tsmiCommitSubmoduleChanges", "Text", "&Commit submodule changes");
+        RunScript = Add("tsmiRunScript", "Text", "Run script");
     }
 
     public TranslatedText OpenWithDifftool { get; }
@@ -94,6 +128,68 @@ public sealed class FileStatusListMenuStrings : ViewStrings
     public TranslatedText GroupByFileStatusTree { get; }
 
     public TranslatedText GroupByFileStatusFlat { get; }
+
+    public TranslatedText StageFile { get; }
+
+    public TranslatedText UnstageFile { get; }
+
+    public TranslatedText ResetChunkOfFile { get; }
+
+    public TranslatedText InteractiveAdd { get; }
+
+    public TranslatedText CherryPickChanges { get; }
+
+    public TranslatedText DiffTwoSelected { get; }
+
+    public TranslatedText RememberSecondRevDiff { get; }
+
+    public TranslatedText RememberFirstRevDiff { get; }
+
+    public TranslatedText DiffSelectedWithRememberedFile { get; }
+
+    public TranslatedText OpenInVisualStudio { get; }
+
+    public TranslatedText Move { get; }
+
+    public TranslatedText NewName { get; }
+
+    public TranslatedText DeleteSelectedFilesCaption { get; }
+
+    public TranslatedText DeleteSelectedFiles { get; }
+
+    public TranslatedText DeleteFailed { get; }
+
+    public TranslatedText ShowInFileTree { get; }
+
+    public TranslatedText FilterFileInGrid { get; }
+
+    public TranslatedText FindFile { get; }
+
+    public TranslatedText AddFileToGitIgnore { get; }
+
+    public TranslatedText AddFileToGitInfoExclude { get; }
+
+    public TranslatedText SkipWorktree { get; }
+
+    public TranslatedText AssumeUnchanged { get; }
+
+    public TranslatedText StopTracking { get; }
+
+    public TranslatedText StopTrackingFail { get; }
+
+    public TranslatedText SkipWorktreeToolTip { get; }
+
+    public TranslatedText AssumeUnchangedToolTip { get; }
+
+    public TranslatedText UpdateSubmodule { get; }
+
+    public TranslatedText ResetSubmoduleChanges { get; }
+
+    public TranslatedText StashSubmoduleChanges { get; }
+
+    public TranslatedText CommitSubmoduleChanges { get; }
+
+    public TranslatedText RunScript { get; }
 }
 
 /// <summary>Strings of the copy paths menu; ids match <c>CopyPathsToolStripMenuItem</c>, which is translated with <c>FormBrowse</c>.</summary>
@@ -143,6 +239,21 @@ public enum CopyPathKind
     RelativePosix,
 }
 
+/// <summary>The submodule items of the menu (<c>tsmiUpdateSubmodule</c>, <c>tsmiResetSubmoduleChanges</c>, ...).</summary>
+public enum SubmoduleMenuAction
+{
+    Update,
+    Reset,
+    Stash,
+    Commit,
+}
+
+/// <summary>A user script of the menu (<c>AddUserScripts</c>).</summary>
+/// <param name="Name">The name of the script.</param>
+/// <param name="Id">The identifier of the script for the host (its hotkey command).</param>
+/// <param name="IsDirect">Whether it is shown in the menu itself (<c>ScriptEvent.ShowInFileList</c>), else under "Run script".</param>
+public sealed record FileStatusScript(string Name, int Id, bool IsDirect);
+
 /// <summary>
 ///  Which items of the menu are shown and enabled for the selection (as <c>FileStatusList.UpdateStatusOfMenuItems</c> decides
 ///  with <c>RevisionDiffController</c>).
@@ -189,13 +300,89 @@ public sealed record FileStatusMenuState
 
     /// <summary>The text of "reset to the first (A) revision", <see langword="null"/> if not possible.</summary>
     public string? ResetToParentText { get; init; }
+
+    /// <summary>Whether the submodule items are shown (<c>ShouldShowSubmoduleMenus</c>).</summary>
+    public bool ShowSubmoduleItems { get; init; }
+
+    public bool ShowStage { get; init; }
+
+    public bool ShowUnstage { get; init; }
+
+    /// <summary>Whether "Reset chunk of file" and "Interactive add" are shown (a single file of the working directory).</summary>
+    public bool ShowResetChunkAndInteractiveAdd { get; init; }
+
+    /// <summary>Whether "Cherry pick changes" is shown (<c>ShouldShowMenuCherryPick</c>, where the list can cherry-pick).</summary>
+    public bool ShowCherryPick { get; init; }
+
+    /// <summary>Whether the remember items of the difftool menu are shown (a single file).</summary>
+    public bool ShowRememberDiff { get; init; }
+
+    public bool CanRememberSecondRevDiff { get; init; }
+
+    public bool CanRememberFirstRevDiff { get; init; }
+
+    /// <summary>Whether "Diff the selected files" is shown (two files).</summary>
+    public bool ShowDiffTwoSelected { get; init; }
+
+    public bool CanDiffTwoSelected { get; init; }
+
+    /// <summary>The text of "Diff with the remembered file", <see langword="null"/> if hidden.</summary>
+    public string? DiffWithRememberedText { get; init; }
+
+    public bool CanDiffWithRemembered { get; init; }
+
+    /// <summary>Whether the separator before the remember items is shown (one or two files).</summary>
+    public bool ShowDifftoolRememberSeparator => ShowRememberDiff || ShowDiffTwoSelected;
+
+    public bool ShowOpenInVisualStudio { get; init; }
+
+    public bool ShowMove { get; init; }
+
+    /// <summary>The text of the delete item (for the number of files), <see langword="null"/> if hidden.</summary>
+    public string? DeleteFileText { get; init; }
+
+    public bool ShowDeleteFile => DeleteFileText is not null;
+
+    /// <summary>Whether "Show in file tree" is shown (<c>ShouldShowMenuShowInFileTree</c>, where the list can show it).</summary>
+    public bool ShowShowInFileTree { get; init; }
+
+    /// <summary>Whether "Filter file in grid" is enabled (<c>ShouldShowMenuFileHistory</c>, where the list can filter).</summary>
+    public bool CanFilterFileInGrid { get; init; }
+
+    public bool ShowFindFile { get; init; }
+
+    /// <summary>Whether the files can be added to .gitignore and .git/info/exclude.</summary>
+    public bool ShowIgnore { get; init; }
+
+    /// <summary>Whether "Skip worktree" and "Assume unchanged" are shown.</summary>
+    public bool ShowSkipWorktreeAndAssumeUnchanged { get; init; }
+
+    /// <summary>Whether "Skip worktree" is checked (a selected file is skip-worktree).</summary>
+    public bool IsSkipWorktree { get; init; }
+
+    /// <summary>Whether "Assume unchanged" is checked (a selected file is assumed unchanged).</summary>
+    public bool IsAssumeUnchanged { get; init; }
+
+    public bool ShowStopTracking { get; init; }
+
+    public bool ShowIgnoreSeparator => ShowIgnore || ShowStopTracking;
+
+    /// <summary>The user scripts (<c>AddUserScripts</c>).</summary>
+    public IReadOnlyList<FileStatusScript> Scripts { get; init; } = [];
+
+    /// <summary>Whether "Run script" has scripts (not shown in the menu itself).</summary>
+    public bool HasRunScriptItems => Scripts.Any(script => !script.IsDirect);
+
+    public bool HasScripts => Scripts.Count > 0;
 }
 
 /// <summary>The actions of the menu of the file status list that need the host (git, the shell, the other dialogs).</summary>
 public interface IFileStatusListMenuHost
 {
     /// <param name="selectedFolder">The selected folder, if a single folder is selected (as <c>FileStatusList.SelectedFolder</c>).</param>
-    FileStatusMenuState GetMenuState(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder);
+    /// <param name="focused">The file selected last (as <c>FocusedItem</c>), the second of "Diff the selected files".</param>
+    /// <param name="supportLinePatching">Whether the diff of the file supports line patching (<c>FileViewer.SupportLinePatching</c>).</param>
+    FileStatusMenuState GetMenuState(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, FileStatusEntry? focused, bool supportLinePatching);
 
     void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind);
 
@@ -216,4 +403,55 @@ public interface IFileStatusListMenuHost
 
     /// <summary>Resets the files after a confirmation; returns whether the list should be refreshed.</summary>
     bool ResetFiles(IReadOnlyList<FileStatusEntry> selected, bool toParent);
+
+    /// <summary>Stages the files of the working directory (as <c>StageFile_Click</c>).</summary>
+    void StageFiles(IReadOnlyList<FileStatusEntry> selected);
+
+    /// <summary>Unstages the files of the index (as <c>UnstageFile_Click</c>).</summary>
+    void UnstageFiles(IReadOnlyList<FileStatusEntry> selected);
+
+    /// <summary>As <c>ResetChunkOfFile_Click</c>: <c>git checkout -p</c> in a console.</summary>
+    Task ResetChunkOfFileAsync(FileStatusEntry entry);
+
+    /// <summary>As <c>InteractiveAdd_Click</c>: <c>git add -p</c> in a console.</summary>
+    Task InteractiveAddAsync(FileStatusEntry entry);
+
+    /// <summary>As <c>RememberFirstRevDiff_Click</c> (<paramref name="first"/>) and <c>RememberSecondRevDiff_Click</c>.</summary>
+    void RememberDiff(FileStatusEntry entry, bool first);
+
+    /// <summary>As <c>DiffWithRemembered_Click</c>.</summary>
+    void DiffWithRemembered(FileStatusEntry entry);
+
+    /// <summary>As <c>DiffTwoSelected_Click</c>.</summary>
+    void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused);
+
+    /// <summary>As <c>OpenInVisualStudio_Click</c>.</summary>
+    void OpenInVisualStudio(FileStatusEntry entry);
+
+    /// <summary>Renames or moves the file or folder (as <c>Move_Click</c>); returns whether the list should be refreshed.</summary>
+    bool Move(FileStatusEntry? entry, RelativePath? selectedFolder);
+
+    /// <summary>Deletes the files after a confirmation (as <c>DeleteFile_Click</c>); returns whether the list should be refreshed.</summary>
+    bool DeleteFiles(IReadOnlyList<FileStatusEntry> selected);
+
+    /// <summary>As <c>FindFile_Click</c>: the file chosen in the search window among the files of the list.</summary>
+    GitItemStatus? FindFile(IReadOnlyList<GitItemStatus> candidates);
+
+    /// <summary>As <c>AddFileToIgnoreFile</c>; returns whether the list should be refreshed.</summary>
+    bool AddToIgnoreFile(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, bool localExclude);
+
+    /// <summary>As <c>SkipWorktree_Click</c>.</summary>
+    void SetSkipWorktree(IReadOnlyList<FileStatusEntry> selected, bool skipWorktree);
+
+    /// <summary>As <c>AssumeUnchanged_Click</c>.</summary>
+    void SetAssumeUnchanged(IReadOnlyList<FileStatusEntry> selected, bool assumeUnchanged);
+
+    /// <summary>As <c>StopTracking_Click</c>; returns whether the list should be refreshed.</summary>
+    bool StopTracking(FileStatusEntry entry);
+
+    /// <summary>The submodule items; returns whether the list should be refreshed.</summary>
+    bool RunSubmoduleAction(IReadOnlyList<FileStatusEntry> selected, SubmoduleMenuAction action);
+
+    /// <summary>Runs the script with the selected files (as <c>ExecuteCommand</c> of a script).</summary>
+    void RunScript(FileStatusScript script, IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder);
 }

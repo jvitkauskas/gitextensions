@@ -218,8 +218,9 @@ internal static partial class AvaloniaDialogs
                     return;
                 }
 
-                // Reset branch colors whenever we open a new repository.
+                // Reset branch colors whenever we open a new repository; as revisionDiff.RepositoryChanged, forget the remembered file.
                 module.ResetRemoteColors();
+                RememberFileContextMenuController.Default.RememberedDiffFileItem = null;
                 if (module.IsValidGitWorkingDir())
                 {
                     AppSettings.RecentWorkingDir = module.WorkingDir;

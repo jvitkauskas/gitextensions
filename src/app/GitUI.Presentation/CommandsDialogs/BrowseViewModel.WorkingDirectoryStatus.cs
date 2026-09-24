@@ -14,6 +14,9 @@ public interface IBrowseStatusHost
 {
     /// <summary>Raised on the UI thread when the status of the working directory changes (<c>GitWorkingDirectoryStatusChanged</c>).</summary>
     event EventHandler<BrowseWorkingDirectoryStatus>? WorkingDirectoryStatusChanged;
+
+    /// <summary>As <c>RefreshGitStatusMonitor</c>: the status is read again at once (e.g. after staging from the diff tab).</summary>
+    void RequestStatusRefresh();
 }
 
 /// <summary>The commit button with the status of the working directory (<c>toolStripButtonCommit</c>).</summary>

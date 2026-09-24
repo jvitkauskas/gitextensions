@@ -89,6 +89,83 @@ public sealed class FileStatusListViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task Context_menu_shows_the_git_items_and_the_scripts_of_the_state() => OnUiThreadAsync(() =>
+    {
+        (Window window, FileStatusListView view, FileStatusListViewModel viewModel) = Show();
+        FileStatusListMenuTests.FakeMenuHost host = new()
+        {
+            State = new FileStatusMenuState
+            {
+                CanOpenWithDifftool = true,
+                ShowStage = true,
+                ShowRememberDiff = true,
+                CanRememberSecondRevDiff = true,
+                DiffWithRememberedText = "_Diff with \"other.txt\"",
+                DeleteFileText = "Delete file",
+                ShowIgnore = true,
+                ShowSkipWorktreeAndAssumeUnchanged = true,
+                IsSkipWorktree = true,
+                ShowShowInFileTree = true,
+                Scripts = [new FileStatusScript("Deploy_all", 9001, IsDirect: true), new FileStatusScript("Lint", 9002, IsDirect: false)],
+            },
+        };
+        viewModel.MenuHost = host;
+        viewModel.ShowInFileTreeAction = () => host.Log.Add("tree");
+
+        view.Tree.RaiseEvent(new ContextRequestedEventArgs { RoutedEvent = Control.ContextRequestedEvent });
+        Dispatcher.UIThread.RunJobs();
+
+        List<MenuItem> items = [.. view.Menu.Items.OfType<MenuItem>()];
+        MenuItem Item(string name) => items.SelectMany(i => i.Items.OfType<MenuItem>().Prepend(i)).Single(i => i.Name == name);
+        Item("stageFileMenuItem").IsVisible.Should().BeTrue();
+        Item("stageFileMenuItem").Header.Should().Be("_Stage selected");
+        Item("unstageFileMenuItem").IsVisible.Should().BeFalse();
+        Item("updateSubmoduleMenuItem").IsVisible.Should().BeFalse();
+        Item("deleteFileMenuItem").Header.Should().Be("Delete file");
+        Item("moveMenuItem").IsVisible.Should().BeFalse();
+        Item("diffWithRememberedMenuItem").Header.Should().Be("_Diff with \"other.txt\"");
+        Item("diffWithRememberedMenuItem").IsEnabled.Should().BeFalse();
+        Item("rememberSecondRevDiffMenuItem").IsEnabled.Should().BeTrue();
+        Item("diffTwoSelectedMenuItem").IsVisible.Should().BeFalse();
+        Item("showInFileTreeMenuItem").IsVisible.Should().BeTrue();
+        Item("filterFileInGridMenuItem").IsVisible.Should().BeFalse("the list does not filter the grid");
+        Item("findFileMenuItem").IsVisible.Should().BeFalse();
+        Item("addFileToGitInfoExcludeMenuItem").IsVisible.Should().BeTrue();
+        Item("skipWorktreeMenuItem").IsChecked.Should().BeTrue();
+        Item("assumeUnchangedMenuItem").IsChecked.Should().BeFalse();
+        ToolTip.GetTip(Item("skipWorktreeMenuItem")).Should().Be(new FileStatusListMenuStrings().SkipWorktreeToolTip.Text);
+
+        // As AddUserScripts: the script of ShowInFileList follows "Run script", the other is under it.
+        MenuItem runScript = Item("runScriptMenuItem");
+        runScript.IsEnabled.Should().BeTrue();
+        runScript.Items.OfType<MenuItem>().Select(i => i.Header).Should().Equal("Lint");
+        MenuItem direct = (MenuItem)view.Menu.Items[view.Menu.Items.IndexOf(runScript) + 1]!;
+        direct.Header.Should().Be("Deploy__all");
+
+        foreach (MenuItem item in new[] { Item("stageFileMenuItem"), Item("skipWorktreeMenuItem"), Item("addFileToGitIgnoreMenuItem"), Item("showInFileTreeMenuItem"), direct })
+        {
+            item.Command!.Execute(item.CommandParameter);
+        }
+
+        host.Log.Where(l => !l.StartsWith("state")).Should().Equal(
+            "stage: docs/readme.md",
+            "skip worktree False: docs/readme.md",
+            "ignore: docs/readme.md folder: ",
+            "tree",
+            "script Deploy_all: docs/readme.md folder: ");
+        view.Menu.Close();
+
+        // Opened again, the scripts are not added twice.
+        view.Tree.RaiseEvent(new ContextRequestedEventArgs { RoutedEvent = Control.ContextRequestedEvent });
+        Dispatcher.UIThread.RunJobs();
+        view.Menu.Items.OfType<MenuItem>().Count(i => i.Tag is FileStatusScript).Should().Be(1);
+        runScript.Items.Should().ContainSingle();
+        SaveScreenshot(window.CaptureRenderedFrame(), "file-status-list-menu");
+        view.Menu.Close();
+        window.Close();
+    });
+
     private static (Window Window, FileStatusListView View, FileStatusListViewModel ViewModel) Show()
     {
         FileStatusListViewModel viewModel = Create();

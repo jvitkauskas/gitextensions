@@ -55,6 +55,9 @@ internal static partial class AvaloniaDialogs
             ReportStatus(status: null, AppSettings.ShowGitStatusInBrowseToolbar, countArtificial: false);
         }
 
+        /// <summary>As <c>FormBrowse.RefreshGitStatusMonitor</c>.</summary>
+        public void RequestStatusRefresh() => _gitStatusMonitor?.RequestRefresh();
+
         private void StopGitStatusMonitor()
         {
             _gitStatusMonitor?.Dispose();
