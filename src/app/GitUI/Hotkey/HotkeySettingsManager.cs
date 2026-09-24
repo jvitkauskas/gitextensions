@@ -6,6 +6,7 @@ using GitUI.Editor;
 using GitUI.ScriptsEngine;
 using Microsoft;
 using ResourceManager;
+using ResourceManager.Hotkey;
 
 namespace GitUI.Hotkey;
 

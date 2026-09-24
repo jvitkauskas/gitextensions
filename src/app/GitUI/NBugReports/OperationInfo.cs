@@ -1,4 +1,6 @@
-﻿namespace GitUI.NBugReports;
+﻿using GitExtensions.Extensibility;
+
+namespace GitUI.NBugReports;
 
 internal struct OperationInfo
 {

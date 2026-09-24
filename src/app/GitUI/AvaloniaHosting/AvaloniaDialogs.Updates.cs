@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Git.hub;
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.BrowseDialog;

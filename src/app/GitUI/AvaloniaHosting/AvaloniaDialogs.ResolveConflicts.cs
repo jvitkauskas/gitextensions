@@ -153,7 +153,7 @@ internal static partial class AvaloniaDialogs
                 return null;
             }
 
-            string directory = Path.Join(Path.GetDirectoryName(Application.ExecutablePath)!, "Diff-Scripts").EnsureTrailingPathSeparator();
+            string directory = Path.Join(Path.GetDirectoryName(ApplicationInfo.ExecutablePath)!, "Diff-Scripts").EnsureTrailingPathSeparator();
             string path = Path.Join(directory, scriptName);
             return Directory.Exists(directory) && File.Exists(path) ? path : null;
         }

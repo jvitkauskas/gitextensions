@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
+using GitExtUtils;
 using JetBrains.Annotations;
 
 namespace GitCommands.Patches;
@@ -295,7 +296,7 @@ public static class PatchManager
             return null;
         }
 
-        result.Append($"\n--\n{Application.ProductName} {AppSettings.ProductVersion}");
+        result.Append($"\n--\n{ApplicationInfo.ProductName} {AppSettings.ProductVersion}");
 
         return result.ToString();
     }

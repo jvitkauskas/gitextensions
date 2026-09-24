@@ -1,4 +1,5 @@
 ﻿using GitCommands;
+using GitExtensions.Extensibility;
 using GitExtUtils.Tasks;
 using LibGit2Sharp;
 
@@ -26,7 +27,7 @@ public class ReferenceRepository : IDisposable
     private readonly GitModuleTestHelper _moduleTestHelper;
 
     // We don't expect any failures so that we won't be switching to the main thread or showing messages
-    public static Control DummyOwner { get; } = new();
+    public static IWin32Window? DummyOwner => null;
 
     public GitModule Module => _moduleTestHelper.Module;
 

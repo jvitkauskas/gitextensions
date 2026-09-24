@@ -17,6 +17,9 @@ public static class ColorHelper
 
     public static ThemeSettings ThemeSettings { private get; set; } = ThemeSettings.Default;
 
+    /// <summary>Whether the theme of the application is dark (as the WinForms <c>Application.IsDarkModeEnabled</c>).</summary>
+    public static bool IsDarkTheme => ThemeSettings.Theme.IsDark;
+
     /// <summary>
     ///  Blends the color with the current editor background color at 50% in linear light (sRGB gamma-corrected) space,
     ///  producing a perceptually correct midpoint. The original alpha is preserved.
@@ -29,9 +32,6 @@ public static class ColorHelper
         byte b = SrgbDelinearize((SrgbLinearize(color.B) + SrgbLinearize(background.B)) * 0.5);
         return Color.FromArgb(color.A, r, g, b);
     }
-
-    public static void SetForeColorForBackColor(this Control control)
-        => control.ForeColor = control.ForeColor.AdaptForeColor(control.BackColor);
 
     public static Color GetTextColor(this Color backColor)
         => ThemeSettings.Theme.GetNonEmptyColor(KnownColor.WindowText).AdaptForeColor(backColor);
@@ -90,12 +90,6 @@ public static class ColorHelper
     /// <remarks>0.05 is subtle. 0.3 is quite strong.</remarks>
     public static Color MakeDarkerBy(this Color color, double amount) =>
         color.TransformHsl(l: l => l - amount);
-
-    public static void AdaptImageLightness(this ToolStripItem item) =>
-        item.Image = ((Bitmap?)item.Image)?.AdaptLightness();
-
-    public static void AdaptImageLightness(this ButtonBase button) =>
-        button.Image = ((Bitmap?)button.Image)?.AdaptLightness();
 
     public static Bitmap AdaptLightness(this Bitmap original)
     {

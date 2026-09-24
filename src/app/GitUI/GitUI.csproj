@@ -36,9 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\externals\conemu-inside\ConEmuWinForms\ConEmuWinForms.csproj" />
     <ProjectReference Include="..\..\..\externals\Git.hub\Git.hub\Git.hub.csproj" />
-    <ProjectReference Include="..\..\..\externals\ICSharpCode.TextEditor\Project\ICSharpCode.TextEditor.csproj" />
     <ProjectReference Include="..\..\..\externals\NetSpell.SpellChecker\SpellChecker.csproj" />
     <ProjectReference Include="..\BugReporter\BugReporter.csproj" />
     <ProjectReference Include="..\GitCommands\GitCommands.csproj" />

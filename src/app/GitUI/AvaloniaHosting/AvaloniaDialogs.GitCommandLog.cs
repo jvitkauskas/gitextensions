@@ -1,5 +1,6 @@
 using GitCommands;
 using GitCommands.Logging;
+using GitExtensions.Extensibility;
 using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;

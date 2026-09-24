@@ -113,10 +113,10 @@ public static class UITest
     }
 
     public static void ProcessUntil(string processName, Func<bool> condition, int maxMilliseconds = 1500)
-        => WinFormsTestHelper.ProcessUntil(processName, condition, maxMilliseconds);
+        => MessagePumpTestHelper.ProcessUntil(processName, condition, maxMilliseconds);
 
     public static void ProcessEventsFor(int milliseconds)
-        => WinFormsTestHelper.ProcessEventsFor(milliseconds);
+        => MessagePumpTestHelper.ProcessEventsFor(milliseconds);
 
     private readonly struct VoidResult
     {

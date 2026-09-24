@@ -1,5 +1,4 @@
-﻿using ConEmu.WinForms;
-
+﻿
 namespace GitUI.Shells;
 
 public class ShellProvider : IShellProvider

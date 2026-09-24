@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace ResourceManager.Hotkey;
+﻿namespace ResourceManager.Hotkey;
 
 public static class KeysExtensions
 {
@@ -88,10 +86,19 @@ public static class KeysExtensions
             return null;
         }
 
-        // var str = key.ToString(); // OLD: this is culture unspecific
-        CultureInfo culture = CultureInfo.CurrentUICulture; // TODO: replace this with the GitExtensions language setting
-
-        // for modifier keys this yields for example "Ctrl+None" thus we have to strip the rest after the +
-        return new KeysConverter().ConvertToString(null, culture, key)?.SubstringUntil('+');
+        // The names of the WinForms KeysConverter (in English: the application ships no WinForms translations).
+        return key switch
+        {
+            Keys.Enter => "Enter",
+            Keys.PageUp => "PgUp",
+            Keys.PageDown => "PgDn",
+            Keys.Insert => "Ins",
+            Keys.Delete => "Del",
+            >= Keys.D0 and <= Keys.D9 => ((char)('0' + (key - Keys.D0))).ToString(),
+            Keys.Shift => "Shift",
+            Keys.Control => "Ctrl",
+            Keys.Alt => "Alt",
+            _ => key.ToString(),
+        };
     }
 }

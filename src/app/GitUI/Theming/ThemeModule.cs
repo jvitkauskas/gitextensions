@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using GitCommands;
 using GitExtUtils.GitUI.Theming;
-using ICSharpCode.TextEditor.Document;
 
 namespace GitUI.Theming;
 
@@ -14,32 +13,7 @@ public static class ThemeModule
     public static void Load()
     {
         Settings = LoadThemeSettings(Repository);
-        Application.SetColorMode(Settings.Theme.SystemColorMode);
-        UpdateEditorSettings();
         ColorHelper.ThemeSettings = Settings;
-        ThemeFix.ThemeSettings = Settings;
-    }
-
-    private static void UpdateEditorSettings()
-    {
-        DefaultHighlightingStrategy strategy = HighlightingManager.Manager.DefaultHighlighting;
-        strategy.SetColorFor("Default",
-            new HighlightColor(SystemColors.WindowText, AppColor.EditorBackground.GetThemeColor(), bold: false, italic: false, adaptable: false));
-        strategy.SetColorFor("Selection",
-            new HighlightColor(SystemColors.WindowText, AppColor.Selection.GetThemeColor(), bold: false, italic: false, adaptable: false));
-        strategy.SetColorFor("LineNumbers",
-            new HighlightColor(SystemColors.GrayText, AppColor.LineNumberBackground.GetThemeColor(), bold: false, italic: false, adaptable: false));
-        strategy.SetColorFor("LineNumberSelected",
-            new HighlightColor(SystemColors.WindowText, AppColor.LineNumberBackground.GetThemeColor(), bold: true, italic: false, adaptable: false));
-        if (Application.IsDarkModeEnabled)
-        {
-            strategy.SetColorFor("EOLMarkers",
-                new HighlightColor(nameof(SystemColors.ControlDarkDark), bold: false, italic: false));
-            strategy.SetColorFor("SpaceMarkers",
-                new HighlightColor(nameof(SystemColors.ControlDarkDark), bold: false, italic: false));
-            strategy.SetColorFor("TabMarkers",
-                new HighlightColor(nameof(SystemColors.ControlDarkDark), bold: false, italic: false));
-        }
     }
 
     private static ThemeSettings LoadThemeSettings(IThemeRepository repository)

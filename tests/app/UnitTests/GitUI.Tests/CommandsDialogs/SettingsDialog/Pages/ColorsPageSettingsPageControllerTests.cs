@@ -148,7 +148,7 @@ public class ColorsPageSettingsPageControllerTests
         _context.Controller.HandleSelectedThemeChanged();
         if (themeId == ThemeId.WindowsAppColorModeId)
         {
-            _context.Page.UseSystemVisualStyle.Should().Be(Application.SystemColorMode == SystemColorMode.Classic);
+            _context.Page.UseSystemVisualStyle.Should().Be(!SystemTheme.IsDarkMode);
         }
         else if (useSystemVisualStyle is not null)
         {
@@ -167,7 +167,7 @@ public class ColorsPageSettingsPageControllerTests
         _context.Page.SelectedThemeId.Should().Be(ThemeId.WindowsAppColorModeId);
 
         // The ThemeId is set from current Windows settings
-        ThemeId id = Application.SystemColorMode == SystemColorMode.Dark
+        ThemeId id = SystemTheme.IsDarkMode
             ? ThemeId.DefaultDark
             : ThemeId.DefaultLight;
         ThemeModule.Settings.Theme.Id.Should().Be(id);
@@ -193,7 +193,7 @@ public class ColorsPageSettingsPageControllerTests
         {
             ThemeId.WindowsAppColorModeId,
             new[] { ThemeVariations.Colorblind },
-            null! // useSystemVisualStyle, depends on Application.SystemColorMode
+            null! // useSystemVisualStyle, depends on SystemTheme.IsDarkMode
         };
 
         yield return new object[]

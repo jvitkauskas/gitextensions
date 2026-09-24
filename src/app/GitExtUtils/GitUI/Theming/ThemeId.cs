@@ -20,10 +20,10 @@ public readonly struct ThemeId
     public bool IsBuiltin { get; }
 
     /// <summary>
-    /// Get the default ThemeId for the current Windows SystemColorMode
+    /// Get the default ThemeId for the current Windows color mode
     /// </summary>
     public static ThemeId ColorModeThemeId
-        => Application.SystemColorMode == SystemColorMode.Dark
+        => SystemTheme.IsDarkMode
             ? ThemeId.DefaultDark
             : ThemeId.DefaultLight;
 

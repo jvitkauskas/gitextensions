@@ -161,18 +161,6 @@ public static class DpiUtil
             (int)(point.Y * scale));
     }
 
-    /// <summary>
-    /// Returns a scaled copy of <paramref name="padding"/> which takes equivalent
-    /// screen space at the current DPI as the original would at 96 DPI.
-    /// </summary>
-    public static Padding Scale(Padding padding)
-    {
-        return new Padding((int)(padding.Left * ScaleX),
-                           (int)(padding.Top * ScaleX),
-                           (int)(padding.Right * ScaleX),
-                           (int)(padding.Bottom * ScaleX));
-    }
-
     [NotNull]
     public static Image Scale([NotNull] Image image)
     {

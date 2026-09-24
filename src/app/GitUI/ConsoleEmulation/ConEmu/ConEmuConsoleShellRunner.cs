@@ -1,5 +1,4 @@
 using System.Globalization;
-using ConEmu.WinForms;
 using GitCommands;
 using GitUI.ConsoleEmulation;
 using GitUI.Shells;

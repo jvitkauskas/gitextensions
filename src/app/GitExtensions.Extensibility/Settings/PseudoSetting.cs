@@ -1,43 +1,27 @@
 ﻿namespace GitExtensions.Extensibility.Settings;
 
 /// <summary>
-/// Not a real setting (as it save no setting value). It is used to display a control that is not a setting (linklabel, text,...)
+/// Not a real setting (as it save no setting value). It is used to display a text that is not a setting.
 /// </summary>
+/// <remarks>For a link, use <see cref="ActionSetting"/>.</remarks>
 public class PseudoSetting : ISetting
 {
-    private readonly Func<TextBox>? _textBoxCreator;
-
-    /// <summary>Shows <paramref name="control"/>, a WinForms control of the plugin (plugin API v1).</summary>
-    /// <remarks>Plugin API v2: for a link, use <see cref="ActionSetting"/>; for a text, the other constructor.</remarks>
-    public PseudoSetting(Control control, string caption = "")
+    /// <param name="text">The text to show.</param>
+    /// <param name="caption">The caption of the text.</param>
+    /// <param name="height">The height of a multiline text, in pixels at 96 DPI; <see langword="null"/> for a single line.</param>
+    public PseudoSetting(string text, string caption = "    ", int? height = null)
     {
+        Text = text;
         Caption = caption;
-        CustomControl = control;
-    }
-
-    public PseudoSetting(string text, string caption = "    ", int? height = null, Action<TextBox>? textboxSettings = null)
-    {
-        Caption = caption;
-
-        _textBoxCreator = () =>
-        {
-            TextBox textbox = new() { ReadOnly = true, BorderStyle = BorderStyle.None, Text = text };
-
-            if (height.HasValue)
-            {
-                textbox.Multiline = true;
-                textbox.Height = height.Value;
-            }
-
-            textboxSettings?.Invoke(textbox);
-            return textbox;
-        };
-
-        CustomControl = _textBoxCreator();
+        Height = height;
     }
 
     public string Name { get; } = "PseudoSetting";
     public string Caption { get; }
-    public Control? CustomControl { get; set; }
-    public Func<TextBox>? TextBoxCreator => _textBoxCreator;
+
+    /// <summary>The text shown.</summary>
+    public string Text { get; }
+
+    /// <summary>The height of a multiline text, in pixels at 96 DPI; <see langword="null"/> for a single line.</summary>
+    public int? Height { get; }
 }

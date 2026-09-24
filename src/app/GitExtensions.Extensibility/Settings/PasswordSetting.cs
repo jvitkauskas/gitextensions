@@ -17,8 +17,6 @@ public class PasswordSetting : ISetting
     public string Name { get; }
     public string Caption { get; }
     public string DefaultValue { get; }
-    public TextBox? CustomControl { get; set; }
-
     public string? this[SettingsSource settings]
     {
         get => settings.GetString(Name, null);

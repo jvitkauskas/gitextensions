@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.SettingsDialog;

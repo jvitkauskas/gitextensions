@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Xml.Serialization;
+using ResourceManager.Hotkey;
 
 namespace ResourceManager;
 

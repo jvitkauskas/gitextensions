@@ -1,4 +1,5 @@
-﻿using GitUI.Infrastructure;
+﻿using GitExtensions.Extensibility;
+using GitUI.Infrastructure;
 
 namespace GitUI;
 

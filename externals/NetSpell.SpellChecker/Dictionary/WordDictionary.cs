@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 #if FULL_PROFILE
-using System.Windows.Forms.Design;
 #endif
 using NetSpell.SpellChecker.Dictionary.Affix;
 using NetSpell.SpellChecker.Dictionary.Phonetic;
@@ -20,7 +19,6 @@ using PhoneticRuleCollection = List<PhoneticRule>;
 /// <summary>
 /// The WordDictionary class contains all the logic for managing the word list.
 /// </summary>
-[ToolboxBitmap(typeof(WordDictionary), "Dictionary.bmp")]
 public partial class WordDictionary : Component
 {
     private string _dictionaryFile = Thread.CurrentThread.CurrentCulture.Name + ".dic";
@@ -677,7 +675,6 @@ public partial class WordDictionary : Component
     [Category("Dictionary")]
     [Description("The folder containing dictionaries")]
 #if FULL_PROFILE
-    [Editor(typeof(FolderNameEditor), typeof(UITypeEditor))]
 #endif
     [NotifyParentProperty(true)]
     public string DictionaryFolder { get; set; } = "";

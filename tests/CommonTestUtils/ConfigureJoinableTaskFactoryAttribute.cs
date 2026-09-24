@@ -22,7 +22,7 @@ public sealed class ConfigureJoinableTaskFactoryAttribute : Attribute, ITestActi
 
     public ConfigureJoinableTaskFactoryAttribute()
     {
-        Application.ThreadException += HandleApplicationThreadException;
+        TaskManager.UnhandledExceptionHandler = StoreThreadException;
     }
 
     public void BeforeTest(ITest test)
@@ -48,13 +48,15 @@ public sealed class ConfigureJoinableTaskFactoryAttribute : Attribute, ITestActi
 
         Thread.CurrentThread.GetApartmentState().Should().Be(ApartmentState.STA);
 
-        // This form is created to obtain a UI synchronization context only.
-        using (new Form())
+        // The UI synchronization context of the thread, as WinForms installed it.
+        if (SynchronizationContext.Current is not MessageWindowSynchronizationContext)
         {
-            // Store the shared JoinableTaskContext
-            ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
-            _hangReporter = new HangReporter(ThreadHelper.JoinableTaskContext);
+            SynchronizationContext.SetSynchronizationContext(new MessageWindowSynchronizationContext());
         }
+
+        // Store the shared JoinableTaskContext
+        ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
+        _hangReporter = new HangReporter(ThreadHelper.JoinableTaskContext);
     }
 
     public void AfterTest(ITest test)
@@ -105,9 +107,6 @@ public sealed class ConfigureJoinableTaskFactoryAttribute : Attribute, ITestActi
             Interlocked.Exchange(ref _threadException, null)?.Throw();
         }
     }
-
-    private void HandleApplicationThreadException(object? sender, ThreadExceptionEventArgs e)
-        => StoreThreadException(e.Exception);
 
     private void StoreThreadException(Exception ex)
     {

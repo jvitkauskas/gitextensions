@@ -4,7 +4,7 @@
     Deliberately WinForms-free: interop with WinForms happens through native window handles only.
   -->
   <PropertyGroup>
-    <UseWindowsForms>false</UseWindowsForms>
+    <UseSystemDrawing>false</UseSystemDrawing>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 

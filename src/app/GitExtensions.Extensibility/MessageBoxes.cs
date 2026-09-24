@@ -1,13 +1,13 @@
 ﻿namespace GitExtensions.Extensibility;
 
 /// <summary>
-///  Provides general-purpose wrappers around <c>System.Windows.Forms.MessageBox</c>
+///  Provides general-purpose wrappers around the native message box (<see cref="NativeMessageBox"/>)
 ///  for use by plugins and other projects that cannot reference GitUI.
 ///  Projects within GitUI should prefer the <c>GitUI.MessageBoxes</c> class
 ///  which provides additional domain-specific methods with translatable strings.
 /// </summary>
 /// <remarks>
-///  Plugin API v2: plugins use <see cref="PluginMessageBoxes"/> instead, which needs no WinForms type.
+///  Plugin API v2: plugins use <see cref="PluginMessageBoxes"/> instead, with an owner of any UI framework.
 /// </remarks>
 public static class MessageBoxes
 {
@@ -15,10 +15,8 @@ public static class MessageBoxes
     ///  Shows a message box with the specified parameters.
     /// </summary>
     /// <returns>The <see cref="DialogResult"/> selected by the user.</returns>
-#pragma warning disable RS0030 // Do not use banned APIs -- MessageBoxes is the approved wrapper
     public static DialogResult Show(IWin32Window? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
-        => MessageBox.Show(owner ?? Form.ActiveForm, text, caption, buttons, icon, defaultButton);
-#pragma warning restore RS0030
+        => NativeMessageBox.Show(owner, text, caption, buttons, icon, defaultButton);
 
     /// <summary>
     ///  Shows a message box without specifying an icon.

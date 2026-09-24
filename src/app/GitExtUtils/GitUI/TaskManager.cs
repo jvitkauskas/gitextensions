@@ -75,7 +75,7 @@ public class TaskManager
     }
 
     /// <summary>
-    /// Asynchronously run <paramref name="asyncAction"/> on a background thread and forward all exceptions to <see cref="Application.OnThreadException"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// Asynchronously run <paramref name="asyncAction"/> on a background thread and forward all exceptions to <see cref="UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
     /// </summary>
     public void FileAndForget(Func<Task> asyncAction)
     {
@@ -87,7 +87,7 @@ public class TaskManager
     }
 
     /// <summary>
-    /// Asynchronously run <paramref name="action"/> on a background thread and forward all exceptions to <see cref="Application.OnThreadException"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// Asynchronously run <paramref name="action"/> on a background thread and forward all exceptions to <see cref="UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
     /// </summary>
     public void FileAndForget(Action action)
     {
@@ -95,38 +95,12 @@ public class TaskManager
     }
 
     /// <summary>
-    /// Asynchronously run <paramref name="task"/> on a background thread and forward all exceptions to <see cref="Application.OnThreadException"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// Asynchronously run <paramref name="task"/> on a background thread and forward all exceptions to <see cref="UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
     /// </summary>
     public void FileAndForget(Task task)
     {
         TimeSpan infiniteTimeout = new(-TimeSpan.TicksPerMillisecond);
         FileAndForget(() => task.WaitAsync(infiniteTimeout));
-    }
-
-    /// <summary>
-    /// Asynchronously run <paramref name="asyncAction"/> on the UI thread and forward all exceptions to <see cref="Application.OnThreadException"/> except for <see cref="OperationCanceledException"/>, which is ignored.
-    /// </summary>
-    public void InvokeAndForget(Control control, Func<Task> asyncAction, CancellationToken cancellationToken = default)
-    {
-        _ = JoinableTaskFactory.RunAsync(() =>
-            HandleExceptionsAsync(async () =>
-                {
-                    if (!JoinableTaskContext.IsOnMainThread)
-                    {
-                        await control.SwitchToMainThreadAsync(cancellationToken.CombineWith(_switchToMainThreadCancellationToken).Token);
-                    }
-
-                    await asyncAction();
-                },
-                ReportExceptionOnMainThreadAsync));
-    }
-
-    /// <summary>
-    /// Asynchronously run <paramref name="action"/> on the UI thread and forward all exceptions to <see cref="Application.OnThreadException"/> except for <see cref="OperationCanceledException"/>, which is ignored.
-    /// </summary>
-    public void InvokeAndForget(Control control, Action action, CancellationToken cancellationToken = default)
-    {
-        InvokeAndForget(control, AsyncAction(action), cancellationToken);
     }
 
     public async Task JoinPendingOperationsAsync(CancellationToken cancellationToken)
@@ -152,9 +126,8 @@ public class TaskManager
     }
 
     /// <summary>
-    ///  Reports the exceptions of the background operations on the main thread; <see cref="Application.OnThreadException"/>
-    ///  if not set. The application sets it, so that the report does not depend on the WinForms message loop (e.g. when
-    ///  Avalonia runs the main loop).
+    ///  Reports the exceptions of the background operations on the main thread; they are traced if not set (e.g. in the
+    ///  tests). The application sets it to its bug report.
     /// </summary>
     public static Action<Exception>? UnhandledExceptionHandler { get; set; }
 
@@ -171,7 +144,7 @@ public class TaskManager
                 await JoinableTaskFactory.SwitchToMainThreadAsync(_switchToMainThreadCancellationToken);
             }
 
-            (UnhandledExceptionHandler ?? Application.OnThreadException)(ex.Demystify());
+            (UnhandledExceptionHandler ?? TraceException)(ex.Demystify());
         }
         catch (Exception exceptionWhileReporting)
         {
@@ -187,4 +160,6 @@ public class TaskManager
             }
         }
     }
+
+    private static void TraceException(Exception ex) => Trace.TraceError(ex.ToString());
 }

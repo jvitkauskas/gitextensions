@@ -71,7 +71,7 @@ internal sealed class ConEmuConsoleEmulator(IShellProvider shellProvider) : ICon
     internal static string ResolveTheme(string? configuredTheme)
     {
         return string.IsNullOrEmpty(configuredTheme)
-            ? Application.IsDarkModeEnabled ? DarkThemeFallback : LightThemeFallback
+            ? ColorHelper.IsDarkTheme ? DarkThemeFallback : LightThemeFallback
             : configuredTheme;
     }
 }

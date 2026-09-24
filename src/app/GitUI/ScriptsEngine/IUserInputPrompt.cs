@@ -1,4 +1,6 @@
-﻿namespace GitUI.ScriptsEngine;
+﻿using GitExtensions.Extensibility;
+
+namespace GitUI.ScriptsEngine;
 
 /// <summary>
 /// Display a script dialog where the user enter a value.

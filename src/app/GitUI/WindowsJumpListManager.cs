@@ -43,7 +43,7 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
         {
             string id = AppSettings.ApplicationId;
             TaskbarManager.Instance.ApplicationId = AppSettings.IsPortable()
-                ? $"{id}.{Convert.ToBase64String(SHA1.HashData(Encoding.UTF8.GetBytes(Application.ExecutablePath)))}"
+                ? $"{id}.{Convert.ToBase64String(SHA1.HashData(Encoding.UTF8.GetBytes(ApplicationInfo.ExecutablePath)))}"
                 : id;
         }
     }

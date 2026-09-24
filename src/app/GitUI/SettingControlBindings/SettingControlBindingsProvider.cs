@@ -1,5 +1,4 @@
 ﻿using GitExtensions.Extensibility.Settings;
-using GitExtensions.Extensibility.Settings.UserControls;
 
 namespace GitUI.SettingControlBindings;
 

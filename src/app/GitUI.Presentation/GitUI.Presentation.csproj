@@ -4,7 +4,7 @@
     (docs/avalonia-port/PLAN.md). Must not reference Avalonia or use WinForms types.
   -->
   <PropertyGroup>
-    <UseWindowsForms>false</UseWindowsForms>
+    <UseSystemDrawing>false</UseSystemDrawing>
   </PropertyGroup>
 
   <ItemGroup>

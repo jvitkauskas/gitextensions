@@ -3,9 +3,9 @@ using GitExtensions.Extensibility.Plugins;
 namespace GitUIPluginInterfaces.RepositoryHosts;
 
 /// <summary>
-///  Plugin API v2 of <see cref="IRepositoryHostPlugin.ConfigureContextMenu"/>: a repository host plugin that implements it adds
+///  Plugin API v2 of <c>IRepositoryHostPlugin.ConfigureContextMenu</c>: a repository host plugin that implements it adds
 ///  items to the context menu of the blame as a menu model, which the host renders (in WinForms or in Avalonia), instead of
-///  changing a WinForms <c>ContextMenuStrip</c>. The host then does not call <see cref="IRepositoryHostPlugin.ConfigureContextMenu"/>.
+///  changing a WinForms <c>ContextMenuStrip</c>. The host then does not call <c>IRepositoryHostPlugin.ConfigureContextMenu</c>.
 /// </summary>
 public interface IBlameContextMenuProvider
 {

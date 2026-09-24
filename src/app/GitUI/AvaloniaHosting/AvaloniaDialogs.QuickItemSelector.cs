@@ -1,3 +1,4 @@
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.Controls.RevisionGrid;
 using GitUI.Avalonia.Hosting;

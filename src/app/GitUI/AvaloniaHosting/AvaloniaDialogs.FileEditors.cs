@@ -7,7 +7,6 @@ using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
-using ICSharpCode.TextEditor.Util;
 using ResourceManager;
 
 namespace GitUI.AvaloniaHosting;

@@ -28,12 +28,10 @@ public class Theme : IThemeSerializationData
     public ThemeId Id { get; }
 
     /// <summary>
-    /// Get the Windows SystemColorMode for this theme, based on the background color.
+    /// Whether this theme is dark (the Windows dark color mode rather than the classic one), based on the background color.
     /// </summary>
-    public SystemColorMode SystemColorMode
-        => new HslColor(GetColor(AppColor.PanelBackground)).L < 0.5
-            ? SystemColorMode.Dark
-            : SystemColorMode.Classic;
+    public bool IsDark
+        => new HslColor(GetColor(AppColor.PanelBackground)).L < 0.5;
 
     /// <summary>
     /// Get GitExtensions app-specific color value as defined by this instance. If not defined,

@@ -1,6 +1,7 @@
 ﻿using System.IO.Abstractions;
 using GitCommands.Git;
 using GitCommands.Git.Tag;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using NSubstitute;
 

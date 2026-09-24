@@ -1,3 +1,4 @@
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;

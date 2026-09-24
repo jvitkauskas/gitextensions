@@ -331,11 +331,6 @@ public class GitHub3Plugin : GitPluginBase, IRepositoryHostPlugin, IGitPluginFor
         }
     }
 
-    /// <summary>Plugin API v1: the host uses <see cref="GetBlameContextMenuItems"/> instead (plugin API v2).</summary>
-    void IRepositoryHostPlugin.ConfigureContextMenu(ContextMenuStrip contextMenu)
-    {
-    }
-
     /// <summary>"View in GitHub", with the blame of the line on each GitHub remote of the repository.</summary>
     public IReadOnlyList<PluginMenuItem> GetBlameContextMenuItems(GitBlameContext context)
     {

@@ -1,4 +1,5 @@
 using GitCommands;
+using GitExtUtils;
 
 namespace ResourceManager.CommitDataRenders;
 
@@ -20,7 +21,7 @@ public sealed class TabbedHeaderRenderStyleProvider : IHeaderRenderStyleProvider
         ];
 
         int tabStop = strings
-            .Select(s => TextRenderer.MeasureText(s + "  ", AppSettings.Font).Width)
+            .Select(s => TextMeasurement.MeasureText(s + "  ", AppSettings.Font).Width)
             .Max();
 
         // simulate a two column layout even when there's more then one tab used

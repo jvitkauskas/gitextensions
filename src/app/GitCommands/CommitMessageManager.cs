@@ -71,7 +71,7 @@ public sealed class CommitMessageManager : ICommitMessageManager
     private readonly string _amendSaveStatePath;
 
     private readonly IFileSystem _fileSystem;
-    private readonly Control _owner;
+    private readonly IWin32Window? _owner;
 
     // Commit messages are UTF-8 by default unless otherwise in the config file.
     // The git manual states:
@@ -83,14 +83,13 @@ public sealed class CommitMessageManager : ICommitMessageManager
 
     private string? _overriddenCommitMessage;
 
-    public CommitMessageManager(Control owner, string workingDirGitDir, Encoding commitEncoding, string? overriddenCommitMessage = null)
+    public CommitMessageManager(IWin32Window? owner, string workingDirGitDir, Encoding commitEncoding, string? overriddenCommitMessage = null)
         : this(owner, workingDirGitDir, commitEncoding, new FileSystem(), overriddenCommitMessage)
     {
     }
 
-    internal CommitMessageManager(Control owner, string workingDirGitDir, Encoding commitEncoding, IFileSystem fileSystem, string? overriddenCommitMessage = null)
+    internal CommitMessageManager(IWin32Window? owner, string workingDirGitDir, Encoding commitEncoding, IFileSystem fileSystem, string? overriddenCommitMessage = null)
     {
-        ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(workingDirGitDir);
 
         _owner = owner;
@@ -231,7 +230,7 @@ public sealed class CommitMessageManager : ICommitMessageManager
         }
         catch (Exception ex) when (ex is not (OperationCanceledException or ObjectDisposedException))
         {
-            await _owner.SwitchToMainThreadAsync(cancellationToken: cancellationToken);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             MessageBoxes.Show(_owner, string.Format(CannotAccessFile, ex.Message, filePath), errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             return string.Empty;
         }
@@ -253,7 +252,7 @@ public sealed class CommitMessageManager : ICommitMessageManager
         }
         catch (Exception ex) when (ex is not (OperationCanceledException or ObjectDisposedException))
         {
-            await _owner.SwitchToMainThreadAsync(cancellationToken: cancellationToken);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             // No need to cancel the other operations in FormCommit - just let the user know that something went wrong
             MessageBoxes.Show(_owner, string.Format(CannotAccessFile, ex.Message, filePath), errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);

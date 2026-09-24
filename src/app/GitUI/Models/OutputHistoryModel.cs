@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text;
 using GitUI.Editor.Diff;
-using ICSharpCode.TextEditor.Document;
 
 namespace GitUI.Models;
 

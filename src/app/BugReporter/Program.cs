@@ -1,6 +1,9 @@
-using System.Text;
+﻿using System.Text;
+using Avalonia.Threading;
 using BugReporter.Serialization;
+using GitCommands;
 using GitUI;
+using GitUI.Avalonia.Hosting;
 using Microsoft.VisualStudio.Threading;
 
 namespace BugReporter;
@@ -13,15 +16,11 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
+        AvaloniaUi.EnsureInitialized(GetOptions);
 
-        // This form created to obtain UI synchronization context only
-        using (new Form())
-        {
-            // Store the shared JoinableTaskContext
-            ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
-        }
+        // The shared JoinableTaskContext, on the synchronization context of Avalonia's UI thread.
+        SynchronizationContext.SetSynchronizationContext(new AvaloniaSynchronizationContext());
+        ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
 
         // If an error happens before we had a chance to init the environment information
         // the call to GetInformation() from BugReporter.ShowNBug() will fail.
@@ -58,7 +57,18 @@ internal static class Program
         string exceptionInfo = "";
         exception ??= new(new Exception("Missing error payload"));
 
-        new BugReportForm().ShowDialog(owner: null, exception, exceptionInfo, UserEnvironmentInformation.GetInformation(), canIgnore: true, showIgnore: false, focusDetails: false);
+        BugReportDialog.Show(owner: null, GetOptions, exception, exceptionInfo, UserEnvironmentInformation.GetInformation(), canIgnore: true, showIgnore: false, focusDetails: false);
+    }
+
+    /// <summary>The fonts of the application (its theme is not loaded by the bug reporter).</summary>
+    private static AvaloniaUiOptions GetOptions()
+    {
+        Font font = AppSettings.Font;
+        return new AvaloniaUiOptions(
+            IsDarkTheme: false,
+            FontFamily: font.FontFamily.Name,
+            FontSize: font.SizeInPoints * 96 / 72,
+            MonospaceFontFamily: AppSettings.MonospaceFont.FontFamily.Name);
     }
 
     private static string Base64Decode(string base64EncodedData)

@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using GitCommands.Git.Extensions;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 
 namespace GitCommands.Git.Tag;

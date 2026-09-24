@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ResourceManager.Hotkey;
 
 namespace GitUI.CommandsDialogs.BrowseDialog;
 

@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
-using ConEmu.WinForms;
 using GitCommands;
 using GitCommands.Logging;
 using GitExtensions.Extensibility;

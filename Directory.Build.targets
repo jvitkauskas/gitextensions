@@ -17,6 +17,23 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
+  <!--
+    The GDI+ types (System.Drawing: the colors and fonts of the settings, the images of the resources), which WinForms
+    brought before it was removed (docs/avalonia-port/PLAN.md, phase 8). The Avalonia projects have their own types of
+    these names, hence no implicit using there.
+  -->
+  <ItemGroup Condition="'$(UseSystemDrawing)' != 'false'">
+    <PackageReference Include="System.Drawing.Common" />
+    <Using Include="System.Drawing" Condition="'$(ImplicitUsings)' == 'enable'" />
+
+    <!-- The images of the .resx files are read from their preserialized form. -->
+    <PackageReference Include="System.Resources.Extensions" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(UseSystemDrawing)' != 'false'">
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Stop transitive consumption of JetBrains annotations -->
     <PackageReference Update="JetBrains.Annotations" PrivateAssets="all" />

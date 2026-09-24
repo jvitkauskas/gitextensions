@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Xml;
 using System.Xml.Serialization;
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using ResourceManager;
 

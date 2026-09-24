@@ -1,0 +1,86 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.BugReporter"
+                x:Class="GitUI.Avalonia.BugReporter.BugReportWindow"
+                x:DataType="vm:BugReportViewModel"
+                Title="{Binding Title}"
+                Width="620" Height="560" MinWidth="480" MinHeight="420">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="6">
+        <Button Name="copyButton" Command="{Binding CopyCommand}" ToolTip.Tip="{Binding Strings.ToolTipCopy.Text}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.Copy.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Button Name="ignoreButton" Grid.Column="2" Content="{Binding Strings.Ignore.AccessKeyText}" Command="{Binding IgnoreCommand}"
+                IsVisible="{Binding IsIgnoreVisible}" IsEnabled="{Binding IsIgnoreEnabled}" />
+        <Button Name="sendAndQuitButton" Grid.Column="3" Classes="accent" Command="{Binding SendAndQuitCommand}"
+                IsEnabled="{Binding CanSend}" ToolTip.Tip="{Binding Strings.ToolTipSendQuit.Text}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Image Source="avares://GitUI.Avalonia/Assets/GitHub.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.SendAndQuit.AccessKeyText}" />
+          </StackPanel>
+        </Button>
+        <Button Name="quitButton" Grid.Column="4" Content="{Binding Strings.Quit.AccessKeyText}" Command="{Binding QuitCommand}"
+                ToolTip.Tip="{Binding Strings.ToolTipQuit.Text}" />
+      </Grid>
+    </Border>
+    <Grid Margin="12" RowDefinitions="Auto,*" RowSpacing="10">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+        <Image Source="avares://GitUI.Avalonia/Assets/Warning.png" Width="32" Height="32" VerticalAlignment="Top" />
+        <TextBlock Grid.Column="1" Name="warningText" Text="{Binding Strings.Warning.Text}" TextWrapping="Wrap" />
+      </Grid>
+      <TabControl Grid.Row="1" Name="tabs" SelectedIndex="{Binding SelectedTabIndex}">
+        <TabItem Header="{Binding Strings.GeneralTab.Text}">
+          <Grid Margin="0,8,0,0" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+                ColumnSpacing="8" RowSpacing="6">
+            <TextBlock Text="{Binding Strings.Application.Text}" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1" Name="applicationText" IsReadOnly="True" Text="{Binding Info.Application, Mode=OneWay}" />
+            <TextBlock Grid.Row="1" Text="{Binding Strings.ExceptionType.Text}" VerticalAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="1" Name="exceptionTypeText" IsReadOnly="True" Text="{Binding Info.ExceptionType, Mode=OneWay}" />
+            <TextBox Grid.Row="2" Grid.ColumnSpan="2" Name="exceptionMessageText" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="90"
+                     Text="{Binding Info.ExceptionMessage, Mode=OneWay}" />
+            <TextBlock Grid.Row="3" Text="{Binding Strings.TargetSite.Text}" VerticalAlignment="Center" />
+            <TextBox Grid.Row="3" Grid.Column="1" Name="targetSiteText" IsReadOnly="True" Text="{Binding Info.TargetSite, Mode=OneWay}" />
+            <TextBlock Grid.Row="4" Text="{Binding Strings.DateTime.Text}" VerticalAlignment="Center" />
+            <TextBox Grid.Row="4" Grid.Column="1" Name="dateTimeText" IsReadOnly="True" Text="{Binding Info.DateTime, Mode=OneWay}" />
+            <TextBlock Grid.Row="5" Text="{Binding Strings.Clr}" VerticalAlignment="Center" />
+            <TextBox Grid.Row="5" Grid.Column="1" Name="clrText" IsReadOnly="True" Text="{Binding Info.ClrVersion, Mode=OneWay}" />
+            <TextBlock Grid.Row="6" Text="{Binding Strings.Git}" VerticalAlignment="Center" />
+            <TextBox Grid.Row="6" Grid.Column="1" Name="gitText" IsReadOnly="True" Text="{Binding Info.GitVersion, Mode=OneWay}" />
+            <TextBlock Grid.Row="7" Grid.ColumnSpan="2" Margin="0,6,0,0" Text="{Binding Strings.ErrorDescription.Text}" TextWrapping="Wrap" />
+            <TextBox Grid.Row="8" Grid.ColumnSpan="2" Name="descriptionText" AcceptsReturn="True" TextWrapping="Wrap"
+                     VerticalContentAlignment="Top" Text="{Binding Description}" />
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding Strings.ExceptionTab.Text}">
+          <Grid Margin="0,8,0,0" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="6">
+            <TextBlock Text="{Binding Strings.Exceptions.Text}" />
+            <TreeView Grid.Row="1" Name="exceptionTree" MaxHeight="120" ItemsSource="{Binding Exceptions}"
+                      SelectedItem="{Binding SelectedException}">
+              <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="vm:BugReportException" ItemsSource="{Binding InnerExceptions}">
+                  <TextBlock Text="{Binding Type}" />
+                </TreeDataTemplate>
+              </TreeView.ItemTemplate>
+            </TreeView>
+            <TextBlock Grid.Row="2" Text="{Binding Strings.ExceptionDetails.Text}" />
+            <DataGrid Grid.Row="3" Name="propertiesGrid" ItemsSource="{Binding SelectedException.Properties}"
+                      IsReadOnly="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" CanUserSortColumns="False">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding Strings.Property.Text}" Binding="{Binding Name}" Width="110" />
+                <DataGridTextColumn Header="{Binding Strings.Information.Text}" Binding="{Binding Value}" Width="*" />
+              </DataGrid.Columns>
+            </DataGrid>
+            <TextBox Grid.Row="4" Name="propertyValueText" IsReadOnly="True" TextWrapping="Wrap" Height="110"
+                     VerticalContentAlignment="Top" FontFamily="{DynamicResource MonospaceFontFamily}"
+                     Text="{Binding #propertiesGrid.((vm:BugReportProperty)SelectedItem).Value, FallbackValue=''}" />
+          </Grid>
+        </TabItem>
+      </TabControl>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

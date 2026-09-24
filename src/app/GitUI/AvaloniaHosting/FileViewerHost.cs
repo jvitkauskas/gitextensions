@@ -18,7 +18,6 @@ using GitUI.Presentation.Editor;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
-using ICSharpCode.TextEditor.Util;
 using Microsoft.VisualStudio.Threading;
 using ResourceManager;
 
@@ -281,7 +280,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
                 GetExtraDiffArguments(request, isRangeDiff: true),
                 pathFilter: "",
                 useGitColoring: true,
-                commandConfiguration: RangeDiffHighlightService.GetGitCommandConfiguration(Module),
+                commandConfiguration: DiffGitCommandConfigurations.ForRangeDiff(Module),
                 cancellationToken));
             cancellationToken.ThrowIfCancellationRequested();
             if (!result.ExitedSuccessfully)
@@ -298,7 +297,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
 
         if (!string.IsNullOrWhiteSpace(item.GrepString))
         {
-            IGitCommandConfiguration commandConfiguration = GrepHighlightService.GetGitCommandConfiguration(Module);
+            IGitCommandConfiguration commandConfiguration = DiffGitCommandConfigurations.ForGrep(Module);
             ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetGrepFileAsync(
                 secondId,
                 item.Name,
@@ -323,7 +322,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         {
             bool success = Module.GetCombinedDiffContent(secondId, item.Name, GetExtraDiffArguments(request, isCombinedDiff: true), encoding, out string diffOfConflict,
                 useGitColoring: UseGitColoring,
-                commandConfiguration: CombinedDiffHighlightService.GetGitCommandConfiguration(Module, UseGitColoring),
+                commandConfiguration: DiffGitCommandConfigurations.ForCombinedDiff(Module, UseGitColoring),
                 cancellationToken);
             if (!success)
             {
@@ -402,7 +401,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             bool isTracked = file.IsTracked || (!file.TreeId.IsZero && !selectedId.IsZero);
             (patch, errorMessage) = await Module.GetSingleDiffAsync(firstId, selectedId, file.Name, file.OldName, GetExtraDiffArguments(request), encoding, cacheResult: true, isTracked,
                 PatchUseGitColoring,
-                PatchHighlightService.GetGitCommandConfiguration(Module, PatchUseGitColoring),
+                DiffGitCommandConfigurations.ForPatch(Module, PatchUseGitColoring),
                 cancellationToken);
         }
         finally

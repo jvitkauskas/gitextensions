@@ -1,5 +1,6 @@
 using System.Text;
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Translations;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog;

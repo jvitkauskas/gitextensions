@@ -1,6 +1,7 @@
 using System.Text;
 using GitCommands;
 using GitCommands.Patches;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;

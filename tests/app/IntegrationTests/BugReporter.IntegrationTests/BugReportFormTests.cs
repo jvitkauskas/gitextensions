@@ -1,5 +1,6 @@
 ﻿using BugReporter;
 using BugReporter.Serialization;
+using GitExtensions.Extensibility;
 
 namespace GitExtensions.UITests.NBugReports;
 

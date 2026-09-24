@@ -11,5 +11,5 @@ internal sealed class HostThemeColors : IThemeColors
 
     public Color GetColor(AppColor color) => color.GetThemeColor();
 
-    public bool IsDarkMode => Application.IsDarkModeEnabled;
+    public bool IsDarkMode => ColorHelper.IsDarkTheme;
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- View model tests and headless Avalonia view tests for the Avalonia port (docs/avalonia-port/PLAN.md). -->
   <PropertyGroup>
-    <UseWindowsForms>false</UseWindowsForms>
+    <UseSystemDrawing>false</UseSystemDrawing>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 

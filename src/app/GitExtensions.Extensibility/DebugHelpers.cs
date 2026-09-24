@@ -54,5 +54,5 @@ public static class DebugHelpers
     }
 
     private static bool IsTestRunning
-        => Application.ExecutablePath.EndsWith("testhost.exe");
+        => Environment.ProcessPath?.EndsWith("testhost.exe") == true;
 }

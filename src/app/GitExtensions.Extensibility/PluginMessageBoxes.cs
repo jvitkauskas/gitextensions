@@ -54,7 +54,7 @@ public enum PluginMessageBoxResult
 public static class PluginMessageBoxes
 {
     /// <summary>The implementation; replaced by tests (and by the host once WinForms goes away).</summary>
-    internal static IPluginMessageBoxService Service { get; set; } = WinFormsPluginMessageBoxService.Instance;
+    internal static IPluginMessageBoxService Service { get; set; } = NativePluginMessageBoxService.Instance;
 
     /// <summary>Shows a message box over <paramref name="owner"/>.</summary>
     /// <returns>The button the user chose.</returns>
@@ -127,16 +127,16 @@ internal interface IPluginMessageBoxService
 ///  The message boxes of <see cref="PluginMessageBoxes"/> shown by WinForms: <see cref="MessageBoxes"/> and <c>TaskDialog</c>.
 ///  The one place to replace when WinForms goes away (docs/avalonia-port/PLAN.md, phase 8).
 /// </summary>
-internal sealed class WinFormsPluginMessageBoxService : IPluginMessageBoxService
+internal sealed class NativePluginMessageBoxService : IPluginMessageBoxService
 {
-    public static WinFormsPluginMessageBoxService Instance { get; } = new();
+    public static NativePluginMessageBoxService Instance { get; } = new();
 
-    private WinFormsPluginMessageBoxService()
+    private NativePluginMessageBoxService()
     {
     }
 
     public PluginMessageBoxResult Show(WindowOwner owner, string text, string caption, PluginMessageBoxButtons buttons, PluginMessageBoxIcon icon, PluginMessageBoxDefaultButton defaultButton)
-        => ToResult(MessageBoxes.Show(owner.ToWin32Window(), text, caption, ToWinForms(buttons), ToWinForms(icon), ToWinForms(defaultButton)));
+        => ToResult(MessageBoxes.Show(owner.ToWin32Window(), text, caption, ToNative(buttons), ToNative(icon), ToNative(defaultButton)));
 
     public async Task<int> ShowChoiceAsync(WindowOwner owner, string caption, string heading, string? text, PluginMessageBoxIcon icon, IReadOnlyList<string> buttons)
     {
@@ -160,7 +160,7 @@ internal sealed class WinFormsPluginMessageBoxService : IPluginMessageBoxService
         return Array.IndexOf(taskDialogButtons, result);
     }
 
-    internal static MessageBoxButtons ToWinForms(PluginMessageBoxButtons buttons) => buttons switch
+    internal static MessageBoxButtons ToNative(PluginMessageBoxButtons buttons) => buttons switch
     {
         PluginMessageBoxButtons.Ok => MessageBoxButtons.OK,
         PluginMessageBoxButtons.OkCancel => MessageBoxButtons.OKCancel,
@@ -171,7 +171,7 @@ internal sealed class WinFormsPluginMessageBoxService : IPluginMessageBoxService
         _ => throw new ArgumentOutOfRangeException(nameof(buttons), buttons, null),
     };
 
-    internal static MessageBoxIcon ToWinForms(PluginMessageBoxIcon icon) => icon switch
+    internal static MessageBoxIcon ToNative(PluginMessageBoxIcon icon) => icon switch
     {
         PluginMessageBoxIcon.None => MessageBoxIcon.None,
         PluginMessageBoxIcon.Information => MessageBoxIcon.Information,
@@ -181,7 +181,7 @@ internal sealed class WinFormsPluginMessageBoxService : IPluginMessageBoxService
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, null),
     };
 
-    internal static MessageBoxDefaultButton ToWinForms(PluginMessageBoxDefaultButton defaultButton) => defaultButton switch
+    internal static MessageBoxDefaultButton ToNative(PluginMessageBoxDefaultButton defaultButton) => defaultButton switch
     {
         PluginMessageBoxDefaultButton.Button1 => MessageBoxDefaultButton.Button1,
         PluginMessageBoxDefaultButton.Button2 => MessageBoxDefaultButton.Button2,

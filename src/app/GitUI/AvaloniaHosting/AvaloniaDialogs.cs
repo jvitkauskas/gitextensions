@@ -126,7 +126,7 @@ internal static partial class AvaloniaDialogs
 
         Font font = AppSettings.Font;
         return new AvaloniaUiOptions(
-            IsDarkTheme: Application.IsDarkModeEnabled,
+            IsDarkTheme: ColorHelper.IsDarkTheme,
             FontFamily: font.FontFamily.Name,
             FontSize: font.SizeInPoints * 96 / 72,
             Colors: GetThemeColors(),

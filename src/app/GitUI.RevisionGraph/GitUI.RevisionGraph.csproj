@@ -7,7 +7,7 @@
     (LaneInfoProvider, with BranchFinder) stay in GitUI.
   -->
   <PropertyGroup>
-    <UseWindowsForms>false</UseWindowsForms>
+    <UseSystemDrawing>false</UseSystemDrawing>
     <RootNamespace>GitUI.UserControls.RevisionGrid.Graph</RootNamespace>
   </PropertyGroup>
 

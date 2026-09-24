@@ -78,7 +78,7 @@ internal sealed class ColorsSettingsPageController
             {
                 // override default (at least dark in .NET10 requires overrides).
                 Theme theme = _themeRepository.GetTheme(_page.SelectedThemeId, _page.SelectedThemeVariations);
-                _page.UseSystemVisualStyle = theme.SystemColorMode == SystemColorMode.Classic;
+                _page.UseSystemVisualStyle = !theme.IsDark;
             }
             catch (Exception)
             {

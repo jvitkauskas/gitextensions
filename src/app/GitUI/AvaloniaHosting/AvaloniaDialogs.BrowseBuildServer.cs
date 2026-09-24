@@ -10,6 +10,7 @@ using GitCommands;
 using GitCommands.Config;
 using GitCommands.Remotes;
 using GitCommands.Settings;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.BuildServerIntegration;
 using GitExtensions.Extensibility.Configurations;
 using GitExtensions.Extensibility.Git;

@@ -16,7 +16,6 @@ namespace NetSpell.SpellChecker;
 ///     The Spelling class encapsulates the functions necessary to check
 ///     the spelling of inputted text.
 /// </summary>
-[ToolboxBitmap(typeof(Spelling), "Spelling.bmp")]
 public partial class Spelling : Component
 {
     #region Global Regex

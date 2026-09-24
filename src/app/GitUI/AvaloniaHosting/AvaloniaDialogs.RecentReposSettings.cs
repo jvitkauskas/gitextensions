@@ -1,5 +1,6 @@
 using GitCommands;
 using GitCommands.UserRepositoryHistory;
+using GitExtensions.Extensibility;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.BrowseDialog;

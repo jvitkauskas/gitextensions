@@ -1,6 +1,7 @@
 ﻿using GitCommands;
 using GitCommands.Config;
 using GitCommands.Settings;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Translations;
 using ResourceManager;

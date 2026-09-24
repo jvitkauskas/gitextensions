@@ -96,7 +96,7 @@ internal static partial class AvaloniaDialogs
             _window = window;
 
             // The manager shows its errors on the WinForms owner; the message box is on the dialog.
-            _commitMessageManager = new CommitMessageManager(new Control(), Module.WorkingDirGitDir, Module.CommitEncoding, commitMessage);
+            _commitMessageManager = new CommitMessageManager(owner: null, Module.WorkingDirGitDir, Module.CommitEncoding, commitMessage);
             _commitTemplateManager = new CommitTemplateManager(() => Module);
         }
 
