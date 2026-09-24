@@ -1465,6 +1465,11 @@ public sealed class GitUICommands : IGitUICommands
     /// <param name="args">The start up arguments.</param>
     public bool StartBrowseDialog(IWin32Window? owner, BrowseArguments? args = null)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowBrowse(this, args ?? new BrowseArguments()))
+        {
+            return true;
+        }
+
         FormBrowse form = new(this, args ?? new BrowseArguments());
 
         if (Application.MessageLoop)

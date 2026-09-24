@@ -145,6 +145,32 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GitLogo16.png" Link="Assets\GitLogo16.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Plugin.png" Link="Assets\Plugin.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Hotkey.png" Link="Assets\Hotkey.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullMerge.png" Link="Assets\PullMerge.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullRebase.png" Link="Assets\PullRebase.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullFetch.png" Link="Assets\PullFetch.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullFetchAll.png" Link="Assets\PullFetchAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullFetchPruneAll.png" Link="Assets\PullFetchPruneAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CloneRepoGit.png" Link="Assets\CloneRepoGit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoCreate.png" Link="Assets\RepoCreate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\WorkTree.png" Link="Assets\WorkTree.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\EditGitIgnore.png" Link="Assets\EditGitIgnore.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Maintenance.png" Link="Assets\Maintenance.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CompressGitDatabase.png" Link="Assets\CompressGitDatabase.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RecoverLostObjects.png" Link="Assets\RecoverLostObjects.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DeleteIndexLock.png" Link="Assets\DeleteIndexLock.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\EditGitConfig.png" Link="Assets\EditGitConfig.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchDelete.png" Link="Assets\BranchDelete.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\TagDelete.png" Link="Assets\TagDelete.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ArchiveRevision.png" Link="Assets\ArchiveRevision.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Bisect.png" Link="Assets\Bisect.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PatchFormat.png" Link="Assets\PatchFormat.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PatchApply.png" Link="Assets\PatchApply.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PatchView.png" Link="Assets\PatchView.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Book.png" Link="Assets\Book.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GitForWindows.png" Link="Assets\GitForWindows.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Changelog.png" Link="Assets\Changelog.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Translate.png" Link="Assets\Translate.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BugReport.png" Link="Assets\BugReport.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Console.png" Link="Assets\Console.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GeneralSettings.png" Link="Assets\GeneralSettings.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Appearance.png" Link="Assets\Appearance.png" />

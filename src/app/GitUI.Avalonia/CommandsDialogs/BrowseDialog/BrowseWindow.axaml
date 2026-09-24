@@ -1,0 +1,104 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.BrowseDialog.BrowseWindow"
+                x:DataType="vm:BrowseViewModel"
+                Title="{Binding Title}"
+                ShowInTaskbar="True"
+                Width="1300" Height="900" MinWidth="600" MinHeight="400">
+  <Window.Styles>
+    <Style Selector="Button.toolbar, SplitButton.toolbar">
+      <Setter Property="Padding" Value="4,3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </Window.Styles>
+  <!-- Equivalent of FormBrowse: the main menu, the main toolbar (ToolStripMain), the grid and the tabs of the selected commit. -->
+  <DockPanel>
+    <Menu Name="mainMenu" DockPanel.Dock="Top" />
+    <StackPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="4,2">
+      <Button Name="refreshButton" Classes="toolbar" Command="{Binding RefreshRevisionsCommand}" ToolTip.Tip="{Binding Strings.Refresh.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
+      </Button>
+      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Button Name="branchButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.CheckoutBranch}" ToolTip.Tip="{Binding Strings.BranchToolTip.Text}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding CurrentBranch}" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
+      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Button Name="commitButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Commit}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/RepoStateClean.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding Strings.CommitButton.Text}" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
+      <SplitButton Name="pullButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.PullDefault}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/Pull.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding Strings.PullButton.Text}" VerticalAlignment="Center" />
+        </StackPanel>
+      </SplitButton>
+      <Button Name="pushButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Push}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/Push.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding Strings.PushButton.Text}" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
+      <SplitButton Name="stashButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.ManageStashes}" ToolTip.Tip="{Binding Strings.ManageStashesToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/Stash.png" Width="16" Height="16" />
+      </SplitButton>
+      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Button Name="fileExplorerButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.FileExplorer}" ToolTip.Tip="{Binding Strings.FileExplorerToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="gitBashButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.GitBash}" ToolTip.Tip="{Binding Strings.GitBashToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/GitForWindows.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="settingsButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Settings}" ToolTip.Tip="{Binding Strings.SettingsToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" Width="16" Height="16" />
+      </Button>
+    </StackPanel>
+    <Grid RowDefinitions="*,Auto,320" Margin="4,0,4,4">
+      <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <rg:RevisionGridView Name="revisionGrid" DataContext="{Binding Grid}" />
+      </Border>
+      <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+      <TabControl Name="tabs" Grid.Row="2" Padding="0,4,0,0">
+        <TabItem Name="commitTab">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/CommitSummary.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.CommitTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <c:CommitInfoView Name="commitInfo" DataContext="{Binding CommitInfo}" />
+          </Border>
+        </TabItem>
+        <TabItem Name="diffTab">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Diff.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.DiffTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <Grid ColumnDefinitions="300,Auto,*">
+            <fs:FileStatusListView Name="diffFiles" DataContext="{Binding Files}" />
+            <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+            <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+              <ed:FileViewerView Name="diffViewer" DataContext="{Binding Viewer}" />
+            </Border>
+          </Grid>
+        </TabItem>
+      </TabControl>
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

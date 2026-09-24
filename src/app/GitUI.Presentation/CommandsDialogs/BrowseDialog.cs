@@ -1,0 +1,658 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GitExtensions.Extensibility.Git;
+using GitUI.Presentation.Editor;
+using GitUI.Presentation.Services;
+using GitUI.Presentation.Translations;
+using GitUI.Presentation.UserControls;
+using GitUI.Presentation.UserControls.FileStatusList;
+using GitUI.Presentation.UserControls.RevisionGrid;
+using GitUIPluginInterfaces;
+
+namespace GitUI.Presentation.CommandsDialogs;
+
+/// <summary>Strings of the main window; ids match <c>FormBrowse</c>.</summary>
+public sealed class BrowseStrings : ViewStrings
+{
+    public BrowseStrings()
+        : base("FormBrowse")
+    {
+        Title = Add("$this", "Text", "Git Extensions");
+        CommitTab = Add("CommitInfoTabPage", "Text", "Commit");
+        DiffTab = Add("DiffTabPage", "Text", "Diff");
+        TreeTab = Add("TreeTabPage", "Text", "File tree");
+        Refresh = Add("RefreshButton", "ToolTipText", "Refresh");
+        CommitButton = Add("toolStripButtonCommit", "Text", "Commit");
+        PullButton = Add("toolStripButtonPull", "Text", "Pull");
+        PushButton = Add("toolStripButtonPush", "Text", "Push");
+        ManageStashesToolTip = Add("toolStripSplitStash", "ToolTipText", "Manage stashes");
+        SettingsToolTip = Add("EditSettings", "ToolTipText", "Settings");
+        BranchToolTip = Add("branchSelect", "ToolTipText", "Change current branch");
+        FileExplorerToolTip = Add("toolStripFileExplorer", "ToolTipText", "File Explorer");
+        GitBashToolTip = Add("userShell", "ToolTipText", "Git bash");
+        NoWorkingFolder = Add("_noWorkingFolderText", "Text", "No working directory");
+        Loading = Add("_loading", "Text", "Loading...");
+
+        // Start
+        StartMenu = Add("fileToolStripMenuItem", "Text", "&Start");
+        Open = Add("openToolStripMenuItem", "Text", "&Open...");
+        Clone = Add("cloneToolStripMenuItem", "Text", "C&lone repository...");
+        Init = Add("initNewRepositoryToolStripMenuItem", "Text", "&Create new repository...");
+        Exit = Add("exitToolStripMenuItem", "Text", "E&xit");
+
+        // Repository
+        RepositoryMenu = Add("repositoryToolStripMenuItem", "Text", "&Repository");
+        RefreshMenu = Add("refreshToolStripMenuItem", "Text", "&Refresh");
+        FileExplorer = Add("fileExplorerToolStripMenuItem", "Text", "File E&xplorer");
+        Remotes = Add("manageRemoteRepositoriesToolStripMenuItem1", "Text", "Remo&te repositories...");
+        ManageSubmodules = Add("manageSubmodulesToolStripMenuItem", "Text", "Manage &submodules...");
+        UpdateAllSubmodules = Add("updateAllSubmodulesToolStripMenuItem", "Text", "&Update all submodules");
+        SynchronizeAllSubmodules = Add("synchronizeAllSubmodulesToolStripMenuItem", "Text", "Synchronize all su&bmodules");
+        ManageWorktrees = Add("manageWorktreeToolStripMenuItem", "Text", "Manage &worktrees...");
+        EditGitIgnore = Add("editgitignoreToolStripMenuItem1", "Text", "Edit .git&ignore");
+        EditGitInfoExclude = Add("editgitinfoexcludeToolStripMenuItem", "Text", "Edit .git/info/&exclude");
+        EditGitAttributes = Add("editGitAttributesToolStripMenuItem", "Text", "Edit .git&attributes");
+        EditMailMap = Add("editmailmapToolStripMenuItem", "Text", "Edit .&mailmap");
+        GitMaintenance = Add("gitMaintenanceToolStripMenuItem", "Text", "&Git maintenance");
+        CompressGitDatabase = Add("compressGitDatabaseToolStripMenuItem", "Text", "&Compress git database");
+        RecoverLostObjects = Add("recoverLostObjectsToolStripMenuItem", "Text", "&Recover lost objects...");
+        DeleteIndexLock = Add("deleteIndexLockToolStripMenuItem", "Text", "&Delete index.lock");
+        EditLocalGitConfig = Add("editLocalGitConfigToolStripMenuItem", "Text", "&Edit .git/config");
+        RepoSettings = Add("repoSettingsToolStripMenuItem", "Text", "Rep&ository settings...");
+        SparseWorkingCopy = Add("menuitemSparse", "Text", "Sparse Wor&king Copy");
+
+        // Commands
+        CommandsMenu = Add("commandsToolStripMenuItem", "Text", "&Commands");
+        Commit = Add("commitToolStripMenuItem", "Text", "&Commit...");
+        Pull = Add("pullToolStripMenuItem", "Text", "Pull&/Fetch...");
+        Push = Add("pushToolStripMenuItem", "Text", "&Push...");
+        ManageStashes = Add("stashToolStripMenuItem", "Text", "Ma&nage stashes...");
+        ResetChanges = Add("resetToolStripMenuItem", "Text", "&Reset changes...");
+        CleanWorkingDirectory = Add("cleanupToolStripMenuItem", "Text", "Clean &working directory...");
+        CreateBranch = Add("branchToolStripMenuItem", "Text", "Create &branch...");
+        DeleteBranch = Add("deleteBranchToolStripMenuItem", "Text", "De&lete branch...");
+        CheckoutBranch = Add("checkoutBranchToolStripMenuItem", "Text", "Chec&kout branch...");
+        MergeBranches = Add("mergeBranchToolStripMenuItem", "Text", "&Merge branches...");
+        Rebase = Add("rebaseToolStripMenuItem", "Text", "R&ebase...");
+        SolveMergeConflicts = Add("runMergetoolToolStripMenuItem", "Text", "&Solve merge conflicts...");
+        CreateTag = Add("tagToolStripMenuItem", "Text", "Create &tag...");
+        DeleteTag = Add("deleteTagToolStripMenuItem", "Text", "&Delete tag...");
+        CherryPick = Add("cherryPickToolStripMenuItem", "Text", "Cherr&y pick...");
+        Archive = Add("archiveToolStripMenuItem", "Text", "Archi&ve revision...");
+        CheckoutRevision = Add("checkoutToolStripMenuItem", "Text", "Check&out revision...");
+        Bisect = Add("bisectToolStripMenuItem", "Text", "B&isect...");
+        FormatPatch = Add("formatPatchToolStripMenuItem", "Text", "&Format patch...");
+        ApplyPatch = Add("applyPatchToolStripMenuItem", "Text", "&Apply patch...");
+        ViewPatch = Add("patchToolStripMenuItem", "Text", "View patc&h file...");
+        Reflog = Add("toolStripMenuItemReflog", "Text", "Show reflo&g...");
+
+        // The pull and stash buttons
+        PullMerge = Add("mergeToolStripMenuItem", "Text", "Pull - &merge");
+        PullRebase = Add("rebaseToolStripMenuItem1", "Text", "Pull - &rebase");
+        Fetch = Add("fetchToolStripMenuItem", "Text", "&Fetch");
+        FetchAll = Add("fetchAllToolStripMenuItem", "Text", "Fetch &all");
+        FetchPruneAll = Add("fetchPruneAllToolStripMenuItem", "Text", "F&etch and prune all");
+        OpenPullDialog = Add("pullToolStripMenuItem1", "Text", "Open &pull dialog...");
+        StashChanges = Add("stashChangesToolStripMenuItem", "Text", "&Stash");
+        StashStaged = Add("stashStagedToolStripMenuItem", "Text", "S&tash staged");
+        StashPop = Add("stashPopToolStripMenuItem", "Text", "Stash &pop");
+        ManageStashesItem = Add("manageStashesToolStripMenuItem", "Text", "&Manage stashes...");
+        CreateStash = Add("createAStashToolStripMenuItem", "Text", "&Create a stash...");
+
+        // Tools
+        ToolsMenu = Add("toolsToolStripMenuItem", "Text", "&Tools");
+        GitBash = Add("gitBashToolStripMenuItem", "Text", "Git &bash");
+        GitGui = Add("gitGUIToolStripMenuItem", "Text", "Git &GUI");
+        GitK = Add("kGitToolStripMenuItem", "Text", "Git&K");
+        GitCommandLog = Add("gitcommandLogToolStripMenuItem", "Text", "Git &command log");
+        Settings = Add("settingsToolStripMenuItem", "Text", "&Settings...");
+
+        // Help
+        HelpMenu = Add("helpToolStripMenuItem", "Text", "&Help");
+        UserManual = Add("userManualToolStripMenuItem", "Text", "User &manual");
+        Changelog = Add("changelogToolStripMenuItem", "Text", "&Changelog");
+        Translate = Add("translateToolStripMenuItem", "Text", "&Translate");
+        Donate = Add("donateToolStripMenuItem", "Text", "&Donate");
+        ReportAnIssue = Add("reportAnIssueToolStripMenuItem", "Text", "&Report an issue");
+        CheckForUpdates = Add("checkForUpdatesToolStripMenuItem", "Text", "Check for &updates");
+        About = Add("aboutToolStripMenuItem", "Text", "&About");
+    }
+
+    public TranslatedText Title { get; }
+
+    public TranslatedText CommitTab { get; }
+
+    public TranslatedText DiffTab { get; }
+
+    public TranslatedText TreeTab { get; }
+
+    public TranslatedText Refresh { get; }
+
+    public TranslatedText CommitButton { get; }
+
+    public TranslatedText PullButton { get; }
+
+    public TranslatedText PushButton { get; }
+
+    public TranslatedText ManageStashesToolTip { get; }
+
+    public TranslatedText SettingsToolTip { get; }
+
+    public TranslatedText BranchToolTip { get; }
+
+    public TranslatedText FileExplorerToolTip { get; }
+
+    public TranslatedText GitBashToolTip { get; }
+
+    public TranslatedText NoWorkingFolder { get; }
+
+    public TranslatedText Loading { get; }
+
+    public TranslatedText StartMenu { get; }
+
+    public TranslatedText Open { get; }
+
+    public TranslatedText Clone { get; }
+
+    public TranslatedText Init { get; }
+
+    public TranslatedText Exit { get; }
+
+    public TranslatedText RepositoryMenu { get; }
+
+    public TranslatedText RefreshMenu { get; }
+
+    public TranslatedText FileExplorer { get; }
+
+    public TranslatedText Remotes { get; }
+
+    public TranslatedText ManageSubmodules { get; }
+
+    public TranslatedText UpdateAllSubmodules { get; }
+
+    public TranslatedText SynchronizeAllSubmodules { get; }
+
+    public TranslatedText ManageWorktrees { get; }
+
+    public TranslatedText EditGitIgnore { get; }
+
+    public TranslatedText EditGitInfoExclude { get; }
+
+    public TranslatedText EditGitAttributes { get; }
+
+    public TranslatedText EditMailMap { get; }
+
+    public TranslatedText GitMaintenance { get; }
+
+    public TranslatedText CompressGitDatabase { get; }
+
+    public TranslatedText RecoverLostObjects { get; }
+
+    public TranslatedText DeleteIndexLock { get; }
+
+    public TranslatedText EditLocalGitConfig { get; }
+
+    public TranslatedText RepoSettings { get; }
+
+    public TranslatedText SparseWorkingCopy { get; }
+
+    public TranslatedText CommandsMenu { get; }
+
+    public TranslatedText Commit { get; }
+
+    public TranslatedText Pull { get; }
+
+    public TranslatedText Push { get; }
+
+    public TranslatedText ManageStashes { get; }
+
+    public TranslatedText ResetChanges { get; }
+
+    public TranslatedText CleanWorkingDirectory { get; }
+
+    public TranslatedText CreateBranch { get; }
+
+    public TranslatedText DeleteBranch { get; }
+
+    public TranslatedText CheckoutBranch { get; }
+
+    public TranslatedText MergeBranches { get; }
+
+    public TranslatedText Rebase { get; }
+
+    public TranslatedText SolveMergeConflicts { get; }
+
+    public TranslatedText CreateTag { get; }
+
+    public TranslatedText DeleteTag { get; }
+
+    public TranslatedText CherryPick { get; }
+
+    public TranslatedText Archive { get; }
+
+    public TranslatedText CheckoutRevision { get; }
+
+    public TranslatedText Bisect { get; }
+
+    public TranslatedText FormatPatch { get; }
+
+    public TranslatedText ApplyPatch { get; }
+
+    public TranslatedText ViewPatch { get; }
+
+    public TranslatedText Reflog { get; }
+
+    public TranslatedText PullMerge { get; }
+
+    public TranslatedText PullRebase { get; }
+
+    public TranslatedText Fetch { get; }
+
+    public TranslatedText FetchAll { get; }
+
+    public TranslatedText FetchPruneAll { get; }
+
+    public TranslatedText OpenPullDialog { get; }
+
+    public TranslatedText StashChanges { get; }
+
+    public TranslatedText StashStaged { get; }
+
+    public TranslatedText StashPop { get; }
+
+    public TranslatedText ManageStashesItem { get; }
+
+    public TranslatedText CreateStash { get; }
+
+    public TranslatedText ToolsMenu { get; }
+
+    public TranslatedText GitBash { get; }
+
+    public TranslatedText GitGui { get; }
+
+    public TranslatedText GitK { get; }
+
+    public TranslatedText GitCommandLog { get; }
+
+    public TranslatedText Settings { get; }
+
+    public TranslatedText HelpMenu { get; }
+
+    public TranslatedText UserManual { get; }
+
+    public TranslatedText Changelog { get; }
+
+    public TranslatedText Translate { get; }
+
+    public TranslatedText Donate { get; }
+
+    public TranslatedText ReportAnIssue { get; }
+
+    public TranslatedText CheckForUpdates { get; }
+
+    public TranslatedText About { get; }
+}
+
+/// <summary>The commands of the menus and the toolbar of the main window (the handlers of <c>FormBrowse</c>).</summary>
+public enum BrowseCommand
+{
+    Refresh,
+    Open,
+    Clone,
+    Init,
+    Exit,
+    FileExplorer,
+    Remotes,
+    ManageSubmodules,
+    UpdateAllSubmodules,
+    SynchronizeAllSubmodules,
+    ManageWorktrees,
+    EditGitIgnore,
+    EditGitInfoExclude,
+    EditGitAttributes,
+    EditMailMap,
+    CompressGitDatabase,
+    RecoverLostObjects,
+    DeleteIndexLock,
+    EditLocalGitConfig,
+    RepoSettings,
+    SparseWorkingCopy,
+    Commit,
+
+    /// <summary>The pull button: the default pull action, silently unless it is to open the dialog.</summary>
+    PullDefault,
+    Pull,
+    PullMerge,
+    PullRebase,
+    Fetch,
+    FetchAll,
+    FetchPruneAll,
+    OpenPullDialog,
+    Push,
+    ManageStashes,
+    StashChanges,
+    StashStaged,
+    StashPop,
+    CreateStash,
+    ResetChanges,
+    CleanWorkingDirectory,
+    CreateBranch,
+    DeleteBranch,
+    CheckoutBranch,
+    MergeBranches,
+    Rebase,
+    SolveMergeConflicts,
+    CreateTag,
+    DeleteTag,
+    CherryPick,
+    Archive,
+    CheckoutRevision,
+    Bisect,
+    FormatPatch,
+    ApplyPatch,
+    ViewPatch,
+    Reflog,
+    GitBash,
+    GitGui,
+    GitK,
+    GitCommandLog,
+    Settings,
+    UserManual,
+    Changelog,
+    Translate,
+    Donate,
+    ReportAnIssue,
+    CheckForUpdates,
+    About,
+}
+
+/// <summary>
+///  The revisions selected in the grid: the latest selected first (as <c>GetSelectedRevisions()</c> of the WinForms grid), and
+///  from the newest to the oldest.
+/// </summary>
+public sealed record BrowseSelection(IReadOnlyList<GitRevision> LatestSelectedFirst, IReadOnlyList<GitRevision> Descending);
+
+/// <summary>An item of a menu of the main window, or a separator (<see cref="Command"/> null and no children).</summary>
+public sealed record BrowseMenuItem(string Header, BrowseCommand? Command, string? Icon = null, IReadOnlyList<BrowseMenuItem>? Children = null)
+{
+    public static BrowseMenuItem Separator { get; } = new("-", null);
+
+    public bool IsSeparator => Command is null && Children is null;
+}
+
+/// <summary>What the main window needs from the application.</summary>
+public interface IBrowseHost
+{
+    /// <summary>As <c>FormBrowse.SetTitle</c> (<c>IAppTitleGenerator</c>): the repository and its branch.</summary>
+    string GetTitle();
+
+    /// <summary>The current branch, or the detached head (the branch button).</summary>
+    string GetCurrentBranch();
+
+    /// <summary>Runs the command of a menu item (the dialogs of <c>UICommands</c>) with the revisions selected in the grid.</summary>
+    void Run(BrowseCommand command, BrowseSelection selection);
+
+    /// <summary>The files of the diffs of the selected revisions (as <c>RevisionDiffControl</c>, <c>FileStatusDiffCalculator</c>).</summary>
+    Task<IReadOnlyList<FileStatusGroup>> GetDiffsAsync(IReadOnlyList<GitRevision> revisions, CancellationToken cancellationToken);
+
+    /// <summary>Raised when the repository changed (<c>RepoChangedNotifier</c>, <c>PostRepositoryChanged</c>), e.g. by a dialog.</summary>
+    event EventHandler? RepositoryChanged;
+}
+
+/// <summary>The tabs below the grid (<c>CommitInfoTabControl</c>).</summary>
+public enum BrowseTab
+{
+    Commit,
+    Diff,
+}
+
+/// <summary>
+///  Port of <c>FormBrowse</c> (the main window), first part: the revision grid with the commit and diff tabs of the selected
+///  revisions, the toolbar and the menus of its commands.
+/// </summary>
+public sealed partial class BrowseViewModel : DialogViewModel
+{
+    private readonly IBrowseHost _host;
+    private CancellationTokenSource? _loadingDiffs;
+
+    public BrowseViewModel(
+        BrowseStrings strings,
+        IBrowseHost host,
+        RevisionGridViewModel grid,
+        ICommitInfoHost commitInfoHost,
+        IFileViewerHost fileViewerHost,
+        FileStatusListStrings fileStatusListStrings,
+        FileStatusTreeOptions fileStatusTreeOptions)
+    {
+        Strings = strings;
+        _host = host;
+        Grid = grid;
+        CommitInfo = new CommitInfoViewModel(commitInfoHost);
+        Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
+        Viewer = new FileViewerViewModel(fileViewerHost);
+        Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
+        Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
+
+        // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
+        Grid.Loaded += (_, _) =>
+        {
+            if (Grid.SelectedRow is null && Grid.Rows.FirstOrDefault(row => !row.Revision.IsArtificial) is { } first)
+            {
+                Grid.SelectedRow = first;
+            }
+        };
+        host.RepositoryChanged += (_, _) => RefreshRevisions();
+
+        Menus = CreateMenus(strings);
+        Title = host.GetTitle();
+        CurrentBranch = host.GetCurrentBranch();
+    }
+
+    public BrowseStrings Strings { get; }
+
+    public RevisionGridViewModel Grid { get; }
+
+    public CommitInfoViewModel CommitInfo { get; }
+
+    public FileStatusListViewModel Files { get; }
+
+    public FileViewerViewModel Viewer { get; }
+
+    /// <summary>The main menu (<c>mainMenuStrip</c>).</summary>
+    public IReadOnlyList<BrowseMenuItem> Menus { get; }
+
+    /// <summary>The items of the drop down of the pull button (<c>toolStripButtonPull</c>).</summary>
+    public IReadOnlyList<BrowseMenuItem> PullItems =>
+    [
+        new(Strings.PullMerge.AccessKeyText, BrowseCommand.PullMerge, "PullMerge"),
+        new(Strings.PullRebase.AccessKeyText, BrowseCommand.PullRebase, "PullRebase"),
+        new(Strings.Fetch.AccessKeyText, BrowseCommand.Fetch, "PullFetch"),
+        new(Strings.FetchAll.AccessKeyText, BrowseCommand.FetchAll, "PullFetchAll"),
+        new(Strings.FetchPruneAll.AccessKeyText, BrowseCommand.FetchPruneAll, "PullFetchPruneAll"),
+        BrowseMenuItem.Separator,
+        new(Strings.OpenPullDialog.AccessKeyText, BrowseCommand.OpenPullDialog, "Pull"),
+    ];
+
+    /// <summary>The items of the drop down of the stash button (<c>toolStripSplitStash</c>).</summary>
+    public IReadOnlyList<BrowseMenuItem> StashItems =>
+    [
+        new(Strings.StashChanges.AccessKeyText, BrowseCommand.StashChanges),
+        new(Strings.StashStaged.AccessKeyText, BrowseCommand.StashStaged),
+        new(Strings.StashPop.AccessKeyText, BrowseCommand.StashPop),
+        BrowseMenuItem.Separator,
+        new(Strings.ManageStashesItem.AccessKeyText, BrowseCommand.ManageStashes),
+        new(Strings.CreateStash.AccessKeyText, BrowseCommand.CreateStash),
+    ];
+
+    [ObservableProperty]
+    public partial string Title { get; private set; }
+
+    /// <summary>The current branch (<c>branchSelect</c>).</summary>
+    [ObservableProperty]
+    public partial string CurrentBranch { get; private set; }
+
+    [ObservableProperty]
+    public partial BrowseTab SelectedTab { get; set; }
+
+    /// <summary>Loads the revisions (when the window is shown).</summary>
+    public void Initialize(ObjectId? selectedId) => Grid.Load(selectedId);
+
+    /// <summary>As <c>RefreshRevisions</c>: the revisions are loaded again, keeping the selection.</summary>
+    [RelayCommand]
+    public void RefreshRevisions()
+    {
+        Title = _host.GetTitle();
+        CurrentBranch = _host.GetCurrentBranch();
+        Grid.Load(Grid.SelectedRow?.ObjectId);
+    }
+
+    /// <summary>A command of the menus or the toolbar.</summary>
+    [RelayCommand]
+    private void Run(BrowseCommand command)
+    {
+        if (command == BrowseCommand.Refresh)
+        {
+            RefreshRevisions();
+            return;
+        }
+
+        if (command == BrowseCommand.Exit)
+        {
+            Close(accepted: true);
+            return;
+        }
+
+        _host.Run(command, new BrowseSelection(Grid.GetSelectedRevisionsLatestSelectedFirst(), Grid.GetSelectedRevisions(descending: true)));
+    }
+
+    // As FormBrowse.RevisionGrid_SelectionChanged and FillCommitInfo / RevisionDiffControl.DisplayDiffTab.
+    private void ShowSelectedRevisions()
+    {
+        IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
+        CommitInfo.SetRevision(selected.Count == 0 ? null : selected[0]);
+        _ = ShowDiffsAsync(selected);
+    }
+
+    private async Task ShowDiffsAsync(IReadOnlyList<GitRevision> revisions)
+    {
+#pragma warning disable VSTHRD103 // CancelAsync may resume off the UI thread.
+        _loadingDiffs?.Cancel();
+#pragma warning restore VSTHRD103
+        _loadingDiffs = new CancellationTokenSource();
+        CancellationToken cancellationToken = _loadingDiffs.Token;
+        if (revisions.Count == 0)
+        {
+            Files.SetGroups([]);
+            return;
+        }
+
+        Files.SetLoading();
+        IReadOnlyList<FileStatusGroup> groups;
+        try
+        {
+            groups = await _host.GetDiffsAsync(revisions, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            Files.SetGroups(groups);
+        }
+    }
+
+    private static IReadOnlyList<BrowseMenuItem> CreateMenus(BrowseStrings s) =>
+    [
+        new(s.StartMenu.AccessKeyText, null, Children:
+        [
+            new(s.Open.AccessKeyText, BrowseCommand.Open, "RepoOpen"),
+            new(s.Clone.AccessKeyText, BrowseCommand.Clone, "CloneRepoGit"),
+            new(s.Init.AccessKeyText, BrowseCommand.Init, "RepoCreate"),
+            BrowseMenuItem.Separator,
+            new(s.Exit.AccessKeyText, BrowseCommand.Exit),
+        ]),
+        new(s.RepositoryMenu.AccessKeyText, null, Children:
+        [
+            new(s.RefreshMenu.AccessKeyText, BrowseCommand.Refresh, "ReloadRevisions"),
+            new(s.FileExplorer.AccessKeyText, BrowseCommand.FileExplorer, "BrowseFileExplorer"),
+            BrowseMenuItem.Separator,
+            new(s.Remotes.AccessKeyText, BrowseCommand.Remotes, "Remotes"),
+            BrowseMenuItem.Separator,
+            new(s.ManageSubmodules.AccessKeyText, BrowseCommand.ManageSubmodules, "SubmodulesManage"),
+            new(s.UpdateAllSubmodules.AccessKeyText, BrowseCommand.UpdateAllSubmodules, "SubmodulesUpdate"),
+            new(s.SynchronizeAllSubmodules.AccessKeyText, BrowseCommand.SynchronizeAllSubmodules, "SubmodulesSync"),
+            BrowseMenuItem.Separator,
+            new(s.ManageWorktrees.AccessKeyText, BrowseCommand.ManageWorktrees, "WorkTree"),
+            BrowseMenuItem.Separator,
+            new(s.EditGitIgnore.AccessKeyText, BrowseCommand.EditGitIgnore, "EditGitIgnore"),
+            new(s.EditGitInfoExclude.AccessKeyText, BrowseCommand.EditGitInfoExclude, "EditGitIgnore"),
+            new(s.EditGitAttributes.AccessKeyText, BrowseCommand.EditGitAttributes),
+            new(s.EditMailMap.AccessKeyText, BrowseCommand.EditMailMap, "EditMailMap"),
+            new(s.GitMaintenance.AccessKeyText, null, "Maintenance", Children:
+            [
+                new(s.CompressGitDatabase.AccessKeyText, BrowseCommand.CompressGitDatabase, "CompressGitDatabase"),
+                new(s.RecoverLostObjects.AccessKeyText, BrowseCommand.RecoverLostObjects, "RecoverLostObjects"),
+                new(s.DeleteIndexLock.AccessKeyText, BrowseCommand.DeleteIndexLock, "DeleteIndexLock"),
+                new(s.EditLocalGitConfig.AccessKeyText, BrowseCommand.EditLocalGitConfig, "EditGitConfig"),
+            ]),
+            new(s.SparseWorkingCopy.AccessKeyText, BrowseCommand.SparseWorkingCopy),
+            BrowseMenuItem.Separator,
+            new(s.RepoSettings.AccessKeyText, BrowseCommand.RepoSettings, "Settings"),
+        ]),
+        new(s.CommandsMenu.AccessKeyText, null, Children:
+        [
+            new(s.Commit.AccessKeyText, BrowseCommand.Commit, "RepoStateClean"),
+            new(s.Pull.AccessKeyText, BrowseCommand.Pull, "Pull"),
+            new(s.Push.AccessKeyText, BrowseCommand.Push, "Push"),
+            BrowseMenuItem.Separator,
+            new(s.ManageStashes.AccessKeyText, BrowseCommand.ManageStashes, "Stash"),
+            new(s.ResetChanges.AccessKeyText, BrowseCommand.ResetChanges, "ResetWorkingDirChanges"),
+            new(s.CleanWorkingDirectory.AccessKeyText, BrowseCommand.CleanWorkingDirectory, "CleanupRepo"),
+            BrowseMenuItem.Separator,
+            new(s.CreateBranch.AccessKeyText, BrowseCommand.CreateBranch, "BranchCreate"),
+            new(s.DeleteBranch.AccessKeyText, BrowseCommand.DeleteBranch, "BranchDelete"),
+            new(s.CheckoutBranch.AccessKeyText, BrowseCommand.CheckoutBranch, "BranchCheckout"),
+            new(s.MergeBranches.AccessKeyText, BrowseCommand.MergeBranches, "Merge"),
+            new(s.Rebase.AccessKeyText, BrowseCommand.Rebase, "Rebase"),
+            new(s.SolveMergeConflicts.AccessKeyText, BrowseCommand.SolveMergeConflicts, "Conflict"),
+            BrowseMenuItem.Separator,
+            new(s.CreateTag.AccessKeyText, BrowseCommand.CreateTag, "TagCreate"),
+            new(s.DeleteTag.AccessKeyText, BrowseCommand.DeleteTag, "TagDelete"),
+            BrowseMenuItem.Separator,
+            new(s.CherryPick.AccessKeyText, BrowseCommand.CherryPick, "CherryPick"),
+            new(s.Archive.AccessKeyText, BrowseCommand.Archive, "ArchiveRevision"),
+            new(s.CheckoutRevision.AccessKeyText, BrowseCommand.CheckoutRevision, "Checkout"),
+            new(s.Bisect.AccessKeyText, BrowseCommand.Bisect, "Bisect"),
+            BrowseMenuItem.Separator,
+            new(s.FormatPatch.AccessKeyText, BrowseCommand.FormatPatch, "PatchFormat"),
+            new(s.ApplyPatch.AccessKeyText, BrowseCommand.ApplyPatch, "PatchApply"),
+            new(s.ViewPatch.AccessKeyText, BrowseCommand.ViewPatch, "PatchView"),
+            BrowseMenuItem.Separator,
+            new(s.Reflog.AccessKeyText, BrowseCommand.Reflog, "Book"),
+        ]),
+        new(s.ToolsMenu.AccessKeyText, null, Children:
+        [
+            new(s.GitBash.AccessKeyText, BrowseCommand.GitBash, "GitForWindows"),
+            new(s.GitGui.AccessKeyText, BrowseCommand.GitGui),
+            new(s.GitK.AccessKeyText, BrowseCommand.GitK),
+            BrowseMenuItem.Separator,
+            new(s.GitCommandLog.AccessKeyText, BrowseCommand.GitCommandLog, "GitCommandLog"),
+            BrowseMenuItem.Separator,
+            new(s.Settings.AccessKeyText, BrowseCommand.Settings, "Settings"),
+        ]),
+        new(s.HelpMenu.AccessKeyText, null, Children:
+        [
+            new(s.UserManual.AccessKeyText, BrowseCommand.UserManual, "GitExtensionsLogo16"),
+            new(s.Changelog.AccessKeyText, BrowseCommand.Changelog, "Changelog"),
+            BrowseMenuItem.Separator,
+            new(s.Translate.AccessKeyText, BrowseCommand.Translate, "Translate"),
+            new(s.Donate.AccessKeyText, BrowseCommand.Donate, "Donate"),
+            new(s.ReportAnIssue.AccessKeyText, BrowseCommand.ReportAnIssue, "BugReport"),
+            new(s.CheckForUpdates.AccessKeyText, BrowseCommand.CheckForUpdates),
+            BrowseMenuItem.Separator,
+            new(s.About.AccessKeyText, BrowseCommand.About, "Information"),
+        ]),
+    ];
+}
