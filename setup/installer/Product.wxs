@@ -39,10 +39,14 @@
           <!-- Avalonia UI and WebView2 native libraries (docs/avalonia-port/PLAN.md), see Component.AvaloniaUI -->
           <Directory Id="RuntimesDir" Name="runtimes">
             <Directory Id="RuntimesWinX64Dir" Name="win-x64">
-              <Directory Id="RuntimesWinX64NativeDir" Name="native" />
+              <Directory Id="RuntimesWinX64NativeDir" Name="native">
+                <Directory Id="RuntimesWinX64NativeX64Dir" Name="x64" />
+              </Directory>
             </Directory>
             <Directory Id="RuntimesWinArm64Dir" Name="win-arm64">
-              <Directory Id="RuntimesWinArm64NativeDir" Name="native" />
+              <Directory Id="RuntimesWinArm64NativeDir" Name="native">
+                <Directory Id="RuntimesWinArm64NativeArm64Dir" Name="arm64" />
+              </Directory>
             </Directory>
           </Directory>
         </Directory>
@@ -926,6 +930,40 @@
       <Component Id="SkiaSharp.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\SkiaSharp.dll" />
       </Component>
+      <!-- The syntax highlighting (TextMate), the hex view of binary files and the built-in terminal -->
+      <Component Id="AvaloniaEdit.TextMate.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\AvaloniaEdit.TextMate.dll" />
+      </Component>
+      <Component Id="AvaloniaHex.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\AvaloniaHex.dll" />
+      </Component>
+      <Component Id="Iciclecreek.Avalonia.Terminal.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Iciclecreek.Avalonia.Terminal.dll" />
+      </Component>
+      <Component Id="NeoSmart.Unicode.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\NeoSmart.Unicode.dll" />
+      </Component>
+      <Component Id="Onigwrap.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Onigwrap.dll" />
+      </Component>
+      <Component Id="Porta.Pty.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Porta.Pty.dll" />
+      </Component>
+      <Component Id="SkiaSharp.HarfBuzz.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\SkiaSharp.HarfBuzz.dll" />
+      </Component>
+      <Component Id="TextMateSharp.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\TextMateSharp.dll" />
+      </Component>
+      <Component Id="TextMateSharp.Grammars.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\TextMateSharp.Grammars.dll" />
+      </Component>
+      <Component Id="Wcwidth.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Wcwidth.dll" />
+      </Component>
+      <Component Id="XTerm.NET.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\XTerm.NET.dll" />
+      </Component>
     </DirectoryRef>
     <DirectoryRef Id="RuntimesWinX64NativeDir">
       <Component Id="native.win_x64.av_libglesv2.dll" Guid="*">
@@ -940,6 +978,17 @@
       <Component Id="native.win_x64.WebView2Loader.dll" Guid="*">
         <File Id="native.win_x64.WebView2Loader.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\WebView2Loader.dll" />
       </Component>
+      <Component Id="native.win_x64.conpty.dll" Guid="*">
+        <File Id="native.win_x64.conpty.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\conpty.dll" />
+      </Component>
+      <Component Id="native.win_x64.libonigwrap.dll" Guid="*">
+        <File Id="native.win_x64.libonigwrap.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\libonigwrap.dll" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="RuntimesWinX64NativeX64Dir">
+      <Component Id="native.win_x64.x64.OpenConsole.exe" Guid="*">
+        <File Id="native.win_x64.x64.OpenConsole.exe" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\x64\OpenConsole.exe" />
+      </Component>
     </DirectoryRef>
     <DirectoryRef Id="RuntimesWinArm64NativeDir">
       <Component Id="native.win_arm64.av_libglesv2.dll" Guid="*">
@@ -953,6 +1002,17 @@
       </Component>
       <Component Id="native.win_arm64.WebView2Loader.dll" Guid="*">
         <File Id="native.win_arm64.WebView2Loader.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\WebView2Loader.dll" />
+      </Component>
+      <Component Id="native.win_arm64.conpty.dll" Guid="*">
+        <File Id="native.win_arm64.conpty.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\conpty.dll" />
+      </Component>
+      <Component Id="native.win_arm64.libonigwrap.dll" Guid="*">
+        <File Id="native.win_arm64.libonigwrap.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\libonigwrap.dll" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="RuntimesWinArm64NativeArm64Dir">
+      <Component Id="native.win_arm64.arm64.OpenConsole.exe" Guid="*">
+        <File Id="native.win_arm64.arm64.OpenConsole.exe" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\arm64\OpenConsole.exe" />
       </Component>
     </DirectoryRef>
     <ComponentGroup Id="Component.AvaloniaUI">
@@ -983,6 +1043,17 @@
       <ComponentRef Id="MicroCom.Runtime.dll" />
       <ComponentRef Id="Microsoft.Web.WebView2.Core.dll" />
       <ComponentRef Id="SkiaSharp.dll" />
+      <ComponentRef Id="AvaloniaEdit.TextMate.dll" />
+      <ComponentRef Id="AvaloniaHex.dll" />
+      <ComponentRef Id="Iciclecreek.Avalonia.Terminal.dll" />
+      <ComponentRef Id="NeoSmart.Unicode.dll" />
+      <ComponentRef Id="Onigwrap.dll" />
+      <ComponentRef Id="Porta.Pty.dll" />
+      <ComponentRef Id="SkiaSharp.HarfBuzz.dll" />
+      <ComponentRef Id="TextMateSharp.dll" />
+      <ComponentRef Id="TextMateSharp.Grammars.dll" />
+      <ComponentRef Id="Wcwidth.dll" />
+      <ComponentRef Id="XTerm.NET.dll" />
       <ComponentRef Id="native.win_x64.av_libglesv2.dll" />
       <ComponentRef Id="native.win_x64.libHarfBuzzSharp.dll" />
       <ComponentRef Id="native.win_x64.libSkiaSharp.dll" />
@@ -991,6 +1062,12 @@
       <ComponentRef Id="native.win_arm64.libHarfBuzzSharp.dll" />
       <ComponentRef Id="native.win_arm64.libSkiaSharp.dll" />
       <ComponentRef Id="native.win_arm64.WebView2Loader.dll" />
+      <ComponentRef Id="native.win_x64.conpty.dll" />
+      <ComponentRef Id="native.win_x64.libonigwrap.dll" />
+      <ComponentRef Id="native.win_x64.x64.OpenConsole.exe" />
+      <ComponentRef Id="native.win_arm64.conpty.dll" />
+      <ComponentRef Id="native.win_arm64.libonigwrap.dll" />
+      <ComponentRef Id="native.win_arm64.arm64.OpenConsole.exe" />
     </ComponentGroup>
     <ComponentGroup Id="Component.PluginResources" />
     <DirectoryRef Id="ProgramMenuFolder">
