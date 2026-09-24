@@ -225,14 +225,9 @@ internal static partial class AvaloniaDialogs
                 return;
             }
 
-            using FormRemoteProcess form = new(commands, Commands.PushTag(remote, tagName, false))
-            {
-                Remote = remote,
-                Text = string.Format(strings.PushTo.Text, remote),
-            };
-            form.ShowDialog(new NativeWindowOwner(window));
+            RemoteProcessResult result = RunRemoteProcess(new NativeWindowOwner(window), commands, Commands.PushTag(remote, tagName, false), remote, string.Format(strings.PushTo.Text, remote));
 
-            if (!commands.Module.InTheMiddleOfAction() && !form.ErrorOccurred())
+            if (!commands.Module.InTheMiddleOfAction() && !result.ErrorOccurred)
             {
                 scriptsRunner.RunEventScripts(ScriptEvent.AfterPush, scriptHost);
             }

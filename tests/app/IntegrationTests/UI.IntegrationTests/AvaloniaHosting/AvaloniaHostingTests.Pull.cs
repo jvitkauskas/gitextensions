@@ -57,9 +57,14 @@ public sealed partial class AvaloniaHostingTests
         string upstream = CreateUpstreamClone(out string upstreamCommit);
         try
         {
-            // No Avalonia dialog is shown: fail if one is.
+            // No pull dialog is shown, only the progress of git (which closes itself): fail if another one is.
             AvaloniaDialogHost.DialogShowingForTests = window =>
             {
+                if (window is GitUI.Avalonia.HelperDialogs.ProcessWindow)
+                {
+                    return;
+                }
+
                 _driveFailure = new InvalidOperationException($"Unexpected dialog {window.GetType().Name}");
                 window.Opened += (_, _) => window.Close();
             };

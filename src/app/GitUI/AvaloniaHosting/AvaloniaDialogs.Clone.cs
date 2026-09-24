@@ -224,18 +224,12 @@ internal static partial class AvaloniaDialogs
                     request.Branch,
                     request.Depth,
                     request.SingleBranch);
-                using (FormRemoteProcess fromProcess = new(destUICommands, cloneCmd))
+                string sourceRepo = PathUtil.IsLocalFile(request.From)
+                    ? destUICommands.Module.GetPathForGitExecution(request.From) ?? request.From
+                    : request.From;
+                if (RunRemoteProcess(Owner, destUICommands, cloneCmd, urlTryingToConnect: sourceRepo).ErrorOccurred || commands.Module.InTheMiddleOfPatch())
                 {
-                    string sourceRepo = PathUtil.IsLocalFile(request.From)
-                        ? destUICommands.Module.GetPathForGitExecution(request.From) ?? request.From
-                        : request.From;
-                    fromProcess.SetUrlTryingToConnect(sourceRepo);
-                    fromProcess.ShowDialog(Owner);
-
-                    if (fromProcess.ErrorOccurred() || commands.Module.InTheMiddleOfPatch())
-                    {
-                        return false;
-                    }
+                    return false;
                 }
 
                 ThreadHelper.JoinableTaskFactory.Run(async () =>

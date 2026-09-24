@@ -230,6 +230,77 @@ public sealed class ProcessViewModelTests
     private ProcessViewModel CreateViewModel(string displayPath = "repo", bool useDialogSettings = true)
         => new(new ProcessStrings(), displayPath, _console, _host, _messageBoxes, useDialogSettings, postToUiThread: action => action());
 
+    [Test]
+    public void The_exit_handler_can_retry_or_change_the_error()
+    {
+        _host.CloseProcessDialog = false;
+        ProcessViewModel viewModel = CreateViewModel();
+        int exits = 0;
+        viewModel.ExitHandler = (ref bool isError) =>
+        {
+            exits++;
+            if (exits == 1)
+            {
+                // As a push rejected then retried with --force-with-lease.
+                isError.Should().BeTrue();
+                viewModel.Retry();
+                return true;
+            }
+
+            isError = false;
+            return false;
+        };
+        int beforeStart = 0;
+        viewModel.BeforeStart = () => beforeStart++;
+        viewModel.Start();
+        _console.Emit("rejected\n");
+
+        _console.Exit(1);
+        viewModel.IsDone.Should().BeFalse("the process is retried");
+        viewModel.Output.Should().BeEmpty("a retry starts with a new output");
+        _console.StartCount.Should().Be(2);
+        beforeStart.Should().Be(2);
+
+        _console.Exit(1);
+        viewModel.IsDone.Should().BeTrue();
+        viewModel.ErrorOccurred.Should().BeFalse("the handler turned the error into a success");
+    }
+
+    [Test]
+    public void A_failing_exit_handler_is_an_error()
+    {
+        ProcessViewModel viewModel = CreateViewModel();
+        viewModel.ExitHandler = (ref bool isError) => throw new InvalidOperationException();
+        viewModel.Start();
+
+        _console.Exit(0);
+
+        viewModel.ErrorOccurred.Should().BeTrue();
+    }
+
+    [Test]
+    public void The_output_is_passed_on_and_the_title_can_be_set()
+    {
+        ProcessViewModel viewModel = CreateViewModel(displayPath: "~/repo");
+        List<string> received = [];
+        viewModel.DataReceived += (_, text) => received.Add(text);
+        viewModel.BaseTitle = "Push to origin";
+        viewModel.Start();
+
+        _console.Emit("Counting objects: 10% (1/10)\r");
+        _console.Emit("If you trust this host, enter \"y\"");
+
+        viewModel.Title.Should().Be("Counting objects: 10% (1/10)", "the progress of a plain text console is shown in the title");
+        viewModel.BaseTitle.Should().Be("Push to origin");
+        received.Should().Equal("Counting objects: 10% (1/10)\r", "If you trust this host, enter \"y\"");
+
+        viewModel.Kill();
+        _console.Killed.Should().BeTrue();
+        viewModel.Aborted.Should().BeFalse("killed by the dialog, not aborted by the user");
+        viewModel.AbortCommand.Execute(null);
+        viewModel.Aborted.Should().BeTrue();
+    }
+
     internal sealed class FakeConsole : IConsoleProcess, IEmbeddedNativeView
     {
         public event EventHandler<string>? OutputReceived;
@@ -243,6 +314,8 @@ public sealed class ProcessViewModelTests
         public IEmbeddedNativeView View => this;
 
         public bool Started { get; private set; }
+
+        public int StartCount { get; private set; }
 
         public bool Killed { get; private set; }
 
@@ -266,6 +339,7 @@ public sealed class ProcessViewModelTests
             }
 
             Started = true;
+            StartCount++;
         }
 
         public void Kill() => Killed = true;

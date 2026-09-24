@@ -126,14 +126,13 @@ internal static partial class AvaloniaDialogs
             if (DetailedSettings.GetRemoteBranchesDirectlyFromRemote.ValueOrDefault(Module.GetEffectiveSettings()))
             {
                 StartPageant(remote);
-                using FormRemoteProcess formProcess = new(commands, $"ls-remote --heads \"{remote}\"") { Remote = remote };
-                formProcess.ShowDialog(Owner);
-                if (formProcess.ErrorOccurred())
+                RemoteProcessResult result = RunRemoteProcess(Owner, commands, $"ls-remote --heads \"{remote}\"", remote);
+                if (result.ErrorOccurred)
                 {
                     return null;
                 }
 
-                remoteHeads = Module.ParseRefs(CleanCommandOutput(formProcess.GetOutputString()));
+                remoteHeads = Module.ParseRefs(CleanCommandOutput(result.Output));
             }
             else
             {
@@ -209,14 +208,13 @@ internal static partial class AvaloniaDialogs
                     return false;
                 }
 
-                using FormRemoteProcess form = new(commands, pushCmd)
-                {
-                    Remote = request.Remote,
-                    Text = string.Format(_strings.PushToCaption.Text, request.Destination),
-                    HandleOnExitCallback = (ref bool isError, FormProcess process) => HandlePushOnExit(ref isError, process, request),
-                };
-                form.ShowDialog(Owner);
-                error = form.ErrorOccurred();
+                error = RunRemoteProcess(
+                    Owner,
+                    commands,
+                    pushCmd,
+                    request.Remote,
+                    string.Format(_strings.PushToCaption.Text, request.Destination),
+                    onExit: (ref bool isError, IRemoteProcessDialog process) => HandlePushOnExit(ref isError, process, request)).ErrorOccurred;
 
                 // The tracking info written by git (e.g. with --set-upstream) is read again.
                 Module.InvalidateGitSettings();
@@ -248,7 +246,7 @@ internal static partial class AvaloniaDialogs
         public IScriptOptionsProvider GetScriptOptionsProvider() => new ScriptOptionsProvider(() => [], () => null, () => null);
 
         /// <summary>As <c>HandlePushOnExit</c>: a rejected push can be retried after a pull, or forced.</summary>
-        private bool HandlePushOnExit(ref bool isError, FormProcess form, PushRequest request)
+        private bool HandlePushOnExit(ref bool isError, IRemoteProcessDialog form, PushRequest request)
         {
             string currentBranch = CurrentBranch;
 
@@ -269,7 +267,7 @@ internal static partial class AvaloniaDialogs
             (GitPullAction onRejectedPullAction, bool forcePush) = AskForAutoPullOnPushRejectedAction(form, match.Groups["currBranch"].Success, request.Remote);
             if (forcePush)
             {
-                if (!form.ProcessArguments!.Contains(" -f ") && !form.ProcessArguments.Contains(" --force"))
+                if (!form.ProcessArguments.Contains(" -f ") && !form.ProcessArguments.Contains(" --force"))
                 {
                     // WSL may add other arguments before the command, so "push" may not be first.
                     int pos = form.ProcessArguments.IndexOf("push ");

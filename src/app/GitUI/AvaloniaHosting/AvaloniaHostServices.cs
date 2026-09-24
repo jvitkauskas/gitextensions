@@ -132,7 +132,7 @@ internal static partial class AvaloniaDialogs
         private readonly IConsoleCommandRunner _runner;
         private readonly IGitUICommands _commands;
         private readonly string _process;
-        private readonly string _arguments;
+        private string _arguments;
         private readonly string _workingDirectory;
 
         public ConsoleProcess(IConsoleCommandRunner runner, IGitUICommands commands, string process, string arguments, string workingDirectory)
@@ -160,7 +160,12 @@ internal static partial class AvaloniaDialogs
 
         public string Process => _process;
 
-        public string Arguments => _arguments;
+        /// <summary>The arguments of the process, which can be changed before it is retried (e.g. to force a push).</summary>
+        public string Arguments
+        {
+            get => _arguments;
+            set => _arguments = value;
+        }
 
         /// <summary>Marshals to the UI thread, as <c>FormProcess</c> does with <c>InvokeAndForget</c>.</summary>
         public void PostToUiThread(Action action) => _runner.Control.InvokeAndForget(action);

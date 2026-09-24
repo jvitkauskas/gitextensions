@@ -280,9 +280,8 @@ internal static partial class AvaloniaDialogs
                 return;
             }
 
-            using FormRemoteProcess form = new(commands, $"push \"{remote}\" :refs/tags/{tagName}");
-            form.ShowDialog(new NativeWindowOwner(window));
-            if (!commands.Module.InTheMiddleOfAction() && !form.ErrorOccurred())
+            RemoteProcessResult result = RunRemoteProcess(new NativeWindowOwner(window), commands, $"push \"{remote}\" :refs/tags/{tagName}");
+            if (!commands.Module.InTheMiddleOfAction() && !result.ErrorOccurred)
             {
                 scriptsRunner.RunEventScripts(ScriptEvent.AfterPush, scriptHost);
             }

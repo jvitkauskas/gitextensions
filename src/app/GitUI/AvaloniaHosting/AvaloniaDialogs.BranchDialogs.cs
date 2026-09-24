@@ -328,10 +328,9 @@ internal static partial class AvaloniaDialogs
                 }
 
                 IGitCommand cmd = Commands.DeleteRemoteBranches(remote, branches.Select(x => x.LocalName));
-                using FormRemoteProcess form = new(commands, cmd.Arguments) { Remote = remote };
-                form.ShowDialog(owner);
+                RemoteProcessResult result = RunRemoteProcess(owner, commands, cmd.Arguments, remote);
 
-                if (!form.ErrorOccurred() && !Module.InTheMiddleOfAction())
+                if (!result.ErrorOccurred && !Module.InTheMiddleOfAction())
                 {
                     scriptsRunner.RunEventScripts(ScriptEvent.AfterPush, scriptHost);
                     if (deleteLocalTrackingBranches)

@@ -51,10 +51,7 @@ internal static partial class AvaloniaDialogs
 
         public void SaveRules(string text) => File.WriteAllBytes(RulesPath, GitModule.SystemEncoding.GetBytes(text));
 
-        public void RefreshWorkingCopy() => AvaloniaUi.RunInHostContext(() =>
-        {
-            using FormRemoteProcess process = new(commands, SparseWorkingCopyViewModel.RefreshWorkingCopyCommandName);
-            process.ShowDialog(new NativeWindowOwner(window));
-        });
+        public void RefreshWorkingCopy()
+            => RunRemoteProcess(new NativeWindowOwner(window), commands, SparseWorkingCopyViewModel.RefreshWorkingCopyCommandName);
     }
 }

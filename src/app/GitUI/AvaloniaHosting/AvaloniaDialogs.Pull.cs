@@ -266,21 +266,15 @@ internal static partial class AvaloniaDialogs
             ArgumentString arguments = command.Fetch
                 ? Module.FetchCmd(command.Source, command.RemoteBranch, command.LocalBranch, command.FetchTags, command.Unshallow, command.Prune, command.PruneTags)
                 : Module.PullCmd(command.Source, command.RemoteBranch, command.Rebase, command.FetchTags, command.Unshallow);
-            using FormRemoteProcess form = new(commands, arguments);
-            if (!command.Fetch)
-            {
-                form.HandleOnExitCallback = HandlePullOnExit;
-            }
+            RemoteProcessResult result = RunRemoteProcess(
+                owner(),
+                commands,
+                arguments,
+                remote: command.IsPullAll ? null : command.Source,
+                onExit: command.Fetch ? null : HandlePullOnExit);
+            return new PullProcessResult(Aborted: result.Aborted, ErrorOccurred: result.ErrorOccurred);
 
-            if (!command.IsPullAll)
-            {
-                form.Remote = command.Source;
-            }
-
-            form.ShowDialog(owner());
-            return new PullProcessResult(Aborted: form.DialogResult == DialogResult.Abort, ErrorOccurred: form.ErrorOccurred());
-
-            bool HandlePullOnExit(ref bool isError, FormProcess process)
+            bool HandlePullOnExit(ref bool isError, IRemoteProcessDialog process)
             {
                 if (!isError || string.IsNullOrEmpty(command.PruneRemote))
                 {
@@ -303,12 +297,7 @@ internal static partial class AvaloniaDialogs
                     if (TaskDialog.ShowDialog(process.Handle, page) == TaskDialogButton.Yes)
                     {
                         string remote = command.PruneRemote;
-                        using FormRemoteProcess formPrune = new(commands, "remote prune " + remote)
-                        {
-                            Remote = remote,
-                            Text = string.Format(strings.PruneFromCaption.Text, remote)
-                        };
-                        formPrune.ShowDialog(process);
+                        RunRemoteProcess(process, commands, "remote prune " + remote, remote, string.Format(strings.PruneFromCaption.Text, remote));
                     }
                 }
 

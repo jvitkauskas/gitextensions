@@ -38,6 +38,11 @@ Do you want to register the host's fingerprint and restart the process?");
 
     public static bool ShowDialog(IWin32Window? owner, IGitUICommands commands, ArgumentString arguments)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowRemoteProcess(owner, commands, arguments, out bool success))
+        {
+            return success;
+        }
+
         using FormRemoteProcess formRemoteProcess = new(commands, arguments);
         formRemoteProcess.ShowDialog(owner);
         return !formRemoteProcess.ErrorOccurred();

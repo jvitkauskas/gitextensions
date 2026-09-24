@@ -6,6 +6,12 @@ using GitUI.Presentation.Services;
 
 namespace GitUI.Presentation.HelperDialogs;
 
+/// <summary>
+///  As <c>FormProcess.HandleOnExit</c>: called when the process exits, with whether it failed; returns whether the exit is
+///  handled (e.g. the process is retried), else the dialog is done with <paramref name="isError"/>.
+/// </summary>
+public delegate bool ProcessExitHandler(ref bool isError);
+
 public enum ProcessStatus
 {
     Running,
@@ -29,7 +35,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
     private readonly IProcessDialogHost _host;
     private readonly IMessageBoxService _messageBoxes;
     private readonly Action<Action> _postToUiThread;
-    private readonly string _baseTitle;
+    private string _baseTitle;
     private readonly OutputLog _outputLog = new();
     private bool _isErrorDialog;
 
@@ -64,7 +70,27 @@ public sealed partial class ProcessViewModel : DialogViewModel
     /// <summary>Raised when the process prompts for input, so that the view can focus the password box.</summary>
     public event EventHandler? InputRequested;
 
+    /// <summary>As <c>FormProcess.DataReceived</c>: each chunk of output, after the dialog handled it; raised on any thread.</summary>
+    public event EventHandler<string>? DataReceived;
+
+    /// <summary>As <c>FormProcess.HandleOnExit</c> (<c>FormRemoteProcess</c>, <c>HandleOnExitCallback</c>).</summary>
+    public ProcessExitHandler? ExitHandler { get; set; }
+
+    /// <summary>As <c>FormProcess.BeforeProcessStart</c>: called before the process starts (again).</summary>
+    public Action? BeforeStart { get; set; }
+
     public ProcessStrings Strings { get; }
+
+    /// <summary>The title of the dialog instead of the working directory (the <c>Text</c> set on <c>FormRemoteProcess</c>).</summary>
+    public string BaseTitle
+    {
+        get => _baseTitle;
+        set
+        {
+            _baseTitle = value;
+            Title = value;
+        }
+    }
 
     public IEmbeddedNativeView ConsoleView => _console.View;
 
@@ -114,6 +140,9 @@ public sealed partial class ProcessViewModel : DialogViewModel
 
     public bool ErrorOccurred { get; private set; }
 
+    /// <summary>Whether the user aborted the process (as <c>DialogResult.Abort</c> of <c>FormStatus</c>).</summary>
+    public bool Aborted { get; private set; }
+
     /// <summary>The logged output (progress messages excluded).</summary>
     public string Output => _outputLog.GetString();
 
@@ -132,6 +161,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
 
         try
         {
+            BeforeStart?.Invoke();
             _console.Start();
         }
         catch (Exception ex)
@@ -197,6 +227,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
     {
         try
         {
+            Aborted = true;
             _console.Kill();
             _outputLog.Append(Environment.NewLine + "Aborted");
             Done(isSuccess: false);
@@ -208,7 +239,14 @@ public sealed partial class ProcessViewModel : DialogViewModel
         }
     }
 
-    private void Reset()
+    /// <summary>As <c>FormStatus.Retry</c>: the process is started again, with a new output.</summary>
+    public void Retry() => Start();
+
+    /// <summary>As <c>FormProcess.KillProcess</c>: the process is killed; its exit is handled as usual.</summary>
+    public void Kill() => _console.Kill();
+
+    /// <summary>As <c>FormStatus.Reset</c>: the output is cleared, e.g. before the process is started again.</summary>
+    public void Reset()
     {
         Status = ProcessStatus.Running;
         _console.Reset();
@@ -256,6 +294,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
         {
             string progress = text.TrimEnd();
             Post(() => SetProgress(progress));
+            DataReceived?.Invoke(this, text);
             return;
         }
 
@@ -281,6 +320,8 @@ public sealed partial class ProcessViewModel : DialogViewModel
                 });
             }
         }
+
+        DataReceived?.Invoke(this, text);
     }
 
     private void SetProgress(string text)
@@ -299,7 +340,24 @@ public sealed partial class ProcessViewModel : DialogViewModel
         }
     }
 
-    private void OnExited(int exitCode) => Post(() => Done(isSuccess: exitCode == 0));
+    // As FormProcess.OnExit: the exit handler may handle the exit (e.g. retry); a failing handler is an error.
+    private void OnExited(int exitCode) => Post(() =>
+    {
+        bool isError = exitCode != 0;
+        try
+        {
+            if (ExitHandler?.Invoke(ref isError) == true)
+            {
+                return;
+            }
+        }
+        catch
+        {
+            isError = true;
+        }
+
+        Done(isSuccess: !isError);
+    });
 
     private void Post(Action action) => _postToUiThread(action);
 
