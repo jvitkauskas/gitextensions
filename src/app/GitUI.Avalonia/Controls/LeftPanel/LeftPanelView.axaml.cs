@@ -153,6 +153,12 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
 
     private void SelectRowOfSelectedNode()
     {
+        // As the selected node of a tree: its parents are expanded.
+        for (LeftPanelNode? parent = _viewModel?.SelectedNode?.Parent; parent is not null; parent = parent.Parent)
+        {
+            parent.IsExpanded = true;
+        }
+
         _selectingFromViewModel = true;
         try
         {
