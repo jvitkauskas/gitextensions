@@ -50,6 +50,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new BrowseToolbarStrings()).SetArgDisplayNames(nameof(BrowseToolbarStrings));
         yield return new TestCaseData(new OutputHistoryStrings()).SetArgDisplayNames(nameof(OutputHistoryStrings));
         yield return new TestCaseData(new BrowsePluginStrings()).SetArgDisplayNames(nameof(BrowsePluginStrings));
+        yield return new TestCaseData(new BuildReportStrings()).SetArgDisplayNames(nameof(BuildReportStrings));
         yield return new TestCaseData(new CommandlineHelpStrings()).SetArgDisplayNames(nameof(CommandlineHelpStrings));
         yield return new TestCaseData(new AddFilesStrings()).SetArgDisplayNames(nameof(AddFilesStrings));
         yield return new TestCaseData(new DonateStrings()).SetArgDisplayNames(nameof(DonateStrings));

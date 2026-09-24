@@ -128,5 +128,6 @@ public sealed partial class BrowseViewModel
         UpdateFileTree(revisionChanged: false);
         UpdateGpgInfo(revisionChanged: false);
         UpdateConsole();
+        UpdateBuildReport(revisionChanged: false);
     }
 }

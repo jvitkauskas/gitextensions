@@ -197,6 +197,23 @@
             </TextBox.ContextMenu>
           </TextBox>
         </TabItem>
+        <!-- BuildReportTabPageExtension: the report of the build status of the selected revision, or a link to it. -->
+        <TabItem Name="buildReportTab" IsVisible="{Binding HasBuildReport}" PropertyChanged="OnBuildReportTabPropertyChanged">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Integration.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding BuildReportStrings.BuildReportTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <Panel>
+            <c:EmbeddedNativeViewPresenter Name="buildReportView" View="{Binding BuildReportView}" IsVisible="{Binding IsBuildReportInTab}" />
+            <Button Name="openBuildReport" Classes="link" Command="{Binding OpenBuildReportCommand}" IsVisible="{Binding !IsBuildReportInTab}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand">
+              <TextBlock Text="{Binding BuildReportStrings.OpenReport.Text}" FontSize="21" TextDecorations="Underline"
+                         Foreground="{DynamicResource SystemControlHighlightAccentBrush}" />
+            </Button>
+          </Panel>
+        </TabItem>
       </TabControl>
       <bd:DashboardView Name="dashboard" Grid.RowSpan="3" Margin="-4,0,-4,-4" DataContext="{Binding Dashboard}" IsVisible="{Binding $parent[Window].((vm:BrowseViewModel)DataContext).IsDashboard}" />
     </Grid>

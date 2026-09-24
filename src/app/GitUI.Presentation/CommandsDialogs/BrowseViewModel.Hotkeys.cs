@@ -26,6 +26,7 @@ public enum BrowseHotkeyCommand
     GoToSuperproject = 27,
     GoToSubmodule = 28,
     FocusGitConsole = 29,
+    FocusBuildServerStatus = 30,
     FocusNextTab = 31,
     FocusOutputHistory = 47,
     FocusPrevTab = 32,
@@ -100,6 +101,7 @@ public sealed partial class BrowseViewModel
             case BrowseHotkeyCommand.FocusFileTree: return FileTree is not null && SelectTab(BrowseTab.FileTree);
             case BrowseHotkeyCommand.FocusGpgInfo: return HasGpgInfo && SelectTab(BrowseTab.Gpg);
             case BrowseHotkeyCommand.FocusGitConsole: return HasConsole && SelectTab(BrowseTab.Console);
+            case BrowseHotkeyCommand.FocusBuildServerStatus: return HasBuildReport && SelectTab(BrowseTab.BuildReport);
             case BrowseHotkeyCommand.FocusOutputHistory: return HasOutputHistory && SelectTab(BrowseTab.OutputHistory);
             case BrowseHotkeyCommand.FocusNextTab: return SelectTab(NextTab(forward: true));
             case BrowseHotkeyCommand.FocusPrevTab: return SelectTab(NextTab(forward: false));
@@ -180,6 +182,7 @@ public sealed partial class BrowseViewModel
         BrowseTab.Gpg => HasGpgInfo,
         BrowseTab.Console => HasConsole,
         BrowseTab.OutputHistory => HasOutputHistory,
+        BrowseTab.BuildReport => HasBuildReport,
         _ => true,
     };
 }

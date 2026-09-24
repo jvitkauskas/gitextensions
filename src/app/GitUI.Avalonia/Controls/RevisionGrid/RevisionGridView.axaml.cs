@@ -1,13 +1,16 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using GitExtensions.Extensibility.BuildServerIntegration;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -17,9 +20,10 @@ namespace GitUI.Avalonia.Controls.RevisionGrid;
 
 /// <summary>
 ///  The Avalonia revision grid (port of <c>RevisionGridControl</c>'s grid; docs/avalonia-port/PLAN.md, phase 4):
-///  the graph, the references and subject, the author, the date and the commit id of each revision.
+///  the graph, the references and subject, the notes, the avatar, the author, the date, the commit id and the build
+///  status of each revision, with the "RevisionGrid" hotkeys.
 /// </summary>
-public partial class RevisionGridView : UserControl
+public partial class RevisionGridView : UserControl, IHotkeyControl
 {
     public static readonly StyledProperty<RevisionGraph?> GraphProperty =
         AvaloniaProperty.Register<RevisionGridView, RevisionGraph?>(nameof(Graph));
@@ -27,7 +31,20 @@ public partial class RevisionGridView : UserControl
     public static readonly StyledProperty<RevisionGraphRenderer?> RendererProperty =
         AvaloniaProperty.Register<RevisionGridView, RevisionGraphRenderer?>(nameof(Renderer));
 
+    public static readonly StyledProperty<RevisionGridViewModel?> ViewModelProperty =
+        AvaloniaProperty.Register<RevisionGridView, RevisionGridViewModel?>(nameof(ViewModel));
+
+    // The columns, in the order of RevisionGridControl.
+    private const int GraphColumn = 0;
+    private const int NotesColumn = 2;
+    private const int AvatarColumn = 3;
+    private const int AuthorColumn = 4;
+    private const int DateColumn = 5;
+    private const int IdColumn = 6;
+    private const int BuildStatusColumn = 7;
+
     private RevisionGridViewModel? _viewModel;
+    private RevisionRefItem? _hoveredRef;
     private int _maxLaneCount = 1;
     private int _laneCountScannedTo;
     private readonly DispatcherTimer _quickSearchTimer = new();
@@ -36,17 +53,32 @@ public partial class RevisionGridView : UserControl
     {
         InitializeComponent();
 
-        revisionsGrid.LoadingRow += (_, e) => _viewModel?.EnsureGraphCached(e.Row.Index + 50);
+        revisionsGrid.LoadingRow += (_, e) =>
+        {
+            _viewModel?.EnsureGraphCached(e.Row.Index + 50);
+            UpdateRow(e.Row);
+        };
         revisionsGrid.DoubleTapped += (_, e) => ActivateSelected(e.Source);
 
         // Before the grid, which moves to the next row on Enter.
         revisionsGrid.AddHandler(KeyDownEvent, OnGridKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         revisionsGrid.HeadersVisibility = DataGridHeadersVisibility.None;
-        revisionsGrid.SelectionChanged += (_, _) => _viewModel?.SetSelectedRows(revisionsGrid.SelectedItems.OfType<RevisionGridRow>());
+        revisionsGrid.SelectionChanged += (_, _) =>
+        {
+            _viewModel?.SetSelectedRows(revisionsGrid.SelectedItems.OfType<RevisionGridRow>());
+
+            // The author to highlight may have changed.
+            UpdateRealizedRows();
+        };
 
         // As mainContextMenu: the menu of the selected revisions, built when opening; a right click selects the row first.
         revisionsGrid.ContextRequested += OnContextRequested;
         revisionsGrid.AddHandler(PointerPressedEvent, OnGridPointerPressed, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        revisionsGrid.AddHandler(PointerReleasedEvent, OnGridPointerReleased, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
+        // As OnGridViewCellMouseMove and OnGridViewCellMouseLeave: the ancestry of the hovered reference label is highlighted.
+        revisionsGrid.PointerMoved += (_, e) => SetHoveredRef(GetRefItem(e.Source));
+        revisionsGrid.PointerExited += (_, _) => SetHoveredRef(null);
 
         // Quick search (as RevisionGridControl with QuickSearchProvider).
         revisionsGrid.AddHandler(TextInputEvent, OnGridTextInput, handledEventsToo: true);
@@ -72,19 +104,50 @@ public partial class RevisionGridView : UserControl
         private set => SetValue(RendererProperty, value);
     }
 
+    /// <summary>The view model (the data context), for the bindings of the cells to the settings of the grid.</summary>
+    public RevisionGridViewModel? ViewModel
+    {
+        get => GetValue(ViewModelProperty);
+        private set => SetValue(ViewModelProperty, value);
+    }
+
+    /// <summary>The draw style of the graph (<c>RevisionGraphColumnProvider.RevisionGraphDrawStyle</c>).</summary>
+    public RevisionGraphDrawStyle DrawStyle
+        => _viewModel is null ? RevisionGraphDrawStyle.Normal
+            : _viewModel.IsBranchHighlighted ? RevisionGraphDrawStyle.HighlightSelected
+            : _viewModel.DrawNonRelativesGray ? RevisionGraphDrawStyle.DrawNonRelativesGray
+            : RevisionGraphDrawStyle.Normal;
+
+    /// <summary>As <c>ProcessHotkey</c>: the "RevisionGrid" hotkeys, while the grid has the focus.</summary>
+    public bool ProcessHotkey(int keyData)
+    {
+        if (_viewModel?.Hotkeys.FirstOrDefault(h => h.KeyData == keyData) is not { } hotkey)
+        {
+            return false;
+        }
+
+        return _viewModel.ExecuteHotkey((RevisionGridCommand)hotkey.CommandCode);
+    }
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
         Renderer = CreateRenderer();
+
+        // The background of the rows of the highlighted author (AppColor.AuthoredHighlight of the theme, else its default).
+        Resources["AuthoredRowBrush"] = AppColorResources.GetBrush(this, AppColor.AuthoredHighlight) ?? Brushes.Transparent;
     }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel?.QuickSearchRestarted -= OnQuickSearchRestarted;
+        _viewModel?.RelativesChanged -= OnRelativesChanged;
         _viewModel = DataContext as RevisionGridViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.QuickSearchRestarted += OnQuickSearchRestarted;
+        _viewModel?.RelativesChanged += OnRelativesChanged;
+        ViewModel = _viewModel;
         Graph = _viewModel?.Graph;
         UpdateColumns();
         revisionsGrid.SelectionMode = _viewModel?.MultiSelect == true ? DataGridSelectionMode.Extended : DataGridSelectionMode.Single;
@@ -99,16 +162,25 @@ public partial class RevisionGridView : UserControl
         {
             case nameof(RevisionGridViewModel.CachedGraphRowCount):
                 UpdateGraphColumnWidth();
-                foreach (RevisionGraphCell cell in revisionsGrid.GetVisualDescendants().OfType<RevisionGraphCell>())
-                {
-                    cell.InvalidateVisual();
-                }
+                OnRelativesChanged(this, EventArgs.Empty);
+                break;
 
+            case nameof(RevisionGridViewModel.DrawNonRelativesGray) or nameof(RevisionGridViewModel.IsBranchHighlighted)
+                or nameof(RevisionGridViewModel.HoverHighlightedIds):
+                InvalidateGraph();
+                break;
+
+            case nameof(RevisionGridViewModel.DrawNonRelativesTextGray) or nameof(RevisionGridViewModel.HighlightAuthoredRevisions):
+                UpdateRealizedRows();
                 break;
 
             case nameof(RevisionGridViewModel.ShowGraphColumn) or nameof(RevisionGridViewModel.ShowAuthorColumn)
-                or nameof(RevisionGridViewModel.ShowDateColumn) or nameof(RevisionGridViewModel.ShowIdColumn):
+                or nameof(RevisionGridViewModel.ShowDateColumn) or nameof(RevisionGridViewModel.ShowIdColumn)
+                or nameof(RevisionGridViewModel.ShowNotesColumn) or nameof(RevisionGridViewModel.ShowAvatarColumn)
+                or nameof(RevisionGridViewModel.ShowBuildStatusColumn) or nameof(RevisionGridViewModel.ShowBuildStatusIcon)
+                or nameof(RevisionGridViewModel.ShowBuildStatusText):
                 UpdateColumns();
+                UpdateRealizedRows();
                 break;
 
             case nameof(RevisionGridViewModel.SelectedRow) when _viewModel?.SelectedRow is { } row:
@@ -142,7 +214,45 @@ public partial class RevisionGridView : UserControl
 
         _laneCountScannedTo = _viewModel.CachedGraphRowCount;
 
-        revisionsGrid.Columns[0].Width = new DataGridLength(RevisionGraphRenderer.GetWidth(_maxLaneCount) + 4);
+        revisionsGrid.Columns[GraphColumn].Width = new DataGridLength(RevisionGraphRenderer.GetWidth(_maxLaneCount) + 4);
+    }
+
+    private void InvalidateGraph()
+    {
+        foreach (RevisionGraphCell cell in revisionsGrid.GetVisualDescendants().OfType<RevisionGraphCell>())
+        {
+            cell.InvalidateVisual();
+        }
+    }
+
+    // The relatives changed (more of the graph laid out, or a highlighted branch): the graph and the gray texts.
+    private void OnRelativesChanged(object? sender, EventArgs e)
+    {
+        InvalidateGraph();
+        UpdateRealizedRows();
+    }
+
+    private void UpdateRealizedRows()
+    {
+        foreach (DataGridRow row in revisionsGrid.GetVisualDescendants().OfType<DataGridRow>())
+        {
+            UpdateRow(row);
+        }
+    }
+
+    // As RevisionDataGridView.OnCellPainting: the background of the highlighted author and the gray texts of the
+    // non-relatives; the avatar is loaded when the row is shown.
+    private void UpdateRow(DataGridRow row)
+    {
+        if (_viewModel is null || row.DataContext is not RevisionGridRow item)
+        {
+            return;
+        }
+
+        // Not for the selected rows, whose selection background shows (a :not(:selected) selector is not re-evaluated for the cells).
+        row.Classes.Set("authored", _viewModel.IsAuthoredHighlight(item) && !revisionsGrid.SelectedItems.Contains(item));
+        row.Classes.Set("nonRelative", _viewModel.IsTextGray(item.Index));
+        _viewModel.RequestAvatar(item);
     }
 
     /// <summary>The context menu opened last, e.g. for tests.</summary>
@@ -168,10 +278,37 @@ public partial class RevisionGridView : UserControl
             return;
         }
 
-        revisionsGrid.Columns[0].IsVisible = _viewModel.ShowGraphColumn;
-        revisionsGrid.Columns[2].IsVisible = _viewModel.ShowAuthorColumn;
-        revisionsGrid.Columns[3].IsVisible = _viewModel.ShowDateColumn;
-        revisionsGrid.Columns[4].IsVisible = _viewModel.ShowIdColumn;
+        revisionsGrid.Columns[GraphColumn].IsVisible = _viewModel.ShowGraphColumn;
+        revisionsGrid.Columns[NotesColumn].IsVisible = _viewModel.ShowNotesColumn;
+        revisionsGrid.Columns[AvatarColumn].IsVisible = _viewModel.ShowAvatarColumn;
+        revisionsGrid.Columns[AuthorColumn].IsVisible = _viewModel.ShowAuthorColumn;
+        revisionsGrid.Columns[DateColumn].IsVisible = _viewModel.ShowDateColumn;
+        revisionsGrid.Columns[IdColumn].IsVisible = _viewModel.ShowIdColumn;
+
+        // As BuildStatusColumnProvider.ApplySettings: the width of the icon only, else resizable for the text.
+        DataGridColumn buildStatus = revisionsGrid.Columns[BuildStatusColumn];
+        buildStatus.IsVisible = _viewModel.ShowBuildStatusColumn && (_viewModel.ShowBuildStatusIcon || _viewModel.ShowBuildStatusText);
+        buildStatus.CanUserResize = _viewModel.ShowBuildStatusText;
+        buildStatus.Width = new DataGridLength(_viewModel.ShowBuildStatusText ? 150 : 24);
+    }
+
+    /// <summary>The reference label under the pointer, if any.</summary>
+    private static RevisionRefItem? GetRefItem(object? source)
+        => (source as Visual)?.GetSelfAndVisualAncestors().OfType<Border>().FirstOrDefault(b => b.Classes.Contains("ref"))?.DataContext as RevisionRefItem;
+
+    private void SetHoveredRef(RevisionRefItem? item)
+    {
+        if (_viewModel is null || ReferenceEquals(item, _hoveredRef))
+        {
+            return;
+        }
+
+        _hoveredRef = item;
+        int rowIndex = item is null ? -1 : _viewModel.Rows.FirstOrDefault(r => r.Refs.Any(i => ReferenceEquals(i, item)))?.Index ?? -1;
+        List<int> shown = [.. revisionsGrid.GetVisualDescendants().OfType<DataGridRow>().Where(r => r.IsVisible).Select(r => r.Index).Where(i => i >= 0)];
+        int first = shown.Count == 0 ? 0 : shown.Min();
+        int count = shown.Count == 0 ? 0 : shown.Max() - first + 1;
+        _ = _viewModel.SetHoverReferenceAsync(item?.GitRef, rowIndex, first, count);
     }
 
     private void OnContextRequested(object? sender, ContextRequestedEventArgs e)
@@ -208,11 +345,37 @@ public partial class RevisionGridView : UserControl
             return;
         }
 
-        if (properties.IsRightButtonPressed
-            && (e.Source as Visual)?.FindAncestorOfType<DataGridRow>(includeSelf: true)?.DataContext is RevisionGridRow row
+        if (properties.IsLeftButtonPressed
+            && (e.Source as Visual)?.GetSelfAndVisualAncestors().OfType<Control>().FirstOrDefault(c => c.Name == "buildStatus")?.DataContext is RevisionGridRow clicked
+            && clicked.HasBuildReport)
+        {
+            // As OnGridViewCellMouseDown: a click on the build status opens its report.
+            _viewModel?.OpenBuildReport(clicked);
+        }
+
+        if (!properties.IsRightButtonPressed)
+        {
+            return;
+        }
+
+        // As _rightClickedHitInfo: the menu of a right-clicked reference label is focused on it.
+        _viewModel?.RefMenuRequest = GetRefItem(e.Source)?.GitRef is { } gitRef
+            ? new RevisionGridRefMenuRequest(gitRef, e.KeyModifiers.HasFlag(KeyModifiers.Shift), e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            : null;
+
+        if ((e.Source as Visual)?.FindAncestorOfType<DataGridRow>(includeSelf: true)?.DataContext is RevisionGridRow row
             && !revisionsGrid.SelectedItems.Contains(row))
         {
             revisionsGrid.SelectedItem = row;
+        }
+    }
+
+    // As OnGridViewMouseClick: Alt+click highlights the branch of the clicked revision.
+    private void OnGridPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton == MouseButton.Left && e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+        {
+            Dispatcher.UIThread.Post(() => _viewModel?.HighlightSelectedBranch());
         }
     }
 
@@ -333,7 +496,51 @@ public sealed class RevisionRefKindConverter(RevisionRefKind kind) : IValueConve
 
     public static RevisionRefKindConverter Tag { get; } = new(RevisionRefKind.Tag);
 
+    public static RevisionRefKindConverter Stash { get; } = new(RevisionRefKind.Stash);
+
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is RevisionRefKind k && k == kind;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>Whether a build status is the one named by the parameter (the class choosing its color).</summary>
+public sealed class BuildStatusClassConverter : IValueConverter
+{
+    public static BuildStatusClassConverter Instance { get; } = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is BuildStatus status && parameter is string name && status.ToString() == name;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>The image of an avatar (PNG data), decoded once for all the rows of its author.</summary>
+public sealed class AvatarConverter : IValueConverter
+{
+    private static readonly ConditionalWeakTable<byte[], Bitmap?> _bitmaps = [];
+
+    public static AvatarConverter Instance { get; } = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not byte[] png)
+        {
+            return null;
+        }
+
+        return _bitmaps.GetValue(png, static data =>
+        {
+            try
+            {
+                using MemoryStream stream = new(data);
+                return new Bitmap(stream);
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException)
+            {
+                return null;
+            }
+        });
+    }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }

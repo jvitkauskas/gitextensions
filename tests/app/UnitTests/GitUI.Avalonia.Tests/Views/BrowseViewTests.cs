@@ -4,6 +4,7 @@ using Avalonia.Headless;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using GitCommands.Git.Gpg;
+using GitExtensions.Extensibility.BuildServerIntegration;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.AvaloniaTests.ViewModels;
@@ -184,6 +185,60 @@ public sealed class BrowseViewTests : HeadlessTest
 
         viewModel.Dispose();
         terminal.Calls[^1].Should().Be("dispose");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_build_report_tab_shows_the_report_of_the_selected_revision() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+
+        // The tabs are in the order of BrowseTab (the view model maps the selected index).
+        window.Tabs.Items.Cast<TabItem>().Select(t => t.Name).Should().Equal("commitTab", "diffTab", "treeTab", "gpgTab", "consoleTab", "outputHistoryTab", "buildReportTab");
+        Enum.GetNames<BrowseTab>().Should().Equal("Commit", "Diff", "FileTree", "Gpg", "Console", "OutputHistory", "BuildReport");
+        viewModel.HasBuildReport.Should().BeFalse("the selected revision has no build status");
+        window.BuildReportTab.IsVisible.Should().BeFalse();
+
+        // The build server reports the build of the selected revision: the tab is shown, the report loaded once it is selected.
+        GitRevision selected = viewModel.Grid.SelectedRow!.Revision;
+        selected.BuildStatus = new BuildInfo { Status = BuildStatus.Success, Url = "https://ci.example.com/1" };
+        Dispatcher.UIThread.RunJobs();
+        viewModel.HasBuildReport.Should().BeTrue();
+        viewModel.IsBuildReportInTab.Should().BeTrue();
+        window.BuildReportTab.IsVisible.Should().BeTrue();
+        FakeWebView webView = host.WebViews.Single();
+        viewModel.BuildReportView.Should().BeSameAs(webView);
+        webView.Calls.Should().BeEmpty("the report is loaded when its tab is shown");
+
+        window.Tabs.SelectedIndex = (int)BrowseTab.BuildReport;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.BuildReport);
+        webView.Calls.Should().Equal("navigate https://ci.example.com/1");
+
+        // A build server that does not show its report in the tab: the link opens it in the browser.
+        selected.BuildStatus = new BuildInfo { Status = BuildStatus.Failure, Url = "https://ci.example.com/2", ShowInBuildReportTab = false };
+        Dispatcher.UIThread.RunJobs();
+        viewModel.IsBuildReportInTab.Should().BeFalse();
+        viewModel.BuildReportUrl.Should().Be("https://ci.example.com/2");
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-build-report-link");
+        viewModel.OpenBuildReportCommand.Execute(null);
+        host.OpenedUrls.Should().Equal("https://ci.example.com/2");
+
+        // A revision without a build status: the tab is hidden, the first tab shown instead.
+        viewModel.Grid.SelectedRow = viewModel.Grid.Rows.First(r => r.Revision != selected && !r.Revision.IsArtificial);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.HasBuildReport.Should().BeFalse();
+        window.Tabs.SelectedIndex.Should().Be(0);
+        webView.Calls[^1].Should().Be("clear");
+
+        // Disabled (ShowBuildResultPage): no tab even with a report.
+        host.IsBuildReportEnabled = false;
+        viewModel.Grid.SelectedRow = viewModel.Grid.Rows.First(r => r.Revision == selected);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.HasBuildReport.Should().BeFalse();
+
+        viewModel.Dispose();
+        webView.Calls[^1].Should().Be("dispose");
         window.Close();
     });
 
@@ -421,7 +476,26 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost
+    internal sealed class FakeWebView : IBrowseWebView, IEmbeddedNativeView
+    {
+        public List<string> Calls { get; } = [];
+
+        public IEmbeddedNativeView View => this;
+
+        public void Navigate(string url) => Calls.Add($"navigate {url}");
+
+        public void Clear() => Calls.Add("clear");
+
+        public void Dispose() => Calls.Add("dispose");
+
+        public nint Attach(nint parentWindow) => 0;
+
+        public void Detach()
+        {
+        }
+    }
+
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost
     {
         public event EventHandler? OutputHistoryChanged;
 
@@ -482,6 +556,21 @@ public sealed class BrowseViewTests : HeadlessTest
         public void RaiseSubmodules(IReadOnlyList<BrowseMenuItem>? items) => SubmoduleMenuChanged?.Invoke(this, items);
 
         public IReadOnlyList<BrowseMenuItem> GetToolbarScripts() => [new("Deploy", null) { Invoke = () => ShellRuns.Add("script Deploy") }];
+
+        public bool IsBuildReportEnabled { get; set; } = true;
+
+        public List<FakeWebView> WebViews { get; } = [];
+
+        public List<string> OpenedUrls { get; } = [];
+
+        public IBrowseWebView? CreateWebView()
+        {
+            FakeWebView webView = new();
+            WebViews.Add(webView);
+            return webView;
+        }
+
+        public void OpenUrl(string url) => OpenedUrls.Add(url);
 
         public event EventHandler? PluginsChanged;
 

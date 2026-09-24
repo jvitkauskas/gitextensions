@@ -102,7 +102,22 @@ public sealed class RevisionGridMenuViewTests : HeadlessTest
         viewModel.ShowIdColumn = false;
         Dispatcher.UIThread.RunJobs();
 
-        grid.Columns.Select(c => c.IsVisible).Should().Equal(true, true, false, true, false);
+        // Graph, message, notes, avatar, author, date, id and build status, as the columns of RevisionGridControl.
+        grid.Columns.Select(c => c.IsVisible).Should().Equal(true, true, false, false, false, true, false, false);
+
+        viewModel.ShowNotesColumn = true;
+        viewModel.ShowAvatarColumn = true;
+        viewModel.ShowBuildStatusColumn = true;
+        Dispatcher.UIThread.RunJobs();
+        grid.Columns.Select(c => c.IsVisible).Should().Equal(true, true, true, true, false, true, false, true);
+        grid.Columns[7].Width.Value.Should().Be(24, "the build status icon only");
+        viewModel.ShowBuildStatusText = true;
+        Dispatcher.UIThread.RunJobs();
+        grid.Columns[7].Width.Value.Should().Be(150, "the build status text too");
+        viewModel.ShowBuildStatusIcon = false;
+        viewModel.ShowBuildStatusText = false;
+        Dispatcher.UIThread.RunJobs();
+        grid.Columns[7].IsVisible.Should().BeFalse("neither the icon nor the text is shown");
 
         // Without the remote branches and the tags, the rows are loaded again without them.
         viewModel.DisplayOptions = viewModel.DisplayOptions with { ShowRemoteBranches = false, ShowTags = false };

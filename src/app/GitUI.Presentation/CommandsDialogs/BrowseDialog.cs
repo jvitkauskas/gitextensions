@@ -484,6 +484,7 @@ public enum BrowseTab
     Gpg,
     Console,
     OutputHistory,
+    BuildReport,
 }
 
 /// <summary>
@@ -522,6 +523,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         InitializeWorkingDirectoryStatus();
         InitializeToolbar();
         InitializeOutputHistory();
+        InitializeBuildReport();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
         Grid.Loaded += (_, _) =>
@@ -675,6 +677,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         _ = ShowDiffsAsync(selected);
         UpdateFileTree(revisionChanged: true);
         UpdateGpgInfo(revisionChanged: true);
+        UpdateBuildReport(revisionChanged: true);
     }
 
     private async Task ShowDiffsAsync(IReadOnlyList<GitRevision> revisions)

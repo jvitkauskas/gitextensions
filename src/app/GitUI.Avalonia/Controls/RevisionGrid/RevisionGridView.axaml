@@ -4,6 +4,29 @@
              xmlns:vm="using:GitUI.Presentation.UserControls.RevisionGrid"
              x:Class="GitUI.Avalonia.Controls.RevisionGrid.RevisionGridView"
              x:DataType="vm:RevisionGridViewModel">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <!-- The colors of the build statuses, as BuildStatusColumnProvider (lighter on dark backgrounds). -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="BuildSuccessBrush" Color="DarkGreen" />
+          <SolidColorBrush x:Key="BuildFailureBrush" Color="DarkRed" />
+          <SolidColorBrush x:Key="BuildInProgressBrush" Color="Blue" />
+          <SolidColorBrush x:Key="BuildUnstableBrush" Color="OrangeRed" />
+          <SolidColorBrush x:Key="BuildStoppedBrush" Color="Gray" />
+          <SolidColorBrush x:Key="NonRelativeTextBrush" Color="#6D6D6D" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="BuildSuccessBrush" Color="LightGreen" />
+          <SolidColorBrush x:Key="BuildFailureBrush" Color="#FF6060" />
+          <SolidColorBrush x:Key="BuildInProgressBrush" Color="#82B4F0" />
+          <SolidColorBrush x:Key="BuildUnstableBrush" Color="OrangeRed" />
+          <SolidColorBrush x:Key="BuildStoppedBrush" Color="LightGray" />
+          <SolidColorBrush x:Key="NonRelativeTextBrush" Color="#C0C0C0" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
   <UserControl.Styles>
     <!-- Reference "capsules" before the subject, colored as the WinForms revision grid's. -->
     <Style Selector="Border.ref">
@@ -12,6 +35,7 @@
       <Setter Property="Padding" Value="3,0" />
       <Setter Property="Margin" Value="0,0,4,0" />
       <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Background" Value="Transparent" />
     </Style>
     <Style Selector="Border.ref TextBlock">
       <Setter Property="FontSize" Value="11" />
@@ -27,6 +51,17 @@
     <Style Selector="Border.ref.tag">
       <Setter Property="BorderBrush" Value="{DynamicResource AppColor.Tag}" />
       <Setter Property="TextElement.Foreground" Value="{DynamicResource AppColor.Tag}" />
+    </Style>
+    <!-- As the stash label of MessageColumnProvider (AppColor.OtherTag). -->
+    <Style Selector="Border.ref.stash">
+      <Setter Property="BorderBrush" Value="{DynamicResource AppColor.OtherTag}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource AppColor.OtherTag}" />
+    </Style>
+    <!-- The hovered label, whose ancestry is highlighted in the graph (the highlight border of RevisionGridRefRenderer). -->
+    <Style Selector="Border.ref.hoverable:pointerover">
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="Padding" Value="2,0" />
+      <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Border.ref.current TextBlock">
       <Setter Property="FontWeight" Value="Bold" />
@@ -44,8 +79,37 @@
       <Setter Property="MinHeight" Value="22" />
       <Setter Property="Height" Value="22" />
     </Style>
+    <!-- As RevisionDataGridView: the rows of the highlighted author, and the gray texts of the non-relatives. -->
+    <Style Selector="DataGridRow.authored DataGridCell">
+      <Setter Property="Background" Value="{DynamicResource AuthoredRowBrush}" />
+    </Style>
+    <Style Selector="DataGridRow.nonRelative TextBlock.cellText">
+      <Setter Property="Foreground" Value="{DynamicResource NonRelativeTextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.author.highlighted">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.buildStatus.Success">
+      <Setter Property="Foreground" Value="{DynamicResource BuildSuccessBrush}" />
+    </Style>
+    <Style Selector="TextBlock.buildStatus.Failure">
+      <Setter Property="Foreground" Value="{DynamicResource BuildFailureBrush}" />
+    </Style>
+    <Style Selector="TextBlock.buildStatus.InProgress">
+      <Setter Property="Foreground" Value="{DynamicResource BuildInProgressBrush}" />
+    </Style>
+    <Style Selector="TextBlock.buildStatus.Unstable">
+      <Setter Property="Foreground" Value="{DynamicResource BuildUnstableBrush}" />
+    </Style>
+    <Style Selector="TextBlock.buildStatus.Stopped">
+      <Setter Property="Foreground" Value="{DynamicResource BuildStoppedBrush}" />
+    </Style>
+    <Style Selector="StackPanel.buildReport">
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
   </UserControl.Styles>
   <Panel>
+    <!-- The columns in the order of RevisionGridControl: graph, message, notes, avatar, author, date, id, build status. -->
     <DataGrid Name="revisionsGrid" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
               IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserReorderColumns="False"
               HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="1"
@@ -75,23 +139,77 @@
                               Classes.branch="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Branch}}"
                               Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
                               Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
+                              Classes.stash="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Stash}}"
+                              Classes.hoverable="{Binding GitRef, Converter={x:Static ObjectConverters.IsNotNull}}"
                               Classes.current="{Binding IsCurrentBranch}">
                         <TextBlock Text="{Binding Name}" />
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="cellText" Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
-        <DataGridTextColumn Binding="{Binding AuthorName}" Width="150" x:DataType="vm:RevisionGridRow" />
-        <DataGridTextColumn Binding="{Binding Date}" Width="130" x:DataType="vm:RevisionGridRow" />
+        <DataGridTemplateColumn Width="120">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <TextBlock Classes="cellText" Text="{Binding Notes}" ToolTip.Tip="{Binding NotesToolTip}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTemplateColumn Width="22" CanUserResize="False">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <Image Name="avatar" Source="{Binding Avatar, Converter={x:Static rg:AvatarConverter.Instance}}" Width="18" Height="18" Margin="2,0" ToolTip.Tip="{Binding AuthorToolTip}"
+                     HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTemplateColumn Width="150">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <TextBlock Classes="cellText author" Classes.highlighted="{Binding IsAuthorHighlighted}" Text="{Binding AuthorName}" ToolTip.Tip="{Binding AuthorToolTip}"
+                         VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTemplateColumn Width="130">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <TextBlock Classes="cellText" Text="{Binding Date}" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
         <DataGridTemplateColumn Width="80">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:RevisionGridRow">
-              <TextBlock Text="{Binding ShortId}" FontFamily="{DynamicResource MonospaceFontFamily}" VerticalAlignment="Center" Margin="4,0" />
+              <TextBlock Classes="cellText" Text="{Binding ShortId}" FontFamily="{DynamicResource MonospaceFontFamily}" VerticalAlignment="Center" Margin="4,0" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTemplateColumn Width="150">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:RevisionGridRow">
+              <!-- As BuildStatusColumnProvider: the symbol and/or the description, colored by the status; a click opens the report. -->
+              <StackPanel Name="buildStatus" Orientation="Horizontal" Spacing="2" Margin="2,0" Background="Transparent" ClipToBounds="True"
+                          Classes.buildReport="{Binding HasBuildReport}" ToolTip.Tip="{Binding BuildStatusToolTip}">
+                <TextBlock Classes="buildStatus" Classes.Success="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Success, FallbackValue=False}"
+                           Classes.Failure="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Failure, FallbackValue=False}"
+                           Classes.InProgress="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=InProgress, FallbackValue=False}"
+                           Classes.Unstable="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Unstable, FallbackValue=False}"
+                           Classes.Stopped="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Stopped, FallbackValue=False}"
+                           Text="{Binding BuildStatusSymbol}" VerticalAlignment="Center"
+                           IsVisible="{Binding $parent[rg:RevisionGridView].ViewModel.ShowBuildStatusIcon, FallbackValue=True}" />
+                <TextBlock Classes="buildStatus" Classes.Success="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Success, FallbackValue=False}"
+                           Classes.Failure="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Failure, FallbackValue=False}"
+                           Classes.InProgress="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=InProgress, FallbackValue=False}"
+                           Classes.Unstable="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Unstable, FallbackValue=False}"
+                           Classes.Stopped="{Binding BuildStatus.Status, Converter={x:Static rg:BuildStatusClassConverter.Instance}, ConverterParameter=Stopped, FallbackValue=False}"
+                           Text="{Binding BuildStatusDescription}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding $parent[rg:RevisionGridView].ViewModel.ShowBuildStatusText, FallbackValue=False}" />
+              </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
