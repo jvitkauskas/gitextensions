@@ -441,7 +441,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             return GetItem(
                 file.Name,
                 file.IsSubmodule,
-                getImage: () => ThreadHelper.JoinableTaskFactory.Run(async () =>
+                getBytes: () => ThreadHelper.JoinableTaskFactory.Run(async () =>
                 {
                     using MemoryStream? stream = await Module.GetFileStreamAsync(blobId.ToString(), cancellationToken);
                     return stream?.ToArray();
@@ -482,7 +482,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         FileViewContent content = GetItem(
             file.Name,
             isSubmodule,
-            getImage: () => File.ReadAllBytes(fullPath),
+            getBytes: () => File.ReadAllBytes(fullPath),
             getFileText: () =>
             {
                 using FileStream stream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -495,8 +495,11 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         return content with { FilePreamble = preamble };
     }
 
-    /// <summary>As <c>FileViewer.ViewItemAsync</c> and the binary check of <c>ViewTextAsync</c> (without the hex dump).</summary>
-    private FileViewContent GetItem(string fileName, bool isSubmodule, Func<byte[]?> getImage, Func<string> getFileText, Func<string> getSubmoduleText)
+    /// <summary>
+    ///  As <c>FileViewer.ViewItemAsync</c> and the binary check of <c>ViewTextAsync</c>: a binary file is shown in hexadecimal
+    ///  (all its bytes, where <c>DisplayAsHexDump</c> showed the first 4 KB), or detected only if its bytes cannot be read.
+    /// </summary>
+    private FileViewContent GetItem(string fileName, bool isSubmodule, Func<byte[]?> getBytes, Func<string> getFileText, Func<string> getSubmoduleText)
     {
         if (isSubmodule)
         {
@@ -508,7 +511,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             byte[]? image = null;
             try
             {
-                image = getImage();
+                image = getBytes();
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -519,10 +522,21 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
                 : new FileViewContent(FileViewKind.Image, "", fileName, Image: image);
         }
 
-        string text = getFileText();
-        if (FileHelper.IsBinaryFileName(Module, fileName) || FileHelper.IsBinaryFileAccordingToContent(text))
+        string? text = FileHelper.IsBinaryFileName(Module, fileName) ? null : getFileText();
+        if (text is null || FileHelper.IsBinaryFileAccordingToContent(text))
         {
-            return new FileViewContent(FileViewKind.Text, string.Format(_strings.BinaryFileDetected.Text, fileName));
+            byte[]? data = null;
+            try
+            {
+                data = getBytes();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+            }
+
+            return data is null
+                ? new FileViewContent(FileViewKind.Text, string.Format(_strings.BinaryFileDetected.Text, fileName))
+                : new FileViewContent(FileViewKind.Binary, fileName, fileName, BinaryData: data);
         }
 
         return new FileViewContent(FileViewKind.Text, text, fileName);

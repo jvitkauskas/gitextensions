@@ -1664,8 +1664,16 @@ Suitable for some config files modified locally.</source>
         <source>Binary file: {0} (Detected)</source>
         <target />
       </trans-unit>
+      <trans-unit id="_bytes.Text">
+        <source>bytes</source>
+        <target />
+      </trans-unit>
       <trans-unit id="_cannotViewImage.Text">
         <source>Cannot view image {0}</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_fileSizeInMb.Text">
+        <source>MB</source>
         <target />
       </trans-unit>
       <trans-unit id="copyNewVersionToolStripMenuItem.Text">

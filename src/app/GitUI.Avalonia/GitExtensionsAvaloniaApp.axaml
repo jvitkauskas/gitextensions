@@ -30,6 +30,7 @@
     <FluentTheme DensityStyle="Compact" />
     <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
     <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+    <StyleInclude Source="avares://AvaloniaHex/Themes/Simple/AvaloniaHex.axaml" />
 
     <!-- Equivalent of GitExtensionsDialog.ControlsPanel: the OK/Cancel strip at the bottom of a dialog. -->
     <Style Selector="Border.dialogFooter">

@@ -2,6 +2,8 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using AvaloniaHex;
+using AvaloniaHex.Document;
 using GitCommands.Settings;
 using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.CommandsDialogs;
@@ -48,6 +50,9 @@ public partial class FileViewerView : UserControl, IHotkeyControl
 
     /// <summary>The image shown instead of the text, e.g. for tests.</summary>
     public Image ImageView => image;
+
+    /// <summary>The bytes of a binary file shown instead of the text, e.g. for tests.</summary>
+    public HexEditor HexView => hexEditor;
 
     /// <summary>The toolbar of the options, e.g. for tests.</summary>
     public Border Toolbar => toolbar;
@@ -347,7 +352,7 @@ public partial class FileViewerView : UserControl, IHotkeyControl
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FileViewerViewModel.Image))
+        if (e.PropertyName is nameof(FileViewerViewModel.Image) or nameof(FileViewerViewModel.BinaryData))
         {
             ShowImage();
         }
@@ -370,7 +375,12 @@ public partial class FileViewerView : UserControl, IHotkeyControl
             }
         }
 
+        // A binary file is read-only: its bytes are shown, not edited.
+        byte[]? data = _viewModel?.BinaryData;
+        hexEditor.Document = data is null ? null : new MemoryBinaryDocument(data, isReadOnly: true);
+        binaryViewer.IsVisible = data is not null;
+
         imageViewer.IsVisible = image.Source is not null;
-        textView.IsVisible = !imageViewer.IsVisible;
+        textView.IsVisible = !imageViewer.IsVisible && !binaryViewer.IsVisible;
     }
 }

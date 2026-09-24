@@ -16,6 +16,8 @@ public sealed class FileViewerStrings : ViewStrings
         BinaryFile = Add("_binaryFile", "Text", "Binary file: {0}");
         BinaryFileDetected = Add("_binaryFileDetected", "Text", "Binary file: {0} (Detected)");
         CannotViewImage = Add("_cannotViewImage", "Text", "Cannot view image {0}");
+        FileSizeInMb = Add("_fileSizeInMb", "Text", "MB");
+        Bytes = Add("_bytes", "Text", "bytes");
         NextChange = Add("nextChangeButton", "ToolTipText", "Next change");
         PreviousChange = Add("previousChangeButton", "ToolTipText", "Previous change");
         IncreaseContextLines = Add("increaseNumberOfLines", "ToolTipText", "Increase the number of lines of context");
@@ -106,6 +108,10 @@ public sealed class FileViewerStrings : ViewStrings
 
     public TranslatedText CannotViewImage { get; }
 
+    public TranslatedText FileSizeInMb { get; }
+
+    public TranslatedText Bytes { get; }
+
     public TranslatedText NextChange { get; }
 
     public TranslatedText PreviousChange { get; }
@@ -138,6 +144,9 @@ public enum FileViewKind
 
     /// <summary>An image.</summary>
     Image,
+
+    /// <summary>The bytes of a binary file, in hexadecimal.</summary>
+    Binary,
 }
 
 /// <summary>What the file viewer shows (the result of the WinForms <c>FileViewer.View*Async</c> methods).</summary>
@@ -149,6 +158,7 @@ public enum FileViewKind
 /// <param name="DiffMode">The kind of a diff (the view mode of <c>FileViewer.View*Async</c>).</param>
 /// <param name="CanOpenWithDifftool">Whether F3 opens the difftool without a search (the <c>openWithDifftool</c> of <c>ViewChangesAsync</c>).</param>
 /// <param name="DifftasticWidth">The width of the output of difftastic (<c>DFT_WIDTH</c>).</param>
+/// <param name="BinaryData">The content of a binary file, whose <see cref="Text"/> is the file name.</param>
 public sealed record FileViewContent(
     FileViewKind Kind,
     string Text,
@@ -159,7 +169,8 @@ public sealed record FileViewContent(
     byte[]? FilePreamble = null,
     DiffViewMode DiffMode = DiffViewMode.Diff,
     bool CanOpenWithDifftool = false,
-    int DifftasticWidth = 80)
+    int DifftasticWidth = 80,
+    byte[]? BinaryData = null)
 {
     public static FileViewContent Empty { get; } = new(FileViewKind.Text, "");
 }
@@ -298,6 +309,14 @@ public sealed partial class FileViewerViewModel : ObservableObject
     [ObservableProperty]
     public partial byte[]? Image { get; private set; }
 
+    /// <summary>The bytes of a binary file shown in hexadecimal instead of the text, if any (<c>DisplayAsHexDump</c>).</summary>
+    [ObservableProperty]
+    public partial byte[]? BinaryData { get; private set; }
+
+    /// <summary>The file name and size above the bytes of a binary file (as the summary of <c>DisplayAsHexDump</c>).</summary>
+    [ObservableProperty]
+    public partial string BinarySummary { get; private set; } = "";
+
     /// <summary>What is shown, which chooses the buttons of the toolbar (as <c>SetVisibilityDiffContextMenu</c>).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDiff), nameof(CanChangeContextLines), nameof(CanIgnoreWhitespaceChanges), nameof(CanIgnoreWhitespaceAtEol), nameof(IsDiffAppearanceVisible))]
@@ -422,7 +441,7 @@ public sealed partial class FileViewerViewModel : ObservableObject
             content = new FileViewContent(FileViewKind.Text, "Unsupported file: \n\n" + ex);
         }
 
-        if (defaultText is not null && content.Kind != FileViewKind.Image && string.IsNullOrEmpty(content.Text))
+        if (defaultText is not null && content.Kind is not (FileViewKind.Image or FileViewKind.Binary) && string.IsNullOrEmpty(content.Text))
         {
             content = new FileViewContent(FileViewKind.Text, defaultText);
         }
@@ -439,6 +458,8 @@ public sealed partial class FileViewerViewModel : ObservableObject
         _content = content;
         _allowLinePatching = content.SupportsLinePatching;
         Image = content.Kind == FileViewKind.Image ? content.Image : null;
+        BinarySummary = content is { Kind: FileViewKind.Binary, BinaryData: { } data } ? GetBinarySummary(content.Text, data.Length) : "";
+        BinaryData = content.Kind == FileViewKind.Binary ? content.BinaryData : null;
         DiffViewMode diffMode = content.DiffMode;
         FileViewKind kind = content.Kind;
         bool hasGitColors = content.HasGitColors;
@@ -467,12 +488,29 @@ public sealed partial class FileViewerViewModel : ObservableObject
                     HighlightingFileName: Settings.ShowSyntaxHighlighting ? content.FileName : null,
                     DifftasticWidth: content.DifftasticWidth));
                 break;
+            case FileViewKind.Binary:
+                Editor.Load("", null);
+                break;
             default:
                 Editor.Load(content.Text, content.FileName);
                 break;
         }
 
         OnPropertyChanged(nameof(DiffAppearance));
+    }
+
+    /// <summary>As the summary of <c>DisplayAsHexDump</c>: "Binary file: name", and the size in MB (from 0.1 MB) and bytes.</summary>
+    private string GetBinarySummary(string fileName, int length)
+    {
+        System.Text.StringBuilder summary = new();
+        summary.AppendLine(string.Format(Strings.BinaryFile.Text, fileName)).AppendLine();
+        double mb = length / (1024d * 1024);
+        if (mb >= 0.1)
+        {
+            summary.Append($"{mb:N1}").Append(' ').Append(Strings.FileSizeInMb.Text).Append(" / ");
+        }
+
+        return summary.Append($"{length:N0}").Append(' ').Append(Strings.Bytes.Text).Append(':').ToString();
     }
 
     private static bool IsDiffFile(string? fileName)
