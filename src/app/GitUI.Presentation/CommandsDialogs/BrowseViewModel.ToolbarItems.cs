@@ -78,7 +78,19 @@ public sealed class BrowseToolbarItemVisibility : INotifyPropertyChanged
     /// <summary>Whether the Standard toolbar is shown (not saved, as <c>ToolStripMain.Visible</c>).</summary>
     public bool IsToolbarShown { get; private set; } = true;
 
-    public bool IsItemShown(string key) => _visible.TryGetValue(key, out bool visible) ? visible : BrowseViewModel.IsToolbarItemVisibleByDefault(key);
+    /// <summary>Reads the saved visibility of an item, the first time it is needed.</summary>
+    internal Func<string, bool>? LoadVisibility { get; set; }
+
+    public bool IsItemShown(string key)
+    {
+        if (!_visible.TryGetValue(key, out bool visible))
+        {
+            visible = LoadVisibility?.Invoke(key) ?? BrowseViewModel.IsToolbarItemVisibleByDefault(key);
+            _visible[key] = visible;
+        }
+
+        return visible;
+    }
 
     internal void SetItemShown(string key, bool visible)
     {
@@ -160,12 +172,24 @@ public sealed partial class BrowseViewModel
             });
         }
 
-        return
-        [
-            new(ToolbarItemsStrings.StandardToolbar.AccessKeyText, null, Children: standard),
-            ToggleItem(ToolbarItemsStrings.FiltersToolbar, ShowFiltersToolbar, () => ShowFiltersToolbar = !ShowFiltersToolbar),
-            ToggleItem(ToolbarItemsStrings.ScriptsToolbar, ShowScriptsToolbar, () => ShowScriptsToolbar = !ShowScriptsToolbar),
-        ];
+        List<BrowseMenuItem> toolbars = [new(ToolbarItemsStrings.StandardToolbar.AccessKeyText, null, Children: standard)];
+        if (Filters is { } filters)
+        {
+            List<BrowseMenuItem> filterItems = [ToggleItem(ToolbarItemsStrings.FiltersToolbar, ShowFiltersToolbar, () => ShowFiltersToolbar = !ShowFiltersToolbar), BrowseMenuItem.Separator];
+            foreach ((string key, string header, object? icon) in GetFilterToolbarItems(filters))
+            {
+                filterItems.Add(new BrowseMenuItem(header, null, icon)
+                {
+                    IsChecked = filters.ItemVisibility.IsItemShown(key),
+                    Invoke = () => SetFilterToolbarItemShown(key, !filters.ItemVisibility.IsItemShown(key)),
+                });
+            }
+
+            toolbars.Add(new(ToolbarItemsStrings.FiltersToolbar.AccessKeyText, null, Children: filterItems));
+        }
+
+        toolbars.Add(ToggleItem(ToolbarItemsStrings.ScriptsToolbar, ShowScriptsToolbar, () => ShowScriptsToolbar = !ShowScriptsToolbar));
+        return toolbars;
 
         static BrowseMenuItem ToggleItem(TranslatedText text, bool isChecked, Action invoke)
             => new(text.AccessKeyText, null) { IsChecked = isChecked, Invoke = invoke };
@@ -173,6 +197,32 @@ public sealed partial class BrowseViewModel
 
     /// <summary>As <c>IsVisibleByDefault</c>: all items but the fetch and pull shortcuts.</summary>
     internal static bool IsToolbarItemVisibleByDefault(string key) => !key.StartsWith(FetchPullShortcutsPrefix, StringComparison.Ordinal);
+
+    /// <summary>Shows or hides an item (or group) of the Filters toolbar, and saves it.</summary>
+    public void SetFilterToolbarItemShown(string key, bool visible)
+    {
+        Filters?.ItemVisibility.SetItemShown(key, visible);
+        _toolbarItemsHost?.SetToolbarItemVisibility(GetFilterSettingKey(key), visible, defaultValue: true);
+    }
+
+    // The groups are saved by their group name (the Tag "ToolBar_group:..." of their WinForms items).
+    private static string GetFilterSettingKey(string key) => key switch
+    {
+        "BranchFilter" => "ToolBar_group:Branch filter",
+        "TextFilter" => "ToolBar_group:Text filter",
+        _ => key,
+    };
+
+    // The items of ToolStripFilters with their tooltips as the headers.
+    private static IEnumerable<(string Key, string Header, object? Icon)> GetFilterToolbarItems(UserControls.RevisionGrid.FilterToolBarViewModel filters)
+    {
+        yield return ("tsbtnAdvancedFilter", filters.Strings.AdvancedFilterToolTip.Text, "FunnelPencil");
+        yield return ("tsbShowReflog", filters.Strings.ShowReflogToolTip.Text, "Book");
+        yield return ("tssbtnShowBranches", filters.BranchesModeToolTip, filters.BranchesModeIcon);
+        yield return ("BranchFilter", filters.Strings.BranchesToolTip.Text, null);
+        yield return ("TextFilter", filters.Strings.FilterToolTip.Text, null);
+        yield return ("tsmiShowOnlyFirstParent", filters.Strings.ShowOnlyFirstParent.Text, "ShowOnlyFirstParent");
+    }
 
     /// <summary>Shows or hides an item of the main toolbar, and saves it.</summary>
     public void SetToolbarItemShown(string key, bool visible)
@@ -244,15 +294,10 @@ public sealed partial class BrowseViewModel
         }
 
         DefaultPullAction = _toolbarItemsHost.DefaultPullAction;
-        foreach ((string key, _, _) in GetStandardToolbarItems())
-        {
-            bool defaultValue = IsToolbarItemVisibleByDefault(key);
-            bool visible = _toolbarItemsHost.GetToolbarItemVisibility(key, defaultValue);
-            if (visible != defaultValue)
-            {
-                ToolbarItems.SetItemShown(key, visible);
-            }
-        }
+
+        // Read when first shown: the left panel and the filters are set after the constructor.
+        IBrowseToolbarItemsHost host = _toolbarItemsHost;
+        ToolbarItems.LoadVisibility = key => host.GetToolbarItemVisibility(key, IsToolbarItemVisibleByDefault(key));
     }
 
     // As SetDefaultPullActionMenuItemClick: saved.

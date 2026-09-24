@@ -1,3 +1,4 @@
+using GitCommands;
 using GitExtUtils;
 using GitUI.Models;
 using GitUI.Presentation.CommandsDialogs;
@@ -36,6 +37,14 @@ internal static partial class AvaloniaDialogs
         }
 
         public bool IsOutputHistoryEnabled => OutputHistoryProvider.Enabled;
+
+        public bool ShowOutputHistoryAsTab => AppSettings.ShowOutputHistoryAsTab.Value;
+
+        public bool IsOutputHistoryPanelVisible
+        {
+            get => AppSettings.OutputHistoryPanelVisible.Value;
+            set => AppSettings.OutputHistoryPanelVisible.Value = value;
+        }
 
         public string OutputHistory => OutputHistoryProvider.History;
 

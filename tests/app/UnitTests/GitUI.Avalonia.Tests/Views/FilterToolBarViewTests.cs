@@ -103,7 +103,7 @@ public sealed class FilterToolBarViewTests : HeadlessTest
         window.Close();
     });
 
-    private sealed class FakeFilterHost : IRevisionGridFilterHost
+    internal sealed class FakeFilterHost : IRevisionGridFilterHost
     {
         public event EventHandler? FilterChanged;
 

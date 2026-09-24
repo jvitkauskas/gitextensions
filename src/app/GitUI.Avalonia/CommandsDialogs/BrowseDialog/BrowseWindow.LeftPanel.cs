@@ -17,6 +17,7 @@ public partial class BrowseWindow
     private BrowseViewModel? _leftPanelOwner;
     private LeftPanelViewModel? _leftPanelViewModel;
     private GridLength _leftPanelWidth = new(260);
+    private GridLength _outputPanelHeight = new(200);
 
     public LeftPanelView LeftPanel => leftPanel;
 
@@ -40,6 +41,10 @@ public partial class BrowseWindow
         {
             UpdateLeftPanel();
         }
+        else if (e.PropertyName == nameof(BrowseViewModel.ShowOutputHistoryPanel))
+        {
+            UpdateLeftPanelColumn();
+        }
     }
 
     private void UpdateLeftPanel()
@@ -61,7 +66,22 @@ public partial class BrowseWindow
     /// <summary>As <c>MainSplitContainer.Panel1Collapsed</c>: a hidden left panel takes no space, and keeps its width.</summary>
     private void UpdateLeftPanelColumn()
     {
-        bool visible = _leftPanelViewModel?.IsVisible is true;
+        bool leftPanelVisible = _leftPanelViewModel?.IsVisible is true;
+        bool outputVisible = _leftPanelOwner?.ShowOutputHistoryPanel is true;
+
+        // As LeftSplitContainer: the output history panel below the left panel, or alone with all the height.
+        RowDefinition outputRow = leftColumn.RowDefinitions[2];
+        if (outputRow.Height.IsAbsolute && outputRow.Height.Value > 0)
+        {
+            _outputPanelHeight = outputRow.Height;
+        }
+
+        leftColumn.RowDefinitions[0].Height = leftPanelVisible ? GridLength.Star : new GridLength(0);
+        outputRow.Height = !outputVisible ? new GridLength(0) : leftPanelVisible ? _outputPanelHeight : GridLength.Star;
+        outputHistoryPanel.IsVisible = outputVisible;
+        outputHistoryPanelSplitter.IsVisible = outputVisible && leftPanelVisible;
+
+        bool visible = leftPanelVisible || outputVisible;
         ColumnDefinition column = mainSplit.ColumnDefinitions[0];
         if (!visible && column.Width.Value > 0)
         {
@@ -69,7 +89,7 @@ public partial class BrowseWindow
         }
 
         column.Width = visible ? _leftPanelWidth : new GridLength(0);
-        leftPanel.IsVisible = visible;
+        leftPanel.IsVisible = leftPanelVisible;
         leftPanelSplitter.IsVisible = visible;
     }
 }

@@ -51,6 +51,7 @@ public enum BrowseFocusTarget
     RevisionGrid,
     Filter,
     CommitInfo,
+    OutputHistory,
 }
 
 /// <summary>What the script hotkeys need from the application.</summary>
@@ -103,7 +104,7 @@ public sealed partial class BrowseViewModel
             case BrowseHotkeyCommand.FocusGpgInfo: return HasGpgInfo && SelectTab(BrowseTab.Gpg);
             case BrowseHotkeyCommand.FocusGitConsole: return HasConsole && SelectTab(BrowseTab.Console);
             case BrowseHotkeyCommand.FocusBuildServerStatus: return HasBuildReport && SelectTab(BrowseTab.BuildReport);
-            case BrowseHotkeyCommand.FocusOutputHistory: return HasOutputHistory && SelectTab(BrowseTab.OutputHistory);
+            case BrowseHotkeyCommand.FocusOutputHistory: return ShowOrToggleOutputHistory();
             case BrowseHotkeyCommand.FocusNextTab: return SelectTab(NextTab(forward: true));
             case BrowseHotkeyCommand.FocusPrevTab: return SelectTab(NextTab(forward: false));
             case BrowseHotkeyCommand.ToggleLeftPanel:
@@ -183,7 +184,7 @@ public sealed partial class BrowseViewModel
         BrowseTab.FileTree => FileTree is not null,
         BrowseTab.Gpg => HasGpgInfo,
         BrowseTab.Console => HasConsole,
-        BrowseTab.OutputHistory => HasOutputHistory,
+        BrowseTab.OutputHistory => HasOutputHistory && IsOutputHistoryTab,
         BrowseTab.BuildReport => HasBuildReport,
         _ => true,
     };

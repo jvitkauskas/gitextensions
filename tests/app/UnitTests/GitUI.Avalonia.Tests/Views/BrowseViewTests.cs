@@ -468,7 +468,7 @@ public sealed class BrowseViewTests : HeadlessTest
     [Test]
     public Task The_toolbars_menu_shows_or_hides_the_toolbars_and_their_items() => OnUiThreadAsync(() =>
     {
-        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(withFilters: true);
         StackPanel shortcuts = window.FindControl<StackPanel>("fetchPullShortcuts")!;
         shortcuts.Children.Select(c => c.Name).Should().Equal(
             "pull_shortcut_fetchToolStripMenuItem", "pull_shortcut_fetchAllToolStripMenuItem", "pull_shortcut_fetchPruneAllToolStripMenuItem",
@@ -506,17 +506,41 @@ public sealed class BrowseViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         window.FindControl<Button>("pushButton")!.IsVisible.Should().BeFalse();
         viewModel.GetToolbarsMenuItems()[0].Children![0].IsChecked.Should().BeFalse();
-        toolbars[1].Invoke!();
+        toolbars[1].Children![0].Invoke!();
         toolbars[2].Invoke!();
         window.FindControl<Panel>("filterToolBarHost")!.IsVisible.Should().BeFalse();
         window.FindControl<StackPanel>("scriptsToolBar")!.IsVisible.Should().BeFalse();
-        viewModel.GetToolbarsMenuItems().Skip(1).Select(t => t.IsChecked).Should().Equal(false, false);
+        viewModel.GetToolbarsMenuItems()[1].Children![0].IsChecked.Should().BeFalse();
+        viewModel.GetToolbarsMenuItems()[2].IsChecked.Should().BeFalse();
+        toolbars[1].Children![0].Invoke!();
+        Dispatcher.UIThread.RunJobs();
+
+        // The items of the Filters toolbar; a group is saved by its group name (the Tag of its WinForms items).
+        IReadOnlyList<BrowseMenuItem> filterItems = viewModel.GetToolbarsMenuItems()[1].Children!;
+        filterItems.Skip(2).Select(i => (i.Header, i.IsChecked)).Should().Equal(
+            ("Advanced filter", true), ("Show all reflog references", true), ("Show all branches", true), ("Branch filter", true), ("Text filter", true), ("Show only first parent", true));
+        ComboBox branchFilterBox = window.FindControl<Control>("filterToolBar")!.GetVisualDescendants().OfType<ComboBox>().First(c => c.Name == "branchFilterBox");
+        branchFilterBox.IsVisible.Should().BeTrue();
+        filterItems.Single(i => i.Header == "Branch filter").Invoke!();
+        Dispatcher.UIThread.RunJobs();
+        branchFilterBox.IsVisible.Should().BeFalse();
+        host.ToolbarVisibility["ToolBar_group:Branch filter"].Should().Be((false, true));
+        viewModel.Filters!.ShowSeparator.Should().BeTrue("the advanced filter, reflog and branches buttons are before it");
+        foreach (string key in (string[])["tsbtnAdvancedFilter", "tsbShowReflog", "tssbtnShowBranches"])
+        {
+            viewModel.SetFilterToolbarItemShown(key, false);
+        }
+
+        viewModel.Filters.ShowSeparator.Should().BeFalse("no item is shown before it");
         window.Close();
 
         // Loaded from the settings.
-        (BrowseWindow window2, BrowseViewModel viewModel2, FakeBrowseHost _) = Show(configure: h => h.ToolbarVisibility["toolStripButtonPush"] = (false, true));
+        (BrowseWindow window2, BrowseViewModel viewModel2, FakeBrowseHost _) = Show(
+            configure: h => (h.ToolbarVisibility["toolStripButtonPush"], h.ToolbarVisibility["ToolBar_group:Text filter"]) = ((false, true), (false, true)),
+            withFilters: true);
         viewModel2.ToolbarItems["toolStripButtonPush"].Should().BeFalse();
         window2.FindControl<Button>("pushButton")!.IsVisible.Should().BeFalse();
+        viewModel2.Filters!.ItemVisibility["TextFilter"].Should().BeFalse();
         window2.Close();
     });
 
@@ -592,6 +616,41 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_output_history_panel_is_toggled_by_its_hotkey_and_saved() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(configure: h => h.ShowOutputHistoryAsTab = false);
+        viewModel.IsOutputHistoryTab.Should().BeFalse();
+        window.FindControl<TabItem>("outputHistoryTab")!.IsVisible.Should().BeFalse("the history is a panel (ShowOutputHistoryAsTab off)");
+        TextBox panel = window.FindControl<TextBox>("outputHistoryPanel")!;
+        ColumnDefinition leftColumn = window.FindControl<Grid>("mainSplit")!.ColumnDefinitions[0];
+        panel.IsVisible.Should().BeFalse();
+        leftColumn.Width.Value.Should().Be(0, "without the left panel nor the output panel");
+
+        // As FocusAndToggleIfPanel: shown and focused, alone in the left column without the left panel.
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusOutputHistory).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        panel.IsVisible.Should().BeTrue();
+        panel.Text.Should().Be("git fetch");
+        panel.IsFocused.Should().BeTrue();
+        leftColumn.Width.Value.Should().BeGreaterThan(0);
+        host.IsOutputHistoryPanelVisible.Should().BeTrue();
+        viewModel.SelectedTab.Should().NotBe(BrowseTab.OutputHistory);
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-output-history-panel");
+
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusOutputHistory).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        panel.IsVisible.Should().BeFalse();
+        host.IsOutputHistoryPanelVisible.Should().BeFalse();
+        leftColumn.Width.Value.Should().Be(0);
+        window.Close();
+
+        // Shown at once when it was left shown.
+        (BrowseWindow window2, BrowseViewModel _, FakeBrowseHost _) = Show(configure: h => (h.ShowOutputHistoryAsTab, h.IsOutputHistoryPanelVisible) = (false, true));
+        window2.FindControl<TextBox>("outputHistoryPanel")!.IsVisible.Should().BeTrue();
+        window2.Close();
+    });
+
+    [Test]
     public Task The_submodules_button_lists_the_submodules_or_goes_to_the_superproject() => OnUiThreadAsync(() =>
     {
         (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
@@ -615,7 +674,7 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
-    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null, Action<FakeBrowseHost>? configure = null, IReadOnlyList<HotkeyBinding>? revisionDiffHotkeys = null)
+    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null, Action<FakeBrowseHost>? configure = null, IReadOnlyList<HotkeyBinding>? revisionDiffHotkeys = null, bool withFilters = false)
     {
         FakeBrowseHost host = new();
         configure?.Invoke(host);
@@ -634,6 +693,7 @@ public sealed class BrowseViewTests : HeadlessTest
         {
             NavigateMenuProvider = navigate,
             RevisionDiffHotkeys = revisionDiffHotkeys ?? [],
+            Filters = withFilters ? new FilterToolBarViewModel(new FilterToolBarStrings(), new FilterToolBarViewTests.FakeFilterHost()) : null,
         };
         BrowseWindow window = new() { Width = 1100, Height = 760, DataContext = viewModel };
         window.Show();
@@ -704,6 +764,10 @@ public sealed class BrowseViewTests : HeadlessTest
         public event EventHandler? OutputHistoryChanged;
 
         public bool IsOutputHistoryEnabled => true;
+
+        public bool ShowOutputHistoryAsTab { get; set; } = true;
+
+        public bool IsOutputHistoryPanelVisible { get; set; }
 
         public string OutputHistory { get; private set; } = "git fetch";
 

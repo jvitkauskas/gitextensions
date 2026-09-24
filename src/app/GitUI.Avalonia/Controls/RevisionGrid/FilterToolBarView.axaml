@@ -20,7 +20,7 @@
   </UserControl.Styles>
   <!-- Equivalent of FilterToolBar (ToolStripFilters of FormBrowse). -->
   <StackPanel Orientation="Horizontal" Spacing="2">
-    <SplitButton Name="advancedFilterButton" Classes="toolbar" ToolTip.Tip="{Binding AdvancedFilterToolTip}">
+    <SplitButton Name="advancedFilterButton" Classes="toolbar" ToolTip.Tip="{Binding AdvancedFilterToolTip}" IsVisible="{Binding ItemVisibility[tsbtnAdvancedFilter]}">
       <Image Source="{Binding AdvancedFilterIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
       <SplitButton.Flyout>
         <MenuFlyout>
@@ -31,11 +31,11 @@
         </MenuFlyout>
       </SplitButton.Flyout>
     </SplitButton>
-    <ToggleButton Name="reflogButton" Classes="toolbar" IsChecked="{Binding State.ShowReflogReferences, Mode=OneWay}"
+    <ToggleButton Name="reflogButton" Classes="toolbar" IsChecked="{Binding State.ShowReflogReferences, Mode=OneWay}" IsVisible="{Binding ItemVisibility[tsbShowReflog]}"
                   Command="{Binding ToggleShowReflogCommand}" ToolTip.Tip="{Binding Strings.ShowReflogToolTip.Text}">
       <Image Source="avares://GitUI.Avalonia/Assets/Book.png" Width="16" Height="16" />
     </ToggleButton>
-    <DropDownButton Name="branchesButton" Classes="toolbar" ToolTip.Tip="{Binding BranchesModeToolTip}">
+    <DropDownButton Name="branchesButton" Classes="toolbar" ToolTip.Tip="{Binding BranchesModeToolTip}" IsVisible="{Binding ItemVisibility[tssbtnShowBranches]}">
       <StackPanel Orientation="Horizontal" Spacing="4">
         <Image Source="{Binding BranchesModeIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
         <TextBlock Text="{Binding BranchesModeText}" VerticalAlignment="Center" />
@@ -51,9 +51,9 @@
         </MenuFlyout>
       </DropDownButton.Flyout>
     </DropDownButton>
-    <Label Content="{Binding Strings.Branches.AccessKeyText}" Target="branchFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.BranchesToolTip.Text}" />
-    <ComboBox Name="branchFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding BranchFilter}" ItemsSource="{Binding BranchItems}" />
-    <DropDownButton Name="branchTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.BranchType.Text}">
+    <Label Content="{Binding Strings.Branches.AccessKeyText}" Target="branchFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.BranchesToolTip.Text}" IsVisible="{Binding ItemVisibility[BranchFilter]}" />
+    <ComboBox Name="branchFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding BranchFilter}" ItemsSource="{Binding BranchItems}" IsVisible="{Binding ItemVisibility[BranchFilter]}" />
+    <DropDownButton Name="branchTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.BranchType.Text}" IsVisible="{Binding ItemVisibility[BranchFilter]}">
       <Image Source="avares://GitUI.Avalonia/Assets/EditFilter.png" Width="16" Height="16" />
       <DropDownButton.Flyout>
         <MenuFlyout>
@@ -63,10 +63,10 @@
         </MenuFlyout>
       </DropDownButton.Flyout>
     </DropDownButton>
-    <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-    <Label Content="{Binding Strings.Filter.AccessKeyText}" Target="revisionFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.FilterToolTip.Text}" />
-    <ComboBox Name="revisionFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding RevisionFilter}" ItemsSource="{Binding RevisionFilterItems}" />
-    <DropDownButton Name="filterTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.FilterType.Text}">
+    <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding ShowSeparator}" />
+    <Label Content="{Binding Strings.Filter.AccessKeyText}" Target="revisionFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.FilterToolTip.Text}" IsVisible="{Binding ItemVisibility[TextFilter]}" />
+    <ComboBox Name="revisionFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding RevisionFilter}" ItemsSource="{Binding RevisionFilterItems}" IsVisible="{Binding ItemVisibility[TextFilter]}" />
+    <DropDownButton Name="filterTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.FilterType.Text}" IsVisible="{Binding ItemVisibility[TextFilter]}">
       <Image Source="avares://GitUI.Avalonia/Assets/EditFilter.png" Width="16" Height="16" />
       <DropDownButton.Flyout>
         <MenuFlyout>
@@ -77,7 +77,7 @@
         </MenuFlyout>
       </DropDownButton.Flyout>
     </DropDownButton>
-    <ToggleButton Name="firstParentButton" Classes="toolbar" IsChecked="{Binding State.ShowOnlyFirstParent, Mode=OneWay}"
+    <ToggleButton Name="firstParentButton" Classes="toolbar" IsChecked="{Binding State.ShowOnlyFirstParent, Mode=OneWay}" IsVisible="{Binding ItemVisibility[tsmiShowOnlyFirstParent]}"
                   Command="{Binding ToggleShowOnlyFirstParentCommand}" ToolTip.Tip="{Binding Strings.ShowOnlyFirstParent.Text}">
       <Image Source="avares://GitUI.Avalonia/Assets/ShowOnlyFirstParent.png" Width="16" Height="16" />
     </ToggleButton>

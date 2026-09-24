@@ -131,7 +131,20 @@
     </WrapPanel>
     <!-- The left panel (RepoObjectsTree in MainSplitContainer.Panel1) beside the grid and the tabs. -->
     <Grid Name="mainSplit" ColumnDefinitions="260,Auto,*" Margin="4,0,4,4">
-    <lp:LeftPanelView Name="leftPanel" DataContext="{Binding LeftPanel}" />
+    <!-- The left panel, and below it the output history panel (OutputHistoryPanelController in LeftSplitContainer.Panel2). -->
+    <Grid Name="leftColumn" RowDefinitions="*,Auto,200">
+      <lp:LeftPanelView Name="leftPanel" DataContext="{Binding LeftPanel}" />
+      <GridSplitter Name="outputHistoryPanelSplitter" Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" IsVisible="False" />
+      <TextBox Name="outputHistoryPanel" Grid.Row="2" Text="{Binding OutputHistoryText}" IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True" IsVisible="False"
+               FontFamily="{DynamicResource MonospaceFontFamily}" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+        <TextBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem Name="copyOutputHistoryPanelItem" Header="{Binding OutputHistoryStrings.Copy.AccessKeyText}" />
+            <MenuItem Header="{Binding OutputHistoryStrings.Clear.AccessKeyText}" Command="{Binding ClearOutputHistoryCommand}" />
+          </ContextMenu>
+        </TextBox.ContextMenu>
+      </TextBox>
+    </Grid>
     <GridSplitter Name="leftPanelSplitter" Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
     <Grid Name="contentGrid" Grid.Column="2" RowDefinitions="*,Auto,320">
       <!-- The commit info beside the grid (CommitInfoPosition LeftwardFromList / RightwardFromList), else in its tab. -->
@@ -219,7 +232,7 @@
           <!-- The terminal of the configured console emulator (ConEmu or Mintty), a WinForms control as a child window. -->
           <c:EmbeddedNativeViewPresenter Name="consoleView" View="{Binding ConsoleView}" />
         </TabItem>
-        <TabItem Name="outputHistoryTab" IsVisible="{Binding HasOutputHistory}">
+        <TabItem Name="outputHistoryTab" IsVisible="{Binding IsOutputHistoryTab}">
           <TabItem.Header>
             <StackPanel Orientation="Horizontal" Spacing="4">
               <Image Source="avares://GitUI.Avalonia/Assets/GitCommandLog.png" Width="16" Height="16" />

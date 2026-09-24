@@ -168,6 +168,17 @@ public interface IRevisionGridFilterHost
 /// <summary>Port of <c>FilterToolBar</c>: the branch and text filters of the revision grid of the main window.</summary>
 public sealed partial class FilterToolBarViewModel : ObservableObject
 {
+    /// <summary>
+    ///  Which items are shown (the Toolbars menu of the main window): the buttons by the names of their WinForms items, the
+    ///  groups as <c>BranchFilter</c> and <c>TextFilter</c>.
+    /// </summary>
+    public GitUI.Presentation.CommandsDialogs.BrowseToolbarItemVisibility ItemVisibility { get; } = new();
+
+    /// <summary>As <c>AdaptSeparatorsVisibility</c>: the separator between the branch and the text filters, if items are on both sides.</summary>
+    public bool ShowSeparator
+        => (ItemVisibility["tsbtnAdvancedFilter"] || ItemVisibility["tsbShowReflog"] || ItemVisibility["tssbtnShowBranches"] || ItemVisibility["BranchFilter"])
+            && (ItemVisibility["TextFilter"] || ItemVisibility["tsmiShowOnlyFirstParent"]);
+
     private const int _maxFilterItems = 30;
     private readonly IRevisionGridFilterHost _host;
     private IReadOnlyList<string> _refNames = [];
@@ -176,6 +187,7 @@ public sealed partial class FilterToolBarViewModel : ObservableObject
 
     public FilterToolBarViewModel(FilterToolBarStrings strings, IRevisionGridFilterHost host)
     {
+        ItemVisibility.PropertyChanged += (_, _) => OnPropertyChanged(nameof(ShowSeparator));
         Strings = strings;
         _host = host;
 

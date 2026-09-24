@@ -50,6 +50,7 @@ public partial class BrowseWindow : DialogWindow
 
         // As CopyToClipboard of OutputHistoryControllerBase: the selection, else the whole history.
         copyOutputHistoryItem.Click += (_, _) => _viewModel?.CopyOutputHistory(outputHistory.SelectedText);
+        copyOutputHistoryPanelItem.Click += (_, _) => _viewModel?.CopyOutputHistory(outputHistoryPanel.SelectedText);
 
         // As Update of OutputHistoryControllerBase: the end of the history is shown.
         outputHistory.PropertyChanged += (_, e) =>
@@ -435,6 +436,9 @@ public partial class BrowseWindow : DialogWindow
                 break;
             case BrowseFocusTarget.CommitInfo:
                 commitInfo.Focus();
+                break;
+            case BrowseFocusTarget.OutputHistory:
+                outputHistoryPanel.Focus();
                 break;
         }
     }

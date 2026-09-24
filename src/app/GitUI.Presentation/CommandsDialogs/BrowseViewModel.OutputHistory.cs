@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GitUI.Presentation.Translations;
 
@@ -30,6 +30,12 @@ public interface IBrowseOutputHistoryHost
 
     bool IsOutputHistoryEnabled { get; }
 
+    /// <summary>Whether the history is a tab (<c>AppSettings.ShowOutputHistoryAsTab</c>), else a panel below the left panel.</summary>
+    bool ShowOutputHistoryAsTab { get; }
+
+    /// <summary>Whether the panel is shown (<c>AppSettings.OutputHistoryPanelVisible</c>).</summary>
+    bool IsOutputHistoryPanelVisible { get; set; }
+
     string OutputHistory { get; }
 
     void ClearOutputHistory();
@@ -37,7 +43,7 @@ public interface IBrowseOutputHistoryHost
     void CopyOutputHistory(string text);
 }
 
-/// <summary>The output history tab of the main window (<c>OutputHistoryTabController</c>).</summary>
+/// <summary>The output history of the main window, as a tab (<c>OutputHistoryTabController</c>) or a panel (<c>OutputHistoryPanelController</c>).</summary>
 public sealed partial class BrowseViewModel
 {
     private IBrowseOutputHistoryHost? _outputHistoryHost;
@@ -52,6 +58,37 @@ public sealed partial class BrowseViewModel
     public partial string OutputHistoryText { get; private set; } = "";
 
     /// <summary>As the Copy item: the selection, else the whole history.</summary>
+    /// <summary>Whether the history is shown in its tab.</summary>
+    public bool IsOutputHistoryTab { get; private set; }
+
+    /// <summary>Whether the history is shown in the panel below the left panel.</summary>
+    [ObservableProperty]
+    public partial bool ShowOutputHistoryPanel { get; private set; }
+
+    /// <summary>As <c>FocusAndToggleIfPanel</c>: the tab is shown, or the panel shown (and focused) or hidden, and saved.</summary>
+    public bool ShowOrToggleOutputHistory()
+    {
+        if (!HasOutputHistory)
+        {
+            return false;
+        }
+
+        if (IsOutputHistoryTab)
+        {
+            SelectedTab = BrowseTab.OutputHistory;
+            return true;
+        }
+
+        ShowOutputHistoryPanel = !ShowOutputHistoryPanel;
+        _outputHistoryHost!.IsOutputHistoryPanelVisible = ShowOutputHistoryPanel;
+        if (ShowOutputHistoryPanel)
+        {
+            FocusRequested?.Invoke(this, BrowseFocusTarget.OutputHistory);
+        }
+
+        return true;
+    }
+
     public void CopyOutputHistory(string? selectedText)
         => _outputHistoryHost?.CopyOutputHistory(string.IsNullOrEmpty(selectedText) ? OutputHistoryText : selectedText);
 
@@ -68,6 +105,8 @@ public sealed partial class BrowseViewModel
         }
 
         OutputHistoryText = _outputHistoryHost!.OutputHistory;
+        IsOutputHistoryTab = _outputHistoryHost.ShowOutputHistoryAsTab;
+        ShowOutputHistoryPanel = !IsOutputHistoryTab && _outputHistoryHost.IsOutputHistoryPanelVisible;
         _outputHistoryHost.OutputHistoryChanged += (_, _) => OutputHistoryText = _outputHistoryHost.OutputHistory;
     }
 }
