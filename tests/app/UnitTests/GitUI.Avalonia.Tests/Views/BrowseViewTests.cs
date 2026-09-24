@@ -96,7 +96,7 @@ public sealed class BrowseViewTests : HeadlessTest
         return (window, viewModel, host);
     }
 
-    private sealed class FakeBrowseHost : IBrowseHost
+    internal sealed class FakeBrowseHost : IBrowseHost
     {
         public event EventHandler? RepositoryChanged;
 
@@ -105,6 +105,10 @@ public sealed class BrowseViewTests : HeadlessTest
         public List<(BrowseCommand Command, BrowseSelection Selection)> Runs { get; } = [];
 
         public List<IReadOnlyList<string>> DiffsRequested { get; } = [];
+
+        public IReadOnlyList<BrowseMenuItem> RecentRepositoriesMenu { get; set; } = [];
+
+        public IReadOnlyList<BrowseMenuItem> FavouriteRepositoriesMenu { get; set; } = [];
 
         public string GetTitle() => $"repo ({Branch}) - Git Extensions";
 
@@ -120,6 +124,8 @@ public sealed class BrowseViewTests : HeadlessTest
             GitItemStatus file = new(name: "src/file.cs") { IsTracked = true, IsChanged = true };
             return Task.FromResult<IReadOnlyList<FileStatusGroup>>([new FileStatusGroup(first, second, "Parent", [file])]);
         }
+
+        public IReadOnlyList<BrowseMenuItem> GetRepositoriesMenu(bool favourites) => favourites ? FavouriteRepositoriesMenu : RecentRepositoriesMenu;
 
         public void RaiseRepositoryChanged() => RepositoryChanged?.Invoke(this, EventArgs.Empty);
     }

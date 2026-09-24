@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GitExtensions.Extensibility.Git;
+using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.Editor;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
@@ -38,7 +39,14 @@ public sealed class BrowseStrings : ViewStrings
         Open = Add("openToolStripMenuItem", "Text", "&Open...");
         Clone = Add("cloneToolStripMenuItem", "Text", "C&lone repository...");
         Init = Add("initNewRepositoryToolStripMenuItem", "Text", "&Create new repository...");
+        FavouriteRepositories = Add("tsmiFavouriteRepositories", "Text", "&Favorite repositories");
+        RecentRepositories = Add("tsmiRecentRepositories", "Text", "&Recent repositories");
+        ClearRecentRepositories = Add("tsmiRecentRepositoriesClear", "Text", "Clear list");
         Exit = Add("exitToolStripMenuItem", "Text", "E&xit");
+
+        // Dashboard
+        DashboardMenu = Add("dashboardToolStripMenuItem", "Text", "&Dashboard");
+        RefreshDashboard = Add("refreshDashboardToolStripMenuItem", "Text", "&Refresh");
 
         // Repository
         RepositoryMenu = Add("repositoryToolStripMenuItem", "Text", "&Repository");
@@ -60,6 +68,7 @@ public sealed class BrowseStrings : ViewStrings
         EditLocalGitConfig = Add("editLocalGitConfigToolStripMenuItem", "Text", "&Edit .git/config");
         RepoSettings = Add("repoSettingsToolStripMenuItem", "Text", "Rep&ository settings...");
         SparseWorkingCopy = Add("menuitemSparse", "Text", "Sparse Wor&king Copy");
+        CloseRepository = Add("closeToolStripMenuItem", "Text", "&Close (go to Dashboard)");
 
         // Commands
         CommandsMenu = Add("commandsToolStripMenuItem", "Text", "&Commands");
@@ -156,7 +165,17 @@ public sealed class BrowseStrings : ViewStrings
 
     public TranslatedText Init { get; }
 
+    public TranslatedText FavouriteRepositories { get; }
+
+    public TranslatedText RecentRepositories { get; }
+
+    public TranslatedText ClearRecentRepositories { get; }
+
     public TranslatedText Exit { get; }
+
+    public TranslatedText DashboardMenu { get; }
+
+    public TranslatedText RefreshDashboard { get; }
 
     public TranslatedText RepositoryMenu { get; }
 
@@ -195,6 +214,8 @@ public sealed class BrowseStrings : ViewStrings
     public TranslatedText RepoSettings { get; }
 
     public TranslatedText SparseWorkingCopy { get; }
+
+    public TranslatedText CloseRepository { get; }
 
     public TranslatedText CommandsMenu { get; }
 
@@ -301,6 +322,18 @@ public enum BrowseCommand
     Clone,
     Init,
     Exit,
+
+    /// <summary>"Clear list" of the recent repositories (<c>tsmiRecentRepositoriesClear_Click</c>).</summary>
+    ClearRecentRepositories,
+
+    /// <summary>"Close (go to Dashboard)": the dashboard, without a repository (<c>CloseToolStripMenuItemClick</c>).</summary>
+    CloseRepository,
+
+    /// <summary>"Refresh" of the Dashboard menu.</summary>
+    RefreshDashboard,
+
+    /// <summary>"Recent repositories settings" of the Dashboard menu.</summary>
+    RecentRepositoriesSettings,
     FileExplorer,
     Remotes,
     ManageSubmodules,
@@ -372,12 +405,30 @@ public enum BrowseCommand
 /// </summary>
 public sealed record BrowseSelection(IReadOnlyList<GitRevision> LatestSelectedFirst, IReadOnlyList<GitRevision> Descending);
 
-/// <summary>An item of a menu of the main window, or a separator (<see cref="Command"/> null and no children).</summary>
+/// <summary>The submenus whose items are read when the Start menu opens (as their <c>DropDownOpening</c>).</summary>
+public enum BrowseSubmenu
+{
+    RecentRepositories,
+    FavouriteRepositories,
+}
+
+/// <summary>An item of a menu of the main window, or a separator (no command, action, submenu or children).</summary>
 public sealed record BrowseMenuItem(string Header, BrowseCommand? Command, string? Icon = null, IReadOnlyList<BrowseMenuItem>? Children = null)
 {
     public static BrowseMenuItem Separator { get; } = new("-", null);
 
-    public bool IsSeparator => Command is null && Children is null;
+    /// <summary>The action of an item without a <see cref="Command"/> (e.g. a recent repository).</summary>
+    public Action? Invoke { get; init; }
+
+    /// <summary>The text shown on the right (the <c>ShortcutKeyDisplayString</c>, e.g. the branch of a recent repository).</summary>
+    public string? Shortcut { get; init; }
+
+    public string? ToolTip { get; init; }
+
+    /// <summary>The submenu whose items are read with <see cref="BrowseViewModel.GetSubmenuItems"/>.</summary>
+    public BrowseSubmenu? Submenu { get; init; }
+
+    public bool IsSeparator => Command is null && Children is null && Invoke is null && Submenu is null;
 }
 
 /// <summary>What the main window needs from the application.</summary>
@@ -395,6 +446,12 @@ public interface IBrowseHost
     /// <summary>The files of the diffs of the selected revisions (as <c>RevisionDiffControl</c>, <c>FileStatusDiffCalculator</c>).</summary>
     Task<IReadOnlyList<FileStatusGroup>> GetDiffsAsync(IReadOnlyList<GitRevision> revisions, CancellationToken cancellationToken);
 
+    /// <summary>
+    ///  The items of the recent (or favourite) repositories menu (<c>IRepositoryHistoryUIService</c>): each opens its
+    ///  repository in this window (with Ctrl, in a new instance).
+    /// </summary>
+    IReadOnlyList<BrowseMenuItem> GetRepositoriesMenu(bool favourites);
+
     /// <summary>Raised when the repository changed (<c>RepoChangedNotifier</c>, <c>PostRepositoryChanged</c>), e.g. by a dialog.</summary>
     event EventHandler? RepositoryChanged;
 }
@@ -408,7 +465,8 @@ public enum BrowseTab
 
 /// <summary>
 ///  Port of <c>FormBrowse</c> (the main window), first part: the revision grid with the commit and diff tabs of the selected
-///  revisions, the toolbar and the menus of its commands.
+///  revisions, the toolbar and the menus of its commands; without a valid repository, the dashboard instead (as
+///  <c>ShowDashboard</c>). Another repository is shown with a new view model for its module (as <c>SetGitModule</c>).
 /// </summary>
 public sealed partial class BrowseViewModel : DialogViewModel
 {
@@ -422,10 +480,12 @@ public sealed partial class BrowseViewModel : DialogViewModel
         ICommitInfoHost commitInfoHost,
         IFileViewerHost fileViewerHost,
         FileStatusListStrings fileStatusListStrings,
-        FileStatusTreeOptions fileStatusTreeOptions)
+        FileStatusTreeOptions fileStatusTreeOptions,
+        DashboardViewModel? dashboard = null)
     {
         Strings = strings;
         _host = host;
+        Dashboard = dashboard;
         Grid = grid;
         CommitInfo = new CommitInfoViewModel(commitInfoHost);
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
@@ -443,7 +503,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         };
         host.RepositoryChanged += (_, _) => RefreshRevisions();
 
-        Menus = CreateMenus(strings);
+        Menus = CreateMenus(strings, dashboard);
         Title = host.GetTitle();
         CurrentBranch = host.GetCurrentBranch();
     }
@@ -457,6 +517,11 @@ public sealed partial class BrowseViewModel : DialogViewModel
     public FileStatusListViewModel Files { get; }
 
     public FileViewerViewModel Viewer { get; }
+
+    /// <summary>The dashboard, shown instead of the grid and the tabs when there is no valid repository.</summary>
+    public DashboardViewModel? Dashboard { get; }
+
+    public bool IsDashboard => Dashboard is not null;
 
     /// <summary>The main menu (<c>mainMenuStrip</c>).</summary>
     public IReadOnlyList<BrowseMenuItem> Menus { get; }
@@ -494,16 +559,45 @@ public sealed partial class BrowseViewModel : DialogViewModel
     [ObservableProperty]
     public partial BrowseTab SelectedTab { get; set; }
 
-    /// <summary>Loads the revisions (when the window is shown).</summary>
-    public void Initialize(ObjectId? selectedId) => Grid.Load(selectedId);
+    /// <summary>Loads the revisions, or the repositories of the dashboard (when the window is shown).</summary>
+    public void Initialize(ObjectId? selectedId)
+    {
+        if (Dashboard is not null)
+        {
+            Dashboard.Refresh();
+            return;
+        }
 
-    /// <summary>As <c>RefreshRevisions</c>: the revisions are loaded again, keeping the selection.</summary>
+        Grid.Load(selectedId);
+    }
+
+    /// <summary>As <c>RefreshRevisions</c>: the revisions are loaded again, keeping the selection (the dashboard is refreshed).</summary>
     [RelayCommand]
     public void RefreshRevisions()
     {
         Title = _host.GetTitle();
         CurrentBranch = _host.GetCurrentBranch();
+        if (Dashboard is not null)
+        {
+            Dashboard.Refresh();
+            return;
+        }
+
         Grid.Load(Grid.SelectedRow?.ObjectId);
+    }
+
+    /// <summary>The items of a submenu, read when the Start menu opens (as the <c>DropDownOpening</c> of <c>StartToolStripMenuItem</c>).</summary>
+    public IReadOnlyList<BrowseMenuItem> GetSubmenuItems(BrowseSubmenu submenu)
+    {
+        if (submenu == BrowseSubmenu.FavouriteRepositories)
+        {
+            return _host.GetRepositoriesMenu(favourites: true);
+        }
+
+        IReadOnlyList<BrowseMenuItem> recent = _host.GetRepositoriesMenu(favourites: false);
+        return recent.Count == 0
+            ? recent
+            : [.. recent, BrowseMenuItem.Separator, new(Strings.ClearRecentRepositories.AccessKeyText, BrowseCommand.ClearRecentRepositories)];
     }
 
     /// <summary>A command of the menus or the toolbar.</summary>
@@ -519,6 +613,18 @@ public sealed partial class BrowseViewModel : DialogViewModel
         if (command == BrowseCommand.Exit)
         {
             Close(accepted: true);
+            return;
+        }
+
+        if (command == BrowseCommand.RefreshDashboard)
+        {
+            Dashboard?.Refresh();
+            return;
+        }
+
+        if (command == BrowseCommand.RecentRepositoriesSettings)
+        {
+            Dashboard?.ConfigureRecentRepositories();
             return;
         }
 
@@ -563,13 +669,34 @@ public sealed partial class BrowseViewModel : DialogViewModel
         }
     }
 
+    // As FormBrowse.InternalInitialize: the Dashboard menu without a repository, else the Repository and Commands menus.
+    private static IReadOnlyList<BrowseMenuItem> CreateMenus(BrowseStrings s, DashboardViewModel? dashboard)
+    {
+        IReadOnlyList<BrowseMenuItem> menus = CreateMenus(s);
+        if (dashboard is null)
+        {
+            return menus;
+        }
+
+        BrowseMenuItem dashboardMenu = new(s.DashboardMenu.AccessKeyText, null, Children:
+        [
+            new(s.RefreshDashboard.AccessKeyText, BrowseCommand.RefreshDashboard, "ReloadRevisions"),
+            BrowseMenuItem.Separator,
+            new(dashboard.ListStrings.Configure.AccessKeyText, BrowseCommand.RecentRepositoriesSettings, "Settings"),
+        ]);
+        return [menus[0], dashboardMenu, .. menus.Skip(3)];
+    }
+
     private static IReadOnlyList<BrowseMenuItem> CreateMenus(BrowseStrings s) =>
     [
         new(s.StartMenu.AccessKeyText, null, Children:
         [
-            new(s.Open.AccessKeyText, BrowseCommand.Open, "RepoOpen"),
-            new(s.Clone.AccessKeyText, BrowseCommand.Clone, "CloneRepoGit"),
             new(s.Init.AccessKeyText, BrowseCommand.Init, "RepoCreate"),
+            new(s.Open.AccessKeyText, BrowseCommand.Open, "RepoOpen"),
+            new(s.FavouriteRepositories.AccessKeyText, null, "Star") { Submenu = BrowseSubmenu.FavouriteRepositories },
+            new(s.RecentRepositories.AccessKeyText, null, "RecentRepositories") { Submenu = BrowseSubmenu.RecentRepositories },
+            BrowseMenuItem.Separator,
+            new(s.Clone.AccessKeyText, BrowseCommand.Clone, "CloneRepoGit"),
             BrowseMenuItem.Separator,
             new(s.Exit.AccessKeyText, BrowseCommand.Exit),
         ]),
@@ -600,6 +727,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
             new(s.SparseWorkingCopy.AccessKeyText, BrowseCommand.SparseWorkingCopy),
             BrowseMenuItem.Separator,
             new(s.RepoSettings.AccessKeyText, BrowseCommand.RepoSettings, "Settings"),
+            BrowseMenuItem.Separator,
+            new(s.CloseRepository.AccessKeyText, BrowseCommand.CloseRepository, "DashboardFolderGit"),
         ]),
         new(s.CommandsMenu.AccessKeyText, null, Children:
         [

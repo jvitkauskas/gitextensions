@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using CommonTestUtils;
 using GitCommands;
+using GitCommands.UserRepositoryHistory;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI;
@@ -37,6 +38,7 @@ public sealed partial class AvaloniaHostingTests
     private GitUICommands _commands = null!;
     private Form _owner = null!;
     private Exception? _driveFailure;
+    private LocalRepositoryManager _history = null!;
 
     // The positions of the windows, instead of the user's WindowPositions.xml; shared by the tests, as the file would be.
     private static readonly InMemoryPositionStore _positions = new();
@@ -46,6 +48,10 @@ public sealed partial class AvaloniaHostingTests
     {
         Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all");
         DialogWindow.PositionStoreForTests = _positions;
+
+        // The repository history of the main window and its dashboard, instead of the user's.
+        _history = new LocalRepositoryManager(new InMemoryRepositoryStorage(), new NoHistoryMigration());
+        AvaloniaDialogs.RepositoryHistoryForTests = _history;
         UserEnvironmentInformation.Initialise("0123456789012345678901234567890123456789", isDirty: false);
 
         _referenceRepository = new ReferenceRepository();
@@ -62,6 +68,7 @@ public sealed partial class AvaloniaHostingTests
         Exception? driveFailure = _driveFailure;
         _driveFailure = null;
         AvaloniaDialogHost.DialogShowingForTests = null;
+        AvaloniaDialogs.RepositoryHistoryForTests = null;
         _owner.Dispose();
         _referenceRepository.Dispose();
         Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "none");

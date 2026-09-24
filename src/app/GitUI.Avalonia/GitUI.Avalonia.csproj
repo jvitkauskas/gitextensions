@@ -190,6 +190,19 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CommitTemplates.png" Link="Assets\CommitTemplates.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GotoManual.png" Link="Assets\GotoManual.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\RecentRepositories.png" Link="Assets\RecentRepositories.png" />
+    <!-- The dashboard. -->
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DashboardFolderGit.png" Link="Assets\DashboardFolderGit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DashboardFolderError.png" Link="Assets\DashboardFolderError.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\star.png" Link="Assets\Star.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StarRemove.png" Link="Assets\StarRemove.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\pin.png" Link="Assets\Pin.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CloneRepoGitHub.png" Link="Assets\CloneRepoGitHub.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Develop.png" Link="Assets\Develop.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\DollarSign.png" Link="Assets\DollarSign.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\bug.png" Link="Assets\Bug.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Backgrounds\DashboardBackgroundBlue.png" Link="Assets\DashboardBackgroundBlue.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Backgrounds\DashboardBackgroundGrey.png" Link="Assets\DashboardBackgroundGrey.png" />
+    <AvaloniaResource Include="..\..\..\setup\assets\Logo\GitExtensionsLogoWide.png" Link="Assets\GitExtensionsLogoWide.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Message.png" Link="Assets\Message.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ArrowDown.png" Link="Assets\ArrowDown.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\NumberOfLinesIncrease.png" Link="Assets\NumberOfLinesIncrease.png" />
