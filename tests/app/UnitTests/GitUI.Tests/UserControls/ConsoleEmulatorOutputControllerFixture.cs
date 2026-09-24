@@ -1,4 +1,5 @@
-﻿using GitCommands;
+﻿using ConEmu.Inside;
+using GitCommands;
 using GitUI.ConsoleEmulation;
 using GitUI.ConsoleEmulation.ConEmu;
 

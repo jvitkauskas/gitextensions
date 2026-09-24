@@ -109,9 +109,7 @@ public sealed class PuttyHelpersTests
 
     private static async Task RunTestAsync(Action action, string pageant)
     {
-        Form form = new();
-        await form.SwitchToMainThreadAsync();
-        form.Dispose();
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
         string configuredSshPath = AppSettings.SshPath;
         string configuredPageant = AppSettings.Pageant;

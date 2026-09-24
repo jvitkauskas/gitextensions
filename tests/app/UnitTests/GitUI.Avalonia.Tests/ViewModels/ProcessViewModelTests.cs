@@ -1,4 +1,4 @@
-using GitUI.Presentation.HelperDialogs;
+﻿using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Services;
 
 namespace GitUI.AvaloniaTests.ViewModels;
@@ -65,6 +65,23 @@ public sealed class ProcessViewModelTests
 
         viewModel.ProgressValue.Should().Be(42);
         viewModel.Title.Should().Be("Process (repo)");
+    }
+
+    [Test]
+    public void The_dialog_shows_the_text_of_a_plain_text_console_and_clears_it_on_reset()
+    {
+        ProcessViewModel viewModel = CreateViewModel();
+        viewModel.Start();
+
+        viewModel.IsPlainText.Should().BeTrue();
+        viewModel.ConsoleView.Should().BeNull("the plain text console has no window");
+        _console.Emit("first line\n");
+        _console.Emit("second line\n");
+
+        viewModel.PlainText.Should().Be("first line\nsecond line\n");
+
+        viewModel.Reset();
+        viewModel.PlainText.Should().BeEmpty();
     }
 
     [Test]
@@ -309,9 +326,11 @@ public sealed class ProcessViewModelTests
 
         public event EventHandler? HostTerminated;
 
+        public event EventHandler<string>? PlainTextWritten;
+
         public bool IsPlainText { get; set; } = true;
 
-        public IEmbeddedNativeView View => this;
+        public IEmbeddedNativeView? View => IsPlainText ? null : this;
 
         public bool Started { get; private set; }
 
@@ -348,7 +367,12 @@ public sealed class ProcessViewModelTests
 
         public void WriteInput(string text) => Input.Add(text);
 
-        public void WriteOutput(string text) => Written.Add(text);
+        public void WriteOutput(string text)
+        {
+            // As the plain text runner: the text is shown by the dialog.
+            Written.Add(text);
+            PlainTextWritten?.Invoke(this, text);
+        }
 
         public nint Attach(nint parentWindow) => 0;
 

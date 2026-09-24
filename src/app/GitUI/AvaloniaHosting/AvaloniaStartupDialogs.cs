@@ -4,6 +4,17 @@ namespace GitUI.AvaloniaHosting;
 public static class AvaloniaStartupDialogs
 {
     /// <summary>
+    ///  Sets up Avalonia on the UI thread of the application, whose synchronization context it then is (as WinForms did
+    ///  before, docs/avalonia-port/PLAN.md, phase 8): the shared <see cref="ThreadHelper.JoinableTaskContext"/> is to be
+    ///  created on it.
+    /// </summary>
+    public static void InitializeUi()
+    {
+        GitUI.Avalonia.Hosting.AvaloniaUi.EnsureInitialized(AvaloniaDialogs.GetOptions);
+        global::Avalonia.Threading.AvaloniaSynchronizationContext.InstallIfNeeded();
+    }
+
+    /// <summary>
     ///  Shows the Avalonia port of <c>FormChooseTranslation</c>, which sets <c>AppSettings.Translation</c>;
     ///  returns <see langword="false"/> if the port is disabled.
     /// </summary>

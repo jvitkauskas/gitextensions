@@ -1,3 +1,4 @@
+using CommonTestUtils;
 using GitExtensions.Extensibility;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;
@@ -64,7 +65,7 @@ public sealed partial class AvaloniaHostingTests
         DateTime deadline = DateTime.UtcNow.AddSeconds(60);
         while (!closed && DateTime.UtcNow < deadline)
         {
-            Application.DoEvents();
+            MessagePump.DoEvents();
             Thread.Sleep(10);
         }
 

@@ -22,9 +22,6 @@ internal static class Program
 {
     private static readonly ServiceContainer _serviceContainer = new();
 
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    private static extern bool SetProcessDPIAware();
-
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
@@ -35,34 +32,11 @@ internal static class Program
         ////if (!Debugger.IsAttached)
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) => BugReportInvoker.Report((Exception)e.ExceptionObject, e.IsTerminating);
-            Application.ThreadException += (s, e) => BugReportInvoker.Report(e.Exception, isTerminating: false);
 
-            // The exceptions of the background operations, also when Avalonia runs the message loop.
+            // The exceptions of the background operations (those of the jobs of the UI thread are reported by AvaloniaUi).
             TaskManager.UnhandledExceptionHandler = exception => BugReportInvoker.Report(exception, isTerminating: false);
-            Application.ApplicationExit += (s, e) => BugReportInvoker.IgnoreFailedToLoadAnAssembly = true;
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => BugReportInvoker.IgnoreFailedToLoadAnAssembly = true;
         }
-
-        if (Environment.OSVersion.Version.Major >= 6)
-        {
-            SetProcessDPIAware();
-        }
-
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.SetHighDpiMode(HighDpiMode.SystemAware);
-
-        bool checkForIllegalCrossThreadCalls = false;
-#if !DEBUG
-        if (ThisAssembly.Git.IsDirty)
-#endif
-        {
-#pragma warning disable CS0162 // Unreachable code detected: if there are no pending changes the compiler thinks so...
-            // In non official builds force to fail for cross-thread operations so we can fix those.
-            checkForIllegalCrossThreadCalls = true;
-#pragma warning restore CS0162 // Unreachable code detected
-        }
-
-        Control.CheckForIllegalCrossThreadCalls = checkForIllegalCrossThreadCalls;
 
         ServiceContainerRegistry.RegisterServices(_serviceContainer);
         BugReportInvoker.ExecutorProvider = _serviceContainer.GetRequiredService<IGitExecutorProvider>();
@@ -75,8 +49,6 @@ internal static class Program
         AppSettings.SetDocumentationBaseUrl(AppSettings.ProductVersion);
 
         ThemeModule.Load();
-
-        HighDpiMouseCursors.Enable();
 
         try
         {
@@ -105,12 +77,9 @@ internal static class Program
     {
         string[] args = Environment.GetCommandLineArgs();
 
-        // This form created to obtain UI synchronization context only
-        using (new Form())
-        {
-            // Store the shared JoinableTaskContext
-            ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
-        }
+        // Avalonia runs the UI thread; the shared JoinableTaskContext is created on its synchronization context.
+        GitUI.AvaloniaHosting.AvaloniaStartupDialogs.InitializeUi();
+        ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
 
         ManagedExtensibility.Initialise(userPluginsPath: AppSettings.UserPluginsPath);
 

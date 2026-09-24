@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CommonTestUtils;
 using GitUI.AvaloniaHosting;
 
 namespace GitExtensions.UITests.AvaloniaHosting;
@@ -67,7 +68,7 @@ public sealed partial class AvaloniaHostingTests
         DateTime deadline = DateTime.UtcNow.AddSeconds(seconds);
         while (!condition() && DateTime.UtcNow < deadline)
         {
-            Application.DoEvents();
+            MessagePump.DoEvents();
             Thread.Sleep(10);
         }
     }
@@ -95,7 +96,7 @@ public sealed partial class AvaloniaHostingTests
                     return;
                 }
 
-                Application.DoEvents();
+                MessagePump.DoEvents();
                 Thread.Sleep(100);
             }
         }

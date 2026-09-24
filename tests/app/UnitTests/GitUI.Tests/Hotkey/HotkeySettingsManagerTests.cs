@@ -3,6 +3,7 @@ using GitUI.Hotkey;
 using GitUI.ScriptsEngine;
 using NSubstitute;
 using ResourceManager;
+using ResourceManager.Hotkey;
 
 namespace GitUITests.Hotkey;
 public class HotkeySettingsManagerTests

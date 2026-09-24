@@ -191,7 +191,7 @@ public sealed partial class AvaloniaHostingTests
         DateTime deadline = DateTime.UtcNow.AddSeconds(seconds);
         while (!closed() && DateTime.UtcNow < deadline)
         {
-            Application.DoEvents();
+            MessagePump.DoEvents();
             Thread.Sleep(10);
         }
 

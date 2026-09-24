@@ -35,7 +35,7 @@ public sealed partial class AvaloniaHostingTests
 
     private ReferenceRepository _referenceRepository = null!;
     private GitUICommands _commands = null!;
-    private Form _owner = null!;
+    private TestOwnerWindow _owner = null!;
     private Exception? _driveFailure;
     private LocalRepositoryManager _history = null!;
 
@@ -58,9 +58,8 @@ public sealed partial class AvaloniaHostingTests
         _referenceRepository = new ReferenceRepository();
         _commands = new GitUICommands(GlobalServiceContainer.CreateDefaultMockServiceContainer(), _referenceRepository.Module);
 
-        _owner = new Form { Text = "WinForms owner", Width = 900, Height = 600, StartPosition = FormStartPosition.CenterScreen };
-        _owner.Show();
-        Application.DoEvents();
+        _owner = new TestOwnerWindow("Owner", 900, 600);
+        MessagePump.DoEvents();
     }
 
     [OneTimeTearDown]
@@ -84,7 +83,7 @@ public sealed partial class AvaloniaHostingTests
     }
 
     [Test]
-    public void About_is_modal_over_its_WinForms_owner()
+    public void About_is_modal_over_its_native_owner()
     {
         bool ownerDisabledWhileOpen = false;
         string? productName = null;

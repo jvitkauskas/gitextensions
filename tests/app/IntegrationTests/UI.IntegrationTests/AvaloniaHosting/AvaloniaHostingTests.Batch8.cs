@@ -148,7 +148,7 @@ public sealed partial class AvaloniaHostingTests
         DateTime deadline = DateTime.UtcNow.AddSeconds(10);
         while (!condition() && DateTime.UtcNow < deadline)
         {
-            Application.DoEvents();
+            MessagePump.DoEvents();
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             Thread.Sleep(10);
         }

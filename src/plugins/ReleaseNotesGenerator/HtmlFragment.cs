@@ -4,6 +4,7 @@
 //
 
 using System.Text.RegularExpressions;
+using GitExtUtils;
 
 namespace GitExtensions.Plugins.ReleaseNotesGenerator;
 
@@ -17,22 +18,6 @@ internal partial class HtmlFragment
     private static partial Regex HtmlRegex { get; }
 
     #region Read and decode from clipboard
-
-    /// <summary>
-    /// Get a HTML fragment from the clipboard.
-    /// </summary>
-    /// <example>
-    ///    string html = "<b>Hello!</b>";
-    ///    HtmlFragment.CopyToClipboard(html);
-    ///    HtmlFragment html2 = HtmlFragment.FromClipboard();
-    ///    DebugHelpers.Assert(html2.Fragment == html);
-    /// </example>
-    public static HtmlFragment FromClipboard()
-    {
-        string rawClipboardText = Clipboard.GetText(TextDataFormat.Html);
-        HtmlFragment h = new(rawClipboardText);
-        return h;
-    }
 
     /// <summary>
     /// Create an HTML fragment decoder around raw HTML text from the clipboard.
@@ -158,16 +143,14 @@ internal partial class HtmlFragment
     /// <param name="sourceUri">optional Source URL of the HTML document, for resolving relative links (can be null)</param>
     public static void CopyToClipboard(string htmlFragment, Uri? sourceUri = null)
     {
-        DataObject dataObject = CreateHtmlFormatClipboardDataObject(htmlFragment, sourceUri);
-
-        Clipboard.Clear();
-        Clipboard.SetDataObject(dataObject);
+        ClipboardUtil.TrySetHtml(CreateHtmlFormat(htmlFragment, sourceUri), htmlFragment);
 
         // now the clipboard can be pasted as text (HTML code) to text editor
         // or as table to MS Word or LibreOffice Writer
     }
 
-    internal static DataObject CreateHtmlFormatClipboardDataObject(string htmlFragment, Uri? sourceUri = null)
+    /// <summary>The HTML format of the clipboard (CF_HTML) of <paramref name="htmlFragment"/>.</summary>
+    internal static string CreateHtmlFormat(string htmlFragment, Uri? sourceUri = null)
     {
         System.Text.StringBuilder sb = new();
 
@@ -214,14 +197,8 @@ internal partial class HtmlFragment
         sb.Replace("<<<<<<<3", To8DigitString(fragmentStart));
         sb.Replace("<<<<<<<4", To8DigitString(fragmentEnd));
 
-        // Finally copy to clipboard.
         // http://stackoverflow.com/questions/13332377/how-to-set-html-text-in-clipboard
-        string data = sb.ToString();
-        DataObject dataObject = new();
-        dataObject.SetText(data, TextDataFormat.Html);
-        dataObject.SetText(htmlFragment, TextDataFormat.Text);
-
-        return dataObject;
+        return sb.ToString();
     }
     #endregion
 }

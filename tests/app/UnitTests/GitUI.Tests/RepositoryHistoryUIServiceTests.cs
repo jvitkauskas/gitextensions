@@ -1,4 +1,4 @@
-﻿using GitCommands.UserRepositoryHistory;
+using GitCommands.UserRepositoryHistory;
 using GitExtensions.Extensibility.Git;
 using GitUI;
 using GitUI.CommandsDialogs;
@@ -23,84 +23,71 @@ public sealed class RepositoryHistoryUIServiceTests
     }
 
     [Test]
-    public void PopulateRecentRepositoriesMenu_should_add_new_item()
+    public void CreateRepositoryItem_should_set_properties_correctly()
     {
-        using ToolStripMenuItem containerMenu = new();
-
         const string path = "";
         const string caption = "CAPTION";
         Repository repository = new(path);
 
-        _service.GetTestAccessor().AddRecentRepositories(containerMenu, repository, caption, number: 1);
+        RepositoryMenuItem item = _service.GetTestAccessor().CreateRepositoryItem(repository, caption, number: 1);
 
-        containerMenu.DropDownItems.Count.Should().Be(1);
+        item.Text.Should().Be($"&1: {caption}");
+        item.IsPinned.Should().BeFalse();
+        item.IsSeparator.Should().BeFalse();
+        item.ToolTip.Should().BeNull("the caption is the path");
+        item.Open.Should().NotBeNull();
     }
 
-    [Test]
-    public void AddRecentRepositories_should_set_properties_correctly()
+    [TestCase(9, "&9: CAPTION")]
+    [TestCase(10, "1&0: CAPTION")]
+    [TestCase(11, "11: CAPTION")]
+    public void CreateRepositoryItem_should_number_the_items(int number, string expected)
     {
-        using ToolStripMenuItem containerMenu = new();
-
-        const string path = "";
-        const string caption = "CAPTION";
-        Repository repository = new(path);
-
-        _service.GetTestAccessor().AddRecentRepositories(containerMenu, repository, caption, number: 1);
-
-        ToolStripMenuItem item = (ToolStripMenuItem)containerMenu.DropDownItems[0];
-        item.Text.Should().Be($"&1: {caption}");
-        item.DisplayStyle.Should().Be(ToolStripItemDisplayStyle.ImageAndText);
-        item.ToolTipText.Should().BeEmpty();
+        _service.GetTestAccessor().CreateRepositoryItem(new Repository("somepath"), "CAPTION", number).Text.Should().Be(expected);
     }
 
     [TestCase(null)]
     [TestCase("")]
     [TestCase("master")]
     [TestCase("(no branch)")]
-    public void AddRecentRepositories_should_show_branch_correctly(string? branch)
+    public void CreateRepositoryItem_should_show_branch_correctly(string? branch)
     {
         _branchNameCache.GetCachedBranchName(Arg.Any<string>()).Returns(string.IsNullOrWhiteSpace(branch) ? null : branch);
-
-        using ToolStripMenuItem containerMenu = new();
 
         const string path = "somepath";
         const string caption = "CAPTION";
         Repository repository = new(path);
 
-        _service.GetTestAccessor().AddRecentRepositories(containerMenu, repository, caption, number: 1);
+        RepositoryMenuItem item = _service.GetTestAccessor().CreateRepositoryItem(repository, caption, number: 1);
 
-        ToolStripMenuItem item = (ToolStripMenuItem)containerMenu.DropDownItems[0];
         if (string.IsNullOrWhiteSpace(branch))
         {
-            item.ShortcutKeyDisplayString.Should().BeNullOrEmpty();
+            item.BranchName.Should().BeNullOrEmpty();
         }
         else
         {
-            item.ShortcutKeyDisplayString.Should().Be(branch);
+            item.BranchName.Should().Be(branch);
         }
+
+        item.ToolTip.Should().Be(path, "the caption shortens the path");
     }
 
     [Test]
     public void ChangeWorkingDir_should_promt_user_to_delete_invalid_repo()
     {
-        using ToolStripMenuItem containerMenu = new();
-
         const string path = "";
         const string caption = "CAPTION";
         Repository repository = new(path);
 
-        _service.GetTestAccessor().AddRecentRepositories(containerMenu, repository, caption, number: 1);
-
-        ToolStripMenuItem item = (ToolStripMenuItem)containerMenu.DropDownItems[0];
-        item.PerformClick();
+        RepositoryMenuItem item = _service.GetTestAccessor().CreateRepositoryItem(repository, caption, number: 1);
+        item.Open!();
 
         _invalidRepositoryRemover.Received(1).ShowDeleteInvalidRepositoryDialog(path);
     }
 
     [Test]
-    public void PopulateFavouriteRepositoriesMenu_should_order_favourites_alphabetically()
+    public void GetFavouriteRepositoriesMenu_should_order_favourites_alphabetically()
     {
-        using ToolStripMenuItem tsmiFavouriteRepositories = new();
         List<Repository> repositoryHistory =
         [
             new Repository(@"c:\") { Category = "D" },
@@ -109,13 +96,9 @@ public sealed class RepositoryHistoryUIServiceTests
             new Repository(@"c:\") { Category = "B" }
         ];
 
-        using Form form = new();
-        form.Show();
+        IReadOnlyList<RepositoryMenuItem> categories = _service.GetTestAccessor().GetFavouriteRepositoriesMenu(repositoryHistory);
 
-        _service.GetTestAccessor().PopulateFavouriteRepositoriesMenu(tsmiFavouriteRepositories, repositoryHistory);
-
-        // assert
-        List<string> categories = [.. tsmiFavouriteRepositories.DropDownItems.Cast<ToolStripMenuItem>().Select(x => x.Text!)];
-        categories.Should().BeInAscendingOrder();
+        categories.Select(x => x.Text).Should().BeInAscendingOrder();
+        categories.Should().OnlyContain(category => category.Children.Count == 1);
     }
 }

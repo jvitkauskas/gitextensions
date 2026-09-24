@@ -31,17 +31,12 @@ public sealed class PluginApiV2Tests
     }
 
     [Test]
-    public void ToWin32Window_is_the_WinForms_control_of_the_handle_or_a_wrapper_of_the_handle()
+    public void ToWin32Window_is_a_wrapper_of_the_handle()
     {
         WindowOwner.None.ToWin32Window().Should().BeNull();
 
-        using Form form = new();
-        new WindowOwner(form.Handle).ToWin32Window().Should().BeSameAs(form, "the WinForms code gets the form it expects");
-
-        // E.g. an Avalonia window: not a WinForms control.
         IWin32Window? wrapper = new WindowOwner(12345).ToWin32Window();
         wrapper.Should().NotBeNull();
-        wrapper.Should().NotBeAssignableTo<Control>();
         wrapper!.Handle.Should().Be(12345);
     }
 
@@ -70,8 +65,6 @@ public sealed class PluginApiV2Tests
         args.OwnerForm!.Handle.Should().Be(12345);
         args.GitUICommands.Should().BeSameAs(commands);
 
-        using Form form = new();
-        new GitUIEventArgs(new WindowOwner(form.Handle), commands).OwnerForm.Should().BeSameAs(form);
         new GitUIEventArgs(WindowOwner.None, commands).OwnerForm.Should().BeNull();
 
         GitUIPostActionEventArgs postArgs = new(new WindowOwner(12345), commands, actionDone: true);
@@ -152,16 +145,16 @@ public sealed class PluginApiV2Tests
     [TestCase(PluginMessageBoxButtons.YesNoCancel, MessageBoxButtons.YesNoCancel)]
     [TestCase(PluginMessageBoxButtons.RetryCancel, MessageBoxButtons.RetryCancel)]
     [TestCase(PluginMessageBoxButtons.AbortRetryIgnore, MessageBoxButtons.AbortRetryIgnore)]
-    public void WinForms_message_boxes_have_the_buttons(PluginMessageBoxButtons buttons, MessageBoxButtons expected)
-        => WinFormsPluginMessageBoxService.ToWinForms(buttons).Should().Be(expected);
+    public void Native_message_boxes_have_the_buttons(PluginMessageBoxButtons buttons, MessageBoxButtons expected)
+        => NativePluginMessageBoxService.ToNative(buttons).Should().Be(expected);
 
     [TestCase(PluginMessageBoxIcon.None, MessageBoxIcon.None)]
     [TestCase(PluginMessageBoxIcon.Information, MessageBoxIcon.Information)]
     [TestCase(PluginMessageBoxIcon.Warning, MessageBoxIcon.Warning)]
     [TestCase(PluginMessageBoxIcon.Error, MessageBoxIcon.Error)]
     [TestCase(PluginMessageBoxIcon.Question, MessageBoxIcon.Question)]
-    public void WinForms_message_boxes_have_the_icon(PluginMessageBoxIcon icon, MessageBoxIcon expected)
-        => WinFormsPluginMessageBoxService.ToWinForms(icon).Should().Be(expected);
+    public void Native_message_boxes_have_the_icon(PluginMessageBoxIcon icon, MessageBoxIcon expected)
+        => NativePluginMessageBoxService.ToNative(icon).Should().Be(expected);
 
     [TestCase(DialogResult.OK, PluginMessageBoxResult.Ok)]
     [TestCase(DialogResult.Cancel, PluginMessageBoxResult.Cancel)]
@@ -171,17 +164,17 @@ public sealed class PluginApiV2Tests
     [TestCase(DialogResult.Abort, PluginMessageBoxResult.Abort)]
     [TestCase(DialogResult.Ignore, PluginMessageBoxResult.Ignore)]
     [TestCase(DialogResult.None, PluginMessageBoxResult.None)]
-    public void WinForms_message_boxes_return_the_result(DialogResult result, PluginMessageBoxResult expected)
-        => WinFormsPluginMessageBoxService.ToResult(result).Should().Be(expected);
+    public void Native_message_boxes_return_the_result(DialogResult result, PluginMessageBoxResult expected)
+        => NativePluginMessageBoxService.ToResult(result).Should().Be(expected);
 
     [Test]
-    public void WinForms_message_boxes_have_the_default_button()
+    public void Native_message_boxes_have_the_default_button()
     {
-        WinFormsPluginMessageBoxService.ToWinForms(PluginMessageBoxDefaultButton.Button1).Should().Be(MessageBoxDefaultButton.Button1);
-        WinFormsPluginMessageBoxService.ToWinForms(PluginMessageBoxDefaultButton.Button2).Should().Be(MessageBoxDefaultButton.Button2);
-        WinFormsPluginMessageBoxService.ToWinForms(PluginMessageBoxDefaultButton.Button3).Should().Be(MessageBoxDefaultButton.Button3);
-        WinFormsPluginMessageBoxService.ToTaskDialogIcon(PluginMessageBoxIcon.Error).Should().Be(TaskDialogIcon.Error);
-        WinFormsPluginMessageBoxService.ToTaskDialogIcon(PluginMessageBoxIcon.None).Should().BeNull();
+        NativePluginMessageBoxService.ToNative(PluginMessageBoxDefaultButton.Button1).Should().Be(MessageBoxDefaultButton.Button1);
+        NativePluginMessageBoxService.ToNative(PluginMessageBoxDefaultButton.Button2).Should().Be(MessageBoxDefaultButton.Button2);
+        NativePluginMessageBoxService.ToNative(PluginMessageBoxDefaultButton.Button3).Should().Be(MessageBoxDefaultButton.Button3);
+        NativePluginMessageBoxService.ToTaskDialogIcon(PluginMessageBoxIcon.Error).Should().Be(TaskDialogIcon.Error);
+        NativePluginMessageBoxService.ToTaskDialogIcon(PluginMessageBoxIcon.None).Should().BeNull();
     }
 
     [Test]
@@ -212,7 +205,6 @@ public sealed class PluginApiV2Tests
 
         setting.Text.Should().Be("link");
         setting.Caption.Should().Be("caption");
-        ((ISetting)setting).CreateControlBinding().Should().BeNull("the host renders it");
         context!.Owner.Should().Be(new WindowOwner(42));
         context.Values.Should().BeSameAs(values);
 

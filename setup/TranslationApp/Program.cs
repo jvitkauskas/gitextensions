@@ -1,5 +1,4 @@
-﻿using BugReporter;
-using GitCommands;
+﻿using GitCommands;
 using GitExtensions.Extensibility.Translations;
 using GitExtensions.Extensibility.Translations.Xliff;
 using GitUI;
@@ -16,17 +15,8 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
-        // This form created for obtain UI synchronization context only
-        using (new Form())
-        {
-            // Store the shared JoinableTaskContext
-            ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
-        }
-
-        // Force load into the appdomain
-        using (BugReportForm dummy = new())
-        {
-        }
+        // Store the shared JoinableTaskContext
+        ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
 
         ManagedExtensibility.Initialise();
 

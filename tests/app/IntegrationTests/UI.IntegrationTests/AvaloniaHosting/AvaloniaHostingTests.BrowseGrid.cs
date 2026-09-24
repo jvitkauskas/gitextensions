@@ -18,6 +18,7 @@ using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
 using NSubstitute;
 using ResourceManager;
+using ResourceManager.Hotkey;
 
 namespace GitExtensions.UITests.AvaloniaHosting;
 

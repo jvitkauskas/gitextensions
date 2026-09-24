@@ -7,10 +7,7 @@ public class GlobalSetupOnce
     [OneTimeSetUp]
     public void RunBeforeAnyTests()
     {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-
-        // Existing tests exercise the WinForms forms; AvaloniaHostingTests opt in to the Avalonia ports.
+        // Nothing to set up: the dialogs are the Avalonia windows of AvaloniaHostingTests.
     }
 
     [OneTimeTearDown]

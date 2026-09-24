@@ -8,9 +8,9 @@ namespace GitUITests;
 [Apartment(ApartmentState.STA)]
 public sealed class ThreadHelperTests
 {
-    private static async Task YieldOntoControlMainThreadAsync(Control control)
+    private static async Task YieldOntoMainThreadAsync(CancellationToken cancellationToken)
     {
-        await control.SwitchToMainThreadAsync();
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
     }
 
     private static async Task ThrowExceptionAsync(Exception ex)
@@ -35,10 +35,7 @@ public sealed class ThreadHelperTests
     public async Task FileAndForgetIgnoresCancellationExceptions()
     {
         using ThreadExceptionHelper helper = new();
-        Form form = new();
-        form.Dispose();
-
-        YieldOntoControlMainThreadAsync(form).FileAndForget();
+        YieldOntoMainThreadAsync(new CancellationToken(canceled: true)).FileAndForget();
 
         await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
         helper.Exception.Should().BeNull(helper.Message);
@@ -164,9 +161,11 @@ public sealed class ThreadHelperTests
 
     private sealed class ThreadExceptionHelper : IDisposable
     {
+        private readonly Action<Exception>? _previousHandler = TaskManager.UnhandledExceptionHandler;
+
         public ThreadExceptionHelper()
         {
-            Application.ThreadException += HandleThreadException;
+            TaskManager.UnhandledExceptionHandler = HandleThreadException;
         }
 
         public Exception Exception { get; private set; } = null!;
@@ -176,12 +175,12 @@ public sealed class ThreadHelperTests
 
         public void Dispose()
         {
-            Application.ThreadException -= HandleThreadException;
+            TaskManager.UnhandledExceptionHandler = _previousHandler;
         }
 
-        private void HandleThreadException(object sender, ThreadExceptionEventArgs e)
+        private void HandleThreadException(Exception exception)
         {
-            Exception = e.Exception;
+            Exception = exception;
         }
     }
 }

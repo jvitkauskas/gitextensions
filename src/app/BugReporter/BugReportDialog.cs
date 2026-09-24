@@ -65,7 +65,7 @@ public static class BugReportDialog
     }
 
     /// <summary>The exception with its properties and inner exceptions, as <c>ExceptionDetails</c> lists them.</summary>
-    internal static BugReportException ToReportException(SerializableException exception)
+    public static BugReportException ToReportException(SerializableException exception)
     {
         List<BugReportProperty> properties = [];
 

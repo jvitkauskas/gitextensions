@@ -1,4 +1,5 @@
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.AvaloniaHosting;
@@ -22,16 +23,18 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void Git_command_log_is_modeless_single_and_closed_with_its_owner()
     {
-        using Form browse = new() { Text = "Browse", Width = 600, Height = 400 };
-        browse.Show(_owner);
-        Application.DoEvents();
+        // The owner: an Avalonia window, as the main window.
+        DialogWindow browse = new() { Title = "Browse", Width = 600, Height = 400 };
+        AvaloniaDialogHost.Show(browse, _owner.Handle);
+        PumpUntil(() => browse.IsVisible);
+        IWin32Window browseOwner = new WindowOwner(browse.NativeHandle).ToWin32Window()!;
         _referenceRepository.Module.GetCurrentCheckout();
 
         DialogWindow? shown = null;
         AvaloniaDialogHost.DialogShowingForTests = window => shown = window;
         try
         {
-            AvaloniaDialogs.TryShowGitCommandLog(browse);
+            AvaloniaDialogs.TryShowGitCommandLog(browseOwner);
             PumpUntil(() => shown?.IsVisible == true);
 
             shown.Should().NotBeNull();
@@ -39,12 +42,12 @@ public sealed partial class AvaloniaHostingTests
             PumpUntil(() => viewModel.LogItems.Count > 0);
             viewModel.LogItems.Should().NotBeEmpty("the commands of this process are logged");
             viewModel.SelectedLogItem.Should().Be(viewModel.LogItems[^1]);
-            IsWindowEnabled(browse.Handle).Should().BeTrue("the window is modeless");
+            IsWindowEnabled(browse.NativeHandle).Should().BeTrue("the window is modeless");
             Capture(shown, "git-command-log");
 
             DialogWindow first = shown;
             shown = null;
-            AvaloniaDialogs.TryShowGitCommandLog(browse);
+            AvaloniaDialogs.TryShowGitCommandLog(browseOwner);
             shown.Should().BeNull("the open window is activated rather than a new one shown");
 
             bool closed = false;

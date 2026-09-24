@@ -1,13 +1,13 @@
-﻿using BugReporter;
+﻿using GitUI.Presentation.BugReporter;
 
 namespace GitUITests;
-public class BugReportFormTests
+public class BugReportViewModelTests
 {
     [TestCase("", false)]
     [TestCase("\t\r\n\t\t   \r   \n   \r", false)]
     [TestCase("\t\r\n\t\t  a \r   \n   \r", true)]
     public void Test(string input, bool expected)
     {
-        BugReportForm.TestAccessor.CheckContainsInfo(input).Should().Be(expected);
+        BugReportViewModel.ContainsInfo(input).Should().Be(expected);
     }
 }

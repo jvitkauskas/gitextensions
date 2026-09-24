@@ -3,7 +3,7 @@
 namespace GitExtensions.Plugins.DeleteUnusedBranches;
 
 /// <summary>
-/// Custom sortable binding branches list, use for support user-defined sorting in <see cref="DataGridView"/>.
+/// Custom sortable binding branches list, use for support user-defined sorting in <c>DataGridView</c>.
 /// </summary>
 internal sealed class SortableBranchesList : SortableBindingList<Branch>
 {

@@ -55,8 +55,8 @@ public class CommitDataHeaderRendererTests
     [Test]
     public void GetFont_should_get_font_from_style_provider()
     {
-        using Control c = new();
-        using Graphics g = c.CreateGraphics();
+        using Bitmap bitmap = new(1, 1);
+        using Graphics g = Graphics.FromImage(bitmap);
         _renderer.GetFont(g);
 
         _headerRendererStyleProvider.Received().GetFont(g);
