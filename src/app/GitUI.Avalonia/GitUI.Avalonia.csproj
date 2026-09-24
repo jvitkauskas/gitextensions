@@ -227,6 +227,7 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Message.png" Link="Assets\Message.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ArrowDown.png" Link="Assets\ArrowDown.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\NumberOfLinesIncrease.png" Link="Assets\NumberOfLinesIncrease.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ui-scroll-bar.png" Link="Assets\UiScrollBar.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\NumberOfLinesDecrease.png" Link="Assets\NumberOfLinesDecrease.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowEntireFile.png" Link="Assets\ShowEntireFile.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowWhitespace.png" Link="Assets\ShowWhitespace.png" />

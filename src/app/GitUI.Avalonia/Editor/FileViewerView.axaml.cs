@@ -20,6 +20,8 @@ namespace GitUI.Avalonia.Editor;
 public partial class FileViewerView : UserControl, IHotkeyControl
 {
     private FileViewerViewModel? _viewModel;
+    private TopLevel? _topLevel;
+    private bool _altPressed;
 
     public FileViewerView()
     {
@@ -35,6 +37,11 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         menu.Opening += (_, _) => FillContextMenu();
         textView.Editor.ContextMenu = menu;
 
+        // As TextArea_MouseWheel and PictureBox_MouseWheel: the wheel at the end (or start) scrolls on into the next (or
+        // previous) file; before the editor scrolls.
+        textView.Editor.AddHandler(PointerWheelChangedEvent, OnEditorWheel, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        imageViewer.AddHandler(PointerWheelChangedEvent, (_, e) => OnWheel(e, atTop: true, atBottom: true), global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
         // The width of the output of difftastic depends on the width of the viewer (GetDifftasticArguments).
         textView.SizeChanged += (_, e) =>
         {
@@ -44,6 +51,59 @@ public partial class FileViewerView : UserControl, IHotkeyControl
             }
         };
     }
+
+    private void OnEditorWheel(object? sender, global::Avalonia.Input.PointerWheelEventArgs e)
+    {
+        AvaloniaEdit.TextEditor editor = textView.Editor;
+        OnWheel(e, atTop: editor.VerticalOffset <= 0, atBottom: editor.VerticalOffset + editor.ViewportHeight >= editor.ExtentHeight - 1);
+    }
+
+    private void OnWheel(global::Avalonia.Input.PointerWheelEventArgs e, bool atTop, bool atBottom)
+    {
+        // Shift scrolls horizontally.
+        if (_viewModel is null || e.KeyModifiers.HasFlag(global::Avalonia.Input.KeyModifiers.Shift))
+        {
+            return;
+        }
+
+        bool withAlt = _altPressed || e.KeyModifiers.HasFlag(global::Avalonia.Input.KeyModifiers.Alt);
+        if (e.Delta.Y > 0 && atTop)
+        {
+            _viewModel.OnScrollReached(bottom: false, withAlt);
+        }
+        else if (e.Delta.Y < 0 && atBottom)
+        {
+            _viewModel.OnScrollReached(bottom: true, withAlt);
+        }
+    }
+
+    protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        // The wheel events of Windows do not have Alt among their modifiers (Control.ModifierKeys in the WinForms viewer).
+        _topLevel = TopLevel.GetTopLevel(this);
+        _topLevel?.AddHandler(KeyDownEvent, OnTopLevelKey, global::Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        _topLevel?.AddHandler(KeyUpEvent, OnTopLevelKey, global::Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        (_topLevel as WindowBase)?.Deactivated += OnTopLevelDeactivated;
+    }
+
+    protected override void OnDetachedFromVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        _topLevel?.RemoveHandler(KeyDownEvent, OnTopLevelKey);
+        _topLevel?.RemoveHandler(KeyUpEvent, OnTopLevelKey);
+        (_topLevel as WindowBase)?.Deactivated -= OnTopLevelDeactivated;
+        _topLevel = null;
+        _altPressed = false;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void OnTopLevelKey(object? sender, global::Avalonia.Input.KeyEventArgs e)
+        => _altPressed = e.Key is global::Avalonia.Input.Key.LeftAlt or global::Avalonia.Input.Key.RightAlt
+            ? e.RoutedEvent == KeyDownEvent
+            : e.KeyModifiers.HasFlag(global::Avalonia.Input.KeyModifiers.Alt);
+
+    private void OnTopLevelDeactivated(object? sender, EventArgs e) => _altPressed = false;
 
     /// <summary>The text editor, e.g. for tests.</summary>
     public TextEditorView TextView => textView;
@@ -74,15 +134,22 @@ public partial class FileViewerView : UserControl, IHotkeyControl
 
         editor.TextArea.Caret.Line = line;
         editor.TextArea.Caret.Column = 1;
-        int firstVisibleLine = Math.Max(1, line - _viewModel.Settings.NumberOfContextLines - 1);
-        editor.ScrollToVerticalOffset(editor.TextArea.TextView.GetVisualTopByDocumentLine(firstVisibleLine));
+        textView.ScrollToFirstVisibleLine(Math.Max(1, line - _viewModel.Settings.NumberOfContextLines - 1));
         editor.TextArea.Focus();
     }
 
-    /// <summary>As <c>GoToLine</c>: the caret goes to the line, which is scrolled into view.</summary>
+    /// <summary>
+    ///  As <c>GoToLine</c>: the caret goes to the line, which is scrolled into view; in a diff, the line of the new file (or the one
+    ///  after it, <c>GetCaretOffset</c>).
+    /// </summary>
     public void GoToLine(int line)
     {
         AvaloniaEdit.TextEditor editor = textView.Editor;
+        if (_viewModel?.Editor.DiffLines is { } diffLines)
+        {
+            line = ViewPositionCache.GetLineInDiff(diffLines, line, rightFile: true);
+        }
+
         line = Math.Clamp(line, 1, editor.Document.LineCount);
         editor.TextArea.Caret.Line = line;
         editor.TextArea.Caret.Column = 1;
@@ -170,6 +237,11 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         if (state.IsDiff)
         {
             Add(strings.TreatAllFilesAsText, () => viewModel.ToggleTreatAllFilesAsTextCommand.Execute(null), isChecked: viewModel.TreatAllFilesAsText);
+        }
+
+        if (viewModel.EnableAutomaticContinuousScroll)
+        {
+            Add(strings.AutomaticContinuousScroll, () => viewModel.ToggleAutomaticContinuousScrollCommand.Execute(null), isChecked: viewModel.Settings.AutomaticContinuousScroll, icon: "UiScrollBar");
         }
 
         Add(strings.Find, () => ExecuteHotkeyCommand(FileViewerHotkeyCommand.Find), icon: "Preview");
@@ -263,7 +335,11 @@ public partial class FileViewerView : UserControl, IHotkeyControl
                 textView.FindNext(backward: true);
                 return true;
             case FileViewerHotkeyCommand.GoToLine:
-                if (AskLineNumber(this, editor.Document.LineCount) is int line)
+                // As MaxLineNumber: in a diff, the last line number of the files.
+                int maxLineNumber = viewModel.Editor.DiffLines is { Count: > 0 } diffLines
+                    ? Math.Max(1, diffLines.Max(l => Math.Max(l.LeftLineNumber, l.RightLineNumber)))
+                    : editor.Document.LineCount;
+                if (AskLineNumber(this, maxLineNumber) is int line)
                 {
                     GoToLine(line);
                 }
@@ -289,6 +365,12 @@ public partial class FileViewerView : UserControl, IHotkeyControl
                 return true;
             case FileViewerHotkeyCommand.TreatFileAsText when viewModel.IsDiff:
                 viewModel.ToggleTreatAllFilesAsTextCommand.Execute(null);
+                return true;
+            case FileViewerHotkeyCommand.NextOccurrence:
+                textView.GoToOccurrence(backwards: false);
+                return true;
+            case FileViewerHotkeyCommand.PreviousOccurrence:
+                textView.GoToOccurrence(backwards: true);
                 return true;
             case FileViewerHotkeyCommand.NextChange when viewModel.IsDiff:
                 GoToChange(backwards: false);

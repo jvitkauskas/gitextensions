@@ -53,7 +53,7 @@ public sealed class FileViewerToolbarViewTests : HeadlessTest
         viewModel.Show(new FileViewContent(FileViewKind.Diff, TwoHunks));
         Dispatcher.UIThread.RunJobs();
 
-        view.GoToChange(backwards: false);
+        // As GoToFirstChange: shown at the first change.
         view.TextView.Editor.TextArea.Caret.Line.Should().Be(6);
         view.GoToChange(backwards: false);
         view.TextView.Editor.TextArea.Caret.Line.Should().Be(11);

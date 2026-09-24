@@ -165,6 +165,9 @@ public sealed partial class ViewPullRequestsViewModel : DialogViewModel
         _messageBoxes = messageBoxes;
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
         Viewer = new FileViewerViewModel(fileViewerHost);
+
+        // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached.
+        Viewer.ScrollOnThrough(() => Files);
         Files.SelectionChanged += (_, _) => ShowSelectedFile();
         SpellCheck = spellCheckHost is null ? null : new SpellCheckViewModel(ViewStrings.Load<SpellCheckStrings>(), spellCheckHost);
     }

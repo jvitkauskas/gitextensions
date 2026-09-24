@@ -52,7 +52,11 @@ public sealed class FileViewerStrings : ViewStrings
         ShowGitWordColoring = Add("showGitWordColoringToolStripMenuItem", "Text", "Git wor&d diff");
         ShowDifftastic = Add("showDifftasticToolStripMenuItem", "Text", "Diff&tastic");
         TreatAllFilesAsText = Add("treatAllFilesAsTextToolStripMenuItem", "Text", "&Treat all files as text");
+        AutomaticContinuousScroll = Add("_contScrollToNextFileOnlyWithAlt", "Text", "Enable automatic continuous scroll (without ALT button)", category: "TranslatedStrings");
     }
+
+    /// <summary>The text of <c>automaticContinuousScrollToolStripMenuItem</c> (<c>TranslatedStrings.ContScrollToNextFileOnlyWithAlt</c>).</summary>
+    public TranslatedText AutomaticContinuousScroll { get; }
 
     public TranslatedText ShowSyntaxHighlighting { get; }
 
@@ -176,12 +180,19 @@ public sealed record FileViewContent(
 }
 
 /// <summary>The settings of the diff and the text that the toolbar of the viewer toggles (saved in <c>AppSettings</c>).</summary>
+/// <param name="AutomaticContinuousScroll">
+///  Whether scrolling past the end (or the start) shows the next (or previous) file also without Alt
+///  (<c>AppSettings.AutomaticContinuousScroll</c>).
+/// </param>
+/// <param name="ContinuousScrollDelay">The time before scrolling on into another file (<c>AutomaticContinuousScrollDelay</c>), in milliseconds.</param>
 public sealed record FileViewerSettings(
     bool ShowNonPrintingChars = false,
     bool ShowEntireFile = false,
     int NumberOfContextLines = 3,
     IgnoreWhitespaceKind IgnoreWhitespace = IgnoreWhitespaceKind.None,
-    bool ShowSyntaxHighlighting = true);
+    bool ShowSyntaxHighlighting = true,
+    bool AutomaticContinuousScroll = false,
+    int ContinuousScrollDelay = 600);
 
 /// <summary>The options of the viewer that the changes of a file depend on, besides <see cref="FileViewerSettings"/>.</summary>
 /// <param name="EncodingName">The encoding chosen in the viewer, or <see langword="null"/> for the files encoding.</param>
@@ -486,13 +497,16 @@ public sealed partial class FileViewerViewModel : ObservableObject
                     Mode: diffMode,
                     IsGitWordDiff: diffMode.IsNormalDiffView() && _host.DiffAppearance == DiffDisplayAppearance.GitWordDiff,
                     HighlightingFileName: Settings.ShowSyntaxHighlighting ? content.FileName : null,
-                    DifftasticWidth: content.DifftasticWidth));
+                    DifftasticWidth: content.DifftasticWidth,
+                    ContentIdentification: content.FileName,
+                    FirstChangeContextLines: Settings.NumberOfContextLines));
                 break;
             case FileViewKind.Binary:
                 Editor.Load("", null);
                 break;
             default:
-                Editor.Load(content.Text, content.FileName);
+                // As ViewPrivateAsync: the position is kept when the same file is shown again (contentIdentification).
+                Editor.Load(content.Text, content.FileName, contentIdentification: content.FileName);
                 break;
         }
 
@@ -587,6 +601,69 @@ public sealed partial class FileViewerViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenSettings() => _host.OpenSettings();
+
+    /// <summary>Whether the context menu has the continuous scroll item (<c>EnableAutomaticContinuousScroll</c>).</summary>
+    public bool EnableAutomaticContinuousScroll { get; set; } = true;
+
+    /// <summary>As <c>ContinuousScrollToolStripMenuItemClick</c>.</summary>
+    [RelayCommand]
+    private void ToggleAutomaticContinuousScroll() => ChangeSettings(Settings with { AutomaticContinuousScroll = !Settings.AutomaticContinuousScroll }, reload: false);
+
+    /// <summary>As <c>BottomScrollReached</c>: scrolling on past the end of the text, the next file is to be shown.</summary>
+    public event EventHandler? BottomScrollReached;
+
+    /// <summary>As <c>TopScrollReached</c>: scrolling on past the start of the text, the previous file is to be shown.</summary>
+    public event EventHandler? TopScrollReached;
+
+    /// <summary>The time, replaced by tests.</summary>
+    public Func<DateTime> Now { get; set; } = () => DateTime.Now;
+
+    private DateTime _lastScrollReached = DateTime.MinValue;
+
+    /// <summary>
+    ///  As <c>ContinuousScrollEventManager</c>: the wheel scrolls on at the end (or start) of the text, which raises
+    ///  <see cref="BottomScrollReached"/> (or <see cref="TopScrollReached"/>) with Alt or if the continuous scroll is automatic,
+    ///  not sooner than its delay after the previous one.
+    /// </summary>
+    public void OnScrollReached(bool bottom, bool withAlt)
+    {
+        DateTime now = Now();
+        if ((!withAlt && !Settings.AutomaticContinuousScroll) || now - _lastScrollReached < TimeSpan.FromMilliseconds(Settings.ContinuousScrollDelay))
+        {
+            return;
+        }
+
+        _lastScrollReached = now;
+        (bottom ? BottomScrollReached : TopScrollReached)?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    ///  As <c>FileViewer_TopScrollReached</c> and <c>FileViewer_BottomScrollReached</c> of the dialogs: scrolling on shows the
+    ///  previous file at its end, or the next file at its start, of the list <paramref name="getFiles"/> returns.
+    /// </summary>
+    public void ScrollOnThrough(Func<FileStatusListViewModel?> getFiles)
+    {
+        TopScrollReached += (_, _) => SelectNextFile(backwards: true);
+        BottomScrollReached += (_, _) => SelectNextFile(backwards: false);
+
+        void SelectNextFile(bool backwards)
+        {
+            if (getFiles() is not { } files)
+            {
+                return;
+            }
+
+            // Before the selection, which may show the file at once.
+            Editor.PendingScroll = backwards ? TextScrollRequest.Bottom : TextScrollRequest.Top;
+            FileStatusEntry? shown = files.SelectedEntry;
+            files.SelectNextItem(backwards);
+            if (ReferenceEquals(files.SelectedEntry, shown))
+            {
+                // The first or last file: nothing else is shown.
+                Editor.PendingScroll = TextScrollRequest.None;
+            }
+        }
+    }
 
     /// <summary>The hotkeys of the viewer (<c>HotkeyCommands.FileViewerSettingsName</c>).</summary>
     public IReadOnlyList<Services.HotkeyBinding> Hotkeys => _host.Hotkeys;
@@ -769,18 +846,5 @@ public sealed partial class FileViewerViewModel : ObservableObject
     ///  removed lines (<c>IsSearchMatch</c>; for a range diff, of commit headers) from <paramref name="currentLine"/> (1-based),
     ///  or <see langword="null"/> if there is none.
     /// </summary>
-    public int? GetChangeLine(int currentLine, bool backwards)
-    {
-        if (Editor.DiffLines is not { } lines)
-        {
-            return null;
-        }
-
-        DiffViewMode mode = Editor.DiffMode;
-        HashSet<int> changed = [.. lines.Where(l => mode.IsSearchMatch(l.Kind)).Select(l => l.LineNumInDiff)];
-        List<int> starts = [.. changed.Where(line => !changed.Contains(line - 1)).Order()];
-        return backwards
-            ? starts.LastOrDefault(line => line < currentLine) is int previous and > 0 ? previous : null
-            : starts.FirstOrDefault(line => line > currentLine) is int next and > 0 ? next : null;
-    }
+    public int? GetChangeLine(int currentLine, bool backwards) => Editor.GetChangeLine(currentLine, backwards);
 }

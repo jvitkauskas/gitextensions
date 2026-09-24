@@ -185,9 +185,11 @@ Every "not yet" of the rows above was checked against the code on 2026-09-25; th
   (Done since the audit: git grep with its box, prompt and hotkeys; the toolbar with the settings button and the A/B filter;
   select all and collapse root folders; the custom difftool submenus and the First / Second captions, also in the grid and
   the file history.)
-- **Diff viewer**: the automatic continuous scroll into the next file (also "next file at the end of a diff" in the log and
-  pull request dialogs), the next / previous occurrence hotkeys, jumping to the first change after loading and keeping the
-  position on reload, the range-diff path filter, the search going on into the next file and "selection only".
+- **Diff viewer**: the range-diff path filter, the search going on into the next file and "selection only". (Done since the
+  audit: the continuous scroll into the next / previous file with its menu item, the occurrences of the selection with their
+  hotkeys, the first change after loading, the position kept for the same file, go to line by the line of the file. Going
+  to an occurrence selects it: AvaloniaEdit drops a selection the caret leaves. `TextEditor.ScrollToVerticalOffset` does not
+  scroll, so `TextEditorView` sets the offset of its scroll viewer.)
 - **File editors**: the options toolbar and an encoding choice.
 - **Commit message editor** (`EditNetSpell`): the paste replacing vertical tabs, Shift+Enter, the double click with
   `WordAtCursorExtractor`, the IME composition checks, the wrapping of the completion list keys.

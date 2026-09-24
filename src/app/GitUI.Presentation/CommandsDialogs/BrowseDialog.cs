@@ -515,6 +515,10 @@ public sealed partial class BrowseViewModel : DialogViewModel
         CommitInfo = new CommitInfoViewModel(commitInfoHost);
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { HasFileSettings = true, HasShowDiffForAllParents = true, HasRefreshButton = true, CanAutoRefresh = true };
         Viewer = new FileViewerViewModel(fileViewerHost);
+
+        // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached of RevisionDiffControl, without the menu item.
+        Viewer.ScrollOnThrough(() => Files);
+        Viewer.EnableAutomaticContinuousScroll = false;
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
         InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);

@@ -86,6 +86,9 @@ public sealed partial class DiffViewModel : DialogViewModel
         SecondDisplayName = secondDisplayName;
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
         Viewer = new FileViewerViewModel(fileViewerHost);
+
+        // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached.
+        Viewer.ScrollOnThrough(() => Files);
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
 
         // As RequestRefresh of the menu (e.g. after resetting files).

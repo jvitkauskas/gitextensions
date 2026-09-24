@@ -58,6 +58,9 @@ public sealed partial class LogViewModel : DialogViewModel, IDisposable
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
         Viewer = new FileViewerViewModel(fileViewerHost);
 
+        // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached.
+        Viewer.ScrollOnThrough(() => Files);
+
         // As RevisionGridSelectionChanged and DiffFilesSelectedIndexChanged.
         Grid.SelectionChanged += OnGridSelectionChanged;
         Files.SelectionChanged += OnFilesSelectionChanged;

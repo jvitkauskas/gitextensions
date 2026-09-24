@@ -192,7 +192,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
     public FileViewerSettings Settings
     {
         get => new(AppSettings.ShowNonPrintingChars.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, AppSettings.IgnoreWhitespaceKind.Value,
-            AppSettings.ShowSyntaxHighlightingInDiff.Value);
+            AppSettings.ShowSyntaxHighlightingInDiff.Value, AppSettings.AutomaticContinuousScroll, AppSettings.AutomaticContinuousScrollDelay);
         set
         {
             AppSettings.ShowNonPrintingChars.Value = value.ShowNonPrintingChars;
@@ -200,6 +200,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             AppSettings.NumberOfContextLines = value.NumberOfContextLines;
             AppSettings.IgnoreWhitespaceKind.Value = value.IgnoreWhitespace;
             AppSettings.ShowSyntaxHighlightingInDiff.Value = value.ShowSyntaxHighlighting;
+            AppSettings.AutomaticContinuousScroll = value.AutomaticContinuousScroll;
         }
     }
 

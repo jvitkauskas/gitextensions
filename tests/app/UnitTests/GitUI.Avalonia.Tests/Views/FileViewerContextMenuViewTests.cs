@@ -30,9 +30,14 @@ public sealed class FileViewerContextMenuViewTests : HeadlessTest
             "Stage selected line(s)", "Reset selected line(s)", "_Copy", "Copy _patch", "Copy _new version", "Copy _old version", "-",
             "_Increase the number of lines of context", "_Decrease the number of lines of context", "Show _entire file", "S_how nonprinting characters",
             "Show synta_x highlighting", "Ignore whitespace changes at end of _line", "Ignore changes in _amount of whitespace", "Ignore all _whitespace changes",
-            "Diff appea_rance", "-", "_Treat all files as text", "_Find...", "_Go to line");
+            "Diff appea_rance", "-", "_Treat all files as text", "Enable automatic continuous scroll (without ALT button)", "_Find...", "_Go to line");
 
         viewModel.Show(new FileViewContent(FileViewKind.Text, "text"));
+        view.FillContextMenu().Select(i => i is MenuItem item ? item.Header : "-").Should().Equal(
+            "_Copy", "-", "S_how nonprinting characters", "-", "Enable automatic continuous scroll (without ALT button)", "_Find...", "_Go to line");
+
+        // As EnableAutomaticContinuousScroll = false (the diff tab of the main window).
+        viewModel.EnableAutomaticContinuousScroll = false;
         view.FillContextMenu().Select(i => i is MenuItem item ? item.Header : "-").Should().Equal(
             "_Copy", "-", "S_how nonprinting characters", "-", "_Find...", "_Go to line");
         window.Close();
@@ -80,7 +85,7 @@ public sealed class FileViewerContextMenuViewTests : HeadlessTest
 
         view.TextView.Editor.TextArea.Focus();
         window.KeyPressQwerty(PhysicalKey.G, RawInputModifiers.Control);
-        view.TextView.Editor.TextArea.Caret.Line.Should().Be(view.TextView.Editor.Document.LineCount);
+        view.TextView.Editor.TextArea.Caret.Line.Should().Be(8, "the last line of the new file (MaxLineNumber)");
 
         window.UnstagedFiles.Tree.ContainerFromIndex(0)!.Focus();
         window.DiffViewer.IsKeyboardFocusWithin.Should().BeFalse();

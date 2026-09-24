@@ -73,6 +73,27 @@ public sealed partial class TextEditorViewModel : ObservableObject
     /// </summary>
     public bool ShowLeftLineNumbers { get; private set; } = true;
 
+    /// <summary>
+    ///  What the text shown is (the file name, the <c>contentIdentification</c> of <c>SetText</c>): showing the same content again
+    ///  keeps the position (<see cref="PositionCache"/>).
+    /// </summary>
+    public string? ContentIdentification { get; private set; }
+
+    /// <summary>The position kept for the same content, which the view captures and restores.</summary>
+    public ViewPositionCache PositionCache { get; } = new();
+
+    /// <summary>
+    ///  The lines of context shown above the first change, which the caret goes to when a diff is loaded (as
+    ///  <c>GoToFirstChange</c>), unless its position is kept; <see langword="null"/> to show the start.
+    /// </summary>
+    public int? FirstChangeContextLines { get; private set; }
+
+    /// <summary>
+    ///  As <c>ScrollToTop</c> and <c>ScrollToBottom</c>: where the next text loaded is shown (e.g. the next file of a continuous
+    ///  scroll), whatever the position kept.
+    /// </summary>
+    public TextScrollRequest PendingScroll { get; set; }
+
     /// <summary>The column of the vertical ruler, 0 for none (as <c>FileViewerInternal.VRulerPosition</c>).</summary>
     [ObservableProperty]
     public partial int VerticalRulerColumn { get; set; }
@@ -139,21 +160,25 @@ public sealed partial class TextEditorViewModel : ObservableObject
         ShowLeftLineNumbers = options.Mode is not (DiffViewMode.Grep or DiffViewMode.RangeDiff);
         GitColoring = gitColoring;
         InlineDiffMarkers = inlineDiffMarkers;
-        LoadText(text, options.HighlightingFileName, line: null, diffLines);
+        FirstChangeContextLines = options.FirstChangeContextLines;
+        LoadText(text, options.HighlightingFileName, line: null, diffLines, options.ContentIdentification);
     }
 
     /// <summary>Loads a text, which is unchanged afterwards (as <c>FileViewer.TextLoaded</c>).</summary>
-    public void Load(string text, string? fileName = null, int? line = null)
+    /// <param name="contentIdentification">What the text is, to keep the position when it is shown again (<see cref="ContentIdentification"/>).</param>
+    public void Load(string text, string? fileName = null, int? line = null, string? contentIdentification = null)
     {
         GitColoring = null;
         InlineDiffMarkers = [];
         DiffMode = DiffViewMode.Diff;
         ShowLeftLineNumbers = true;
-        LoadText(text, fileName, line, diffLines: null);
+        FirstChangeContextLines = null;
+        LoadText(text, fileName, line, diffLines: null, contentIdentification);
     }
 
-    private void LoadText(string text, string? fileName, int? line, IReadOnlyList<DiffLine>? diffLines)
+    private void LoadText(string text, string? fileName, int? line, IReadOnlyList<DiffLine>? diffLines, string? contentIdentification)
     {
+        ContentIdentification = contentIdentification;
         DiffLines = diffLines;
         FileName = fileName;
         LineToShow = line;
@@ -161,6 +186,26 @@ public sealed partial class TextEditorViewModel : ObservableObject
         Text = text;
         OnPropertyChanged(nameof(HasChanges));
         TextLoaded?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    ///  As <c>GoToNextChange</c> and <c>GoToPreviousChange</c>: the first line of the next (or previous) block of added or
+    ///  removed lines (<c>IsSearchMatch</c>; for a range diff, of commit headers) from <paramref name="currentLine"/> (1-based),
+    ///  or <see langword="null"/> if there is none (or no diff is shown).
+    /// </summary>
+    public int? GetChangeLine(int currentLine, bool backwards)
+    {
+        if (DiffLines is not { } lines)
+        {
+            return null;
+        }
+
+        DiffViewMode mode = DiffMode;
+        HashSet<int> changed = [.. lines.Where(l => mode.IsSearchMatch(l.Kind)).Select(l => l.LineNumInDiff)];
+        List<int> starts = [.. changed.Where(line => !changed.Contains(line - 1)).Order()];
+        return backwards
+            ? starts.LastOrDefault(line => line < currentLine) is int previous and > 0 ? previous : null
+            : starts.FirstOrDefault(line => line > currentLine) is int next and > 0 ? next : null;
     }
 
     /// <summary>Marks the current text as saved.</summary>
@@ -178,10 +223,22 @@ public sealed partial class TextEditorViewModel : ObservableObject
 /// <param name="IsGitWordDiff">Whether a colored patch is a git word diff (<c>DiffDisplayAppearance.GitWordDiff</c>).</param>
 /// <param name="HighlightingFileName">The file whose syntax highlighting the diff gets (<c>ShowSyntaxHighlightingInDiff</c>), if any.</param>
 /// <param name="DifftasticWidth">The width of the output of difftastic (<c>DFT_WIDTH</c>).</param>
+/// <param name="ContentIdentification">What the diff is (the file name), to keep the position when it is shown again.</param>
+/// <param name="FirstChangeContextLines">The lines of context above the first change the caret goes to (<c>GoToFirstChange</c>), if any.</param>
 public sealed record DiffLoadOptions(
     IThemeColors? GitColors = null,
     bool ReverseGitColoring = true,
     DiffViewMode Mode = DiffViewMode.Diff,
     bool IsGitWordDiff = false,
     string? HighlightingFileName = null,
-    int DifftasticWidth = 80);
+    int DifftasticWidth = 80,
+    string? ContentIdentification = null,
+    int? FirstChangeContextLines = null);
+
+/// <summary>Where the next text loaded is shown (<c>ScrollToTop</c>, <c>ScrollToBottom</c>).</summary>
+public enum TextScrollRequest
+{
+    None,
+    Top,
+    Bottom,
+}

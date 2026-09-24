@@ -65,6 +65,9 @@ public sealed partial class CommitViewModel : DialogViewModel
         Staged = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { NoFilesText = strings.NoStagedChanges.Text, SelectFirstItemOnSetItems = false };
         Diff = new FileViewerViewModel(fileViewerHost) { LinePatchingBlocksUntilReload = true };
 
+        // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached: in the list whose file is shown.
+        Diff.ScrollOnThrough(() => _currentFilesList);
+
         // As SelectedDiff_PatchApplied: the changes are loaded again, keeping the selected file.
         Diff.PatchApplied += (_, _) => RescanChanges();
         _currentFilesList = Unstaged;

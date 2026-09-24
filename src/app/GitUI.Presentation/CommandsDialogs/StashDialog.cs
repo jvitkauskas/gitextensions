@@ -133,6 +133,9 @@ public sealed partial class StashViewModel : DialogViewModel
         (KeepIndex, IncludeUntrackedFiles) = host.LoadSettings();
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
         Viewer = new FileViewerViewModel(fileViewerHost);
+
+        // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached.
+        Viewer.ScrollOnThrough(() => Files);
         Files.SelectionChanged += (_, _) =>
         {
             _ = Viewer.ShowChangesAsync(Files.SelectedEntry);

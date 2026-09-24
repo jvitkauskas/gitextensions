@@ -37,6 +37,10 @@ public partial class TextEditorView : UserControl
     private DiffBrushes? _diffBrushes;
     private DiffBackgroundRenderer? _diffBackground;
     private DiffAnchorRenderer? _diffAnchors;
+    private readonly OccurrenceRenderer _occurrences = new();
+    private IReadOnlyList<DiffLine>? _shownDiffLines;
+    private int _scrollVersion;
+    private string? _capturedForText;
 
     static TextEditorView()
     {
@@ -87,6 +91,10 @@ public partial class TextEditorView : UserControl
                 }
             }
         };
+
+        // As SelectionManagerSelectionChanged: the occurrences of the selected text are highlighted.
+        editor.TextArea.TextView.BackgroundRenderers.Add(_occurrences);
+        editor.TextArea.SelectionChanged += (_, _) => UpdateOccurrences();
         editor.TextChanged += (_, _) =>
         {
             if (!_updatingText && _viewModel is not null)
@@ -205,6 +213,115 @@ public partial class TextEditorView : UserControl
         return true;
     }
 
+    /// <summary>The offsets of the occurrences of the selected text, e.g. for tests.</summary>
+    public IReadOnlyList<int> Occurrences => _occurrences.Offsets;
+
+    /// <summary>
+    ///  As <c>GoToNextOccurrence</c> and <c>GoToPreviousOccurrence</c>: the next (or previous) occurrence of the selected text,
+    ///  from the start of the selection. It is selected (the WinForms viewer only moved the caret; AvaloniaEdit drops a
+    ///  selection the caret leaves, and the occurrences with it).
+    /// </summary>
+    public void GoToOccurrence(bool backwards)
+    {
+        int from = editor.TextArea.Selection.IsEmpty ? editor.CaretOffset : editor.SelectionStart;
+        int target = backwards
+            ? _occurrences.Offsets.LastOrDefault(o => o < from, -1)
+            : _occurrences.Offsets.FirstOrDefault(o => o > from, -1);
+        if (target >= 0)
+        {
+            editor.Select(target, _occurrences.Length);
+            editor.TextArea.Caret.BringCaretToView();
+        }
+    }
+
+    private void UpdateOccurrences()
+    {
+        _occurrences.Brush ??= AppColorResources.GetBrush(this, AppColor.HighlightAllOccurences);
+        string selected = editor.TextArea.Selection.IsEmpty ? "" : editor.TextArea.Selection.GetText();
+        if (_occurrences.Update(editor.Document.Text, selected))
+        {
+            editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
+        }
+    }
+
+    /// <summary>The first line in view (1-based).</summary>
+    public int FirstVisibleLine
+        => editor.TextArea.TextView.GetDocumentLineByVisualTop(editor.VerticalOffset)?.LineNumber ?? 1;
+
+    /// <summary>The number of lines in view.</summary>
+    public int VisibleLineCount
+        => (int)(editor.TextArea.TextView.Bounds.Height / Math.Max(1, editor.TextArea.TextView.DefaultLineHeight));
+
+    /// <summary>
+    ///  As setting <c>FirstVisibleLine</c>: the line (1-based) is shown at the top, once the layout knows the new text if it
+    ///  does not yet.
+    /// </summary>
+    public void ScrollToFirstVisibleLine(int line)
+        => ScrollTo(() => editor.TextArea.TextView.GetVisualTopByDocumentLine(Math.Clamp(line, 1, Math.Max(1, editor.Document.LineCount))));
+
+    private void ScrollTo(Func<double> getOffset)
+    {
+        int version = ++_scrollVersion;
+        double offset = getOffset();
+        SetVerticalOffset(offset);
+        if (Math.Abs(editor.VerticalOffset - offset) > 0.5)
+        {
+            // Again once the extent of a new text is measured, unless something else scrolled meanwhile.
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    if (version == _scrollVersion)
+                    {
+                        SetVerticalOffset(getOffset());
+                    }
+                },
+                DispatcherPriority.Loaded);
+        }
+    }
+
+    /// <summary>The offset of the scroll viewer of the editor (its <c>ScrollToVerticalOffset</c> does not scroll).</summary>
+    private void SetVerticalOffset(double offset)
+    {
+        if (editor.FindDescendantOfType<ScrollViewer>() is { } scrollViewer)
+        {
+            scrollViewer.Offset = scrollViewer.Offset.WithY(Math.Max(0, offset));
+        }
+    }
+
+    private void CapturePosition()
+    {
+        _viewModel!.PositionCache.Capture(GetPosition(), editor.Document.LineCount, _shownDiffLines);
+        _capturedForText = _viewModel.Text;
+    }
+
+    private ViewerPosition GetPosition()
+    {
+        int caretLine = editor.TextArea.Caret.Line;
+        int firstVisibleLine = FirstVisibleLine;
+        return new ViewerPosition(caretLine, editor.TextArea.Caret.Column, firstVisibleLine,
+            CaretVisible: caretLine >= firstVisibleLine && caretLine < firstVisibleLine + VisibleLineCount);
+    }
+
+    /// <summary>
+    ///  As <c>GoToFirstChange</c>: the caret on the first change, shown below its lines of context unless it is in view
+    ///  already.
+    /// </summary>
+    private void GoToFirstChange(int contextLines)
+    {
+        if (_viewModel!.GetChangeLine(0, backwards: false) is not int line)
+        {
+            return;
+        }
+
+        editor.TextArea.Caret.Line = line;
+        editor.TextArea.Caret.Column = 1;
+        int firstVisibleLine = FirstVisibleLine;
+        if (line < firstVisibleLine || line >= firstVisibleLine + VisibleLineCount)
+        {
+            ScrollToFirstVisibleLine(Math.Max(1, line - contextLines - 1));
+        }
+    }
+
     /// <summary>The keys of <c>FindAndReplaceForm</c>, unless they are typed in the search panel (which handles them itself).</summary>
     private void OnEditorPreviewKeyDown(object? sender, KeyEventArgs e)
     {
@@ -259,6 +376,8 @@ public partial class TextEditorView : UserControl
         switch (e.PropertyName)
         {
             case nameof(TextEditorViewModel.Text) when !_updatingText:
+                // Before the text is replaced (a text loaded replaces it before TextLoaded).
+                CapturePosition();
                 SetText(_viewModel!.Text);
                 break;
 
@@ -358,19 +477,58 @@ public partial class TextEditorView : UserControl
 
     private void OnTextLoaded(object? sender, EventArgs e)
     {
-        SetText(_viewModel!.Text);
-        ShowDiff(_viewModel.DiffLines);
+        TextEditorViewModel viewModel = _viewModel!;
 
-        // Show the requested line with the caret on it, or the start.
-        if (_viewModel.LineToShow is int line && line > 0 && line <= editor.Document.LineCount)
+        // As SetText of FileViewerInternal: the position of the content shown until now, kept for the same content.
+        if (!ReferenceEquals(_capturedForText, viewModel.Text) || editor.Text != viewModel.Text)
+        {
+            CapturePosition();
+        }
+
+        _capturedForText = null;
+        _scrollVersion++;
+        SetText(viewModel.Text);
+        ShowDiff(viewModel.DiffLines);
+        _shownDiffLines = viewModel.DiffLines;
+        UpdateOccurrences();
+        TextScrollRequest scroll = viewModel.PendingScroll;
+        viewModel.PendingScroll = TextScrollRequest.None;
+        ViewerPosition? restored = viewModel.PositionCache.Restore(viewModel.ContentIdentification, editor.Document.LineCount, viewModel.DiffLines, VisibleLineCount);
+
+        // Show the requested line with the caret on it (as ViewPrivateAsync with a line).
+        if (viewModel.LineToShow is int line && line > 0 && line <= editor.Document.LineCount)
         {
             editor.TextArea.Caret.Line = line;
             editor.ScrollToLine(line);
+            return;
+        }
+
+        if (restored is { } position)
+        {
+            editor.TextArea.Caret.Line = position.CaretLine;
+            editor.TextArea.Caret.Column = position.CaretColumn;
+            ScrollToFirstVisibleLine(position.FirstVisibleLine);
         }
         else
         {
             editor.TextArea.Caret.Offset = 0;
             editor.ScrollToHome();
+            SetVerticalOffset(0);
+        }
+
+        // The kept position counts if the caret is below the header of a patch (FirstLineAfterHeader).
+        bool hasPatchHeader = viewModel.DiffLines is not null && viewModel.DiffMode is DiffViewMode.Diff or DiffViewMode.FixedDiff or DiffViewMode.CombinedDiff;
+        bool positionSet = restored is { } kept && kept.CaretLine > (hasPatchHeader ? 6 : 1);
+        if (scroll != TextScrollRequest.None)
+        {
+            // As ScrollToTop and ScrollToBottom (the continuous scroll into the previous or next file).
+            ScrollTo(() => scroll == TextScrollRequest.Top ? 0 : Math.Max(0, editor.TextArea.TextView.DocumentHeight - editor.ViewportHeight));
+            positionSet = true;
+        }
+
+        if (!positionSet && viewModel.FirstChangeContextLines is int contextLines)
+        {
+            GoToFirstChange(contextLines);
         }
     }
 
