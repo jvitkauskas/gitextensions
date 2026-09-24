@@ -124,6 +124,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new PatchGridStrings()).SetArgDisplayNames(nameof(PatchGridStrings));
         yield return new TestCaseData(new RebaseStrings()).SetArgDisplayNames(nameof(RebaseStrings));
         yield return new TestCaseData(new ApplyPatchStrings()).SetArgDisplayNames(nameof(ApplyPatchStrings));
+        yield return new TestCaseData(new ResolveConflictsStrings()).SetArgDisplayNames(nameof(ResolveConflictsStrings));
         yield return new TestCaseData(new PluginSettingsPageStrings()).SetArgDisplayNames(nameof(PluginSettingsPageStrings));
         yield return new TestCaseData(new SettingValueStrings()).SetArgDisplayNames(nameof(SettingValueStrings));
         yield return new TestCaseData(new HotkeysSettingsPageStrings()).SetArgDisplayNames(nameof(HotkeysSettingsPageStrings));

@@ -1,0 +1,125 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.ResolveConflictsWindow"
+                x:DataType="vm:ResolveConflictsViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                ManualSectionSubfolder="modify_history" ManualSectionAnchorName="handle-merge-conflicts"
+                Width="619" Height="392" MinWidth="450" MinHeight="299">
+  <!-- The shortcuts of the choose items of ConflictedFilesContextMenu. -->
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+D1" Command="{Binding ChooseLocalCommand}" />
+    <KeyBinding Gesture="Ctrl+D2" Command="{Binding ChooseRemoteCommand}" />
+    <KeyBinding Gesture="Ctrl+D3" Command="{Binding ChooseBaseCommand}" />
+  </Window.KeyBindings>
+  <Window.Styles>
+    <Style Selector="StackPanel#buttonsPanel > Button">
+      <Setter Property="Width" Value="140" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </Window.Styles>
+  <!-- Equivalent of tableLayoutPanel4: the conflicts and the buttons, the sides of the selected file, the manual link. -->
+  <Grid Margin="8" RowDefinitions="*,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" IsEnabled="{Binding IsIdle}">
+    <!-- Equivalent of tableLayoutPanel5. -->
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="4">
+      <TextBlock Text="{Binding Strings.UnresolvedMergeConflicts.Text}" />
+      <DataGrid Name="conflictsGrid" Grid.Row="1" ItemsSource="{Binding Conflicts}" SelectedItem="{Binding SelectedConflict}"
+                IsReadOnly="True" SelectionMode="Extended" CanUserReorderColumns="False" CanUserResizeColumns="False"
+                HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DataGrid.ContextMenu>
+          <!-- Equivalent of ConflictedFilesContextMenu. -->
+          <ContextMenu Name="conflictsContextMenu">
+            <MenuItem Name="openMergeToolMenuItem" Header="{Binding OpenMergeToolMenuText}" Command="{Binding MergeCommand}"
+                      IsEnabled="{Binding CanOpenMergeTool}" />
+            <MenuItem Name="customMergeToolMenuItem" Header="{Binding Strings.CustomMergeTool.AccessKeyText}"
+                      Command="{Binding CustomMergeToolCommand}" IsEnabled="{Binding IsSingleFileSelected}" />
+            <MenuItem Name="markAsSolvedMenuItem" Header="{Binding Strings.MarkAsSolved.PlainText}" Command="{Binding MarkAsSolvedCommand}" />
+            <Separator />
+            <MenuItem Name="chooseLocalMenuItem" Header="{Binding ChooseLocalText}" ToolTip.Tip="{Binding ChooseLocalToolTip}"
+                      InputGesture="Ctrl+D1" Command="{Binding ChooseLocalCommand}" />
+            <MenuItem Name="chooseRemoteMenuItem" Header="{Binding ChooseRemoteText}" ToolTip.Tip="{Binding ChooseRemoteToolTip}"
+                      InputGesture="Ctrl+D2" Command="{Binding ChooseRemoteCommand}" />
+            <MenuItem Name="chooseBaseMenuItem" Header="{Binding Strings.ChooseBase.PlainText}" ToolTip.Tip="{Binding ChooseBaseToolTip}"
+                      InputGesture="Ctrl+D3" Command="{Binding ChooseBaseCommand}" />
+            <Separator />
+            <MenuItem Name="openLocalWithMenuItem" Header="{Binding Strings.OpenLocalWith.PlainText}" Command="{Binding OpenLocalWithCommand}"
+                      IsEnabled="{Binding CanOpenLocal}" />
+            <MenuItem Name="openRemoteWithMenuItem" Header="{Binding Strings.OpenRemoteWith.PlainText}" Command="{Binding OpenRemoteWithCommand}"
+                      IsEnabled="{Binding CanOpenRemote}" />
+            <MenuItem Name="openBaseWithMenuItem" Header="{Binding Strings.OpenBaseWith.PlainText}" Command="{Binding OpenBaseWithCommand}"
+                      IsEnabled="{Binding CanOpenBase}" />
+            <Separator />
+            <MenuItem Name="saveLocalAsMenuItem" Header="{Binding Strings.SaveLocalAs.PlainText}" Command="{Binding SaveLocalAsCommand}"
+                      IsEnabled="{Binding CanOpenLocal}" />
+            <MenuItem Name="saveRemoteAsMenuItem" Header="{Binding Strings.SaveRemoteAs.PlainText}" Command="{Binding SaveRemoteAsCommand}"
+                      IsEnabled="{Binding CanOpenRemote}" />
+            <MenuItem Name="saveBaseAsMenuItem" Header="{Binding Strings.SaveBaseAs.PlainText}" Command="{Binding SaveBaseAsCommand}"
+                      IsEnabled="{Binding CanOpenBase}" />
+            <Separator />
+            <MenuItem Name="openMenuItem" Header="{Binding Strings.Open.PlainText}" Command="{Binding OpenCommand}"
+                      IsEnabled="{Binding IsSingleFileSelected}" />
+            <MenuItem Name="openWithMenuItem" Header="{Binding Strings.OpenWith.PlainText}" Command="{Binding OpenWithCommand}"
+                      IsEnabled="{Binding IsSingleFileSelected}" />
+            <MenuItem Name="showInFolderMenuItem" Header="{Binding Strings.ShowInFolder.PlainText}" Command="{Binding ShowInFolderCommand}"
+                      IsEnabled="{Binding IsSingleFileSelected}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Name="fileHistoryMenuItem" Header="{Binding Strings.FileHistory.PlainText}" Command="{Binding FileHistoryCommand}"
+                      IsEnabled="{Binding IsSingleFileSelected}" />
+          </ContextMenu>
+        </DataGrid.ContextMenu>
+        <DataGrid.Columns>
+          <DataGridTextColumn Binding="{Binding Filename}" Width="*" SortMemberPath="Filename" x:DataType="vm:ConflictItem" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <!-- Equivalent of tableLayoutPanel3: the description of the conflict and the merge button. -->
+      <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+        <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" VerticalAlignment="Center" />
+        <TextBlock Name="conflictDescription" Grid.Column="1" Text="{Binding ConflictDescription}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Name="mergeButton" Grid.Column="2" MinWidth="130" IsDefault="True" VerticalAlignment="Center"
+                Command="{Binding MergeCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/SelectBranch.png" Width="16" Height="16" />
+            <TextBlock Text="{Binding Strings.Merge.PlainText}" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Grid>
+    <!-- Equivalent of flowLayoutPanel1. -->
+    <StackPanel Name="buttonsPanel" Grid.Column="1" Spacing="6">
+      <Button Name="openMergeToolButton" IsEnabled="{Binding CanOpenMergeTool}" Command="{Binding MergeCommand}">
+        <TextBlock Text="{Binding OpenMergeToolButtonText}" TextTrimming="CharacterEllipsis" />
+      </Button>
+      <Button Name="startMergeToolButton" Content="{Binding Strings.StartMergeTool.PlainText}" Command="{Binding StartMergeToolCommand}" />
+      <Button Name="rescanButton" Command="{Binding RescanCommand}">
+        <TextBlock Text="{Binding Strings.Rescan.PlainText}" TextTrimming="CharacterEllipsis" />
+      </Button>
+      <Button Name="resetButton" Content="{Binding Strings.Reset.AccessKeyText}" Command="{Binding ResetCommand}" />
+      <ProgressBar Name="progressBar" Width="140" MinWidth="0" Height="24" IsVisible="{Binding IsProgressVisible}"
+                   Minimum="0" Maximum="{Binding ProgressMaximum}" Value="{Binding ProgressValue}" />
+    </StackPanel>
+    <!-- Equivalent of tableLayoutPanel1: the sides of the selected file. -->
+    <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,6,0,0" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
+          ColumnSpacing="8" RowSpacing="4">
+      <TextBlock Name="localLabel" Text="{Binding LocalLabel}" ToolTip.Tip="{Binding LocalLabelToolTip}" />
+      <SelectableTextBlock Name="localFileName" Grid.Column="1" Text="{Binding LocalFileName}" />
+      <TextBlock Grid.Row="1" Text="{Binding Strings.Base.Text}" />
+      <SelectableTextBlock Name="baseFileName" Grid.Row="1" Grid.Column="1" Text="{Binding BaseFileName}" />
+      <TextBlock Name="remoteLabel" Grid.Row="2" Text="{Binding RemoteLabel}" ToolTip.Tip="{Binding RemoteLabelToolTip}" />
+      <SelectableTextBlock Name="remoteFileName" Grid.Row="2" Grid.Column="1" Text="{Binding RemoteFileName}" />
+    </Grid>
+    <!-- Equivalent of gotoUserManualControl1. -->
+    <Button Name="helpLink" Grid.Row="2" Classes="link" Margin="0,6,0,0" HorizontalAlignment="Left"
+            Command="{Binding OpenHelpCommand}" ToolTip.Tip="{Binding HelpTooltip}">
+      <StackPanel Orientation="Horizontal" Spacing="4">
+        <Image Source="avares://GitUI.Avalonia/Assets/GotoManual.png" Width="16" Height="16" />
+        <TextBlock Text="{Binding Strings.Help.PlainText}" VerticalAlignment="Center" />
+      </StackPanel>
+    </Button>
+  </Grid>
+</h:DialogWindow>
