@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.Editor"
+             x:Class="GitUI.Avalonia.Editor.EditorOptionsToolbar"
+             x:DataType="vm:TextEditorOptionsViewModel"
+             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,40,0">
+  <UserControl.Styles>
+    <Style Selector="Border#toolbar Button, Border#toolbar ToggleButton">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border#toolbar Button, Border#toolbar ToggleButton:unchecked">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border#toolbar Image">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+    </Style>
+  </UserControl.Styles>
+  <!-- The fileviewerToolbar of the FileViewer of the WinForms editors, for a text: shown while the mouse moves over the text. -->
+  <Border Name="toolbar" Padding="2" CornerRadius="0,0,3,3" IsVisible="False"
+          Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+          BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1,0,1,1">
+    <StackPanel Orientation="Horizontal" Spacing="1">
+      <ToggleButton Name="showNonPrintingCharsButton" ToolTip.Tip="{Binding Strings.ShowNonPrintingChars.Text}"
+                    IsChecked="{Binding ShowNonPrintingChars}">
+        <Image Source="avares://GitUI.Avalonia/Assets/ShowWhitespace.png" />
+      </ToggleButton>
+      <ComboBox Name="encodingComboBox" MinWidth="120" MaxWidth="200" Padding="4,1" VerticalAlignment="Center"
+                IsVisible="{Binding HasEncodings}" IsEnabled="{Binding CanChangeEncoding}"
+                ItemsSource="{Binding Encodings}" SelectedItem="{Binding SelectedEncoding}" />
+      <Button Name="settingsButton" ToolTip.Tip="{Binding Strings.Settings.Text}" Command="{Binding OpenSettingsCommand}">
+        <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" />
+      </Button>
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -8,7 +8,10 @@
                 Title="{Binding Strings.Title.PlainText}"
                 Width="634" Height="474" MinWidth="450" MinHeight="300">
   <Grid ColumnDefinitions="3*,Auto,2*">
-    <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+    <Panel>
+      <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+      <ed:EditorOptionsToolbar Name="optionsToolbar" DataContext="{Binding Options}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    </Panel>
     <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
     <DockPanel Grid.Column="2" Margin="6">
       <Button Name="saveButton" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="accent"

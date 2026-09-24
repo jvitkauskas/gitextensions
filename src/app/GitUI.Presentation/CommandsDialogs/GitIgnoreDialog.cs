@@ -164,6 +164,9 @@ public sealed partial class GitIgnoreEditorViewModel : DialogViewModel
 
     public TextEditorViewModel Editor { get; } = new();
 
+    /// <summary>The options toolbar of the editor (the <c>fileviewerToolbar</c> of its WinForms <c>FileViewer</c>), if any.</summary>
+    public TextEditorOptionsViewModel? Options { get; set; }
+
     /// <summary>As <c>FormGitIgnore.AddDefaultClick</c>: adds the default patterns that are not in the file yet.</summary>
     [RelayCommand]
     private void AddDefault()

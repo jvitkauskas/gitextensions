@@ -190,7 +190,6 @@ Every "not yet" of the rows above was checked against the code on 2026-09-25; th
   hotkeys, the first change after loading, the position kept for the same file, go to line by the line of the file. Going
   to an occurrence selects it: AvaloniaEdit drops a selection the caret leaves. `TextEditor.ScrollToVerticalOffset` does not
   scroll, so `TextEditorView` sets the offset of its scroll viewer.)
-- **File editors**: the options toolbar and an encoding choice.
 - **Commit message editor** (`EditNetSpell`): the paste replacing vertical tabs, Shift+Enter, the double click with
   `WordAtCursorExtractor`, the IME composition checks, the wrapping of the completion list keys.
 - **Commit dialog**: the icons of the templates, the list of the changes in submodules.
@@ -225,7 +224,9 @@ order, group boxes and icons). Deliberate differences:
 The options toolbar that the WinForms `FileViewer` shows when the mouse moves over it is ported in `FileViewerView` (next and
 previous change, context lines, entire file, nonprinting characters, whitespace, encoding, settings; the options are saved in
 `AppSettings` as the WinForms viewer saves them), with the syntax highlighting of diffs and the context menu (copy patch, find,
-stage lines, ...). Not ported yet: the toolbar of the file editors (which use `TextEditorView` directly).
+stage lines, ...). The file editors (`FormEditor`, `.gitattributes`, `.mailmap`, `.gitignore`) have `EditorOptionsToolbar`
+(nonprinting characters, settings, and for `FormEditor` the encoding: choosing one reads the file again in it while unchanged,
+and the file is saved in it; the WinForms combo box of the editor only changed later reads).
 
 ## Translations
 

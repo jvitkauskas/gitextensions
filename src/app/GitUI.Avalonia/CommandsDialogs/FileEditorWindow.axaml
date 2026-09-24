@@ -24,6 +24,9 @@
         <TextBlock Text="{Binding Strings.Warning.Text}" TextWrapping="Wrap" Foreground="Black" />
       </StackPanel>
     </Border>
-    <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+    <Panel>
+      <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+      <ed:EditorOptionsToolbar Name="optionsToolbar" DataContext="{Binding Options}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    </Panel>
   </DockPanel>
 </h:DialogWindow>

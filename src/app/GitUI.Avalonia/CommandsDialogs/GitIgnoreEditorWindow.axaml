@@ -29,7 +29,10 @@
           <Button Name="addPatternButton" MinWidth="160" HorizontalContentAlignment="Center"
                   Content="{Binding Strings.AddPattern.AccessKeyText}" Command="{Binding AddPatternCommand}" />
         </StackPanel>
-        <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+        <Panel>
+          <ed:TextEditorView Name="editorView" DataContext="{Binding Editor}" />
+          <ed:EditorOptionsToolbar Name="optionsToolbar" DataContext="{Binding Options}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </Panel>
       </DockPanel>
       <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
       <DockPanel Grid.Column="2" Margin="6">

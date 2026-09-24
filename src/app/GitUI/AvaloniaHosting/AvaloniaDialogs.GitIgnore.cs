@@ -6,6 +6,7 @@ using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.Editor;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Editor;
 using GitUI.Presentation.Translations;
 
 namespace GitUI.AvaloniaHosting;
@@ -33,7 +34,9 @@ internal static partial class AvaloniaDialogs
             () =>
             {
                 GitIgnoreEditorWindow window = new();
-                window.DataContext = new GitIgnoreEditorViewModel(strings, fileStrings, new GitIgnoreEditorHost(commands, path, localExclude, window), new MessageBoxService(window));
+                GitIgnoreEditorViewModel viewModel = new(strings, fileStrings, new GitIgnoreEditorHost(commands, path, localExclude, window), new MessageBoxService(window));
+                viewModel.Options = new TextEditorOptionsViewModel(viewModel.Editor, new TextEditorOptionsHost(commands));
+                window.DataContext = viewModel;
                 return window;
             },
             owner,

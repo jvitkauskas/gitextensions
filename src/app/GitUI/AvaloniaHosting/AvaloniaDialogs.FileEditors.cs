@@ -1,3 +1,4 @@
+using System.Text;
 using GitCommands;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
@@ -7,6 +8,7 @@ using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.Editor;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Editor;
 using GitUI.Presentation.Translations;
 using ResourceManager;
 
@@ -40,11 +42,13 @@ internal static partial class AvaloniaDialogs
             () =>
             {
                 RepoFileEditorWindow window = new();
-                window.DataContext = new RepoFileEditorViewModel(
+                RepoFileEditorViewModel viewModel = new(
                     strings,
                     fileName,
                     new RepoFileEditorHost(commands, fullPathResolver.Resolve(fileName), notifyRepoChanged),
                     new MessageBoxService(window));
+                viewModel.Options = new TextEditorOptionsViewModel(viewModel.Editor, new TextEditorOptionsHost(commands));
+                window.DataContext = viewModel;
                 return window;
             },
             owner,
@@ -66,15 +70,13 @@ internal static partial class AvaloniaDialogs
 
         IGitModule module = commands.Module;
         string text;
-        byte[] preamble;
+        FileEditorHost host;
         try
         {
             // As FileViewer.ViewFileAsync: the encoding is detected, the repository's by default.
             string fullPath = new FullPathResolver(() => module.WorkingDir).Resolve(fileName) ?? fileName;
-            using FileStream stream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using StreamReader reader = FileReader.OpenStream(stream, module.FilesEncoding);
-            text = reader.ReadToEnd();
-            preamble = reader.CurrentEncoding.GetPreamble();
+            host = new FileEditorHost(module, fullPath);
+            text = host.Read(module.FilesEncoding);
         }
         catch (Exception ex)
         {
@@ -96,9 +98,9 @@ internal static partial class AvaloniaDialogs
                     readOnly: false,
                     lineNumber,
                     TranslatedStrings.Error,
-                    new FileEditorHost(module, preamble),
+                    host,
                     new MessageBoxService(window));
-                viewModel.Editor.ShowWhitespace = AppSettings.ShowNonPrintingChars.Value;
+                viewModel.Options = new TextEditorOptionsViewModel(viewModel.Editor, new TextEditorOptionsHost(commands), host);
                 window.DataContext = viewModel;
                 return window;
             },
@@ -141,13 +143,49 @@ internal static partial class AvaloniaDialogs
         }
     }
 
-    private sealed class FileEditorHost(IGitModule module, byte[] preamble) : IFileEditorHost
+    /// <summary>Reads and saves the file of <c>FormEditor</c>, in the encoding of the repository or the one chosen.</summary>
+    private sealed class FileEditorHost(IGitModule module, string fullPath) : IFileEditorHost, IEncodingReader
     {
+        private Encoding _encoding = module.FilesEncoding;
+        private byte[] _preamble = [];
+
+        public IReadOnlyList<string> AvailableEncodings => [.. AppSettings.AvailableEncodings.Values.Select(e => e.EncodingName)];
+
+        public string EncodingName => _encoding.EncodingName;
+
+        public string Read(string encodingName)
+            => Read(AppSettings.AvailableEncodings.Values.FirstOrDefault(e => e.EncodingName == encodingName) ?? module.FilesEncoding);
+
+        /// <summary>The file, in its encoding if it has a byte order mark, else in <paramref name="encoding"/>.</summary>
+        public string Read(Encoding encoding)
+        {
+            using FileStream stream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using StreamReader reader = FileReader.OpenStream(stream, encoding);
+            string text = reader.ReadToEnd();
+            _encoding = encoding;
+            _preamble = reader.CurrentEncoding.GetPreamble();
+            return text;
+        }
+
         public void Save(string fileName, string text)
         {
-            // As FormEditor.SaveChanges: the preamble of the file is kept unless it is the one of the repository's encoding.
-            byte[] filePreamble = module.FilesEncoding.GetPreamble().SequenceEqual(preamble) ? [] : preamble;
-            FileUtility.SafeWriteAllText(fileName, text, module.FilesEncoding, filePreamble);
+            // As FormEditor.SaveChanges: the preamble of the file is kept unless it is the one of the encoding (the repository's,
+            // or the one chosen in the toolbar, which the WinForms editor only read with).
+            byte[] filePreamble = _encoding.GetPreamble().SequenceEqual(_preamble) ? [] : _preamble;
+            FileUtility.SafeWriteAllText(fileName, text, _encoding, filePreamble);
         }
+    }
+
+    /// <summary>The options toolbar of the file editors.</summary>
+    private sealed class TextEditorOptionsHost(IGitUICommands commands) : ITextEditorOptionsHost
+    {
+        public bool ShowNonPrintingChars
+        {
+            get => AppSettings.ShowNonPrintingChars.Value;
+            set => AppSettings.ShowNonPrintingChars.Value = value;
+        }
+
+        public void OpenSettings()
+            => AvaloniaUi.RunInHostContext(() => commands.StartSettingsDialog(owner: null, new CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("DiffViewerSettingsPage")));
     }
 }

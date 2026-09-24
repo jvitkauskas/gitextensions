@@ -97,6 +97,9 @@ public sealed partial class RepoFileEditorViewModel : DialogViewModel
 
     public TextEditorViewModel Editor { get; } = new();
 
+    /// <summary>The options toolbar of the editor (the <c>fileviewerToolbar</c> of its WinForms <c>FileViewer</c>), if any.</summary>
+    public TextEditorOptionsViewModel? Options { get; set; }
+
     [RelayCommand]
     private void Save()
     {
@@ -229,6 +232,9 @@ public sealed partial class FileEditorViewModel : DialogViewModel
     public bool ShowWarning { get; }
 
     public TextEditorViewModel Editor { get; } = new();
+
+    /// <summary>The options toolbar of the editor (the <c>fileviewerToolbar</c> of its WinForms <c>FileViewer</c>), if any.</summary>
+    public TextEditorOptionsViewModel? Options { get; set; }
 
     /// <summary>Whether the dialog ended with the file saved or unchanged (<c>DialogResult.OK</c>), not discarded or cancelled.</summary>
     public bool Accepted { get; private set; }
