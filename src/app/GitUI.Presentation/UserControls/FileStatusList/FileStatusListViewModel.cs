@@ -306,6 +306,7 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     public void UpdateMenuState()
     {
         OnPropertyChanged(nameof(CanCollapseRootFolders));
+        UpdateDifftoolCaptions();
         if (MenuHost is not { } host)
         {
             MenuState = FileStatusMenuState.None;

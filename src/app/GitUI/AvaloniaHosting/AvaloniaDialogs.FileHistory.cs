@@ -70,6 +70,14 @@ internal static partial class AvaloniaDialogs
             revision?.ObjectId,
             showBlame);
         window.DataContext = viewModel;
+
+        // As FormFileHistory.LoadCustomDifftools: the difftools of the submenus of the grid.
+        ThreadHelper.FileAndForget(async () =>
+        {
+            IReadOnlyList<string> tools = await LoadCustomDiffToolsAsync(commands.Module, CustomDiffToolsDelay, CancellationToken.None);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            viewModel.CustomDiffTools = tools;
+        });
         if (AvaloniaDialogHost.HasOpenWindows)
         {
             AvaloniaDialogHost.Show(window, ownerHandle: 0);
@@ -205,8 +213,8 @@ internal static partial class AvaloniaDialogs
             return new CommitDataManager(() => Module).GetCommitData(commitOrRef)?.ObjectId;
         }
 
-        public void OpenWithDifftool(IReadOnlyList<GitRevision> revisions, string fileName, string? revisionFileName, bool toLocal)
-            => AvaloniaUi.RunInHostContext(() => commands.OpenWithDifftool(Owner, revisions, fileName, revisionFileName, toLocal ? RevisionDiffKind.DiffBLocal : RevisionDiffKind.DiffAB, isTracked: true));
+        public void OpenWithDifftool(IReadOnlyList<GitRevision> revisions, string fileName, string? revisionFileName, bool toLocal, string? customTool = null)
+            => AvaloniaUi.RunInHostContext(() => commands.OpenWithDifftool(Owner, revisions, fileName, revisionFileName, toLocal ? RevisionDiffKind.DiffBLocal : RevisionDiffKind.DiffAB, isTracked: true, customTool: customTool));
 
         /// <summary>As <c>saveAsToolStripMenuItem_Click</c>.</summary>
         public void SaveAs(GitRevision revision, string fileName) => AvaloniaUi.RunInHostContext(() =>

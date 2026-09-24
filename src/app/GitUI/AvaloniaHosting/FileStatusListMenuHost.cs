@@ -118,7 +118,7 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
     }
 
     /// <summary>As <c>FileStatusList.OpenFilesWithDiffTool</c>.</summary>
-    public void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind)
+    public void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind, string? customTool = null)
     {
         RevisionDiffKind diffKind = kind switch
         {
@@ -138,7 +138,7 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
 
                 // If FirstRevision is null, compare to root commit
                 GitRevision?[] revisions = [entry.SecondRevision, entry.FirstRevision];
-                commands.OpenWithDifftool(Owner, revisions, entry.Item.Name, entry.Item.OldName, diffKind, entry.Item.IsTracked);
+                commands.OpenWithDifftool(Owner, revisions, entry.Item.Name, entry.Item.OldName, diffKind, entry.Item.IsTracked, customTool: customTool);
             }
         });
     }
@@ -382,7 +382,7 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
     }
 
     /// <summary>As <c>DiffWithRemembered_Click</c>.</summary>
-    public void DiffWithRemembered(FileStatusEntry entry)
+    public void DiffWithRemembered(FileStatusEntry entry, string? customTool = null)
     {
         FileStatusItem item = ToItems([entry])[0];
 
@@ -392,11 +392,11 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         // Fallback to first revision if second cannot be used
         bool isSecond = _rememberFileContextMenuController.ShouldEnableSecondItemDiff(item, isSecondRevision: true);
         string? second = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash, item, isSecondRevision: isSecond);
-        AvaloniaUi.RunInHostContext(() => Module.OpenFilesWithDifftool(first, second, customTool: null));
+        AvaloniaUi.RunInHostContext(() => Module.OpenFilesWithDifftool(first, second, customTool: customTool));
     }
 
     /// <summary>As <c>DiffTwoSelected_Click</c>.</summary>
-    public void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused)
+    public void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused, string? customTool = null)
     {
         FileStatusItem[] diffFiles = ToItems(selected);
         if (diffFiles.Length != 2)
@@ -413,7 +413,7 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         string? first = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash, diffFiles[firstIndex], isSecondRevision: isFirstItemSecondRev);
         bool isSecondItemSecondRev = _rememberFileContextMenuController.ShouldEnableSecondItemDiff(diffFiles[secondIndex], isSecondRevision: true);
         string? second = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash, diffFiles[secondIndex], isSecondRevision: isSecondItemSecondRev);
-        AvaloniaUi.RunInHostContext(() => Module.OpenFilesWithDifftool(first, second, customTool: null));
+        AvaloniaUi.RunInHostContext(() => Module.OpenFilesWithDifftool(first, second, customTool: customTool));
     }
 
     /// <summary>As <c>OpenInVisualStudio_Click</c> (without the line of the viewer).</summary>

@@ -314,8 +314,8 @@ public sealed class FileHistoryViewModelTests
                 ? Resolved.FirstOrDefault(pair => pair.Value == commitOrRef).Key is { IsZero: false } id ? id : null
                 : new[] { Added, Renamed, Changed }.FirstOrDefault(r => r.Guid.StartsWith(commitOrRef))?.ObjectId;
 
-        public void OpenWithDifftool(IReadOnlyList<GitRevision> revisions, string fileName, string? revisionFileName, bool toLocal)
-            => Difftools.Add($"{string.Join(",", revisions.Select(r => r.ObjectId.ToShortString()))}:{fileName}:{revisionFileName}:{toLocal}");
+        public void OpenWithDifftool(IReadOnlyList<GitRevision> revisions, string fileName, string? revisionFileName, bool toLocal, string? customTool = null)
+            => Difftools.Add($"{string.Join(",", revisions.Select(r => r.ObjectId.ToShortString()))}:{fileName}:{revisionFileName}:{toLocal}{(customTool is null ? "" : $":{customTool}")}");
 
         public void SaveAs(GitRevision revision, string fileName) => Actions.Add($"save {revision.ObjectId.ToShortString()} {fileName}");
 

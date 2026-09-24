@@ -272,6 +272,50 @@ public sealed class FileStatusListMenuTests
         viewModel.Nodes[1].IsExpanded.Should().BeTrue();
     }
 
+    [Test]
+    public void The_difftool_submenus_open_the_chosen_difftool_and_name_the_revisions()
+    {
+        FakeMenuHost host = new();
+        FileStatusListViewModel viewModel = Create();
+        viewModel.MenuHost = host;
+        viewModel.DescribeRevision = objectId => objectId == First.ObjectId ? "first" : "second";
+        bool disabled = false;
+        viewModel.DisableCustomDiffToolsAction = () => disabled = true;
+        viewModel.SetDiff(First, Second, CreateStatuses());
+        viewModel.UpdateMenuState();
+
+        // As OpenWithDifftool_DropDownOpening.
+        viewModel.SecondDiffCaption.Should().Be("Second: B second");
+        viewModel.FirstDiffCaption.Should().Be("First: A first");
+
+        viewModel.OpenWithCustomDifftoolCommand.Execute(new DifftoolChoice(DifftoolKind.FirstToSelected, "meld"));
+        viewModel.DiffWithRememberedCustomCommand.Execute("kdiff3");
+        viewModel.DiffTwoSelectedCustomCommand.Execute("meld");
+        viewModel.DisableCustomDiffToolsCommand.Execute(null);
+
+        host.Log.Where(line => !line.StartsWith("state:")).Should().Equal(
+            "difftool FirstToSelected meld: docs/readme.md",
+            "diff with remembered kdiff3: docs/readme.md",
+            "diff two meld: docs/readme.md focused: docs/readme.md");
+        disabled.Should().BeTrue();
+
+        // Files of several revisions; none selected: no captions.
+        viewModel.SetGroups(
+        [
+            new FileStatusGroup(First, Second, "First parent", CreateStatuses()),
+            new FileStatusGroup(Second, First, "Second parent", [new GitItemStatus("other.txt") { IsNew = true }]),
+        ]);
+        viewModel.SelectedNodes.Clear();
+        viewModel.SelectedNodes.Add(viewModel.Nodes[0].Children[0].Children.FirstOrDefault() ?? viewModel.Nodes[0].Children[0]);
+        viewModel.SelectedNodes.Add(viewModel.Nodes[1].Children[0]);
+        viewModel.UpdateMenuState();
+        viewModel.SecondDiffCaption.Should().Be("Second: B <multiple>");
+        viewModel.SelectedNodes.Clear();
+        viewModel.UpdateMenuState();
+        viewModel.SecondDiffCaption.Should().BeNull();
+        viewModel.FirstDiffCaption.Should().BeNull();
+    }
+
     internal sealed class FakeMenuHost : IFileStatusListMenuHost
     {
         public List<string> Log { get; } = [];
@@ -290,7 +334,7 @@ public sealed class FileStatusListMenuTests
             return State;
         }
 
-        public void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind) => Log.Add($"difftool {kind}: {Names(selected)}");
+        public void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind, string? customTool = null) => Log.Add($"difftool {kind}{(customTool is null ? "" : $" {customTool}")}: {Names(selected)}");
 
         public void OpenWorkingDirectoryFile(FileStatusEntry entry, bool openWith) => Log.Add($"open {openWith}: {entry.Item.Name}");
 
@@ -337,9 +381,9 @@ public sealed class FileStatusListMenuTests
 
         public void RememberDiff(FileStatusEntry entry, bool first) => Log.Add($"remember {(first ? "first" : "second")}: {entry.Item.Name}");
 
-        public void DiffWithRemembered(FileStatusEntry entry) => Log.Add($"diff with remembered: {entry.Item.Name}");
+        public void DiffWithRemembered(FileStatusEntry entry, string? customTool = null) => Log.Add($"diff with remembered{(customTool is null ? "" : $" {customTool}")}: {entry.Item.Name}");
 
-        public void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused) => Log.Add($"diff two: {Names(selected)} focused: {focused?.Item.Name}");
+        public void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused, string? customTool = null) => Log.Add($"diff two{(customTool is null ? "" : $" {customTool}")}: {Names(selected)} focused: {focused?.Item.Name}");
 
         public void OpenInVisualStudio(FileStatusEntry entry) => Log.Add($"visual studio: {entry.Item.Name}");
 

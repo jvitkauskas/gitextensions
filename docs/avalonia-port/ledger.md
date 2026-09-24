@@ -181,13 +181,10 @@ of a plugin) stay `TreeView`s.
 
 Every "not yet" of the rows above was checked against the code on 2026-09-25; the rows now say what is really missing. By area:
 
-- **Git grep**: the search box, the toggle and the results in the file status list, the file tree and the main window (the
-  hotkeys are declared, not handled); the prompt (`FindInCommitFilesGitGrepWindow`) is shown by nothing since phase 8.
-- **Custom difftools**: the submenus of the difftool items (file status list, grid, file history, commit dialog; every call
-  passes no custom tool), and the First / Second captions of the difftool menu.
-- **File status list**: select all, collapse root folders, open submodule, the settings button (ignored / untracked /
-  skip-worktree / assume-unchanged files, .gitignore, refresh on focus, diff for all parents; also the unstaged list of the
-  commit dialog), the A/B filter buttons, the file type icons of the shell, the script hotkeys with the files of the list.
+- **File status list**: open submodule, the file type icons of the shell, the script hotkeys with the files of the list.
+  (Done since the audit: git grep with its box, prompt and hotkeys; the toolbar with the settings button and the A/B filter;
+  select all and collapse root folders; the custom difftool submenus and the First / Second captions, also in the grid and
+  the file history.)
 - **Diff viewer**: the automatic continuous scroll into the next file (also "next file at the end of a diff" in the log and
   pull request dialogs), the next / previous occurrence hotkeys, jumping to the first change after loading and keeping the
   position on reload, the range-diff path filter, the search going on into the next file and "selection only".

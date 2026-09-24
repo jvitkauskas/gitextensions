@@ -44,6 +44,7 @@ public sealed class FileStatusListToolbarStrings : ViewStrings
         OpenGitGrepDialog = Add("tsmiOpenFindInCommitFilesGitGrepDialog", "Text", "Find in &commit files using git-grep...");
         ShowGitGrepBox = Add("tsmiShowFindInCommitFilesGitGrep", "Text", "Show 'Find in commit fi&les using git-grep'");
         SelectAll = Add("_selectAll", "Text", "S&elect all");
+        DisableCustomDiffTools = Add("_disableMenuItem", "Text", "Disable this dropdown", category: "TranslatedStrings");
         CollapseRootFolders = Add("_collapseRootFolders", "Text", "Collap&se root folders");
     }
 
@@ -105,11 +106,16 @@ public sealed class FileStatusListToolbarStrings : ViewStrings
 
     public TranslatedText SelectAll { get; }
 
+    public TranslatedText DisableCustomDiffTools { get; }
+
     public TranslatedText CollapseRootFolders { get; }
 }
 
 /// <summary>The files a list shows as its settings choose (<c>tsmiShowIgnoredFiles</c>, ...).</summary>
 public sealed record FileStatusFileOptions(bool ShowIgnoredFiles = false, bool ShowAssumeUnchangedFiles = false, bool ShowSkipWorktreeFiles = false, bool ShowUntrackedFiles = true);
+
+/// <summary>A difftool item and the custom difftool chosen in its submenu.</summary>
+public sealed record DifftoolChoice(DifftoolKind Kind, string Tool);
 
 /// <summary>How the file status list searches with git grep (<c>AppSettings.FileStatusFindInFilesGitGrepTypeIndex</c>).</summary>
 public enum GitGrepUsing
@@ -433,6 +439,69 @@ public sealed partial class FileStatusListViewModel
 
     [RelayCommand]
     private void SetGitGrepOption(string option) => GitGrepUserArguments = option;
+
+    /// <summary>
+    ///  The difftools configured in git, for the submenus of the difftool items (<c>LoadCustomDifftools</c>); none without
+    ///  several, the items then have no submenu.
+    /// </summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<string> CustomDiffTools { get; set; } = [];
+
+    /// <summary>"Disable this dropdown" of the submenus (the host disables them).</summary>
+    public Action? DisableCustomDiffToolsAction { get; set; }
+
+    /// <summary>Describes a revision for the captions of the difftool menu (<c>DescribeRevision</c>); the short hash by default.</summary>
+    public Func<ObjectId, string>? DescribeRevision { get; set; }
+
+    /// <summary>The caption "Second: B ..." of the difftool menu, if the selection has revisions (<c>tsmiSecondDiffCaption</c>).</summary>
+    [ObservableProperty]
+    public partial string? SecondDiffCaption { get; private set; }
+
+    /// <summary>The caption "First: A ..." of the difftool menu (<c>tsmiFirstDiffCaption</c>).</summary>
+    [ObservableProperty]
+    public partial string? FirstDiffCaption { get; private set; }
+
+    /// <summary>As <c>OpenWithDifftool_DropDownOpening</c>: the revisions of the selected files, or &lt;multiple&gt;.</summary>
+    private void UpdateDifftoolCaptions()
+    {
+        List<GitRevision> seconds = [.. SelectedEntries.Select(entry => entry.SecondRevision).DistinctBy(revision => revision.ObjectId)];
+        if (seconds.Count == 0)
+        {
+            SecondDiffCaption = null;
+            FirstDiffCaption = null;
+            return;
+        }
+
+        List<GitRevision> firsts = [.. SelectedEntries.Select(entry => entry.FirstRevision).OfType<GitRevision>().DistinctBy(revision => revision.ObjectId)];
+        SecondDiffCaption = MenuStrings.SelectedRevision.Text + (Describe(seconds) ?? "");
+        FirstDiffCaption = MenuStrings.FirstRevision.Text + (Describe(firsts) ?? "");
+
+        string? Describe(List<GitRevision> revisions)
+            => revisions.Count switch
+            {
+                1 => DescribeRevision?.Invoke(revisions[0].ObjectId) ?? revisions[0].ObjectId.ToShortString(),
+                > 1 => MenuStrings.MultipleDescription.Text,
+                _ => null,
+            };
+    }
+
+    [RelayCommand]
+    private void OpenWithCustomDifftool(DifftoolChoice choice) => MenuHost?.OpenWithDifftool(SelectedEntries, choice.Kind, choice.Tool);
+
+    [RelayCommand]
+    private void DiffWithRememberedCustom(string tool)
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.DiffWithRemembered(entry, tool);
+        }
+    }
+
+    [RelayCommand]
+    private void DiffTwoSelectedCustom(string tool) => MenuHost?.DiffTwoSelected(SelectedEntries, FocusedEntry, tool);
+
+    [RelayCommand]
+    private void DisableCustomDiffTools() => DisableCustomDiffToolsAction?.Invoke();
 
     /// <summary>The refresh button: the artificial commits are read again (<c>RequestRefresh</c>).</summary>
     [RelayCommand]

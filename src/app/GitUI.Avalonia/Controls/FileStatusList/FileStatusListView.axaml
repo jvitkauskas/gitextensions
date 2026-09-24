@@ -227,6 +227,11 @@
             <Separator IsVisible="{Binding HasMenuHost}" />
             <MenuItem Name="openWithDifftoolMenuItem" Header="{Binding MenuStrings.OpenWithDifftool.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanOpenWithDifftool}">
+              <!-- The captions of the revisions compared (tsmiSecondDiffCaption, tsmiFirstDiffCaption). -->
+              <MenuItem Name="secondDiffCaptionMenuItem" Header="{Binding SecondDiffCaption}" IsEnabled="False" FontStyle="Italic"
+                        IsVisible="{Binding SecondDiffCaption, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <MenuItem Name="firstDiffCaptionMenuItem" Header="{Binding FirstDiffCaption}" IsEnabled="False" FontStyle="Italic"
+                        IsVisible="{Binding FirstDiffCaption, Converter={x:Static ObjectConverters.IsNotNull}}" />
               <MenuItem Name="diffFirstToSelectedMenuItem" Header="{Binding MenuStrings.DiffFirstToSelected.AccessKeyText}"
                         IsEnabled="{Binding MenuState.CanDiffFirstToSelected}"
                         Command="{Binding OpenWithDifftoolCommand}" CommandParameter="{x:Static fs:DifftoolKind.FirstToSelected}" />

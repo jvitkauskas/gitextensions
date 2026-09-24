@@ -108,6 +108,39 @@ public partial class FileHistoryWindow : DialogWindow
             : null;
 
     /// <summary>As <c>FileHistoryContextMenuOpening</c>, with the copy menu of the selected revisions.</summary>
+    private void FillCustomDiffTools(MenuItem item, bool toLocal)
+    {
+        item.Items.Clear();
+        IReadOnlyList<string> tools = _viewModel!.CustomDiffTools;
+        if (tools.Count <= 1)
+        {
+            return;
+        }
+
+        for (int index = 0; index < tools.Count; index++)
+        {
+            string tool = tools[index];
+            MenuItem toolItem = new() { Header = tool, FontWeight = index == 0 ? global::Avalonia.Media.FontWeight.Bold : global::Avalonia.Media.FontWeight.Normal };
+            toolItem.Click += (_, e) =>
+            {
+                // Not the item of the menu itself.
+                e.Handled = true;
+                _viewModel?.OpenWithCustomDifftool(toLocal, tool);
+            };
+            item.Items.Add(toolItem);
+        }
+
+        item.Items.Add(new Separator());
+        MenuItem disable = new() { Header = ResourceManager.TranslatedStrings.DisableMenuItem };
+        disable.Click += (_, e) =>
+        {
+            e.Handled = true;
+            GitCommands.AppSettings.ShowAvailableDiffTools = false;
+            _viewModel?.CustomDiffTools = [];
+        };
+        item.Items.Add(disable);
+    }
+
     private void UpdateMenu()
     {
         if (_viewModel is null)
@@ -124,6 +157,10 @@ public partial class FileHistoryWindow : DialogWindow
         followRenamesItem.IsChecked = _viewModel.FollowRenames;
         followRenamesExactOnlyItem.IsEnabled = _viewModel.FollowRenames;
         followRenamesExactOnlyItem.IsChecked = _viewModel.FollowRenamesExactOnly;
+
+        // As LoadCustomDifftools: the difftool items have a submenu with the difftools configured in git.
+        FillCustomDiffTools(openWithDifftoolItem, toLocal: false);
+        FillCustomDiffTools(diffToolRemoteLocalItem, toLocal: true);
 
         List<Control> copyItems = [];
         foreach (RevisionCopyItem item in _viewModel.GetCopyItems())

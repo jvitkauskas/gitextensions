@@ -217,7 +217,8 @@ public interface IFileHistoryHost
     ObjectId? ResolveCommit(string commitOrRef, bool isRef);
 
     /// <summary>As <c>UICommands.OpenWithDifftool</c> (<c>RevisionDiffKind.DiffAB</c>, or <c>DiffBLocal</c> if <paramref name="toLocal"/>).</summary>
-    void OpenWithDifftool(IReadOnlyList<GitRevision> revisions, string fileName, string? revisionFileName, bool toLocal);
+    /// <param name="customTool">The difftool of the submenu, else the default one.</param>
+    void OpenWithDifftool(IReadOnlyList<GitRevision> revisions, string fileName, string? revisionFileName, bool toLocal, string? customTool = null);
 
     /// <summary>As <c>saveAsToolStripMenuItem_Click</c>.</summary>
     void SaveAs(GitRevision revision, string fileName);
@@ -621,13 +622,22 @@ public sealed partial class FileHistoryViewModel : DialogViewModel
 
     public void Copy(RevisionCopyItem item) => _host.CopyToClipboard(item.Text);
 
+    /// <summary>
+    ///  The difftools configured in git, for the submenus of the difftool items (<c>LoadCustomDifftools</c>); none without
+    ///  several.
+    /// </summary>
+    public IReadOnlyList<string> CustomDiffTools { get; set; } = [];
+
     /// <summary>As <c>OpenFilesWithDiffTool</c>.</summary>
     [RelayCommand]
-    private void OpenWithDifftool(bool toLocal)
+    private void OpenWithDifftool(bool toLocal) => OpenWithCustomDifftool(toLocal, customTool: null);
+
+    /// <summary>As <c>OpenFilesWithDiffTool</c> with the difftool of the submenu.</summary>
+    public void OpenWithCustomDifftool(bool toLocal, string? customTool)
     {
         IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
         string? revisionFileName = selected.Count != 0 ? _host.GetFileName(selected[0]) : null;
-        _host.OpenWithDifftool(selected, FileName, revisionFileName, toLocal);
+        _host.OpenWithDifftool(selected, FileName, revisionFileName, toLocal, customTool);
     }
 
     [RelayCommand]

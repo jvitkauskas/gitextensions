@@ -384,7 +384,8 @@ public interface IFileStatusListMenuHost
     /// <param name="supportLinePatching">Whether the diff of the file supports line patching (<c>FileViewer.SupportLinePatching</c>).</param>
     FileStatusMenuState GetMenuState(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, FileStatusEntry? focused, bool supportLinePatching);
 
-    void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind);
+    /// <param name="customTool">The difftool of the submenu, else the default one.</param>
+    void OpenWithDifftool(IReadOnlyList<FileStatusEntry> selected, DifftoolKind kind, string? customTool = null);
 
     void OpenWorkingDirectoryFile(FileStatusEntry entry, bool openWith);
 
@@ -420,10 +421,10 @@ public interface IFileStatusListMenuHost
     void RememberDiff(FileStatusEntry entry, bool first);
 
     /// <summary>As <c>DiffWithRemembered_Click</c>.</summary>
-    void DiffWithRemembered(FileStatusEntry entry);
+    void DiffWithRemembered(FileStatusEntry entry, string? customTool = null);
 
     /// <summary>As <c>DiffTwoSelected_Click</c>.</summary>
-    void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused);
+    void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused, string? customTool = null);
 
     /// <summary>As <c>OpenInVisualStudio_Click</c>.</summary>
     void OpenInVisualStudio(FileStatusEntry entry);

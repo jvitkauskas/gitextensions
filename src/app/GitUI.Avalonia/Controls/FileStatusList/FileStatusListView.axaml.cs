@@ -37,6 +37,7 @@ public partial class FileStatusListView : UserControl
             {
                 viewModel.UpdateMenuState();
                 InsertDirectScripts(viewModel);
+                FillCustomDiffTools(viewModel);
             }
         };
 
@@ -153,6 +154,46 @@ public partial class FileStatusListView : UserControl
 
     /// <summary>The visible nodes of the tree and the selection, e.g. for tests.</summary>
     public FlatTreeList? FlatTree => _tree;
+
+    /// <summary>
+    ///  As <c>LoadCustomDifftools</c>: the difftool items have a submenu with the difftools configured in git, the first (the
+    ///  default) bold, and "Disable this dropdown".
+    /// </summary>
+    private void FillCustomDiffTools(FileStatusListViewModel viewModel)
+    {
+        (MenuItem Item, Func<string, (System.Windows.Input.ICommand Command, object Parameter)> Open)[] items =
+        [
+            (diffFirstToSelectedMenuItem, tool => (viewModel.OpenWithCustomDifftoolCommand, new DifftoolChoice(DifftoolKind.FirstToSelected, tool))),
+            (diffSelectedToLocalMenuItem, tool => (viewModel.OpenWithCustomDifftoolCommand, new DifftoolChoice(DifftoolKind.SelectedToLocal, tool))),
+            (diffFirstToLocalMenuItem, tool => (viewModel.OpenWithCustomDifftoolCommand, new DifftoolChoice(DifftoolKind.FirstToLocal, tool))),
+            (diffWithRememberedMenuItem, tool => (viewModel.DiffWithRememberedCustomCommand, tool)),
+            (diffTwoSelectedMenuItem, tool => (viewModel.DiffTwoSelectedCustomCommand, tool)),
+        ];
+        foreach ((MenuItem item, Func<string, (System.Windows.Input.ICommand Command, object Parameter)> open) in items)
+        {
+            item.Items.Clear();
+            if (viewModel.CustomDiffTools.Count <= 1)
+            {
+                continue;
+            }
+
+            for (int index = 0; index < viewModel.CustomDiffTools.Count; index++)
+            {
+                string tool = viewModel.CustomDiffTools[index];
+                (System.Windows.Input.ICommand command, object parameter) = open(tool);
+                item.Items.Add(new MenuItem
+                {
+                    Header = tool,
+                    Command = command,
+                    CommandParameter = parameter,
+                    FontWeight = index == 0 ? global::Avalonia.Media.FontWeight.Bold : global::Avalonia.Media.FontWeight.Normal,
+                });
+            }
+
+            item.Items.Add(new Separator());
+            item.Items.Add(new MenuItem { Header = viewModel.ToolbarStrings.DisableCustomDiffTools.Text, Command = viewModel.DisableCustomDiffToolsCommand });
+        }
+    }
 
     // As AddUserScripts: the scripts of ScriptEvent.ShowInFileList follow "Run script" in the menu itself, the others are under it.
     private void InsertDirectScripts(FileStatusListViewModel viewModel)

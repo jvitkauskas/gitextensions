@@ -28,6 +28,8 @@ internal static partial class AvaloniaDialogs
     {
         private readonly RevisionGridMenuStrings _s = ViewStrings.Load<RevisionGridMenuStrings>();
         private GitRevision? _baseCommitToCompare;
+        private IReadOnlyList<string> _customDiffTools = [];
+        private bool _customDiffToolsRequested;
 
         /// <summary>Selects a reference in the left panel (<c>SelectInLeftPanel</c>), if there is one.</summary>
         public Action<string>? SelectInLeftPanel { get; set; }
@@ -39,6 +41,14 @@ internal static partial class AvaloniaDialogs
 
         public IReadOnlyList<MenuModelItem> Build()
         {
+            // As RevisionGridControl.LoadCustomDifftools: the difftools of the submenu, read once (after a delay, not
+            // while git log runs); shown from the next menu.
+            if (!_customDiffToolsRequested)
+            {
+                _customDiffToolsRequested = true;
+                ThreadHelper.FileAndForget(async () => _customDiffTools = await LoadCustomDiffToolsAsync(Module, CustomDiffToolsDelay, CancellationToken.None));
+            }
+
             // As ContextMenuOpening: the menu of a right-clicked reference label is focused on it: its actions only, the
             // advanced items under "Other actions" (unless Shift or AlwaysShowAdvOpt; Ctrl overrides them).
             RevisionGridRefMenuRequest? request = grid.RefMenuRequest;
@@ -370,7 +380,17 @@ internal static partial class AvaloniaDialogs
         private IReadOnlyList<MenuModelItem> CreateCompareItems()
             =>
             [
-                Item(_s.OpenCommitsWithDiffTool, "Diff", DiffSelectedCommitsWithDifftool),
+                Item(_s.OpenCommitsWithDiffTool, "Diff", () => DiffSelectedCommitsWithDifftool()) with
+                {
+                    Children = CreateCustomDiffToolItems(
+                        _customDiffTools,
+                        tool => Run(() => DiffSelectedCommitsWithDifftool(tool)),
+                        () =>
+                        {
+                            AppSettings.ShowAvailableDiffTools = false;
+                            _customDiffTools = [];
+                        }),
+                },
                 MenuModelItem.Separator,
                 Item(_s.CompareToBranch, null, CompareToBranch),
                 Item(_s.CompareWithCurrentBranch, null, CompareWithCurrentBranch),
@@ -563,7 +583,7 @@ internal static partial class AvaloniaDialogs
                 case RevisionGridCommand.CreateFixupCommit: RunOnLatest(r => commands.StartFixupCommitDialog(owner(), r)); break;
                 case RevisionGridCommand.CreateSquashCommit: RunOnLatest(r => commands.StartSquashCommitDialog(owner(), r)); break;
                 case RevisionGridCommand.CreateAmendCommit: RunOnLatest(r => commands.StartAmendCommitDialog(owner(), r)); break;
-                case RevisionGridCommand.OpenCommitsWithDifftool: Run(DiffSelectedCommitsWithDifftool); break;
+                case RevisionGridCommand.OpenCommitsWithDifftool: Run(() => DiffSelectedCommitsWithDifftool()); break;
                 case RevisionGridCommand.CompareToWorkingDirectory: Run(CompareToWorkingDirectory); break;
                 case RevisionGridCommand.CompareToCurrentBranch: Run(CompareWithCurrentBranch); break;
                 case RevisionGridCommand.CompareToBranch: Run(CompareToBranch); break;
@@ -811,12 +831,12 @@ internal static partial class AvaloniaDialogs
             };
         }
 
-        private void DiffSelectedCommitsWithDifftool()
+        private void DiffSelectedCommitsWithDifftool(string? customTool = null)
         {
             (ObjectId first, GitRevision? selected) = GetFirstAndSelected();
             if (selected is not null)
             {
-                Module.OpenWithDifftoolDirDiff(first.IsZero ? null : first.ToString(), selected.ObjectId.ToString(), customTool: null);
+                Module.OpenWithDifftoolDirDiff(first.IsZero ? null : first.ToString(), selected.ObjectId.ToString(), customTool: customTool);
             }
         }
 

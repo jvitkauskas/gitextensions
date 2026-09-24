@@ -40,6 +40,7 @@ internal static partial class AvaloniaDialogs
     internal static void UseFileStatusListMenu(FileStatusListViewModel files, IGitUICommands commands, DialogWindow window)
     {
         files.MenuHost = new FileStatusListMenuHost(commands, window);
+        LoadCustomDiffTools(files, commands.Module);
         files.SortTypeChanged += (_, _) => DiffListSortService.Instance.DiffListSorting = files.Options.SortType;
     }
 
