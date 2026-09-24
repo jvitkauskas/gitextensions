@@ -34,7 +34,7 @@ public sealed class RepositoryHistoryUIServiceTests
         item.Text.Should().Be($"&1: {caption}");
         item.IsPinned.Should().BeFalse();
         item.IsSeparator.Should().BeFalse();
-        item.ToolTip.Should().BeNull("the caption is the path");
+        item.ToolTip.Should().BeEmpty("the tooltip is the (empty) path");
         item.Open.Should().NotBeNull();
     }
 

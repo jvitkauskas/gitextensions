@@ -79,5 +79,9 @@ public static class ThemeModule
     {
         public static void ReloadThemeSettings(IThemeRepository repository) =>
             Settings = LoadThemeSettings(repository);
+
+        /// <summary>Restores the default settings, e.g. after <see cref="ReloadThemeSettings"/> with a fake repository.</summary>
+        public static void ResetThemeSettings() =>
+            Settings = ThemeSettings.Default;
     }
 }

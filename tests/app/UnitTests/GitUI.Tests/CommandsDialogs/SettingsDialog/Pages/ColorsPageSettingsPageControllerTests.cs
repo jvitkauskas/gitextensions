@@ -9,6 +9,10 @@ public class ColorsPageSettingsPageControllerTests
 {
     private ColorSettingsPageTestContext _context = null!;
 
+    // The theme of the fake repository must not stay the one of the other tests (e.g. the colors of the revision graph).
+    [TearDown]
+    public void TearDown() => ThemeModule.TestAccessor.ResetThemeSettings();
+
     [SetUp]
     public void Setup()
     {
