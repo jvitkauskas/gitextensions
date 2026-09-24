@@ -518,6 +518,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
         InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);
+        InitializeFileMenus();
         InitializeGpg();
         InitializeConsole();
         InitializeWorkingDirectoryStatus();
@@ -684,7 +685,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
         UpdateBuildReport(revisionChanged: true);
     }
 
-    private async Task ShowDiffsAsync(IReadOnlyList<GitRevision> revisions)
+    /// <param name="refresh">Whether the files are shown again, keeping the selection (<c>RefreshArtificial</c>).</param>
+    private async Task ShowDiffsAsync(IReadOnlyList<GitRevision> revisions, bool refresh = false)
     {
 #pragma warning disable VSTHRD103 // CancelAsync may resume off the UI thread.
         _loadingDiffs?.Cancel();
@@ -697,7 +699,11 @@ public sealed partial class BrowseViewModel : DialogViewModel
             return;
         }
 
-        Files.SetLoading();
+        if (!refresh)
+        {
+            Files.SetLoading();
+        }
+
         IReadOnlyList<FileStatusGroup> groups;
         try
         {
@@ -708,7 +714,16 @@ public sealed partial class BrowseViewModel : DialogViewModel
             return;
         }
 
-        if (!cancellationToken.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (refresh)
+        {
+            Files.RefreshGroups(groups);
+        }
+        else
         {
             Files.SetGroups(groups);
         }

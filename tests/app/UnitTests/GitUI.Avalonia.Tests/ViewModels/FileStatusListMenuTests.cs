@@ -24,7 +24,7 @@ public sealed class FileStatusListMenuTests
         viewModel.UpdateMenuState();
 
         viewModel.MenuState.ShowSaveAs.Should().BeTrue();
-        host.Log.Should().Equal("state: docs/readme.md folder: ");
+        host.Log.Should().Equal("state: docs/readme.md folder:  focused: docs/readme.md");
     }
 
     [Test]
@@ -79,6 +79,199 @@ public sealed class FileStatusListMenuTests
         host.Log.Should().Contain(["reset parent: docs/readme.md", "reset selected: docs/readme.md"]);
     }
 
+    [Test]
+    public void The_git_items_get_the_selection_and_request_a_refresh_when_they_change_the_files()
+    {
+        FakeMenuHost host = new() { State = new() { IsSkipWorktree = true } };
+        FileStatusListViewModel viewModel = Create();
+        viewModel.MenuHost = host;
+        viewModel.SetDiff(First, Second, CreateStatuses());
+        viewModel.UpdateMenuState();
+        int refreshes = 0;
+        viewModel.RefreshRequested += (_, _) => refreshes++;
+
+        viewModel.StageFilesCommand.Execute(null);
+        viewModel.UnstageFilesCommand.Execute(null);
+        viewModel.ResetChunkOfFileCommand.Execute(null);
+        viewModel.InteractiveAddCommand.Execute(null);
+        viewModel.DeleteFilesCommand.Execute(null);
+        viewModel.MoveCommand.Execute(null);
+        viewModel.AddToIgnoreFileCommand.Execute(false);
+        viewModel.AddToIgnoreFileCommand.Execute(true);
+        viewModel.ToggleSkipWorktreeCommand.Execute(null);
+        viewModel.ToggleAssumeUnchangedCommand.Execute(null);
+        viewModel.StopTrackingCommand.Execute(null);
+        viewModel.RunSubmoduleActionCommand.Execute(SubmoduleMenuAction.Update);
+        refreshes.Should().Be(12);
+
+        // Without a change: cancelled, or not changing the files.
+        host.MoveResult = false;
+        viewModel.MoveCommand.Execute(null);
+        viewModel.RunSubmoduleActionCommand.Execute(SubmoduleMenuAction.Reset);
+        viewModel.RememberDiffCommand.Execute(true);
+        viewModel.RememberDiffCommand.Execute(false);
+        viewModel.DiffWithRememberedCommand.Execute(null);
+        viewModel.OpenInVisualStudioCommand.Execute(null);
+        viewModel.RunScriptCommand.Execute(new FileStatusScript("Lint", 9001, IsDirect: false));
+        refreshes.Should().Be(12);
+
+        host.Log.Where(l => !l.StartsWith("state")).Should().Equal(
+            "stage: docs/readme.md",
+            "unstage: docs/readme.md",
+            "reset chunk: docs/readme.md",
+            "interactive add: docs/readme.md",
+            "delete: docs/readme.md",
+            "move: docs/readme.md folder: ",
+            "ignore: docs/readme.md folder: ",
+            "exclude: docs/readme.md folder: ",
+            "skip worktree False: docs/readme.md",
+            "assume unchanged True: docs/readme.md",
+            "stop tracking: docs/readme.md",
+            "submodule Update: docs/readme.md",
+            "move: docs/readme.md folder: ",
+            "submodule Reset: docs/readme.md",
+            "remember first: docs/readme.md",
+            "remember second: docs/readme.md",
+            "diff with remembered: docs/readme.md",
+            "visual studio: docs/readme.md",
+            "script Lint: docs/readme.md folder: ");
+
+        // A folder is renamed, added to .gitignore and given to the scripts.
+        viewModel.SelectedNodes.Clear();
+        viewModel.SelectedNodes.Add(viewModel.Nodes[1]);
+        viewModel.MoveCommand.Execute(null);
+        viewModel.AddToIgnoreFileCommand.Execute(false);
+        viewModel.RunScriptCommand.Execute(new FileStatusScript("Lint", 9001, IsDirect: true));
+        host.Log.TakeLast(3).Should().Equal(
+            "move:  folder: src",
+            "ignore: src/Util/Helper.cs, src/Program.cs folder: src",
+            "script Lint: src/Util/Helper.cs, src/Program.cs folder: src");
+    }
+
+    [Test]
+    public void Staging_is_the_one_of_the_dialog_when_it_binds_it()
+    {
+        FakeMenuHost host = new();
+        FileStatusListViewModel viewModel = Create();
+        viewModel.MenuHost = host;
+        viewModel.SetDiff(First, Second, CreateStatuses());
+        int refreshes = 0;
+        int staged = 0;
+        int unstaged = 0;
+        viewModel.RefreshRequested += (_, _) => refreshes++;
+        viewModel.StageSelectedAction = () => staged++;
+        viewModel.UnstageSelectedAction = () => unstaged++;
+
+        viewModel.StageFilesCommand.Execute(null);
+        viewModel.UnstageFilesCommand.Execute(null);
+
+        (staged, unstaged, refreshes).Should().Be((1, 1, 0), "the dialog refreshes its lists itself");
+        host.Log.Should().BeEmpty();
+    }
+
+    [Test]
+    public void The_items_of_the_main_window_are_shown_where_the_list_binds_them()
+    {
+        FakeMenuHost host = new() { State = new() { ShowShowInFileTree = true, CanFilterFileInGrid = true, ShowCherryPick = true } };
+        FileStatusListViewModel viewModel = Create();
+        viewModel.MenuHost = host;
+        viewModel.SetDiff(First, Second, CreateStatuses());
+
+        viewModel.UpdateMenuState();
+        (viewModel.MenuState.ShowShowInFileTree, viewModel.MenuState.CanFilterFileInGrid, viewModel.MenuState.ShowCherryPick, viewModel.HasFilterFileInGrid)
+            .Should().Be((false, false, false, false), "as FileStatusList without BindContextMenu");
+
+        List<string> runs = [];
+        viewModel.ShowInFileTreeAction = () => runs.Add("tree");
+        viewModel.FilterFileInGridAction = () => runs.Add("filter");
+        viewModel.CherryPickChangesAction = () => runs.Add("cherry-pick");
+        viewModel.GetSupportLinePatching = () => true;
+        viewModel.UpdateMenuState();
+        (viewModel.MenuState.ShowShowInFileTree, viewModel.MenuState.CanFilterFileInGrid, viewModel.MenuState.ShowCherryPick, viewModel.HasFilterFileInGrid)
+            .Should().Be((true, true, true, true));
+        host.Log[^1].Should().EndWith(" patching", "the host gets whether the diff supports line patching");
+
+        viewModel.ShowInFileTreeCommand.Execute(null);
+        viewModel.FilterFileInGridCommand.Execute(null);
+        viewModel.CherryPickChangesCommand.Execute(null);
+        runs.Should().Equal("tree", "filter", "cherry-pick");
+
+        // As ShowInFileTree_Click: not in the file tree itself.
+        FileStatusListViewModel tree = new(new FileStatusListStrings()) { IsFileTreeMode = true, MenuHost = host, ShowInFileTreeAction = () => { } };
+        tree.UpdateMenuState();
+        tree.MenuState.ShowShowInFileTree.Should().BeFalse();
+    }
+
+    [Test]
+    public void Diff_the_selected_files_and_find_file_get_the_focused_file_and_all_the_files()
+    {
+        FakeMenuHost host = new();
+        FileStatusListViewModel viewModel = Create();
+        viewModel.MenuHost = host;
+        viewModel.SetDiff(First, Second, CreateStatuses());
+
+        // The file selected last is the focused one, the second of the diff.
+        FileStatusNode program = viewModel.Nodes[1].Children[1];
+        viewModel.SelectedNodes.Clear();
+        viewModel.SelectedNodes.Add(program);
+        viewModel.SelectedNodes.Add(viewModel.Nodes[0].Children[0]);
+        viewModel.FocusedEntry!.Item.Name.Should().Be("docs/readme.md");
+        viewModel.DiffTwoSelectedCommand.Execute(null);
+        host.Log[^1].Should().Be("diff two: src/Program.cs, docs/readme.md focused: docs/readme.md");
+
+        // As FindFile_Click: among all the files, also those the filter hides; the file found is selected.
+        viewModel.Filter = "Program";
+        host.FoundFile = program.Entry!.Item;
+        viewModel.FindFileCommand.Execute(null);
+        host.Log[^1].Should().Be("find: 4");
+        viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
+    }
+
+    [Test]
+    public void Refreshing_keeps_the_selected_files_else_selects_the_next_file()
+    {
+        FileStatusListViewModel viewModel = Create();
+        viewModel.SetDiff(First, Second, CreateStatuses());
+        viewModel.Select(entry => entry.Item.Name == "src/Program.cs");
+
+        // As RefreshArtificial: new statuses of the same files.
+        viewModel.RefreshGroups([new FileStatusGroup(First, Second, "", CreateStatuses())]);
+        viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
+
+        // The selected file is gone (e.g. staged): the file after it (StoreNextItemToSelect).
+        viewModel.RefreshGroups([new FileStatusGroup(First, Second, "", [.. CreateStatuses().Where(s => s.Name != "src/Program.cs")])]);
+        viewModel.SelectedEntry!.Item.Name.Should().Be("build.cmd");
+
+        // The last file is gone: the first file.
+        viewModel.RefreshGroups([new FileStatusGroup(First, Second, "", [.. CreateStatuses().Where(s => s.Name != "build.cmd")])]);
+        viewModel.SelectedEntry!.Item.Name.Should().Be("docs/readme.md");
+    }
+
+    [Test]
+    public void SelectFirstGroup_selects_the_files_of_the_first_diff()
+    {
+        FileStatusListViewModel viewModel = Create();
+        viewModel.SetGroups(
+        [
+            new FileStatusGroup(First, Second, "First parent", CreateStatuses()),
+            new FileStatusGroup(null, Second, "Second parent", [new GitItemStatus("other.txt") { IsNew = true }]),
+        ]);
+
+        viewModel.SelectFirstGroup();
+        viewModel.SelectedEntries.Select(e => e.Item.Name).Should().BeEquivalentTo("docs/readme.md", "src/Util/Helper.cs", "src/Program.cs", "build.cmd");
+
+        // Without diff groups: all the files.
+        viewModel.SetDiff(First, Second, CreateStatuses());
+        viewModel.SelectFirstGroup();
+        viewModel.SelectedEntries.Should().HaveCount(4);
+
+        // As SelectFileOrFolder: a folder, expanded to show it.
+        viewModel.CollapseAllCommand.Execute(null);
+        viewModel.SelectFolder(RelativePath.From("src/Util"));
+        viewModel.SelectedFolder!.Value.Should().Be("src/Util");
+        viewModel.Nodes[1].IsExpanded.Should().BeTrue();
+    }
+
     internal sealed class FakeMenuHost : IFileStatusListMenuHost
     {
         public List<string> Log { get; } = [];
@@ -87,9 +280,13 @@ public sealed class FileStatusListMenuTests
 
         public FileStatusMenuState State { get; set; } = new() { ShowSaveAs = true };
 
-        public FileStatusMenuState GetMenuState(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder)
+        public bool MoveResult { get; set; } = true;
+
+        public GitItemStatus? FoundFile { get; set; }
+
+        public FileStatusMenuState GetMenuState(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, FileStatusEntry? focused, bool supportLinePatching)
         {
-            Log.Add($"state: {Names(selected)} folder: {selectedFolder}");
+            Log.Add($"state: {Names(selected)} folder: {selectedFolder}{(focused is null ? "" : $" focused: {focused.Item.Name}")}{(supportLinePatching ? " patching" : "")}");
             return State;
         }
 
@@ -121,6 +318,73 @@ public sealed class FileStatusListMenuTests
             Log.Add($"reset {(toParent ? "parent" : "selected")}: {Names(selected)}");
             return ResetResult;
         }
+
+        public void StageFiles(IReadOnlyList<FileStatusEntry> selected) => Log.Add($"stage: {Names(selected)}");
+
+        public void UnstageFiles(IReadOnlyList<FileStatusEntry> selected) => Log.Add($"unstage: {Names(selected)}");
+
+        public Task ResetChunkOfFileAsync(FileStatusEntry entry)
+        {
+            Log.Add($"reset chunk: {entry.Item.Name}");
+            return Task.CompletedTask;
+        }
+
+        public Task InteractiveAddAsync(FileStatusEntry entry)
+        {
+            Log.Add($"interactive add: {entry.Item.Name}");
+            return Task.CompletedTask;
+        }
+
+        public void RememberDiff(FileStatusEntry entry, bool first) => Log.Add($"remember {(first ? "first" : "second")}: {entry.Item.Name}");
+
+        public void DiffWithRemembered(FileStatusEntry entry) => Log.Add($"diff with remembered: {entry.Item.Name}");
+
+        public void DiffTwoSelected(IReadOnlyList<FileStatusEntry> selected, FileStatusEntry? focused) => Log.Add($"diff two: {Names(selected)} focused: {focused?.Item.Name}");
+
+        public void OpenInVisualStudio(FileStatusEntry entry) => Log.Add($"visual studio: {entry.Item.Name}");
+
+        public bool Move(FileStatusEntry? entry, RelativePath? selectedFolder)
+        {
+            Log.Add($"move: {entry?.Item.Name} folder: {selectedFolder}");
+            return MoveResult;
+        }
+
+        public bool DeleteFiles(IReadOnlyList<FileStatusEntry> selected)
+        {
+            Log.Add($"delete: {Names(selected)}");
+            return true;
+        }
+
+        public GitItemStatus? FindFile(IReadOnlyList<GitItemStatus> candidates)
+        {
+            Log.Add($"find: {candidates.Count}");
+            return FoundFile;
+        }
+
+        public bool AddToIgnoreFile(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, bool localExclude)
+        {
+            Log.Add($"{(localExclude ? "exclude" : "ignore")}: {Names(selected)} folder: {selectedFolder}");
+            return true;
+        }
+
+        public void SetSkipWorktree(IReadOnlyList<FileStatusEntry> selected, bool skipWorktree) => Log.Add($"skip worktree {skipWorktree}: {Names(selected)}");
+
+        public void SetAssumeUnchanged(IReadOnlyList<FileStatusEntry> selected, bool assumeUnchanged) => Log.Add($"assume unchanged {assumeUnchanged}: {Names(selected)}");
+
+        public bool StopTracking(FileStatusEntry entry)
+        {
+            Log.Add($"stop tracking: {entry.Item.Name}");
+            return true;
+        }
+
+        public bool RunSubmoduleAction(IReadOnlyList<FileStatusEntry> selected, SubmoduleMenuAction action)
+        {
+            Log.Add($"submodule {action}: {Names(selected)}");
+            return action != SubmoduleMenuAction.Reset;
+        }
+
+        public void RunScript(FileStatusScript script, IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder)
+            => Log.Add($"script {script.Name}: {Names(selected)} folder: {selectedFolder}");
 
         private static string Names(IReadOnlyList<FileStatusEntry> entries) => string.Join(", ", entries.Select(e => e.Item.Name));
     }

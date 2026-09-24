@@ -578,7 +578,7 @@ public sealed class BrowseViewTests : HeadlessTest
                 new HotkeyBinding((int)RevisionDiffHotkeyCommand.OpenWithDifftool, 0x44 /* D */ | HotkeyBinding.Control),
                 new HotkeyBinding((int)RevisionDiffHotkeyCommand.Blame, 0x42 /* B */ | HotkeyBinding.Control),
             ]);
-        FileStatusListMenuTests.FakeMenuHost menu = new() { State = new() { CanOpenWithDifftool = true, CanDiffFirstToSelected = true, CanShowFileHistory = true } };
+        FileStatusListMenuTests.FakeMenuHost menu = new() { State = new() { CanOpenWithDifftool = true, CanDiffFirstToSelected = true, CanShowFileHistory = true, ShowShowInFileTree = true } };
         viewModel.Files.MenuHost = menu;
         window.Tabs.SelectedIndex = (int)BrowseTab.Diff;
         Dispatcher.UIThread.RunJobs();
@@ -612,6 +612,104 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.GoToFirstParent, fileTree: true).Should().BeTrue();
         Dispatcher.UIThread.RunJobs();
         viewModel.Grid.SelectedRow!.Revision.ObjectId.Should().Be(selected.FirstParentId);
+        window.Close();
+    });
+
+    [Test]
+    public Task The_diff_tab_menu_changes_the_files_of_the_working_directory_and_refreshes_its_diff() => OnUiThreadAsync(() =>
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        GitRevision index = new(ObjectId.IndexId) { Subject = "Commit index", ParentIds = [history[0].ObjectId] };
+        GitRevision workTree = new(ObjectId.WorkTreeId) { Subject = "Working directory", ParentIds = [ObjectId.IndexId] };
+        FilterToolBarViewTests.FakeFilterHost filterHost = new();
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(
+            configure: h => h.DiffFiles = ["a.txt", "b.txt", "c.txt", "src/d.cs"],
+            revisionDiffHotkeys: [new HotkeyBinding((int)RevisionDiffHotkeyCommand.StageSelectedFile, 0x53 /* S */ | HotkeyBinding.Control)],
+            history: [workTree, index, .. history],
+            filterHost: filterHost);
+        FileStatusListMenuTests.FakeMenuHost menu = new()
+        {
+            State = new()
+            {
+                ShowStage = true,
+                CanFilterFileInGrid = true,
+                DeleteFileText = "Delete file",
+                ShowMove = true,
+                ShowFindFile = true,
+                ShowOpenInVisualStudio = true,
+                ShowIgnore = true,
+                ShowShowInFileTree = true,
+            },
+        };
+        viewModel.Files.MenuHost = menu;
+        viewModel.Grid.SelectRevision(ObjectId.WorkTreeId).Should().BeTrue();
+        window.Tabs.SelectedIndex = (int)BrowseTab.Diff;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Files.Select(e => e.Item.Name == "b.txt");
+        Dispatcher.UIThread.RunJobs();
+        int requests = host.DiffsRequested.Count;
+
+        // As StageFile_Click and RequestRefresh: the status and the working directory are refreshed, the next file selected.
+        host.DiffFiles = ["a.txt", "c.txt", "src/d.cs"];
+        window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<TreeViewItem>().Last().Focus().Should().BeTrue();
+        window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Control);
+        Dispatcher.UIThread.RunJobs();
+        menu.Log.Should().Contain("stage: b.txt");
+        host.StatusRefreshes.Should().Be(1);
+        host.DiffsRequested.Should().HaveCount(requests + 1);
+        host.DiffsRequested[^1].Should().Equal("Working directory");
+        viewModel.Files.SelectedEntry!.Item.Name.Should().Be("c.txt");
+
+        // The hotkeys of the other items added to the menu.
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.DeleteSelectedFiles, fileTree: false).Should().BeTrue();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.RenameMove, fileTree: false).Should().BeTrue();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.FindFile, fileTree: false).Should().BeTrue();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.OpenInVisualStudio, fileTree: false).Should().BeTrue();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.AddFileToGitIgnore, fileTree: false).Should().BeTrue();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.FilterFileInGrid, fileTree: false).Should().BeTrue();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.UnStageSelectedFile, fileTree: false).Should().BeFalse("the item is hidden");
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.FindInCommitFilesUsingGitGrep_DiffTab, fileTree: false).Should().BeFalse("git grep is not ported");
+        Dispatcher.UIThread.RunJobs();
+        menu.Log.Where(l => !l.StartsWith("state")).Should().Equal(
+            "stage: b.txt",
+            "delete: c.txt",
+            "move: c.txt folder: ",
+            "find: 3",
+            "visual studio: c.txt",
+            "ignore: c.txt folder: ");
+        filterHost.Calls.Should().Contain("path \"c.txt\"");
+
+        // As SelectFirstGroupChanges: all the files without diff groups.
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.SelectFirstGroupChanges, fileTree: false).Should().BeTrue();
+        viewModel.Files.SelectedEntries.Should().HaveCount(3);
+
+        // As OpenInFileTreeTab: a folder is selected in the file tree.
+        host.TreeFiles = ["src/d.cs", "src/e.cs"];
+        viewModel.Files.SelectedNodes.Clear();
+        viewModel.Files.SelectedNodes.Add(viewModel.Files.Nodes.First(n => n.Entry is null));
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.ShowFileTree, fileTree: false).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.FileTree);
+        viewModel.FileTree!.SelectedFolder!.Value.Should().Be("src");
+
+        // In a commit, the diff is not loaded again.
+        viewModel.Grid.SelectRevision(history[0].ObjectId).Should().BeTrue();
+        window.Tabs.SelectedIndex = (int)BrowseTab.Diff;
+        Dispatcher.UIThread.RunJobs();
+        requests = host.DiffsRequested.Count;
+        int statusRefreshes = host.StatusRefreshes;
+        viewModel.Files.StageFilesCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+        host.StatusRefreshes.Should().Be(statusRefreshes + 1);
+        host.DiffsRequested.Should().HaveCount(requests);
+
+        // Without the items (hidden for the selection), the hotkeys do nothing.
+        menu.State = new();
+        int logged = menu.Log.Count(l => !l.StartsWith("state"));
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.DeleteSelectedFiles, fileTree: false).Should().BeFalse();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.StageSelectedFile, fileTree: false).Should().BeFalse();
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.FilterFileInGrid, fileTree: false).Should().BeFalse();
+        menu.Log.Count(l => !l.StartsWith("state")).Should().Be(logged);
         window.Close();
     });
 
@@ -674,11 +772,11 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
-    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null, Action<FakeBrowseHost>? configure = null, IReadOnlyList<HotkeyBinding>? revisionDiffHotkeys = null, bool withFilters = false)
+    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null, Action<FakeBrowseHost>? configure = null, IReadOnlyList<HotkeyBinding>? revisionDiffHotkeys = null, bool withFilters = false, List<GitRevision>? history = null, FilterToolBarViewTests.FakeFilterHost? filterHost = null)
     {
         FakeBrowseHost host = new();
         configure?.Invoke(host);
-        RevisionGridViewModel grid = new(new RevisionGridViewTests.FakeRevisionGridHost(RevisionGridViewTests.CreateHistory()), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false))
+        RevisionGridViewModel grid = new(new RevisionGridViewTests.FakeRevisionGridHost(history ?? RevisionGridViewTests.CreateHistory()), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false))
         {
             MultiSelect = true,
         };
@@ -693,7 +791,7 @@ public sealed class BrowseViewTests : HeadlessTest
         {
             NavigateMenuProvider = navigate,
             RevisionDiffHotkeys = revisionDiffHotkeys ?? [],
-            Filters = withFilters ? new FilterToolBarViewModel(new FilterToolBarStrings(), new FilterToolBarViewTests.FakeFilterHost()) : null,
+            Filters = withFilters || filterHost is not null ? new FilterToolBarViewModel(new FilterToolBarStrings(), filterHost ?? new FilterToolBarViewTests.FakeFilterHost()) : null,
         };
         BrowseWindow window = new() { Width = 1100, Height = 760, DataContext = viewModel };
         window.Show();
@@ -799,6 +897,10 @@ public sealed class BrowseViewTests : HeadlessTest
         }
 
         public event EventHandler<BrowseWorkingDirectoryStatus>? WorkingDirectoryStatusChanged;
+
+        public int StatusRefreshes { get; private set; }
+
+        public void RequestStatusRefresh() => StatusRefreshes++;
 
         public List<string> ShellRuns { get; } = [];
 
@@ -915,11 +1017,15 @@ public sealed class BrowseViewTests : HeadlessTest
             DiffsRequested.Add([.. revisions.Select(r => r.Subject)]);
             GitRevision second = revisions[0];
             GitRevision first = new(second.FirstParentId);
-            GitItemStatus file = new(name: "src/file.cs") { IsTracked = true, IsChanged = true };
-            return Task.FromResult<IReadOnlyList<FileStatusGroup>>([new FileStatusGroup(first, second, "Parent", [file])]);
+            StagedStatus staged = second.ObjectId == ObjectId.WorkTreeId ? StagedStatus.WorkTree : second.ObjectId == ObjectId.IndexId ? StagedStatus.Index : StagedStatus.None;
+            GitItemStatus[] files = [.. DiffFiles.Select(name => new GitItemStatus(name) { IsTracked = true, IsChanged = true, Staged = staged })];
+            return Task.FromResult<IReadOnlyList<FileStatusGroup>>([new FileStatusGroup(first, second, "Parent", files)]);
         }
 
         public IReadOnlyList<string> TreeFiles { get; set; } = ["README.md", "src/a.cs", "src/b.cs"];
+
+        /// <summary>The files of the diffs of the selected revisions.</summary>
+        public IReadOnlyList<string> DiffFiles { get; set; } = ["src/file.cs"];
 
         public Task<FileStatusGroup> GetTreeFilesAsync(GitRevision revision, CancellationToken cancellationToken)
         {

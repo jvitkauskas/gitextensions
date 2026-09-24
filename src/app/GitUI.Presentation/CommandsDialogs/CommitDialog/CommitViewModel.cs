@@ -77,6 +77,10 @@ public sealed partial class CommitViewModel : DialogViewModel
         Staged.SelectionActivated += (_, _) => UnstageSelected();
         Unstaged.RefreshRequested += (_, _) => RescanChanges();
         Staged.RefreshRequested += (_, _) => RescanChanges();
+
+        // As BindContextMenu: "Stage selected" and "Unstage selected" of the menus are the staging of the dialog.
+        Unstaged.StageSelectedAction = Stage;
+        Staged.UnstageSelectedAction = Unstage;
         _initializing = false;
     }
 

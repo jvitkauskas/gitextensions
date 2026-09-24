@@ -77,6 +77,7 @@ public sealed partial class BrowseViewModel
 
         // As RevisionDiffControl: the selected file stays selected in the next revision, if it has it (or the file to show in the tree).
         string? selectedPath = _pendingTreePath ?? fileTree.SelectedEntry?.Item.Name;
+        bool isFolder = _pendingTreePath is not null && _pendingTreeFolder;
         if (revision is null)
         {
             fileTree.SetGroups([]);
@@ -101,9 +102,10 @@ public sealed partial class BrowseViewModel
 
         fileTree.SetGroups([files]);
         _pendingTreePath = null;
+        _pendingTreeFolder = false;
         if (selectedPath is not null)
         {
-            fileTree.Select(entry => entry.Item.Name == selectedPath);
+            SelectInFileTree(selectedPath, isFolder);
         }
 
         if (fileTree.SelectedEntry is null)

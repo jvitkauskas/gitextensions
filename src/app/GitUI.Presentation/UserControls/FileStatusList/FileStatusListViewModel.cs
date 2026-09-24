@@ -58,6 +58,7 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     private IReadOnlyList<FileStatusGroup> _groups = [];
     private Regex? _filterRegex;
     private bool _updatingSelection;
+    private Func<IReadOnlyList<FileStatusNode>, IReadOnlyList<FileStatusNode>>? _restoreSelection;
 
     /// <param name="fileNameOnlyFilter">Whether the filter matches only file names (<c>TruncatePathMethod.FileNameOnly</c>).</param>
     public FileStatusListViewModel(FileStatusListStrings strings, FileStatusTreeOptions? options = null, bool fileNameOnlyFilter = false)
@@ -259,9 +260,281 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     /// <summary>Raised when the user changes the sorting, which the host keeps for all lists (<c>DiffListSortService</c>).</summary>
     public event EventHandler? SortTypeChanged;
 
+    /// <summary>The file selected last (as <c>FocusedItem</c>).</summary>
+    public FileStatusEntry? FocusedEntry => SelectedNodes.Count == 0 ? null : SelectedNodes[^1].Entry;
+
+    /// <summary>
+    ///  "Stage selected" of the dialog instead of the one of the host (the <c>stage</c> of <c>BindContextMenu</c>, e.g. the
+    ///  staging of the commit dialog).
+    /// </summary>
+    public Action? StageSelectedAction { get; set; }
+
+    /// <summary>"Unstage selected" of the dialog instead of the one of the host (the <c>unstage</c> of <c>BindContextMenu</c>).</summary>
+    public Action? UnstageSelectedAction { get; set; }
+
+    /// <summary>"Show in file tree" of the main window (the <c>openInFileTreeTab_AsBlame</c> of <c>BindContextMenu</c>), if any.</summary>
+    public Action? ShowInFileTreeAction { get; set; }
+
+    /// <summary>"Filter file in grid" of the main window (the <c>filterFileInGrid</c> of <c>BindContextMenu</c>), if any.</summary>
+    public Action? FilterFileInGridAction
+    {
+        get;
+        set
+        {
+            field = value;
+            OnPropertyChanged(nameof(HasFilterFileInGrid));
+        }
+    }
+
+    public bool HasFilterFileInGrid => FilterFileInGridAction is not null;
+
+    /// <summary>"Cherry pick changes" of the file viewer (the <c>cherryPickChanges</c> of <c>BindContextMenu</c>), if any.</summary>
+    public Action? CherryPickChangesAction { get; set; }
+
+    /// <summary>Whether the diff shown supports line patching (the <c>getSupportLinePatching</c> of <c>BindContextMenu</c>).</summary>
+    public Func<bool>? GetSupportLinePatching { get; set; }
+
     /// <summary>As <c>ItemContextMenu_Opening</c> / <c>UpdateStatusOfMenuItems</c>.</summary>
     public void UpdateMenuState()
-        => MenuState = MenuHost?.GetMenuState(SelectedEntries, SelectedFolder) ?? FileStatusMenuState.None;
+    {
+        if (MenuHost is not { } host)
+        {
+            MenuState = FileStatusMenuState.None;
+            return;
+        }
+
+        // The items of the dialogs binding them (BindContextMenu).
+        FileStatusMenuState state = host.GetMenuState(SelectedEntries, SelectedFolder, FocusedEntry, GetSupportLinePatching?.Invoke() ?? false);
+        MenuState = state with
+        {
+            ShowShowInFileTree = state.ShowShowInFileTree && ShowInFileTreeAction is not null && !IsFileTreeMode,
+            CanFilterFileInGrid = state.CanFilterFileInGrid && FilterFileInGridAction is not null,
+            ShowCherryPick = state.ShowCherryPick && CherryPickChangesAction is not null,
+        };
+    }
+
+    [RelayCommand]
+    private void StageFiles()
+    {
+        if (StageSelectedAction is { } stage)
+        {
+            stage();
+            return;
+        }
+
+        MenuHost?.StageFiles(SelectedEntries);
+        RefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void UnstageFiles()
+    {
+        if (UnstageSelectedAction is { } unstage)
+        {
+            unstage();
+            return;
+        }
+
+        MenuHost?.UnstageFiles(SelectedEntries);
+        RefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private async Task ResetChunkOfFileAsync()
+    {
+        if (SelectedEntry is { } entry && MenuHost is { } host)
+        {
+            await host.ResetChunkOfFileAsync(entry);
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private async Task InteractiveAddAsync()
+    {
+        if (SelectedEntry is { } entry && MenuHost is { } host)
+        {
+            await host.InteractiveAddAsync(entry);
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void CherryPickChanges() => CherryPickChangesAction?.Invoke();
+
+    [RelayCommand]
+    private void RememberDiff(bool first)
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.RememberDiff(entry, first);
+        }
+    }
+
+    [RelayCommand]
+    private void DiffWithRemembered()
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.DiffWithRemembered(entry);
+        }
+    }
+
+    [RelayCommand]
+    private void DiffTwoSelected() => MenuHost?.DiffTwoSelected(SelectedEntries, FocusedEntry);
+
+    [RelayCommand]
+    private void OpenInVisualStudio()
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.OpenInVisualStudio(entry);
+        }
+    }
+
+    [RelayCommand]
+    private void Move()
+    {
+        if (MenuHost?.Move(SelectedEntry, SelectedEntry is null ? SelectedFolder : null) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void DeleteFiles()
+    {
+        if (MenuHost?.DeleteFiles(SelectedEntries) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void ShowInFileTree() => ShowInFileTreeAction?.Invoke();
+
+    [RelayCommand]
+    private void FilterFileInGrid() => FilterFileInGridAction?.Invoke();
+
+    /// <summary>As <c>FindFile_Click</c>: once the files are loaded, the file chosen among all files of the list is selected.</summary>
+    [RelayCommand]
+    private async Task FindFileAsync()
+    {
+        while (IsLoading)
+        {
+            await Task.Delay(100);
+        }
+
+        if (MenuHost?.FindFile([.. AllItems]) is { } item)
+        {
+            Select(entry => entry.Item == item);
+        }
+    }
+
+    [RelayCommand]
+    private void AddToIgnoreFile(bool localExclude)
+    {
+        if (MenuHost?.AddToIgnoreFile(SelectedEntries, SelectedFolder, localExclude) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>As <c>SkipWorktree_Click</c>: the item toggles (<c>CheckOnClick</c>).</summary>
+    [RelayCommand]
+    private void ToggleSkipWorktree()
+    {
+        MenuHost?.SetSkipWorktree(SelectedEntries, !MenuState.IsSkipWorktree);
+        RefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>As <c>AssumeUnchanged_Click</c>: the item toggles (<c>CheckOnClick</c>).</summary>
+    [RelayCommand]
+    private void ToggleAssumeUnchanged()
+    {
+        MenuHost?.SetAssumeUnchanged(SelectedEntries, !MenuState.IsAssumeUnchanged);
+        RefreshRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void StopTracking()
+    {
+        if (SelectedEntry is { } entry && MenuHost?.StopTracking(entry) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void RunSubmoduleAction(SubmoduleMenuAction action)
+    {
+        if (MenuHost?.RunSubmoduleAction(SelectedEntries, action) == true)
+        {
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void RunScript(FileStatusScript script) => MenuHost?.RunScript(script, SelectedEntries, SelectedFolder);
+
+    /// <summary>As <c>SelectFirstGroupChangesIfFocused</c>: the files of the first diff (all files without diff groups).</summary>
+    public void SelectFirstGroup()
+    {
+        if (Nodes.Count == 0)
+        {
+            return;
+        }
+
+        IEnumerable<FileStatusNode> nodes = Nodes[0].Group is not null ? Nodes[0].DescendantsAndSelf() : Nodes.SelectMany(n => n.DescendantsAndSelf());
+        SetSelection([.. nodes.Where(n => n.Entry is not null && n.Entry.Item != _noItemStatus)]);
+    }
+
+    /// <summary>
+    ///  As <c>RevisionDiffControl.RefreshArtificial</c>: the files are set again, keeping the selected files (else the file after
+    ///  them, <c>StoreNextItemToSelect</c>; else the first file).
+    /// </summary>
+    public void RefreshGroups(IReadOnlyList<FileStatusGroup> groups)
+    {
+        HashSet<(string Name, ObjectId Id)> selected = [.. SelectedEntries.Select(Key)];
+        List<FileStatusEntry> entries = [.. AllEntries];
+        int lastSelected = entries.FindLastIndex(entry => selected.Contains(Key(entry)));
+        (string Name, ObjectId Id)? next = lastSelected < 0 ? null
+            : entries.Skip(lastSelected + 1).FirstOrDefault(entry => !selected.Contains(Key(entry))) is { } nextEntry ? Key(nextEntry)
+            : null;
+
+        _restoreSelection = files =>
+        {
+            List<FileStatusNode> nodes = [.. files.Where(node => selected.Contains(Key(node.Entry!)))];
+            return nodes.Count > 0 || next is not { } nextKey ? nodes : [.. files.Where(node => Key(node.Entry!) == nextKey).Take(1)];
+        };
+        try
+        {
+            SetGroups(groups);
+        }
+        finally
+        {
+            _restoreSelection = null;
+        }
+
+        static (string Name, ObjectId Id) Key(FileStatusEntry entry) => (entry.Item.Name, entry.SecondRevision.ObjectId);
+    }
+
+    /// <summary>Selects the folder (as <c>SelectFileOrFolder</c> for a folder), expanding its parents.</summary>
+    public void SelectFolder(RelativePath folder)
+    {
+        FileStatusNode? node = Nodes.SelectMany(n => n.DescendantsAndSelf()).FirstOrDefault(n => n.Entry is null && n.FolderPath?.Value == folder.Value);
+        if (node is null)
+        {
+            return;
+        }
+
+        for (FileStatusNode? parent = node.Parent; parent is not null; parent = parent.Parent)
+        {
+            parent.IsExpanded = true;
+        }
+
+        SetSelection([node]);
+    }
 
     [RelayCommand]
     private void OpenWithDifftool(DifftoolKind kind) => MenuHost?.OpenWithDifftool(SelectedEntries, kind);
@@ -389,6 +662,19 @@ public sealed partial class FileStatusListViewModel : ObservableObject
         if (Nodes.Count == 1 && Nodes[0].Children.Count == 0)
         {
             SetSelection([Nodes[0]]);
+        }
+        else if (!updateCausedByFilter && _restoreSelection is { } restore
+            && restore([.. Nodes.SelectMany(n => n.DescendantsAndSelf()).Where(n => n.Entry is not null && n.Entry.Item != _noItemStatus)]) is { Count: > 0 } restored)
+        {
+            foreach (FileStatusNode node in restored)
+            {
+                for (FileStatusNode? parent = node.Parent; parent is not null; parent = parent.Parent)
+                {
+                    parent.IsExpanded = true;
+                }
+            }
+
+            SetSelection(restored);
         }
         else if (!updateCausedByFilter && SelectFirstItemOnSetItems)
         {
