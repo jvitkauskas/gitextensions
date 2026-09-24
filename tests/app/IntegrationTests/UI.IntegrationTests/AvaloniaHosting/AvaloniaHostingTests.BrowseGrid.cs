@@ -135,6 +135,9 @@ public sealed partial class AvaloniaHostingTests
             bool tabShown = false;
             bool reportInTab = false;
             bool webViewCreated = false;
+            WebView2BrowseWebView? webView2 = null;
+            string? webView2Url = null;
+            Rectangle? webView2Bounds = null;
             List<string> menu = [];
             bool closed = false;
             DriveNextDialog(window =>
@@ -153,13 +156,18 @@ public sealed partial class AvaloniaHostingTests
                         viewModel.Grid.SelectedRow = row;
                         menu.AddRange(viewModel.Grid.ContextMenuProvider!().Select(m => m.Header));
 
-                        // The report in the embedded web browser once its tab is shown.
+                        // The report in the embedded web browser once its tab is shown: WebView2 if its runtime is installed,
+                        // which shows it once its controller is created (in the window, as sized by the NativeControlHost).
                         ((BrowseWindow)window).Tabs.SelectedIndex = (int)BrowseTab.BuildReport;
                         WaitUntil(
-                            () => viewModel.BuildReportView is not null,
+                            () => viewModel.BuildReportView is not null
+                                && (viewModel.BuildReportView is not WebView2BrowseWebView webView || webView.LastCompletedNavigationUrl is not null),
                             () =>
                             {
                                 webViewCreated = viewModel.BuildReportView is not null;
+                                webView2 = viewModel.BuildReportView as WebView2BrowseWebView;
+                                webView2Url = webView2?.LastCompletedNavigationUrl;
+                                webView2Bounds = webView2?.Bounds;
                                 Capture(window, "browse-build-report");
                                 window.Close();
                             });
@@ -168,6 +176,7 @@ public sealed partial class AvaloniaHostingTests
 
             _commands.StartBrowseDialog(_owner, new BrowseArguments()).Should().BeTrue();
             WaitForMainWindowToClose(() => closed);
+            PumpUntil(() => webView2 is null || webView2.Initialization.IsCompleted);
 
             adapter.Initialized.Should().BeTrue();
             symbol.Should().Be("✔");
@@ -175,6 +184,16 @@ public sealed partial class AvaloniaHostingTests
             tabShown.Should().BeTrue();
             reportInTab.Should().BeTrue();
             webViewCreated.Should().BeTrue();
+            if (BrowseWebViews.IsWebView2Available(BrowseWebViews.GetAvailableBrowserVersion))
+            {
+                webView2.Should().NotBeNull("the WebView2 runtime is installed");
+                webView2!.InitializationError.Should().BeNull();
+                webView2Url.Should().Be("about:blank", "the report was shown");
+                webView2Bounds.Should().NotBeNull();
+                webView2Bounds!.Value.Width.Should().BeGreaterThan(0, "the controller follows the size of the tab");
+                webView2Bounds.Value.Height.Should().BeGreaterThan(0);
+            }
+
             menu.Should().Contain("View _build report in a browser");
             adapter.Disposed.Should().BeTrue("disposed with the window");
         }

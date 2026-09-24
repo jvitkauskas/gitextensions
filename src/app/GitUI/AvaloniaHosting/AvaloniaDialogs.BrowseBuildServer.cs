@@ -32,7 +32,8 @@ namespace GitUI.AvaloniaHosting;
 
 /// <summary>
 ///  The build server integration of the Avalonia main window: the build statuses of the grid (<c>BuildServerWatcher</c>) and
-///  the build report tab (<c>BuildReportTabPageExtension</c>) with the WinForms <c>WebBrowserControl</c> as a child window.
+///  the build report tab (<c>BuildReportTabPageExtension</c>) with WebView2, or the WinForms <c>WebBrowserControl</c> without
+///  the WebView2 runtime, as a child window (<see cref="BrowseWebViews"/>).
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
@@ -47,13 +48,20 @@ internal static partial class AvaloniaDialogs
         public bool IsBuildReportEnabled
             => ShowBuildResultPageForTests ?? BuildServerSettings.ShowBuildResultPage.ValueOrDefault(Module.GetEffectiveSettings());
 
-        public IBrowseWebView? CreateWebView() => new BrowseWebView();
+        public IBrowseWebView? CreateWebView()
+            => BrowseWebViews.Create(
+                BrowseWebViews.GetAvailableBrowserVersion,
+                () => new WebView2BrowseWebView(BrowseWebViews.UserDataFolder, OpenUrl),
+                () => new WebBrowserControlWebView());
 
         public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
     }
 
-    /// <summary>The web browser of the build report tab: <c>WebBrowserControl</c>, embedded as the console tab embeds its terminal.</summary>
-    private sealed class BrowseWebView : IBrowseWebView, IEmbeddedNativeView
+    /// <summary>
+    ///  The web browser of the build report tab without the WebView2 runtime: <c>WebBrowserControl</c> (Internet Explorer),
+    ///  embedded as the console tab embeds its terminal.
+    /// </summary>
+    private sealed class WebBrowserControlWebView : IBrowseWebView, IEmbeddedNativeView
     {
         private static readonly nint HWND_MESSAGE = -3;
         private readonly WebBrowserControl _browser = new();
