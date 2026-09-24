@@ -55,31 +55,6 @@ internal static partial class AvaloniaDialogs
         string? urlTryingToConnect = null,
         RemoteProcessExitHandler? onExit = null)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRemoteProcess)))
-        {
-            return AvaloniaUi.RunInHostContext(() =>
-            {
-                using FormRemoteProcess form = new(commands, arguments) { Remote = remote ?? "" };
-                if (title is not null)
-                {
-                    form.Text = title;
-                }
-
-                if (urlTryingToConnect is not null)
-                {
-                    form.SetUrlTryingToConnect(urlTryingToConnect);
-                }
-
-                if (onExit is not null)
-                {
-                    form.HandleOnExitCallback = (ref bool isError, FormProcess process) => onExit(ref isError, new WinFormsRemoteProcessDialog((FormRemoteProcess)process));
-                }
-
-                form.ShowDialog(owner);
-                return new RemoteProcessResult(form.ErrorOccurred(), form.DialogResult == DialogResult.Abort, form.GetOutputString());
-            });
-        }
-
         string workingDirectory = commands.Module.WorkingDir;
         (string process, string resolvedArguments) = ResolveProcess(process: null, arguments, workingDirectory);
         using ConsoleProcess console = new(
@@ -121,11 +96,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowRemoteProcess(IWin32Window? owner, IGitUICommands commands, ArgumentString arguments, out bool success)
     {
         success = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRemoteProcess)))
-        {
-            return false;
-        }
-
         success = !RunRemoteProcess(owner, commands, arguments).ErrorOccurred;
         return true;
     }

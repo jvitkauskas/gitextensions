@@ -23,11 +23,6 @@ internal static partial class AvaloniaDialogs
     /// </summary>
     public static bool TryShowApplyPatch(IWin32Window? owner, IGitUICommands commands, string? patchFile)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormApplyPatch)))
-        {
-            return false;
-        }
-
         bool isDirectory = Directory.Exists(patchFile!);
         ShowDialog(
             () =>

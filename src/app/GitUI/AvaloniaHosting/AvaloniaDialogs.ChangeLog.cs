@@ -12,11 +12,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowChangeLog(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormChangeLog)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () => new ChangeLogWindow { DataContext = new ChangeLogViewModel(ViewStrings.Load<ChangeLogStrings>(), Resources.ChangeLog) },
             owner,

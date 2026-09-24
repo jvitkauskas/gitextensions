@@ -37,11 +37,6 @@ internal static partial class AvaloniaDialogs
     /// </summary>
     public static bool TryShowBrowse(IGitUICommands commands, BrowseArguments args)
     {
-        if (!AvaloniaUi.IsExplicitlyEnabledFor(nameof(FormBrowse)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
         ShowBrowseWindow(commands, args);
         if (!Application.MessageLoop && !AvaloniaUi.IsMainLoopRunning)

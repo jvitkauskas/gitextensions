@@ -28,11 +28,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCreateBranch(IWin32Window? owner, IGitUICommands commands, ObjectId objectId, CreateBranchOptions options, out bool created)
     {
         created = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCreateBranch)))
-        {
-            return false;
-        }
-
         // As the FormCreateBranch constructor.
         IGitModule module = commands.Module;
         if (objectId.IsArtificial)
@@ -91,11 +86,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCreateTag(IWin32Window? owner, IGitUICommands commands, ObjectId objectId, out bool created)
     {
         created = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCreateTag)))
-        {
-            return false;
-        }
-
         // As FormCreateTag.
         IGitModule module = commands.Module;
         if (objectId.IsArtificial)

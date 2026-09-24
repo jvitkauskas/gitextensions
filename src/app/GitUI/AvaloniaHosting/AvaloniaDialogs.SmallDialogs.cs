@@ -31,11 +31,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowCommandlineHelp()
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCommandlineHelp)))
-        {
-            return false;
-        }
-
         // The command list is a (non-translated) resource of the WinForms form.
         string commands = new ComponentResourceManager(typeof(FormCommandlineHelp)).GetString("_NO_TRANSLATE_commands.Text") ?? "";
         ShowDialog(() => new CommandlineHelpWindow { DataContext = new CommandlineHelpViewModel(ViewStrings.Load<CommandlineHelpStrings>(), commands) }, owner: null);
@@ -44,11 +39,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowAddFiles(IWin32Window? owner, IGitUICommands commands, string? filter)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormAddFiles)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {
@@ -67,11 +57,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowDonate(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormDonate)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () => new DonateWindow
             {
@@ -83,11 +68,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowContributors(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormContributors)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () => new ContributorsWindow { DataContext = new ContributorsViewModel(Resources.Team, Resources.Coders, Resources.Translators, Resources.Designers) },
             owner);
@@ -97,11 +77,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowResetChanges(IWin32Window? owner, bool hasExistingFiles, bool hasNewFiles, string? confirmationMessage, out FormResetChanges.ActionEnum action)
     {
         action = FormResetChanges.ActionEnum.Cancel;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormResetChanges)))
-        {
-            return false;
-        }
-
         ResetChangesViewModel viewModel = new(ViewStrings.Load<ResetChangesStrings>(), hasExistingFiles, hasNewFiles, confirmationMessage);
         ShowDialog(() => new ResetChangesWindow { DataContext = viewModel }, owner);
         action = viewModel.SelectedAction switch
@@ -116,11 +91,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowDeleteTag(IWin32Window? owner, IGitUICommands commands, string? tag, out bool deleted)
     {
         deleted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormDeleteTag)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         IReadOnlyList<string> tags = [.. module.GetRefs(RefsFilter.Tags).Select(r => r.LocalName)];
         IReadOnlyList<string> remotes = [.. new ConfigFileRemoteSettingsManager(() => module).LoadRemotes(false).Select(r => r.Name!)];
@@ -146,11 +116,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowInit(IWin32Window? owner, IGitUICommands commands, string dir, EventHandler<GitModuleEventArgs>? gitModuleChanged)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormInit)))
-        {
-            return false;
-        }
-
         IList<Repository> history = ThreadHelper.JoinableTaskFactory.Run(RepositoryHistoryManager.Locals.LoadRecentHistoryAsync);
 
         ShowDialog(
@@ -175,11 +140,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowGoToLine(IWin32Window? owner, int maxLineNumber, out int? lineNumber)
     {
         lineNumber = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormGoToLine)))
-        {
-            return false;
-        }
-
         GoToLineViewModel viewModel = new(ViewStrings.Load<GoToLineStrings>(), maxLineNumber);
         if (ShowDialog(() => new GoToLineWindow { DataContext = viewModel }, owner))
         {
@@ -189,23 +149,19 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
-    /// <summary>The Avalonia port of <c>SimplePrompt</c>, or <see langword="null"/> to use the WinForms one.</summary>
-    public static IUserInputPrompt? CreateSimplePrompt(string? title, string? label, string? defaultValue)
-        => AvaloniaUi.IsEnabledFor(nameof(SimplePrompt))
-            ? new UserInputPrompt(
-                () => new SimplePromptViewModel(title, label, defaultValue),
-                () => new SimplePromptWindow(),
-                viewModel => ((SimplePromptViewModel)viewModel).UserInput)
-            : null;
+    /// <summary>The Avalonia port of <c>SimplePrompt</c>.</summary>
+    public static IUserInputPrompt CreateSimplePrompt(string? title, string? label, string? defaultValue)
+        => new UserInputPrompt(
+            () => new SimplePromptViewModel(title, label, defaultValue),
+            () => new SimplePromptWindow(),
+            viewModel => ((SimplePromptViewModel)viewModel).UserInput);
 
-    /// <summary>The Avalonia port of <c>FormFilePrompt</c>, or <see langword="null"/> to use the WinForms one.</summary>
-    public static IUserInputPrompt? CreateFilePrompt()
-        => AvaloniaUi.IsEnabledFor(nameof(FormFilePrompt))
-            ? new UserInputPrompt(
-                window => new FilePromptViewModel(ViewStrings.Load<FilePromptStrings>(), new AvaloniaFileDialogService(window)),
-                () => new FilePromptWindow(),
-                viewModel => ((FilePromptViewModel)viewModel).UserInput)
-            : null;
+    /// <summary>The Avalonia port of <c>FormFilePrompt</c>.</summary>
+    public static IUserInputPrompt CreateFilePrompt()
+        => new UserInputPrompt(
+            window => new FilePromptViewModel(ViewStrings.Load<FilePromptStrings>(), new AvaloniaFileDialogService(window)),
+            () => new FilePromptWindow(),
+            viewModel => ((FilePromptViewModel)viewModel).UserInput);
 
     /// <summary>A script input prompt (<see cref="IUserInputPrompt"/>) shown as an Avalonia dialog.</summary>
     private sealed class UserInputPrompt : IUserInputPrompt

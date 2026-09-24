@@ -13,7 +13,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void StartBrowseDialog_shows_the_branches_in_the_left_panel_and_selecting_one_selects_its_revision()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         string first = _referenceRepository.CommitHash!;
         _referenceRepository.CreateBranch("feature/left-panel", first);
         _referenceRepository.CreateTag("v1.0", first);

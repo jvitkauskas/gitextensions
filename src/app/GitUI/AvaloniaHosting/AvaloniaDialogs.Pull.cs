@@ -38,11 +38,6 @@ internal static partial class AvaloniaDialogs
     {
         accepted = false;
         errorOccurred = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormPull)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         PullOptions options = new(
             SelectedBranch: module.GetSelectedBranch(),

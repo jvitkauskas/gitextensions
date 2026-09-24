@@ -12,7 +12,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_filter_toolbar_filters_the_revisions_by_text_and_by_branch()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         string first = _referenceRepository.CommitHash!;
         _referenceRepository.CreateBranch("feature", first);
         _referenceRepository.CreateCommit("Second commit", "changed content", "file.txt");

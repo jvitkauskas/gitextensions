@@ -20,11 +20,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowFixHome(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormFixHome)))
-        {
-            return false;
-        }
-
         FixHomeEnvironment environment = new(
             CustomHomeDir: AppSettings.CustomHomeDir,
             UserProfileHomeDir: AppSettings.UserProfileHomeDir,
@@ -70,11 +65,6 @@ internal static partial class AvaloniaDialogs
     /// </summary>
     public static bool TryShowSimpleHelpDisplay(Control owner, string title, string content)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(SimpleHelpDisplayDialog)))
-        {
-            return false;
-        }
-
         if (_helpDisplayWindows.TryGetValue(owner, out DialogWindow? openWindow) && openWindow.IsVisible)
         {
             openWindow.Activate();

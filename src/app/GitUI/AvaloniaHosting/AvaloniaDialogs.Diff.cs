@@ -19,11 +19,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>FormDiff</c> (modeless, as <c>RevisionGridControl.ShowFormDiff</c>).</summary>
     public static bool TryShowDiff(IGitUICommands commands, ObjectId firstId, ObjectId secondId, string firstDisplayName, string secondDisplayName)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormDiff)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
         DiffWindow window = new() { PositionName = nameof(FormDiff), PositionStore = WindowPositionStore.Instance };
         window.DataContext = new DiffViewModel(

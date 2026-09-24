@@ -21,11 +21,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>FormResolveConflicts</c> (the arguments of its constructor).</summary>
     public static bool TryShowResolveConflicts(IWin32Window? owner, IGitUICommands commands, bool offerCommit)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormResolveConflicts)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {

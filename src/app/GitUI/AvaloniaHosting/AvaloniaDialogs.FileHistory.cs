@@ -29,11 +29,6 @@ internal static partial class AvaloniaDialogs
     /// <param name="fileName">The file, quoted or not.</param>
     public static bool TryShowFileHistory(IGitUICommands commands, string fileName, GitRevision? revision, bool filterByRevision, bool showBlame)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormFileHistory)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
         FileHistoryWindow window = new() { PositionName = nameof(FormFileHistory), PositionStore = WindowPositionStore.Instance };
         FileHistoryHost host = new(commands, window, fileName.Trim('"').ToPosixPath());

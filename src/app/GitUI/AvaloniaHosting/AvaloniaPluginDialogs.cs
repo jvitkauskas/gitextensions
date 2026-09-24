@@ -16,9 +16,6 @@ namespace GitUI.AvaloniaHosting;
 /// </remarks>
 public static class AvaloniaPluginDialogs
 {
-    /// <summary>Whether the Avalonia port of the plugin form <paramref name="winFormsFormName"/> is enabled (<c>GE_AVALONIA</c>).</summary>
-    public static bool IsEnabledFor(string winFormsFormName) => AvaloniaUi.IsEnabledFor(winFormsFormName);
-
     /// <summary>
     ///  Shows the window created by <paramref name="createWindow"/> modally over <paramref name="owner"/>; returns whether it
     ///  was accepted.

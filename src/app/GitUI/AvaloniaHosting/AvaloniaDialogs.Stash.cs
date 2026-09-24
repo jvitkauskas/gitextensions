@@ -16,11 +16,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowStash(IWin32Window? owner, IGitUICommands commands, bool manageStashes, string? initialStash)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormStash)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {

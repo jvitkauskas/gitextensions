@@ -18,11 +18,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowQuickRefSelector(IWin32Window? owner, FormQuickGitRefSelector.QuickAction action, IReadOnlyList<IGitRef> refs, Point location, out IGitRef? selected)
     {
         selected = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormQuickItemSelector)))
-        {
-            return false;
-        }
-
         QuickItemSelectorViewModel viewModel = QuickItemSelectorViewModel.ForRefs(ViewStrings.Load<QuickItemSelectorStrings>(), (QuickRefAction)(int)action, refs);
         selected = ShowQuickItemSelector(owner, viewModel, location) as IGitRef;
         return true;
@@ -33,11 +28,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowQuickStringSelector(IWin32Window? owner, IReadOnlyList<string> values, Point location, out string? selected)
     {
         selected = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormQuickItemSelector)))
-        {
-            return false;
-        }
-
         selected = ShowQuickItemSelector(owner, QuickItemSelectorViewModel.ForStrings(ViewStrings.Load<QuickItemSelectorStrings>(), values), location) as string;
         return true;
     }

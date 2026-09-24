@@ -26,11 +26,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCherryPick(IWin32Window? owner, IGitUICommands commands, GitRevision? revision, out bool picked)
     {
         picked = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCherryPick)))
-        {
-            return false;
-        }
-
         picked = ShowCherryPick(owner, commands, revision);
         return true;
     }
@@ -39,11 +34,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCherryPicks(IWin32Window? owner, IGitUICommands commands, IEnumerable<GitRevision> revisions, out bool repoChanged)
     {
         repoChanged = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCherryPick)))
-        {
-            return false;
-        }
-
         // Each dialog starts with the options of the previous one, which saves them when accepted.
         foreach (GitRevision revision in revisions)
         {
@@ -61,11 +51,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowRevertCommit(IWin32Window? owner, IGitUICommands commands, GitRevision revision, out bool reverted)
     {
         reverted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRevertCommit)))
-        {
-            return false;
-        }
-
         RevisionInfo revisionInfo = ToRevisionInfo(commands.Module, revision);
         reverted = ShowDialog(
             () =>
@@ -87,11 +72,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowResetCurrentBranch(IWin32Window? owner, IGitUICommands commands, GitRevision revision, FormResetCurrentBranch.ResetType resetType, out bool reset)
     {
         reset = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormResetCurrentBranch)))
-        {
-            return false;
-        }
-
         reset = ShowDialog(
             () =>
             {
@@ -114,11 +94,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowResetAnotherBranch(IWin32Window? owner, IGitUICommands commands, GitRevision revision, out bool reset)
     {
         reset = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormResetAnotherBranch)))
-        {
-            return false;
-        }
-
         // As FormResetAnotherBranch.InitLocalBranchesWithoutCurrent.
         IGitModule module = commands.Module;
         string currentBranch = module.GetSelectedBranch();
@@ -164,11 +139,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowArchive(IWin32Window? owner, IGitUICommands commands, GitRevision? revision, GitRevision? diffRevision, string? path)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormArchive)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         ShowDialog(
             () =>

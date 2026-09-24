@@ -46,7 +46,6 @@ public sealed partial class AvaloniaHostingTests
     [SetUp]
     public void SetUp()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all");
         DialogWindow.PositionStoreForTests = _positions;
 
         // The repository history of the main window and its dashboard, instead of the user's.
@@ -78,7 +77,6 @@ public sealed partial class AvaloniaHostingTests
         BrowseWebViews.UserDataFolderForTests = null;
         _owner.Dispose();
         _referenceRepository.Dispose();
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "none");
 
         if (driveFailure is not null)
         {

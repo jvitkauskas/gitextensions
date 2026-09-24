@@ -32,11 +32,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowAbout(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormAbout)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {
@@ -65,11 +60,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowRenameBranch(IWin32Window? owner, IGitUICommands commands, string branch, out bool renamed)
     {
         renamed = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRenameBranch)))
-        {
-            return false;
-        }
-
         renamed = ShowDialog(
             () =>
             {
@@ -96,11 +86,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowCommitTemplateSettings(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCommitTemplateSettings)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () => new CommitTemplateSettingsWindow
             {

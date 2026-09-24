@@ -25,11 +25,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>FormBlame</c> (the <c>blame</c> verb), of HEAD as <c>FormBlame</c> without a revision.</summary>
     public static bool TryShowBlame(IWin32Window? owner, IGitUICommands commands, string fileName, int? initialLine)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormBlame)))
-        {
-            return false;
-        }
-
         if (string.IsNullOrEmpty(fileName) || commands.Module.GetRevision() is not { } revision)
         {
             return false;

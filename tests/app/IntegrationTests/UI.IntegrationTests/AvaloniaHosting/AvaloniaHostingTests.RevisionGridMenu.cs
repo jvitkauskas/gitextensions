@@ -13,7 +13,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_grid_menu_lists_the_actions_of_the_selected_commit_and_navigates()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         string first = _referenceRepository.CommitHash!;
         _referenceRepository.CreateBranch("feature", first);
         _referenceRepository.CreateTag("v1.0", first);

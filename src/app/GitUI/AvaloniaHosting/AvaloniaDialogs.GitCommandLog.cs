@@ -21,11 +21,6 @@ internal static partial class AvaloniaDialogs
     /// </summary>
     public static bool TryShowGitCommandLog(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormGitCommandLog)))
-        {
-            return false;
-        }
-
         if (_gitCommandLogWindow is { } openWindow)
         {
             if (openWindow.WindowState == global::Avalonia.Controls.WindowState.Minimized)

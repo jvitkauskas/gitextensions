@@ -14,11 +14,6 @@ internal static class ProxySwitcherDialog
     /// <summary>Returns <see langword="false"/> when the port is disabled, in which case the caller shows the WinForms form.</summary>
     public static bool TryShow(GitUIEventArgs args, ProxySwitcherPlugin plugin, SettingsSource settings)
     {
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(ProxySwitcherForm)))
-        {
-            return false;
-        }
-
         ProxySwitcherStrings strings = ViewStrings.Load<ProxySwitcherStrings>();
         ProxySettings proxySettings = new(
             plugin.Username.ValueOrDefault(settings),

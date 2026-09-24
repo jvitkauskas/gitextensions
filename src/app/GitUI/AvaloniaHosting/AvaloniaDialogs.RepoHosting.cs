@@ -24,11 +24,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>ForkAndCloneForm</c> (modal, as <c>StartCloneForkFromHoster</c>).</summary>
     public static bool TryShowForkAndClone(IWin32Window? owner, IGitUICommands commands, IRepositoryHostPlugin gitHoster, EventHandler<GitModuleEventArgs>? gitModuleChanged)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(ForkAndCloneForm)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {
@@ -49,11 +44,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>ViewPullRequestsForm</c> (modeless, as <c>StartPullRequestsDialog</c>).</summary>
     public static bool TryShowPullRequests(IWin32Window? owner, IGitUICommands commands, IRepositoryHostPlugin gitHoster)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(ViewPullRequestsForm)))
-        {
-            return false;
-        }
-
         AvaloniaPluginDialogs.Show(
             () =>
             {
@@ -81,11 +71,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>CreatePullRequestForm</c> (modeless, as <c>StartCreatePullRequest</c>).</summary>
     public static bool TryShowCreatePullRequest(IWin32Window? owner, IGitUICommands commands, IRepositoryHostPlugin gitHoster, string? chooseRemote)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(CreatePullRequestForm)))
-        {
-            return false;
-        }
-
         AvaloniaPluginDialogs.Show(
             () =>
             {

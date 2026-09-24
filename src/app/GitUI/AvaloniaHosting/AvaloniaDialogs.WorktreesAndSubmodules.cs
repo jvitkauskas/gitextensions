@@ -25,11 +25,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowManageWorktree(IWin32Window? owner, IGitUICommands commands, out bool shouldRefreshRevisionGrid)
     {
         shouldRefreshRevisionGrid = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormManageWorktree)))
-        {
-            return false;
-        }
-
         ManageWorktreeViewModel? viewModel = null;
         ShowDialog(
             () =>
@@ -49,11 +44,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowSubmodules(IWin32Window? owner, IGitUICommands commands)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormSubmodules)))
-        {
-            return false;
-        }
-
         SubmodulesHost? host = null;
         try
         {

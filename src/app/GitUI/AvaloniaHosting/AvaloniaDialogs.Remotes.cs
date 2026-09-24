@@ -26,11 +26,6 @@ internal static partial class AvaloniaDialogs
     /// <param name="preselectLocal">The branch to select on the pull behavior tab (<c>FormRemotes.PreselectLocalOnLoad</c>).</param>
     public static bool TryShowRemotes(IWin32Window? owner, IGitUICommands commands, string? preselectRemote, string? preselectLocal)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRemotes)))
-        {
-            return false;
-        }
-
         if (preselectRemote is not null && preselectLocal is not null)
         {
             throw new ArgumentException($"Only one option allowed: either {nameof(preselectRemote)} or {nameof(preselectLocal)}");

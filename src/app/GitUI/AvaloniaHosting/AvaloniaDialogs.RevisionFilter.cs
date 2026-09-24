@@ -15,11 +15,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowRevisionFilter(IWin32Window? owner, FilterInfo filterInfo, out bool accepted)
     {
         accepted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRevisionFilter)))
-        {
-            return false;
-        }
-
         // As FormRevisionFilter.OnLoad: the dialog shows the raw values.
         FilterInfo raw = filterInfo with { IsRaw = true };
         RevisionFilterViewModel viewModel = new(

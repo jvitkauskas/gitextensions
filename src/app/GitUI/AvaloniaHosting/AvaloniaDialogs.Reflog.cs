@@ -21,11 +21,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowReflog(IWin32Window? owner, IGitUICommands commands)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormReflog)))
-        {
-            return false;
-        }
-
         // As FormReflog_Load.
         IGitModule module = commands.Module;
         bool isDirty = module.IsDirtyDir();

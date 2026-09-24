@@ -25,11 +25,6 @@ internal static partial class AvaloniaDialogs
     {
         retry = false;
         keyPath = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormPuttyError)))
-        {
-            return false;
-        }
-
         PuttyErrorViewModel? viewModel = null;
         ShowDialog(
             () =>
@@ -54,11 +49,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowBuildServerCredentials(IWin32Window? owner, string buildServerUniqueKey, IBuildServerCredentials credentials, out bool accepted)
     {
         accepted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormBuildServerCredentials)))
-        {
-            return false;
-        }
-
         BuildServerCredentialsViewModel viewModel = new(buildServerUniqueKey)
         {
             Authentication = credentials.BuildServerCredentialsType switch
@@ -93,11 +83,6 @@ internal static partial class AvaloniaDialogs
     public static bool TrySelectMultipleBranches(IWin32Window? owner, IReadOnlyList<IGitRef> branches, IEnumerable<IGitRef> selectedBranches, out IReadOnlyList<IGitRef> selected)
     {
         selected = [];
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormSelectMultipleBranches)))
-        {
-            return false;
-        }
-
         SelectMultipleBranchesViewModel viewModel = new(
             ViewStrings.Load<SelectMultipleBranchesStrings>(),
             branches.Select(b => ((object)b, b.Name)),
@@ -112,11 +97,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>The Avalonia port of <see cref="FormChooseTranslation"/>; sets <see cref="AppSettings.Translation"/>.</summary>
     public static bool TryShowChooseTranslation(IWin32Window? owner)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormChooseTranslation)))
-        {
-            return false;
-        }
-
         ChooseTranslationViewModel viewModel = new(
             ViewStrings.Load<ChooseTranslationStrings>(),
             ChooseTranslationViewModel.CreateChoices(Translator.GetAllTranslations(), Translator.GetTranslationDir(), File.Exists));
@@ -138,11 +118,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowAvailableEncodings(IWin32Window? owner, out bool accepted)
     {
         accepted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormAvailableEncodings)))
-        {
-            return false;
-        }
-
         AvailableEncodingsViewModel viewModel = new(ViewStrings.Load<AvailableEncodingsStrings>(), AppSettings.AvailableEncodings.Values);
         accepted = ShowDialog(() => new AvailableEncodingsWindow { DataContext = viewModel }, owner);
         if (accepted)

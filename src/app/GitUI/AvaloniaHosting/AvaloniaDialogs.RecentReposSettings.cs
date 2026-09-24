@@ -17,11 +17,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowRecentReposSettings(IWin32Window? owner, out bool saved)
     {
         saved = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRecentReposSettings)))
-        {
-            return false;
-        }
-
         RecentReposOptions options = new(
             AppSettings.ShorteningRecentRepoPathStrategy,
             AppSettings.HideTopRepositoriesFromRecentList.Value,

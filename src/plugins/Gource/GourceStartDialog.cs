@@ -22,11 +22,6 @@ internal static class GourceStartDialog
     {
         gourcePath = pathToGource;
         gourceArguments = arguments;
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(GourceStart)))
-        {
-            return false;
-        }
-
         GourceStartViewModel? viewModel = null;
         AvaloniaPluginDialogs.ShowDialog(
             () =>

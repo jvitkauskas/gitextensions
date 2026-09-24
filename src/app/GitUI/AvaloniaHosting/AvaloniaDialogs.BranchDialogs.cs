@@ -28,11 +28,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowDeleteBranch(IWin32Window? owner, IGitUICommands commands, IEnumerable<string> branches)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormDeleteBranch)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         IReadOnlyList<IGitRef> heads = module.GetRefs(RefsFilter.Heads);
 
@@ -77,11 +72,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowDeleteRemoteBranch(IWin32Window? owner, IGitUICommands commands, string remoteBranch)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormDeleteRemoteBranch)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         IReadOnlyList<IGitRef> remoteRefs = module.GetRefs(RefsFilter.Remotes);
 
@@ -109,11 +99,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowMergeBranch(IWin32Window? owner, IGitUICommands commands, string? defaultBranch)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormMergeBranch)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         SettingsSource effectiveSettings = module.GetEffectiveSettings();
         MergeBranchOptions options = new(

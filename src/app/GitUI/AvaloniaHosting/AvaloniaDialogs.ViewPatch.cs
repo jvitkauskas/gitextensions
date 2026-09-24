@@ -17,11 +17,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowViewPatch(IWin32Window? owner, IGitUICommands commands, string? patchFile)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormViewPatch)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {

@@ -27,11 +27,6 @@ internal static partial class AvaloniaDialogs
     private static bool TryShowRepoFileEditor<TStrings>(IWin32Window? owner, IGitUICommands commands, string formName, string fileName, bool notifyRepoChanged)
         where TStrings : RepoFileEditorStrings, new()
     {
-        if (!AvaloniaUi.IsEnabledFor(formName))
-        {
-            return false;
-        }
-
         TStrings strings = ViewStrings.Load<TStrings>();
         IGitModule module = commands.Module;
         if (module.IsBareRepository())
@@ -64,7 +59,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowFileEditor(IGitUICommands commands, string? fileName, bool showWarning, int? lineNumber, out bool accepted)
     {
         accepted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormEditor)) || string.IsNullOrEmpty(fileName))
+        if (string.IsNullOrEmpty(fileName))
         {
             return false;
         }

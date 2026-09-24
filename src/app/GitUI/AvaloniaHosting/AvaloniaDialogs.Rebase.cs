@@ -21,11 +21,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>FormRebase</c> (the arguments of its constructor).</summary>
     public static bool TryShowRebase(IWin32Window? owner, IGitUICommands commands, string? from, string? to, string? defaultBranch, bool interactive, bool startRebaseImmediately)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormRebase)))
-        {
-            return false;
-        }
-
         RebaseDialogOptions options = new(
             from,
             to,

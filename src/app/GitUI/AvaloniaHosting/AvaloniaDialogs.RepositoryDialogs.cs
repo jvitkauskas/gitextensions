@@ -24,11 +24,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowAddSubmodule(IWin32Window? owner, IGitUICommands commands)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormAddSubmodule)))
-        {
-            return false;
-        }
-
         IList<Repository> history = ThreadHelper.JoinableTaskFactory.Run(RepositoryHistoryManager.Remotes.LoadRecentHistoryAsync);
 
         ShowDialog(
@@ -52,11 +47,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowCleanupRepository(IWin32Window? owner, IGitUICommands commands, string? path)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCleanupRepository)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         ShowDialog(
             () =>
@@ -81,11 +71,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowMergeSubmodule(IWin32Window? owner, IGitUICommands commands, string filename, out bool accepted)
     {
         accepted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormMergeSubmodule)))
-        {
-            return false;
-        }
-
         ConflictData conflict = ThreadHelper.JoinableTaskFactory.Run(() => commands.Module.GetConflictAsync(filename));
 
         accepted = ShowDialog(
@@ -113,11 +98,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCreateWorktree(IWin32Window? owner, IGitUICommands commands, string? mainWorktreePath, out string? worktreeDirectory)
     {
         worktreeDirectory = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCreateWorktree)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         CreateWorktreeViewModel? viewModel = null;
         bool created = ShowDialog(
@@ -157,11 +137,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowOpenDirectory(IWin32Window? owner, IGitExecutorProvider executorProvider, IGitModule? currentModule, out IGitModule? module)
     {
         module = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormOpenDirectory)))
-        {
-            return false;
-        }
-
         IList<Repository> history = ThreadHelper.JoinableTaskFactory.Run(RepositoryHistoryManager.Locals.LoadRecentHistoryAsync);
         IReadOnlyList<string> directories = OpenDirectoryViewModel.GetDirectories(
             AppSettings.DefaultCloneDestinationPath,

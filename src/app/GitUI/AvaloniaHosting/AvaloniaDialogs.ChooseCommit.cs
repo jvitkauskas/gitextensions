@@ -37,11 +37,6 @@ internal static partial class AvaloniaDialogs
         string? lastRevisionToDisplayHash = null)
     {
         selected = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormChooseCommit)))
-        {
-            return false;
-        }
-
         IGitModule module = commands.Module;
         ObjectId? toBeSelected = null;
         if (!string.IsNullOrEmpty(preselectCommit) && module.RevParse(preselectCommit) is { IsZero: false } objectId)

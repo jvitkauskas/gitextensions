@@ -12,11 +12,6 @@ internal static class FindLargeFilesDialog
     /// <summary>Returns <see langword="false"/> when the port is disabled, in which case the caller shows the WinForms form.</summary>
     public static bool TryShow(GitUIEventArgs args, float threshold)
     {
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(FindLargeFilesForm)))
-        {
-            return false;
-        }
-
         IGitUICommands commands = args.GitUICommands;
         AvaloniaPluginDialogs.ShowDialog(
             () =>

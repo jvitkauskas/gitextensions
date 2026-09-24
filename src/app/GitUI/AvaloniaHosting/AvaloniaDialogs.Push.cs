@@ -35,11 +35,6 @@ internal static partial class AvaloniaDialogs
     {
         pushed = false;
         pushCompleted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormPush)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
         PushWindow window = new();
         PushHost host = new(commands, window);

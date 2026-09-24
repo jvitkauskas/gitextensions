@@ -31,11 +31,6 @@ internal static partial class AvaloniaDialogs
         Action<string> search,
         Action<bool> setSearchBoxVisible)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormFindInCommitFilesGitGrep)))
-        {
-            return false;
-        }
-
         if (!_gitGrepWindows.TryGetValue(fileList, out FindInCommitFilesGitGrepWindow? window) || !window.IsVisible)
         {
             AvaloniaUi.EnsureInitialized(GetOptions);

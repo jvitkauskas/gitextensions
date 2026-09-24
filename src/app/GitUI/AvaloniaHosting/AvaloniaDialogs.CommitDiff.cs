@@ -15,11 +15,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>FormCommitDiff</c>, modal or modeless (as <c>RevisionGridControl.ViewSelectedRevisions</c>).</summary>
     public static bool TryShowCommitDiff(IWin32Window? owner, IGitUICommands commands, ObjectId objectId, bool modeless = false)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCommitDiff)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
         CommitDiffWindow window = new() { PositionName = nameof(FormCommitDiff), PositionStore = WindowPositionStore.Instance };
         CommitDiffViewModel viewModel = new(

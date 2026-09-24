@@ -19,7 +19,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void StartBrowseDialog_shows_the_revisions_the_commit_and_its_diff()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         _referenceRepository.CreateCommit("Second commit", "changed content", "file.txt");
         string head = _referenceRepository.CommitHash!;
 
@@ -60,7 +59,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void Browse_switches_to_the_dashboard_and_to_other_repositories_in_the_same_window()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         string? recentWorkingDir = AppSettings.RecentWorkingDir;
         using ReferenceRepository other = new();
         other.CreateCommit("Commit of the other repository", "other content", "other.txt");
@@ -146,7 +144,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void Browse_shows_the_dashboard_for_a_directory_that_is_not_a_repository()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         string directory = Path.Combine(Path.GetTempPath(), $"ge-dashboard-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
         ThreadHelper.JoinableTaskFactory.Run(() => _history.AddAsMostRecentAsync(_referenceRepository.Module.WorkingDir));

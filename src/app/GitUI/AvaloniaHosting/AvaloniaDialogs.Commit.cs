@@ -29,11 +29,6 @@ internal static partial class AvaloniaDialogs
     /// </summary>
     public static bool TryShowCommit(IWin32Window? owner, IGitUICommands commands, CommitKind kind = CommitKind.Normal, GitRevision? editedCommit = null, string? commitMessage = null, bool showOnlyWhenChanges = false)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCommit)))
-        {
-            return false;
-        }
-
         if (showOnlyWhenChanges && commands.Module.GetAllChangedFilesWithSubmodulesStatus(cancellationToken: default).Count == 0)
         {
             return true;

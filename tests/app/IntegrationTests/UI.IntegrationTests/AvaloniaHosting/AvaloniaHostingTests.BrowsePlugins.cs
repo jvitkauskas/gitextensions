@@ -15,7 +15,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void A_plugin_of_API_v1_runs_from_the_plugins_menu_of_the_Avalonia_main_window_with_its_window_as_OwnerForm()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         V1OnlyPlugin plugin = new();
         lock (PluginRegistry.Plugins)
         {

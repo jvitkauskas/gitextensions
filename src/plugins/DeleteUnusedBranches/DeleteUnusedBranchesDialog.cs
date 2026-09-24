@@ -17,11 +17,6 @@ internal static class DeleteUnusedBranchesDialog
     public static bool TryShow(GitUIEventArgs args, DeleteUnusedBranchesFormSettings settings, IGitPlugin plugin, out bool hasDeletedBranch)
     {
         hasDeletedBranch = false;
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(DeleteUnusedBranchesForm)))
-        {
-            return false;
-        }
-
         DeleteUnusedBranchesViewModel? viewModel = null;
         AvaloniaPluginDialogs.ShowDialog(
             () =>

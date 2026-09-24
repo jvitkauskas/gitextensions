@@ -22,11 +22,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowClone(IWin32Window? owner, IGitUICommands commands, string? url, bool openedFromProtocolHandler, EventHandler<GitModuleEventArgs>? gitModuleChanged)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormClone)))
-        {
-            return false;
-        }
-
         IList<Repository> remotesHistory = ThreadHelper.JoinableTaskFactory.Run(RepositoryHistoryManager.Remotes.LoadRecentHistoryAsync);
         IList<Repository> localsHistory = ThreadHelper.JoinableTaskFactory.Run(RepositoryHistoryManager.Locals.LoadRecentHistoryAsync);
         IReadOnlyList<string> recentDestinations = [.. localsHistory.Select(x => x.GetParentPath())

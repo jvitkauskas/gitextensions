@@ -12,11 +12,6 @@ internal static class GitStatisticsDialog
     /// <summary>Returns <see langword="false"/> when the port is disabled, in which case the caller shows the WinForms form.</summary>
     public static bool TryShow(GitUIEventArgs args, string codeFilePattern, bool countSubmodules, string directoriesToIgnore)
     {
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(FormGitStatistics)))
-        {
-            return false;
-        }
-
         IGitExecutorProvider executorProvider = args.GitUICommands.GetRequiredService<IGitExecutorProvider>();
         AvaloniaPluginDialogs.ShowDialog(
             () => new GitStatisticsWindow

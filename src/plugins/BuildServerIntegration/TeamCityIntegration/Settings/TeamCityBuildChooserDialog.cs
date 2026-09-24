@@ -18,11 +18,6 @@ internal static class TeamCityBuildChooserDialog
     public static bool TryShow(WindowOwner owner, string serverUrl, string projectName, string buildIdFilter, out (string ProjectName, string BuildIdFilter)? chosen)
     {
         chosen = null;
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(TeamCityBuildChooser)))
-        {
-            return false;
-        }
-
         using TeamCityAdapter adapter = new();
         adapter.InitializeHttpClient(serverUrl);
         Project? rootProject = adapter.GetProjectsTree();

@@ -46,13 +46,6 @@ public static class ThemeColors
 /// </summary>
 public static class AvaloniaUi
 {
-    /// <summary>Environment variable selecting which dialogs use the Avalonia UI.</summary>
-    /// <remarks>
-    ///  Unset or <c>all</c>: every ported dialog; <c>none</c>: none (WinForms fallback);
-    ///  otherwise a comma-separated list of WinForms form names, e.g. <c>FormAbout,FormRenameBranch</c>.
-    /// </remarks>
-    public const string EnvironmentVariable = "GE_AVALONIA";
-
     /// <summary>The host's (WinForms) synchronization context, captured when Avalonia was set up.</summary>
     private static SynchronizationContext? _hostContext;
 
@@ -123,19 +116,6 @@ public static class AvaloniaUi
         });
 
     /// <summary>
-    ///  Returns whether the Avalonia port of the dialog replacing the given WinForms form should be used.
-    /// </summary>
-    /// <remarks>Read on every call (it is cheap), so that tests can switch between the UIs.</remarks>
-    public static bool IsEnabledFor(string winFormsFormName)
-        => ParseEnabledDialogs() is not { } enabled || enabled.Contains(winFormsFormName);
-
-    /// <summary>
-    ///  Whether an unfinished port is enabled: only when named in the environment variable (e.g.
-    ///  <c>GE_AVALONIA=all,FormSettings</c> for all the ports with it), not by default.
-    /// </summary>
-    public static bool IsExplicitlyEnabledFor(string winFormsFormName) => IsNamed(winFormsFormName);
-
-    /// <summary>
     ///  Sets up Avalonia on the current (UI) thread on first use. Initialising lazily keeps startup unchanged
     ///  while no ported dialog has been opened.
     /// </summary>
@@ -173,28 +153,6 @@ public static class AvaloniaUi
             }
         };
     }
-
-    private static HashSet<string>? ParseEnabledDialogs()
-    {
-        string? value = Environment.GetEnvironmentVariable(EnvironmentVariable)?.Trim();
-        if (string.IsNullOrEmpty(value) || value.Equals("all", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        if (value.Equals("none", StringComparison.OrdinalIgnoreCase))
-        {
-            return [];
-        }
-
-        HashSet<string> names = [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
-
-        // "all,FormSettings": all the ports, and the unfinished ones named.
-        return names.Contains("all", StringComparer.OrdinalIgnoreCase) ? null : names;
-    }
-
-    private static bool IsNamed(string winFormsFormName)
-        => Environment.GetEnvironmentVariable(EnvironmentVariable)?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Contains(winFormsFormName) == true;
 
     internal static void VerifyUiThread() => Dispatcher.UIThread.VerifyAccess();
 

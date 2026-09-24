@@ -12,11 +12,6 @@ internal static class ReleaseNotesGeneratorDialog
     /// <summary>Returns <see langword="false"/> when the port is disabled, in which case the caller shows the WinForms form.</summary>
     public static bool TryShow(GitUIEventArgs args)
     {
-        if (!AvaloniaPluginDialogs.IsEnabledFor(nameof(ReleaseNotesGeneratorForm)))
-        {
-            return false;
-        }
-
         AvaloniaPluginDialogs.ShowDialog(
             () =>
             {

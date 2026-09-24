@@ -15,11 +15,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowGitIgnore(IWin32Window? owner, IGitUICommands commands, bool localExclude)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormGitIgnore)))
-        {
-            return false;
-        }
-
         GitIgnoreStrings strings = ViewStrings.Load<GitIgnoreStrings>();
         GitIgnoreFileStrings fileStrings = localExclude ? ViewStrings.Load<GitLocalExcludeModelStrings>() : ViewStrings.Load<GitIgnoreModelStrings>();
         IGitModule module = commands.Module;

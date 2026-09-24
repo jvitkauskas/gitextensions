@@ -12,7 +12,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_file_tree_tab_lists_the_files_of_the_selected_commit_and_shows_them()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         _referenceRepository.CreateCommit("Second commit", "changed content", "file.txt");
         Directory.CreateDirectory(Path.Combine(_referenceRepository.Module.WorkingDir, "folder"));
         _referenceRepository.CreateCommit("Third commit", "nested content", "folder/nested.txt");

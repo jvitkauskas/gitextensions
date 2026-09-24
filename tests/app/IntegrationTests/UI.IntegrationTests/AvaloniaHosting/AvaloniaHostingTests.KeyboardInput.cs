@@ -12,7 +12,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void A_modeless_Avalonia_window_gets_the_characters_of_its_key_presses()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
 
         string? typed = null;
         bool closed = false;

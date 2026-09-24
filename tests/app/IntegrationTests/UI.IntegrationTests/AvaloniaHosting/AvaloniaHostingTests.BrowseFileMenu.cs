@@ -18,7 +18,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_diff_tab_menu_stages_and_unstages_a_file_of_the_working_directory()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         _referenceRepository.CreateCommit("Second commit", "committed content", "file.txt");
         File.WriteAllText(Path.Combine(_referenceRepository.Module.WorkingDir, "file.txt"), "changed content");
 
@@ -92,7 +91,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_diff_tab_menu_renames_a_file_of_a_commit_with_the_prompt()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         _referenceRepository.CreateCommit("Second commit", "committed content", "file.txt");
         string head = _referenceRepository.CommitHash!;
 

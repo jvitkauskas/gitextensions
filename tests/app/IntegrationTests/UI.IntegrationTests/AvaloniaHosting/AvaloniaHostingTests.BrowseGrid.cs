@@ -26,7 +26,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_grid_of_the_main_window_shows_the_stashes_as_rows_and_runs_its_hotkeys()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         string head = _referenceRepository.CommitHash!;
 
         // An older stash of a tracked file, and a newer one of an untracked file only (git stash -u).
@@ -120,7 +119,6 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void The_grid_shows_the_build_statuses_and_the_build_report_tab_of_the_selected_commit()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormBrowse");
         _referenceRepository.CreateCommit("Second commit", "changed content", "file.txt");
         string head = _referenceRepository.CommitHash!;
         FakeBuildServerAdapter adapter = new(new BuildInfo

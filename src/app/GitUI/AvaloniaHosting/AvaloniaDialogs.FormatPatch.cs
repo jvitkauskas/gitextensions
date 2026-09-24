@@ -17,11 +17,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowFormatPatch(IWin32Window? owner, IGitUICommands commands)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormFormatPatch)))
-        {
-            return false;
-        }
-
         FormatPatchViewModel? viewModel = null;
         try
         {

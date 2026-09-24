@@ -23,11 +23,6 @@ internal static partial class AvaloniaDialogs
     /// </summary>
     public static bool TrySearchForUpdatesAndShow(IWin32Window? owner, bool alwaysShow)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormUpdates)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
         UpdatesWindow window = new();
         UpdatesViewModel viewModel = new(

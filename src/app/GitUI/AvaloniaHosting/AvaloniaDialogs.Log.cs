@@ -19,11 +19,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowLog(IWin32Window? owner, IGitUICommands commands, out bool accepted)
     {
         accepted = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormLog)))
-        {
-            return false;
-        }
-
         AvaloniaUi.EnsureInitialized(GetOptions);
 
         LogWindow window = new() { PositionName = nameof(FormLog), PositionStore = WindowPositionStore.Instance };

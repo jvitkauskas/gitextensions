@@ -29,11 +29,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowSettings(IWin32Window? owner, IGitUICommands commands, SettingsPageReference? initialPage, out bool saved)
     {
         saved = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormSettings)))
-        {
-            return false;
-        }
-
         CommonLogic commonLogic = new(commands.Module);
         SettingsDialogViewModel viewModel = new(ViewStrings.Load<SettingsDialogStrings>(), new SettingsDialogHost(commonLogic, owner));
         SettingsWindow? settingsWindow = null;

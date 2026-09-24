@@ -150,14 +150,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowDeleteBranch(owner, this, branches))
-            {
-                return true;
-            }
-
-            using FormDeleteBranch form = new(this, branches);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowDeleteBranch(owner, this, branches);
         }, changesRepo: false);
     }
 
@@ -165,14 +158,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowDeleteRemoteBranch(owner, this, remoteBranch))
-            {
-                return true;
-            }
-
-            using FormDeleteRemoteBranch form = new(this, remoteBranch);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowDeleteRemoteBranch(owner, this, remoteBranch);
         }, changesRepo: false);
     }
 
@@ -180,14 +166,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCheckoutRevision(owner, this, revision, out bool checkedOut))
-            {
-                return checkedOut;
-            }
-
-            using FormCheckoutRevision form = new(this);
-            form.SetRevision(revision);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCheckoutRevision(owner, this, revision, out bool checkedOut) && checkedOut;
         }, preEvent: PreCheckoutRevision, postEvent: PostCheckoutRevision);
     }
 
@@ -200,13 +179,7 @@ public sealed class GitUICommands : IGitUICommands
             return false;
         }
 
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(owner, this, Module.GetRevision(objectId), FormResetCurrentBranch.ResetType.Soft, out bool reset))
-        {
-            return reset;
-        }
-
-        using FormResetCurrentBranch form = FormResetCurrentBranch.Create(this, Module.GetRevision(objectId));
-        return form.ShowDialog(owner) == DialogResult.OK;
+        return AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(owner, this, Module.GetRevision(objectId), FormResetCurrentBranch.ResetType.Soft, out bool reset) && reset;
     }
 
     public bool StashSave(IWin32Window? owner, bool includeUntrackedFiles, bool keepIndex = false, string message = "", IReadOnlyList<string>? selectedFiles = null)
@@ -345,15 +318,7 @@ public sealed class GitUICommands : IGitUICommands
             return false;
         }
 
-        if (FindFormBrowse(owner) is FormBrowse browse)
-        {
-            browse.SetWorkingDir(Path.GetFullPath(worktreePath));
-        }
-        else
-        {
-            AvaloniaHosting.AvaloniaDialogs.TrySetBrowseWorkingDir(owner, Path.GetFullPath(worktreePath));
-        }
-
+        AvaloniaHosting.AvaloniaDialogs.TrySetBrowseWorkingDir(owner, Path.GetFullPath(worktreePath));
         return true;
     }
 
@@ -361,47 +326,15 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateWorktree(owner, this, mainWorktreePath, out string? worktreeDirectory))
-            {
-                if (worktreeDirectory is null)
-                {
-                    return false;
-                }
-
-                WorktreeSwitch(owner, worktreeDirectory);
-                return true;
-            }
-
-            using FormCreateWorktree form = new(this, mainWorktreePath);
-            if (form.ShowDialog(owner) != DialogResult.OK)
+            if (!AvaloniaHosting.AvaloniaDialogs.TryShowCreateWorktree(owner, this, mainWorktreePath, out string? worktreeDirectory) || worktreeDirectory is null)
             {
                 return false;
             }
 
             // Offer to switch to the freshly created worktree, mirroring the clone flow.
-            WorktreeSwitch(owner, form.WorktreeDirectory);
-
+            WorktreeSwitch(owner, worktreeDirectory);
             return true;
         });
-    }
-
-    private static FormBrowse? FindFormBrowse(IWin32Window? window)
-    {
-        // The owner may be a child control (e.g. the repository objects tree), so resolve its containing form first.
-        if (window is Control control and not Form)
-        {
-            window = control.FindForm();
-        }
-
-        for (Form? form = window as Form; form is not null; form = form.Owner)
-        {
-            if (form is FormBrowse formBrowse)
-            {
-                return formBrowse;
-            }
-        }
-
-        return null;
     }
 
     public void ShowModelessForm(IWin32Window? owner, bool requiresValidWorkingDir,
@@ -498,13 +431,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCheckoutBranch(owner, this, branch, remote, containObjectIds, out bool notCancelled))
-            {
-                return notCancelled;
-            }
-
-            using FormCheckoutBranch form = new(this, branch, remote, containObjectIds);
-            return form.DoDefaultActionOrShow(owner) != DialogResult.Cancel;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCheckoutBranch(owner, this, branch, remote, containObjectIds, out bool notCancelled) && notCancelled;
         }, preEvent: PreCheckoutBranch, postEvent: PostCheckoutBranch);
     }
 
@@ -567,13 +494,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowLog(owner, this, out bool accepted))
-            {
-                return accepted;
-            }
-
-            using FormLog form = new(this);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowLog(owner, this, out bool accepted) && accepted;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -583,14 +504,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowAddFiles(owner, this, addFiles))
-            {
-                return true;
-            }
-
-            using FormAddFiles form = new(this, addFiles);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowAddFiles(owner, this, addFiles);
         });
     }
 
@@ -615,13 +529,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateBranch(owner, this, objectId, new(newBranchNamePrefix), out bool created))
-            {
-                return created;
-            }
-
-            using FormCreateBranch form = new(this, objectId, newBranchNamePrefix);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCreateBranch(owner, this, objectId, new(newBranchNamePrefix), out bool created) && created;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -631,14 +539,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowClone(owner, this, url, openedFromProtocolHandler, gitModuleChanged))
-            {
-                return true;
-            }
-
-            using FormClone form = new(this, url, openedFromProtocolHandler, gitModuleChanged);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowClone(owner, this, url, openedFromProtocolHandler, gitModuleChanged);
         }
 
         return DoActionOnRepo(owner, Action, requiresValidWorkingDir: false, changesRepo: false);
@@ -651,30 +552,14 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartCleanupRepositoryDialog(IWin32Window? owner = null, string? path = null)
     {
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowCleanupRepository(owner, this, path))
-        {
-            return true;
-        }
-
-        using FormCleanupRepository form = new(this);
-        form.SetPathArgument(path);
-        form.ShowDialog(owner);
-
-        return true;
+        return AvaloniaHosting.AvaloniaDialogs.TryShowCleanupRepository(owner, this, path);
     }
 
     public bool StartSquashCommitDialog(IWin32Window? owner, GitRevision revision)
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Squash, revision))
-            {
-                return true;
-            }
-
-            using FormCommit form = new(this, CommitKind.Squash, revision);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Squash, revision);
         }
 
         return DoActionOnRepo(Action);
@@ -684,14 +569,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Fixup, revision))
-            {
-                return true;
-            }
-
-            using FormCommit form = new(this, CommitKind.Fixup, revision);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Fixup, revision);
         }
 
         return DoActionOnRepo(Action);
@@ -701,14 +579,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Amend, revision))
-            {
-                return true;
-            }
-
-            using FormCommit form = new(this, CommitKind.Amend, revision);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, CommitKind.Amend, revision);
         }
 
         return DoActionOnRepo(Action);
@@ -747,22 +618,7 @@ public sealed class GitUICommands : IGitUICommands
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, commitMessage: commitMessage, showOnlyWhenChanges: showOnlyWhenChanges))
-            {
-                return true;
-            }
-
-            using FormCommit form = new(this, commitMessage: commitMessage);
-            if (showOnlyWhenChanges)
-            {
-                form.ShowDialogWhenChanges(owner);
-            }
-            else
-            {
-                form.ShowDialog(owner);
-            }
-
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCommit(owner, this, commitMessage: commitMessage, showOnlyWhenChanges: showOnlyWhenChanges);
         }
 
         try
@@ -792,14 +648,7 @@ public sealed class GitUICommands : IGitUICommands
         {
             dir ??= Module.IsValidGitWorkingDir() ? Module.WorkingDir : string.Empty;
 
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowInit(owner, this, dir, gitModuleChanged))
-            {
-                return true;
-            }
-
-            using FormInit frm = new(this, dir, gitModuleChanged);
-            frm.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowInit(owner, this, dir, gitModuleChanged);
         }
 
         return DoActionOnRepo(owner, Action, requiresValidWorkingDir: false, changesRepo: false);
@@ -828,23 +677,13 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowPull(owner, this, remoteBranch, remote, pullAction, pullOnShow, out bool accepted, out bool errorOccurred))
+            if (!AvaloniaHosting.AvaloniaDialogs.TryShowPull(owner, this, remoteBranch, remote, pullAction, pullOnShow, out bool accepted, out bool errorOccurred))
             {
-                pulled = accepted && !errorOccurred;
-                return accepted;
+                return false;
             }
 
-            using FormPull formPull = new(this, remoteBranch, remote, pullAction);
-            DialogResult dlgResult = pullOnShow
-                ? formPull.PullAndShowDialogWhenFailed(owner, remote, pullAction)
-                : formPull.ShowDialog(owner);
-
-            if (dlgResult == DialogResult.OK)
-            {
-                pulled = !formPull.ErrorOccurred;
-            }
-
-            return dlgResult == DialogResult.OK;
+            pulled = accepted && !errorOccurred;
+            return accepted;
         }
 
         bool done = DoActionOnRepo(owner, Action);
@@ -858,20 +697,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowViewPatch(owner, this, patchFile))
-            {
-                return true;
-            }
-
-            using FormViewPatch viewPatch = new(this);
-            if (!string.IsNullOrEmpty(patchFile))
-            {
-                viewPatch.LoadPatch(patchFile);
-            }
-
-            viewPatch.ShowDialog(owner);
-
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowViewPatch(owner, this, patchFile);
         }
 
         return DoActionOnRepo(owner, Action, requiresValidWorkingDir: false, changesRepo: false);
@@ -881,14 +707,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCommitDiff(null, this, objectId))
-            {
-                return true;
-            }
-
-            using FormCommitDiff viewPatch = new(this, objectId);
-            viewPatch.ShowDialog(null);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCommitDiff(null, this, objectId);
         }
 
         return DoActionOnRepo(null, Action, requiresValidWorkingDir: false, changesRepo: false);
@@ -903,14 +722,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowSparseWorkingCopy(owner, this))
-            {
-                return true;
-            }
-
-            using FormSparseWorkingCopy form = new(this);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowSparseWorkingCopy(owner, this);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false);
@@ -930,14 +742,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowFormatPatch(owner, this))
-            {
-                return true;
-            }
-
-            using FormFormatPatch form = new(this);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowFormatPatch(owner, this);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false);
@@ -947,14 +752,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowStash(owner, this, manageStashes, initialStash))
-            {
-                return true;
-            }
-
-            using FormStash form = new(this, initialStash) { ManageStashes = manageStashes };
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowStash(owner, this, manageStashes, initialStash);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false);
@@ -1033,13 +831,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowRevertCommit(owner, this, revision, out bool reverted))
-            {
-                return reverted;
-            }
-
-            using FormRevertCommit form = new(this, revision);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowRevertCommit(owner, this, revision, out bool reverted) && reverted;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1049,14 +841,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowResolveConflicts(owner, this, offerCommit))
-            {
-                return true;
-            }
-
-            using FormResolveConflicts form = new(this, offerCommit);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowResolveConflicts(owner, this, offerCommit);
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1066,13 +851,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCherryPick(owner, this, revision, out bool picked))
-            {
-                return picked;
-            }
-
-            using FormCherryPick form = new(this, revision);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCherryPick(owner, this, revision, out bool picked) && picked;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1084,44 +863,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCherryPicks(owner, this, revisions, out bool changed))
-            {
-                return changed;
-            }
-
-            FormCherryPick? prevForm = null;
-
-            try
-            {
-                bool repoChanged = false;
-
-                // ReSharper disable once PossibleMultipleEnumeration
-                foreach (GitRevision r in revisions)
-                {
-                    FormCherryPick frm = new(this, r);
-                    if (prevForm is not null)
-                    {
-                        frm.CopyOptions(prevForm);
-                        prevForm.Dispose();
-                    }
-
-                    prevForm = frm;
-                    if (frm.ShowDialog(owner) == DialogResult.OK)
-                    {
-                        repoChanged = true;
-                    }
-                    else
-                    {
-                        return repoChanged;
-                    }
-                }
-
-                return repoChanged;
-            }
-            finally
-            {
-                prevForm?.Dispose();
-            }
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCherryPicks(owner, this, revisions, out bool changed) && changed;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1134,14 +876,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowMergeBranch(owner, this, branch))
-            {
-                return true;
-            }
-
-            using FormMergeBranch form = new(this, branch);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowMergeBranch(owner, this, branch);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false);
@@ -1156,13 +891,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowCreateTag(owner, this, revision?.ObjectId ?? default, out bool created))
-            {
-                return created;
-            }
-
-            using FormCreateTag form = new(this, revision?.ObjectId ?? default);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowCreateTag(owner, this, revision?.ObjectId ?? default, out bool created) && created;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1172,13 +901,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowDeleteTag(owner, this, tag, out bool deleted))
-            {
-                return deleted;
-            }
-
-            using FormDeleteTag form = new(this, tag);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowDeleteTag(owner, this, tag, out bool deleted) && deleted;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1188,14 +911,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowGitIgnore(owner, this, localExcludes))
-            {
-                return true;
-            }
-
-            using FormGitIgnore form = new(this, localExcludes);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowGitIgnore(owner, this, localExcludes);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false, postEvent: PostEditGitIgnore);
@@ -1205,14 +921,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowAddToGitIgnore(owner, this, localExclude, filePattern))
-            {
-                return true;
-            }
-
-            using FormAddToGitIgnore frm = new(this, localExclude, filePattern);
-            frm.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowAddToGitIgnore(owner, this, localExclude, filePattern);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false, postEvent: PostEditGitIgnore);
@@ -1222,13 +931,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowSettings(owner, this, initialPage, out bool saved))
-            {
-                return saved;
-            }
-
-            return FormSettings.ShowSettingsDialog(this, owner, initialPage)
-                is DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowSettings(owner, this, initialPage, out bool saved) && saved;
         }
 
         return DoActionOnRepo(owner, Action, requiresValidWorkingDir: false, postEvent: PostSettings);
@@ -1255,20 +958,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
             {
-                if (AvaloniaHosting.AvaloniaDialogs.TryShowArchive(owner, this, revision, revision2, path))
-                {
-                    return true;
-                }
-
-                using FormArchive form = new(this)
-                {
-                    SelectedRevision = revision,
-                };
-                form.SetDiffSelectedRevision(revision2);
-                form.SetPathArgument(path);
-                form.ShowDialog(owner);
-
-                return true;
+                return AvaloniaHosting.AvaloniaDialogs.TryShowArchive(owner, this, revision, revision2, path);
             }, changesRepo: false);
     }
 
@@ -1276,14 +966,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowMailMap(owner, this))
-            {
-                return true;
-            }
-
-            using FormMailMap form = new(this);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowMailMap(owner, this);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false);
@@ -1293,14 +976,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowVerify(owner, this))
-            {
-                return true;
-            }
-
-            using FormVerify form = new(this);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowVerify(owner, this);
         }
 
         // TODO: move Notify to FormVerify and friends
@@ -1312,18 +988,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowRemotes(owner, this, preselectRemote, preselectLocal))
-            {
-                return true;
-            }
-
-            using FormRemotes form = new(this)
-            {
-                PreselectRemoteOnLoad = preselectRemote,
-                PreselectLocalOnLoad = preselectLocal
-            };
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowRemotes(owner, this, preselectRemote, preselectLocal);
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1360,14 +1025,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowRebase(owner, this, from, to, onto, interactive, startRebaseImmediately))
-            {
-                return true;
-            }
-
-            using FormRebase form = new(this, from, to, onto, interactive, startRebaseImmediately);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowRebase(owner, this, from, to, onto, interactive, startRebaseImmediately);
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1377,13 +1035,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowRenameBranch(owner, this, branch, out bool renamed))
-            {
-                return renamed;
-            }
-
-            using FormRenameBranch form = new(this, branch);
-            return form.ShowDialog(owner) == DialogResult.OK;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowRenameBranch(owner, this, branch, out bool renamed) && renamed;
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1393,14 +1045,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowSubmodules(owner, this))
-            {
-                return true;
-            }
-
-            using FormSubmodules form = new(this);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowSubmodules(owner, this);
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1474,23 +1119,7 @@ public sealed class GitUICommands : IGitUICommands
     /// <param name="args">The start up arguments.</param>
     public bool StartBrowseDialog(IWin32Window? owner, BrowseArguments? args = null)
     {
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowBrowse(this, args ?? new BrowseArguments()))
-        {
-            return true;
-        }
-
-        FormBrowse form = new(this, args ?? new BrowseArguments());
-
-        if (Application.MessageLoop)
-        {
-            form.Show(owner);
-        }
-        else
-        {
-            Application.Run(form);
-        }
-
-        return true;
+        return AvaloniaHosting.AvaloniaDialogs.TryShowBrowse(this, args ?? new BrowseArguments());
     }
 
     public void StartFileHistoryDialog(IWin32Window? owner, string fileName, GitRevision? revision = null, bool filterByRevision = false, bool showBlame = false)
@@ -1545,28 +1174,13 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowPush(owner, this, pushOnShow, forceWithLease, branchName, out bool accepted, out bool avaloniaPushed))
+            if (!AvaloniaHosting.AvaloniaDialogs.TryShowPush(owner, this, pushOnShow, forceWithLease, branchName, out bool accepted, out bool avaloniaPushed))
             {
-                pushed = avaloniaPushed;
-                return accepted;
+                return false;
             }
 
-            using FormPush form = new(this, branchName);
-            if (forceWithLease)
-            {
-                form.CheckForceWithLease();
-            }
-
-            DialogResult dlgResult = pushOnShow
-                ? form.PushAndShowDialogWhenFailed(owner)
-                : form.ShowDialog(owner);
-
-            if (dlgResult == DialogResult.OK)
-            {
-                pushed = !form.ErrorOccurred;
-            }
-
-            return dlgResult == DialogResult.OK;
+            pushed = avaloniaPushed;
+            return accepted;
         }
 
         bool done = DoActionOnRepo(owner, Action);
@@ -1585,24 +1199,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         return DoActionOnRepo(owner, action: () =>
             {
-                if (AvaloniaHosting.AvaloniaDialogs.TryShowApplyPatch(owner, this, patchFile))
-                {
-                    return true;
-                }
-
-                using FormApplyPatch form = new(this);
-                if (Directory.Exists(patchFile!))
-                {
-                    form.SetPatchDir(patchFile!);
-                }
-                else
-                {
-                    form.SetPatchFile(patchFile ?? "");
-                }
-
-                form.ShowDialog(owner);
-
-                return true;
+                return AvaloniaHosting.AvaloniaDialogs.TryShowApplyPatch(owner, this, patchFile);
             }, changesRepo: false);
     }
 
@@ -1610,14 +1207,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowEditGitAttributes(owner, this))
-            {
-                return true;
-            }
-
-            using FormGitAttributes form = new(this);
-            form.ShowDialog(owner);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowEditGitAttributes(owner, this);
         }
 
         return DoActionOnRepo(owner, Action, changesRepo: false);
@@ -1678,13 +1268,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         WrapRepoHostingCall(TranslatedStrings.ForkCloneRepo, gitHoster, gh =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowForkAndClone(owner, this, gh, gitModuleChanged))
-            {
-                return;
-            }
-
-            using ForkAndCloneForm frm = new(this, gh, gitModuleChanged);
-            frm.ShowDialog(owner);
+            AvaloniaHosting.AvaloniaDialogs.TryShowForkAndClone(owner, this, gh, gitModuleChanged);
         });
     }
 
@@ -1693,13 +1277,7 @@ public sealed class GitUICommands : IGitUICommands
         WrapRepoHostingCall(TranslatedStrings.ViewPullRequest, gitHoster,
                             gh =>
                             {
-                                if (AvaloniaHosting.AvaloniaDialogs.TryShowPullRequests(owner, this, gh))
-                                {
-                                    return;
-                                }
-
-                                ViewPullRequestsForm frm = new(this, gh) { ShowInTaskbar = true };
-                                frm.Show(owner);
+                                AvaloniaHosting.AvaloniaDialogs.TryShowPullRequests(owner, this, gh);
                             });
     }
 
@@ -1745,17 +1323,7 @@ public sealed class GitUICommands : IGitUICommands
             gitHoster,
             gh =>
             {
-                if (AvaloniaHosting.AvaloniaDialogs.TryShowCreatePullRequest(owner, this, gh, chooseRemote))
-                {
-                    return;
-                }
-
-                CreatePullRequestForm form = new(this, gh, chooseRemote, chooseBranch)
-                {
-                    ShowInTaskbar = true
-                };
-
-                form.Show(owner);
+                AvaloniaHosting.AvaloniaDialogs.TryShowCreatePullRequest(owner, this, gh, chooseRemote);
             });
     }
 
@@ -1811,16 +1379,7 @@ public sealed class GitUICommands : IGitUICommands
         switch (command)
         {
             case "about":
-                if (AvaloniaHosting.AvaloniaDialogs.TryShowAbout(owner: null))
-                {
-                    return true;
-                }
-
-                Application.Run(new FormAbout
-                {
-                    StartPosition = FormStartPosition.CenterScreen
-                });
-                return true;
+                return AvaloniaHosting.AvaloniaDialogs.TryShowAbout(owner: null);
             case "add":
             case "addfiles":
                 // If filenames have been specified, quote them and pass them to the dialog, else pass '.' for current dir.
@@ -1938,13 +1497,7 @@ public sealed class GitUICommands : IGitUICommands
         }
 #pragma warning restore SA1025 // Code should not contain multiple whitespace in a row
 
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowCommandlineHelp())
-        {
-            return true;
-        }
-
-        Application.Run(new FormCommandlineHelp { StartPosition = FormStartPosition.CenterScreen });
-        return true;
+        return AvaloniaHosting.AvaloniaDialogs.TryShowCommandlineHelp();
     }
 
     private static bool UninstallEditor()
@@ -2098,13 +1651,7 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartFileEditorDialog(string? filename, bool showWarning = false, int? lineNumber = null)
     {
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowFileEditor(this, filename, showWarning, lineNumber, out bool accepted))
-        {
-            return accepted;
-        }
-
-        using FormEditor formEditor = new(this, filename, showWarning, lineNumber: lineNumber);
-        return !formEditor.IsDisposed && formEditor.ShowDialog() != DialogResult.Cancel;
+        return AvaloniaHosting.AvaloniaDialogs.TryShowFileEditor(this, filename, showWarning, lineNumber, out bool accepted) && accepted;
     }
 
     /// <summary>
@@ -2156,29 +1703,20 @@ public sealed class GitUICommands : IGitUICommands
             // NOTE: fileHistoryFileName doesn't need to be quoted, as it the filter will get quoted
             // when the filter gets set.
 
-            ShowModelessForm(owner: null, requiresValidWorkingDir: true, preEvent: null, postEvent: null,
-                             () => new FormBrowse(commands: this, new BrowseArguments
-                             {
-                                 RevFilter = filterByRevision ? revision?.ObjectId.ToString() : null,
-                                 PathFilter = fileHistoryFileName,
-                                 SelectedId = revision?.ObjectId ?? default,
-                                 IsFileHistoryMode = true
-                             }));
+            return RequiresValidWorkingDir(owner: null) && StartBrowseDialog(owner: null, new BrowseArguments
+            {
+                RevFilter = filterByRevision ? revision?.ObjectId.ToString() : null,
+                PathFilter = fileHistoryFileName,
+                SelectedId = revision?.ObjectId ?? default,
+                IsFileHistoryMode = true
+            });
         }
         else
         {
             // NOTE: fileHistoryFileName must be quoted.
 
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowFileHistory(this, fileHistoryFileName, revision, filterByRevision, showBlame))
-            {
-                return true;
-            }
-
-            ShowModelessForm(owner: null, requiresValidWorkingDir: true, preEvent: null, postEvent: null,
-                             () => new FormFileHistory(this, fileHistoryFileName.QuoteNE(), revision, filterByRevision, showBlame));
+            return AvaloniaHosting.AvaloniaDialogs.TryShowFileHistory(this, fileHistoryFileName, revision, filterByRevision, showBlame);
         }
-
-        return true;
     }
 
     private bool RunCloneCommand(IReadOnlyList<string> args)
@@ -2203,14 +1741,7 @@ public sealed class GitUICommands : IGitUICommands
 
         return DoActionOnRepo(owner: null, action: () =>
         {
-            if (AvaloniaHosting.AvaloniaDialogs.TryShowBlame(owner: null, this, blameFileName, initialLine))
-            {
-                return true;
-            }
-
-            using FormBlame frm = new(this, blameFileName, null, initialLine);
-            frm.ShowDialog(null);
-            return true;
+            return AvaloniaHosting.AvaloniaDialogs.TryShowBlame(owner: null, this, blameFileName, initialLine);
         }, changesRepo: false);
     }
 

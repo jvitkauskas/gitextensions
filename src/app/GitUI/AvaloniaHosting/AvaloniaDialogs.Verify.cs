@@ -20,11 +20,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowVerify(IWin32Window? owner, IGitUICommands commands)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormVerify)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {
@@ -40,11 +35,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Shows the Avalonia port of <c>FormEdit</c>; returns <see langword="false"/> if it is disabled.</summary>
     public static bool TryShowTextViewer(IWin32Window? owner, string text, string fileName, bool isReadOnly)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormEdit)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () => new TextViewerWindow { DataContext = new TextViewerViewModel(ViewStrings.Load<TextViewerStrings>(), text, fileName, isReadOnly) },
             owner,

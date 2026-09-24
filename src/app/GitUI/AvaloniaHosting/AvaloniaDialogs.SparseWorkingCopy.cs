@@ -14,11 +14,6 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowSparseWorkingCopy(IWin32Window? owner, IGitUICommands commands)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormSparseWorkingCopy)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {

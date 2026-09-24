@@ -33,7 +33,7 @@ internal static partial class AvaloniaDialogs
         output = "";
 
         // FormProcess does not support process input either; keep that case on the WinForms path.
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormProcess)) || !string.IsNullOrEmpty(input))
+        if (!string.IsNullOrEmpty(input))
         {
             return false;
         }
@@ -74,11 +74,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>Avalonia port of <see cref="FormStatus.ShowErrorDialog"/>.</summary>
     public static bool TryShowErrorDialog(IWin32Window owner, IGitUICommands commands, string text, string[]? output)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormStatus)))
-        {
-            return false;
-        }
-
         using ConsoleProcess console = new(new PlainTextConsoleCommandRunner(), commands, process: "", arguments: "", workingDirectory: "");
 
         ShowDialog(

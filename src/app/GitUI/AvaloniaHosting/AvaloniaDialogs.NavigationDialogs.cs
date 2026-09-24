@@ -30,11 +30,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCheckoutRevision(IWin32Window? owner, IGitUICommands commands, string? revision, out bool checkedOut)
     {
         checkedOut = false;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCheckoutRevision)))
-        {
-            return false;
-        }
-
         checkedOut = ShowDialog(
             () =>
             {
@@ -54,11 +49,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCompareToBranch(IWin32Window? owner, IGitUICommands commands, ObjectId commitToCompare, out string? branchName)
     {
         branchName = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormCompareToBranch)))
-        {
-            return false;
-        }
-
         CompareToBranchViewModel viewModel = new(
             ViewStrings.Load<CompareToBranchStrings>(),
             new LocalRemoteBranchSelectorViewModel(
@@ -73,11 +63,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowBisect(IWin32Window? owner, IGitUICommands commands, IRevisionGridInfo revisionGrid)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormBisect)))
-        {
-            return false;
-        }
-
         ShowDialog(
             () =>
             {
@@ -95,11 +80,6 @@ internal static partial class AvaloniaDialogs
     {
         accepted = false;
         commitId = default;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormGoToCommit)))
-        {
-            return false;
-        }
-
         // As FormGoToCommit: at most 1000 refs per list, and a revision on the clipboard is offered.
         const int maxDropDownCount = 1_000;
         IGitModule module = commands.Module;
@@ -127,11 +107,6 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowDashboardCategoryTitle(IWin32Window? owner, IReadOnlyList<string> existingCategories, string? originalName, out string? name)
     {
         name = null;
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormDashboardCategoryTitle)))
-        {
-            return false;
-        }
-
         DashboardCategoryTitleViewModel? viewModel = null;
         ShowDialog(
             () =>
@@ -148,11 +123,6 @@ internal static partial class AvaloniaDialogs
 
     public static bool TryShowAddToGitIgnore(IWin32Window? owner, IGitUICommands commands, bool localExclude, IReadOnlyList<string> patterns)
     {
-        if (!AvaloniaUi.IsEnabledFor(nameof(FormAddToGitIgnore)))
-        {
-            return false;
-        }
-
         using AddToGitIgnoreHost host = new(commands, localExclude);
         ShowDialog(
             () =>
