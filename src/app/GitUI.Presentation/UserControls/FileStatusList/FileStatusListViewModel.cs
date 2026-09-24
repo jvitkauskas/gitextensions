@@ -146,7 +146,43 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     public event EventHandler? SelectionActivated;
 
     /// <summary>Activates the selected files (from the view).</summary>
-    public void ActivateSelection() => SelectionActivated?.Invoke(this, EventArgs.Empty);
+    public void ActivateSelection()
+    {
+        if (SelectionActivated is not null)
+        {
+            SelectionActivated(this, EventArgs.Empty);
+            return;
+        }
+
+        // As FileStatusListView_DoubleClick without a DoubleClick handler (and DiffFiles_DoubleClick): the submodule is opened
+        // if set so, else the history of the file.
+        if (SelectedEntry is not { } entry || MenuHost is not { } host || !entry.Item.IsTracked)
+        {
+            return;
+        }
+
+        if (entry.Item.IsSubmodule && host.OpenSubmoduleOnDoubleClick)
+        {
+            host.OpenSubmodule(entry);
+        }
+        else
+        {
+            host.ShowFileHistory(entry, selectedFolder: null, blame: false);
+        }
+    }
+
+    /// <summary>As <c>DisableSubmoduleMenuItemBold</c>: the open submodule item is never bold (the commit dialog stages on a double click).</summary>
+    public bool DisableSubmoduleMenuItemBold { get; init; }
+
+    /// <summary>As the click on <c>_NO_TRANSLATE_openSubmoduleMenuItem</c>.</summary>
+    [RelayCommand]
+    private void OpenSubmodule()
+    {
+        if (SelectedEntry is { } entry)
+        {
+            MenuHost?.OpenSubmodule(entry);
+        }
+    }
 
     public bool IsFlatList => Options.SortType.ToString().EndsWith("Flat");
 
@@ -255,7 +291,11 @@ public sealed partial class FileStatusListViewModel : ObservableObject
 
     /// <summary>The menu items for the selection, updated when the menu opens.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOpenSubmoduleBold))]
     public partial FileStatusMenuState MenuState { get; private set; } = FileStatusMenuState.None;
+
+    /// <summary>Whether "Open with Git Extensions" is bold, as the action of a double click.</summary>
+    public bool IsOpenSubmoduleBold => MenuState.IsOpenSubmoduleDefault && !DisableSubmoduleMenuItemBold;
 
     public bool HasMenuHost => MenuHost is not null;
 

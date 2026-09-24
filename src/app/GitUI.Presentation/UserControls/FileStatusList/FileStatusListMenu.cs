@@ -46,6 +46,7 @@ public sealed class FileStatusListMenuStrings : ViewStrings
         RememberSecondRevDiff = Add("tsmiRememberSecondRevDiff", "Text", "&Remember Second for diff");
         RememberFirstRevDiff = Add("tsmiRememberFirstRevDiff", "Text", "R&emember First for diff");
         DiffSelectedWithRememberedFile = Add("_diffSelectedWithRememberedFile", "Text", "&Diff with \"{0}\"", category: "TranslatedStrings");
+        OpenWithGitExtensions = Add("_openWithGitExtensions", "Text", "&Open with Git Extensions", category: "TranslatedStrings");
         OpenInVisualStudio = Add("tsmiOpenInVisualStudio", "Text", "Open in &Visual Studio");
         Move = Add("tsmiMove", "Text", "Rena&me / move");
         NewName = Add("_newName", "Text", "New name");
@@ -146,6 +147,8 @@ public sealed class FileStatusListMenuStrings : ViewStrings
     public TranslatedText RememberFirstRevDiff { get; }
 
     public TranslatedText DiffSelectedWithRememberedFile { get; }
+
+    public TranslatedText OpenWithGitExtensions { get; }
 
     public TranslatedText OpenInVisualStudio { get; }
 
@@ -261,6 +264,12 @@ public sealed record FileStatusScript(string Name, int Id, bool IsDirect);
 public sealed record FileStatusMenuState
 {
     public static FileStatusMenuState None { get; } = new();
+
+    /// <summary>Whether a submodule is selected, which "Open with Git Extensions" opens (<c>_NO_TRANSLATE_openSubmoduleMenuItem</c>).</summary>
+    public bool ShowOpenSubmodule { get; init; }
+
+    /// <summary>Whether a double click opens the submodule, which the item is bold for (<c>AppSettings.OpenSubmoduleDiffInSeparateWindow</c>).</summary>
+    public bool IsOpenSubmoduleDefault { get; init; }
 
     public bool CanOpenWithDifftool { get; init; }
 
@@ -401,6 +410,15 @@ public interface IFileStatusListMenuHost
     void ShowInFolder(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder);
 
     void ShowFileHistory(FileStatusEntry? entry, RelativePath? selectedFolder, bool blame);
+
+    /// <summary>
+    ///  As <c>OpenSubmoduleAsync</c>: the submodule in a new instance of the application, with the commits of its diff
+    ///  selected.
+    /// </summary>
+    void OpenSubmodule(FileStatusEntry entry);
+
+    /// <summary>Whether a double click opens a submodule (<c>AppSettings.OpenSubmoduleDiffInSeparateWindow</c>), else its history.</summary>
+    bool OpenSubmoduleOnDoubleClick { get; }
 
     /// <summary>Resets the files after a confirmation; returns whether the list should be refreshed.</summary>
     bool ResetFiles(IReadOnlyList<FileStatusEntry> selected, bool toParent);

@@ -61,8 +61,11 @@ public sealed partial class CommitViewModel : DialogViewModel
             HasIgnoredFileSettings = true,
             HasRefreshButton = true,
             CanAutoRefresh = true,
+
+            // As DisableSubmoduleMenuItemBold: a double click stages.
+            DisableSubmoduleMenuItemBold = true,
         };
-        Staged = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { NoFilesText = strings.NoStagedChanges.Text, SelectFirstItemOnSetItems = false };
+        Staged = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { NoFilesText = strings.NoStagedChanges.Text, SelectFirstItemOnSetItems = false, DisableSubmoduleMenuItemBold = true };
         Diff = new FileViewerViewModel(fileViewerHost) { LinePatchingBlocksUntilReload = true };
 
         // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached: in the list whose file is shown.

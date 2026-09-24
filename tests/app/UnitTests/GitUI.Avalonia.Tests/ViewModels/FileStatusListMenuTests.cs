@@ -316,6 +316,34 @@ public sealed class FileStatusListMenuTests
         viewModel.FirstDiffCaption.Should().BeNull();
     }
 
+    [Test]
+    public void A_double_click_opens_the_history_or_the_submodule_unless_the_dialog_handles_it()
+    {
+        FakeMenuHost host = new();
+        FileStatusListViewModel viewModel = Create();
+        viewModel.MenuHost = host;
+        viewModel.SetDiff(First, Second, [new GitItemStatus("lib") { IsSubmodule = true, IsTracked = true, IsChanged = true }, new GitItemStatus("file.txt") { IsTracked = true, IsChanged = true }]);
+
+        // As FileStatusListView_DoubleClick without a handler.
+        viewModel.Select(entry => entry.Item.Name == "lib");
+        viewModel.ActivateSelection();
+        host.OpenSubmoduleOnDoubleClick = true;
+        viewModel.ActivateSelection();
+        viewModel.Select(entry => entry.Item.Name == "file.txt");
+        viewModel.ActivateSelection();
+        viewModel.Select(entry => entry.Item.Name == "lib");
+        viewModel.OpenSubmoduleCommand.Execute(null);
+
+        host.Log.Where(line => !line.StartsWith("state:")).Should().Equal("history: lib", "open submodule: lib", "history: file.txt", "open submodule: lib");
+
+        // A dialog with its own action (e.g. staging in the commit dialog).
+        int activated = 0;
+        viewModel.SelectionActivated += (_, _) => activated++;
+        viewModel.ActivateSelection();
+        activated.Should().Be(1);
+        host.Log.Should().HaveCount(4);
+    }
+
     internal sealed class FakeMenuHost : IFileStatusListMenuHost
     {
         public List<string> Log { get; } = [];
@@ -356,6 +384,10 @@ public sealed class FileStatusListMenuTests
 
         public void ShowFileHistory(FileStatusEntry? entry, RelativePath? selectedFolder, bool blame)
             => Log.Add($"history{(blame ? " blame" : "")}: {entry?.Item.Name}");
+
+        public void OpenSubmodule(FileStatusEntry entry) => Log.Add($"open submodule: {entry.Item.Name}");
+
+        public bool OpenSubmoduleOnDoubleClick { get; set; }
 
         public bool ResetFiles(IReadOnlyList<FileStatusEntry> selected, bool toParent)
         {

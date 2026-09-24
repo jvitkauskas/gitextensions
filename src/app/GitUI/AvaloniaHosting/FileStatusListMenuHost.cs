@@ -69,6 +69,8 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         FileStatusItem? single = selectedItems.Length == 1 ? selectedItems[0] : null;
         return new FileStatusMenuState
         {
+            ShowOpenSubmodule = single?.Item.IsSubmodule == true,
+            IsOpenSubmoduleDefault = AppSettings.OpenSubmoduleDiffInSeparateWindow,
             CanOpenWithDifftool = controller.ShouldShowDifftoolMenus(selectionInfo),
             CanDiffFirstToSelected = _itemContextMenuController.ShouldShowMenuFirstToSelected(diffToolInfo),
             CanDiffFirstToLocal = _itemContextMenuController.ShouldShowMenuFirstToLocal(diffToolInfo),
@@ -276,6 +278,26 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
     }
 
     /// <summary>As <c>StartFileHistoryDialog</c> (without a current revision of a file tree).</summary>
+    public bool OpenSubmoduleOnDoubleClick => AppSettings.OpenSubmoduleDiffInSeparateWindow;
+
+    public void OpenSubmodule(FileStatusEntry entry)
+        => ThreadHelper.FileAndForget(async () =>
+        {
+            // As OpenSubmoduleAsync: the commit of the diff (or the working directory) and the one before.
+            GitSubmoduleStatus? status = entry.Item.GetSubmoduleStatusAsync() is { } task ? await task : null;
+            ObjectId selectedId = entry.SecondRevision.ObjectId == ObjectId.WorkTreeId ? ObjectId.WorkTreeId : status?.Commit ?? default;
+            ObjectId firstId = status?.OldCommit ?? default;
+            string path = FullPathResolver.Resolve(entry.Item.Name.EnsureTrailingPathSeparator()) ?? "";
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            if (!Directory.Exists(path))
+            {
+                MessageBoxes.SubmoduleDirectoryDoesNotExist(Owner, path, entry.Item.Name);
+                return;
+            }
+
+            GitUICommands.LaunchBrowse(workingDir: path, selectedId, firstId);
+        });
+
     public void ShowFileHistory(FileStatusEntry? entry, RelativePath? selectedFolder, bool blame)
     {
         (string? fileName, GitRevision? revision) = selectedFolder is not null
