@@ -68,6 +68,12 @@ public class DialogWindow : Window
     /// </summary>
     public bool IsCenteredOnOwner { get; set; }
 
+    /// <summary>
+    ///  The screen position (in pixels) to open the window at instead of centering it, as a WinForms form with
+    ///  <c>StartPosition.Manual</c> and a <c>Location</c> (e.g. a popup under a grid cell).
+    /// </summary>
+    public PixelPoint? StartupScreenPosition { get; set; }
+
     /// <summary>The configured hotkeys of this dialog.</summary>
     public IReadOnlyList<HotkeyBinding> Hotkeys { get; set; } = [];
 
@@ -107,6 +113,13 @@ public class DialogWindow : Window
         RestorePosition();
         AccessibleNames.Apply(this);
         base.OnOpened(e);
+
+        // After the host centered the window (in the Opened event).
+        if (StartupScreenPosition is { } position)
+        {
+            Position = position;
+        }
+
         RememberNormalBounds();
     }
 

@@ -12,6 +12,7 @@ using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
 using GitUI.Presentation.UserControls.Blame;
 using GitUI.Presentation.UserControls.FileStatusList;
+using GitUI.Presentation.UserControls.RevisionGrid;
 
 namespace GitUI.AvaloniaTests.ViewModels;
 
@@ -135,6 +136,11 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new BuildServerIntegrationSettingsPageStrings()).SetArgDisplayNames(nameof(BuildServerIntegrationSettingsPageStrings));
         yield return new TestCaseData(new RevisionLinksSettingsPageStrings()).SetArgDisplayNames(nameof(RevisionLinksSettingsPageStrings));
         yield return new TestCaseData(new ShellExtensionSettingsPageStrings()).SetArgDisplayNames(nameof(ShellExtensionSettingsPageStrings));
+        yield return new TestCaseData(new GitCommandLogStrings()).SetArgDisplayNames(nameof(GitCommandLogStrings));
+        yield return new TestCaseData(new FindInCommitFilesGitGrepStrings()).SetArgDisplayNames(nameof(FindInCommitFilesGitGrepStrings));
+        yield return new TestCaseData(new QuickItemSelectorStrings()).SetArgDisplayNames(nameof(QuickItemSelectorStrings));
+        yield return new TestCaseData(new LogStrings()).SetArgDisplayNames(nameof(LogStrings));
+        yield return new TestCaseData(new FindAndReplaceStrings()).SetArgDisplayNames(nameof(FindAndReplaceStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

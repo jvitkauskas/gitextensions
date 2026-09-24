@@ -1,20 +1,29 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.Editor;
+using GitUI.Presentation.Translations;
 
 namespace GitUI.Avalonia.Editor;
 
 /// <summary>
 ///  The Avalonia text editor on AvaloniaEdit (the editing mode of the WinForms <c>FileViewer</c>; docs/avalonia-port/PLAN.md,
-///  phase 3): line numbers, syntax highlighting by file extension, whitespace markers and search (Ctrl+F).
+///  phase 3): line numbers, syntax highlighting by file extension, whitespace markers and search.
 /// </summary>
+/// <remarks>
+///  The search is AvaloniaEdit's <see cref="SearchPanel"/> (match case, whole words, regular expressions, highlighting of all
+///  matches, replace in editable texts), with the behaviour of <c>FindAndReplaceForm</c>: Ctrl+F (Ctrl+H to replace) starts with
+///  the selected text or the word at the caret, and F3 (Shift+F3) finds the next (previous) match also once the panel is closed.
+/// </remarks>
 public partial class TextEditorView : UserControl
 {
     private TextEditorViewModel? _viewModel;
@@ -27,10 +36,18 @@ public partial class TextEditorView : UserControl
     private DiffBackgroundRenderer? _diffBackground;
     private DiffAnchorRenderer? _diffAnchors;
 
+    static TextEditorView()
+    {
+        SearchPanelLocalization.Apply(ViewStrings.Load<FindAndReplaceStrings>());
+    }
+
     public TextEditorView()
     {
         InitializeComponent();
         Search = SearchPanel.Install(editor);
+
+        // Before the text area handles the keys (the search commands of AvaloniaEdit).
+        editor.AddHandler(KeyDownEvent, OnEditorPreviewKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         ActualThemeVariantChanged += (_, _) =>
         {
             if (_viewModel is not null)
@@ -75,6 +92,130 @@ public partial class TextEditorView : UserControl
 
     /// <summary>The search panel of the editor (as <c>FindAndReplaceForm</c>).</summary>
     public SearchPanel Search { get; }
+
+    /// <summary>
+    ///  As <c>FindAndReplaceForm.ShowFor</c>: opens the search panel with the text selected on one line, or else the word at the
+    ///  caret (the previous search is kept without one, or with a selection of several lines), in replace mode only if the
+    ///  text is editable.
+    /// </summary>
+    public void OpenSearch(bool replace)
+    {
+        string text = editor.TextArea.Selection switch
+        {
+            { IsEmpty: true } => TextSearch.GetWordAt(editor.Document.Text, editor.CaretOffset),
+            { IsMultiline: false } selection => selection.GetText(),
+
+            // FindAndReplaceForm searches a selection of several lines only (not ported); the previous search is kept.
+            _ => "",
+        };
+        Search.IsReplaceMode = replace && !editor.IsReadOnly;
+        Search.Open();
+        if (text.Length > 0)
+        {
+            Search.SearchPattern = text;
+        }
+
+        Dispatcher.UIThread.Post(Search.Reactivate, DispatcherPriority.Input);
+    }
+
+    /// <summary>
+    ///  As <c>FindAndReplaceForm.FindNextAsync</c> (F3, Shift+F3): selects the next (or previous) match, from the caret and
+    ///  looping around; once the panel is closed, with its last search and options.
+    /// </summary>
+    /// <returns>
+    ///  <see langword="false"/> if the panel is closed and nothing was found, or there is nothing to search for; the panel is then
+    ///  opened, which shows it (instead of the message box of <c>FindAndReplaceForm</c>).
+    /// </returns>
+    public bool FindNext(bool backward)
+    {
+        if (Search.IsOpened)
+        {
+            if (backward)
+            {
+                Search.FindPrevious();
+            }
+            else
+            {
+                Search.FindNext();
+            }
+
+            return true;
+        }
+
+        if (FindClosed(backward))
+        {
+            return true;
+        }
+
+        Search.IsReplaceMode = false;
+        Search.Open();
+        Dispatcher.UIThread.Post(Search.Reactivate, DispatcherPriority.Input);
+        return false;
+    }
+
+    /// <summary>As the <c>SearchPanel</c> does while open: the matches of its search, the one after (or before) the caret.</summary>
+    private bool FindClosed(bool backward)
+    {
+        string pattern = Search.SearchPattern ?? "";
+        if (pattern.Length == 0)
+        {
+            return false;
+        }
+
+        ISearchStrategy strategy;
+        try
+        {
+            strategy = SearchStrategyFactory.Create(pattern, ignoreCase: !Search.MatchCase, Search.WholeWords, Search.UseRegex ? SearchMode.RegEx : SearchMode.Normal);
+        }
+        catch (SearchPatternException)
+        {
+            return false;
+        }
+
+        List<ISearchResult> results = [.. strategy.FindAll(editor.Document, 0, editor.Document.TextLength).Where(r => r.Length > 0)];
+        if (results.Count == 0)
+        {
+            return false;
+        }
+
+        int caret = editor.CaretOffset;
+        ISearchResult result = backward
+            ? results.LastOrDefault(r => r.Offset < caret - editor.SelectionLength) ?? results[^1]
+            : results.FirstOrDefault(r => r.Offset >= caret) ?? results[0];
+        editor.Select(result.Offset, result.Length);
+        editor.TextArea.Caret.Offset = result.EndOffset;
+        editor.TextArea.Caret.BringCaretToView();
+        return true;
+    }
+
+    /// <summary>The keys of <c>FindAndReplaceForm</c>, unless they are typed in the search panel (which handles them itself).</summary>
+    private void OnEditorPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || (e.Source as global::Avalonia.Visual)?.FindAncestorOfType<SearchPanel>(includeSelf: true) is not null)
+        {
+            return;
+        }
+
+        switch (e.Key, e.KeyModifiers)
+        {
+            case (Key.F, KeyModifiers.Control):
+                OpenSearch(replace: false);
+                e.Handled = true;
+                break;
+            case (Key.H, KeyModifiers.Control) when !editor.IsReadOnly:
+                OpenSearch(replace: true);
+                e.Handled = true;
+                break;
+            case (Key.F3, KeyModifiers.None):
+                FindNext(backward: false);
+                e.Handled = true;
+                break;
+            case (Key.F3, KeyModifiers.Shift):
+                FindNext(backward: true);
+                e.Handled = true;
+                break;
+        }
+    }
 
     protected override void OnDataContextChanged(EventArgs e)
     {

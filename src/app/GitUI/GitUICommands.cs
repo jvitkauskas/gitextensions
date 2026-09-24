@@ -563,6 +563,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowLog(owner, this, out bool accepted))
+            {
+                return accepted;
+            }
+
             using FormLog form = new(this);
             return form.ShowDialog(owner) == DialogResult.OK;
         }

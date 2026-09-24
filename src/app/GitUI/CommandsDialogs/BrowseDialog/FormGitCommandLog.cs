@@ -213,6 +213,11 @@ public sealed partial class FormGitCommandLog : GitExtensionsForm
 
     public static void ShowOrActivate(IWin32Window owner)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowGitCommandLog(owner))
+        {
+            return;
+        }
+
         if (instance is null)
         {
             (instance = new FormGitCommandLog()).Show(owner);

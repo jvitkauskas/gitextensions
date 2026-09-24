@@ -1,0 +1,26 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
+                x:Class="GitUI.Avalonia.CommandsDialogs.LogWindow"
+                x:DataType="vm:LogViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="900" Height="640" MinWidth="400" MinHeight="300">
+  <!-- Equivalent of splitContainer1: the revision grid above the files of the selected revisions and their diff. -->
+  <Grid RowDefinitions="205,Auto,*" Margin="4">
+    <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <rg:RevisionGridView Name="revisionGrid" DataContext="{Binding Grid}" />
+    </Border>
+    <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+    <Grid Grid.Row="2" ColumnDefinitions="220,Auto,*">
+      <fs:FileStatusListView Name="diffFiles" DataContext="{Binding Files}" />
+      <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
+      <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <ed:FileViewerView Name="diffViewer" DataContext="{Binding Viewer}" />
+      </Border>
+    </Grid>
+  </Grid>
+</h:DialogWindow>

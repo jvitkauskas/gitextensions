@@ -515,6 +515,16 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             return;
         }
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowQuickRefSelector(ParentForm, actionLabel, gitRefs, GetQuickItemSelectorLocation(), out IGitRef? selectedRef))
+        {
+            if (selectedRef is not null)
+            {
+                action(selectedRef);
+            }
+
+            return;
+        }
+
         using FormQuickGitRefSelector dlg = new();
         dlg.Init(actionLabel, gitRefs);
         dlg.Location = GetQuickItemSelectorLocation();

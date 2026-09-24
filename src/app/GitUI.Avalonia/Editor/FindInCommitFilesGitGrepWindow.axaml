@@ -1,0 +1,28 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.Editor"
+                x:Class="GitUI.Avalonia.Editor.FindInCommitFilesGitGrepWindow"
+                x:DataType="vm:FindInCommitFilesGitGrepViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                ManualSectionSubfolder="browse_repository" ManualSectionAnchorName="diff"
+                Width="440" SizeToContent="Height" CanResize="False" CanMaximize="False">
+  <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto"
+        ColumnSpacing="8" RowSpacing="6" Margin="12">
+    <Label Content="{Binding Strings.FindWhat.AccessKeyText}" Target="expressionComboBox" VerticalAlignment="Center" />
+    <ComboBox Name="expressionComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+              PlaceholderText="{Binding Strings.Watermark.Text}"
+              ItemsSource="{Binding SearchItems}" Text="{Binding Expression}" />
+    <Label Grid.Row="1" Content="{Binding Strings.Options.AccessKeyText}" Target="optionsTextBox" VerticalAlignment="Center" />
+    <TextBox Name="optionsTextBox" Grid.Row="1" Grid.Column="1" Text="{Binding UserArguments}" />
+    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="16">
+      <CheckBox Name="matchCaseCheckBox" Content="{Binding Strings.MatchCase.AccessKeyText}" IsChecked="{Binding MatchCase}" />
+      <CheckBox Name="matchWholeWordCheckBox" Content="{Binding Strings.MatchWholeWord.AccessKeyText}" IsChecked="{Binding MatchWholeWord}" />
+    </StackPanel>
+    <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+      <CheckBox Name="showSearchBoxCheckBox" Content="{Binding Strings.ShowSearchBox.AccessKeyText}" IsChecked="{Binding ShowSearchBox}" />
+      <Button Name="findButton" Grid.Column="1" MinWidth="90" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Find.AccessKeyText}" Command="{Binding SearchCommand}" />
+    </Grid>
+  </Grid>
+</h:DialogWindow>

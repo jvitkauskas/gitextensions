@@ -1,0 +1,98 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.BrowseDialog"
+                x:Class="GitUI.Avalonia.CommandsDialogs.BrowseDialog.GitCommandLogWindow"
+                x:DataType="vm:GitCommandLogViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Topmost="{Binding AlwaysOnTop}"
+                ShowInTaskbar="True" CanMinimize="True"
+                Width="659" Height="470" MinWidth="400" MinHeight="250">
+  <Window.Styles>
+    <Style Selector="ListBox.log">
+      <Setter Property="FontFamily" Value="{DynamicResource MonospaceFontFamily}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+    <Style Selector="ListBox.log ListBoxItem">
+      <Setter Property="Padding" Value="4,1" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBox.output">
+      <Setter Property="FontFamily" Value="{DynamicResource MonospaceFontFamily}" />
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="AcceptsReturn" Value="True" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="VerticalContentAlignment" Value="Top" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+    <Style Selector="TextBox.output.wrap">
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </Window.Styles>
+  <DockPanel Margin="4">
+    <!-- Equivalent of the check boxes anchored to the bottom left. -->
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12" Margin="2,4,2,0">
+      <CheckBox Name="alwaysOnTopCheckBox" Content="{Binding Strings.AlwaysOnTop.AccessKeyText}" IsChecked="{Binding AlwaysOnTop}" />
+      <CheckBox Name="wordWrapCheckBox" Content="{Binding Strings.WordWrap.AccessKeyText}" IsChecked="{Binding WordWrap}" />
+      <CheckBox Name="captureCallStacksCheckBox" Content="{Binding Strings.CaptureCallStacks.AccessKeyText}" IsChecked="{Binding CaptureCallStacks}" />
+    </StackPanel>
+    <TabControl Name="tabs" SelectedIndex="{Binding SelectedTabIndex}" Padding="0,4,0,0">
+      <TabItem Name="commandLogTab" Header="{Binding Strings.CommandLogTab.PlainText}">
+        <Grid RowDefinitions="*,Auto,135">
+          <ListBox Name="logItems" Classes="log" ItemsSource="{Binding LogItems}" SelectedItem="{Binding SelectedLogItem}" SelectionMode="Single">
+            <ListBox.ContextMenu>
+              <ContextMenu Name="logMenu">
+                <MenuItem Name="saveToFileItem" Header="{Binding Strings.SaveToFile.AccessKeyText}" InputGesture="Ctrl+S" Command="{Binding SaveToFileCommand}">
+                  <MenuItem.Icon>
+                    <Image Source="avares://GitUI.Avalonia/Assets/SaveAs.png" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Name="copyCommandLineItem" Header="{Binding Strings.CopyCommandLine.AccessKeyText}" InputGesture="Ctrl+C" Command="{Binding CopyCommandLineCommand}">
+                  <MenuItem.Icon>
+                    <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Name="clearLogItem" Header="{Binding Strings.ClearLog.AccessKeyText}" InputGesture="Ctrl+L" Command="{Binding ClearLogCommand}">
+                  <MenuItem.Icon>
+                    <Image Source="avares://GitUI.Avalonia/Assets/ClearLog.png" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </ListBox.ContextMenu>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:GitCommandLogItem">
+                <TextBlock Text="{Binding ColumnLine}" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+          <TextBox Name="logOutput" Grid.Row="2" Classes="output" Text="{Binding LogOutput, Mode=OneWay}" Classes.wrap="{Binding WordWrap}" />
+        </Grid>
+      </TabItem>
+      <TabItem Name="commandCacheTab" Header="{Binding Strings.CommandCacheTab.PlainText}">
+        <Grid RowDefinitions="183,Auto,*">
+          <ListBox Name="cacheItems" Classes="log" ItemsSource="{Binding CacheItems}" SelectedItem="{Binding SelectedCacheItem}" SelectionMode="Single">
+            <ListBox.ContextMenu>
+              <ContextMenu Name="cacheMenu">
+                <MenuItem Name="clearCacheItem" Header="{Binding Strings.ClearCache.AccessKeyText}" InputGesture="Ctrl+L" Command="{Binding ClearCacheCommand}">
+                  <MenuItem.Icon>
+                    <Image Source="avares://GitUI.Avalonia/Assets/ClearLog.png" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </ListBox.ContextMenu>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:GitCommandCacheItem">
+                <TextBlock Text="{Binding DisplayString}" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
+          <TextBox Name="cacheOutput" Grid.Row="2" Classes="output" Text="{Binding CacheOutput, Mode=OneWay}" Classes.wrap="{Binding WordWrap}" />
+        </Grid>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</h:DialogWindow>
