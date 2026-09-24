@@ -22,8 +22,6 @@ public abstract class GroupSettingsPage : Translate, ISettingsPage
         return Title;
     }
 
-    public Control? GuiControl => null;
-
     public void OnPageShown()
     {
     }

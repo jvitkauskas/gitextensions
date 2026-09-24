@@ -5,74 +5,45 @@ using GitCommands.Git.Extensions;
 using GitCommands.Logging;
 using GitExtensions.Extensibility;
 using GitExtUtils;
-using GitExtUtils.GitUI.Theming;
-using GitUI.Theming;
+using GitUI.Presentation.Services;
 using Microsoft;
-using Timer = System.Windows.Forms.Timer;
 
 namespace GitUI.ConsoleEmulation.PlainText;
 
 /// <summary>
-///  Displays redirected process output in an edit box when no embedded terminal is being used.
+///  Runs a process with redirected output, which the progress dialog shows as plain text, when no embedded terminal is
+///  being used.
 /// </summary>
-public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainTextConsoleCommandRunner
+public sealed class PlainTextConsoleCommandRunner : IPlainTextConsoleCommandRunner
 {
-    private readonly RichTextBox _editbox;
-
     private Process? _process;
 
     private Action? _logProcessKilled;
 
-    private ProcessOutputThrottle? _outputThrottle;
-
     private StreamWriter? _input;
 
-    public PlainTextConsoleCommandRunner()
-    {
-        _editbox = new RichTextBox
-        {
-            BackColor = ColorHelper.IsDarkTheme ? AppColor.EditorBackground.GetThemeColor() : SystemColors.Info,
-            BorderStyle = BorderStyle.FixedSingle,
-            Dock = DockStyle.Fill,
-            Font = AppSettings.MonospaceFont,
-            ReadOnly = true
-        };
-        _editbox.LinkClicked += editbox_LinkClicked;
-        Controls.Add(_editbox);
+    private bool _isDisposed;
 
-        _outputThrottle = new ProcessOutputThrottle(AppendMessage);
+    /// <summary>The progress dialog shows the output (<see cref="OutputTextWritten"/>), there is no window.</summary>
+    public IEmbeddedNativeView? View => null;
 
-        void AppendMessage(string text)
-        {
-            DebugHelpers.Assert(text is not null, "text is not null");
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            DebugHelpers.Assert(!InvokeRequired, "!InvokeRequired");
-
-            _editbox.Visible = true;
-            _editbox.Text += text;
-            _editbox.SelectionStart = _editbox.Text.Length;
-            _editbox.ScrollToCaret();
-        }
-    }
-
-    public Control Control => this;
+    public event EventHandler<string>? OutputTextWritten;
 
     public event EventHandler<ConsoleOutputEventArgs>? CommandOutputReceived;
 
     public event EventHandler<ConsoleProcessExitEventArgs>? CommandProcessExited;
 
-    // Editbox-based output never terminates independently; event is required by the interface.
+    // The plain text output never terminates independently; event is required by the interface.
 #pragma warning disable CS0067
     public event EventHandler? ConsoleHostTerminated;
 #pragma warning restore CS0067
 
     public void WriteOutputText(string text)
     {
-        _outputThrottle?.Append(text);
+        if (!_isDisposed)
+        {
+            OutputTextWritten?.Invoke(this, text);
+        }
     }
 
     public void WriteCommandProcessInput(string text)
@@ -83,10 +54,7 @@ public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainText
 
     public void KillCommandProcess()
     {
-        if (InvokeRequired)
-        {
-            throw new InvalidOperationException("This operation is to be executed on the home thread.");
-        }
+        ThreadHelper.ThrowIfNotOnUIThread();
 
         if (_process is null)
         {
@@ -114,9 +82,6 @@ public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainText
     public void ResetConsole()
     {
         KillCommandProcess();
-        _outputThrottle?.Clear();
-        _editbox.Text = "";
-        _editbox.Visible = false;
     }
 
     public void StartCommand(string command, string arguments, string workDir, Dictionary<string, string> envVariables)
@@ -166,7 +131,7 @@ public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainText
                     {
                         if (_process is null)
                         {
-                            await this.SwitchToMainThreadAsync();
+                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                             operation.LogProcessEnd(new Exception("Process instance is null in Exited event"));
                             return;
                         }
@@ -193,7 +158,7 @@ public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainText
                         }
                         catch (Exception ex)
                         {
-                            await this.SwitchToMainThreadAsync();
+                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                             operation.LogProcessEnd(ex);
                         }
 
@@ -213,14 +178,13 @@ public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainText
                             errorReader.Dispose();
                         }
 
-                        await this.SwitchToMainThreadAsync();
+                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         operation.LogProcessEnd(exitCode);
                         WriteOutputText("Done");
                         _process.Dispose();
                         _process = null;
                         await _input!.DisposeAsync();
                         _input = null;
-                        _outputThrottle?.Stop(flush: true);
                         CommandProcessExited?.Invoke(this, new ConsoleProcessExitEventArgs(exitCode));
                     });
             };
@@ -261,111 +225,18 @@ public sealed class PlainTextConsoleCommandRunner : ContainerControl, IPlainText
         }
     }
 
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+
         KillCommandProcess();
-        if (disposing)
-        {
-            _outputThrottle?.Dispose();
-            _outputThrottle = null;
-            _process?.Dispose();
-            _process = null;
-            _input?.Dispose();
-            _input = null;
-        }
-
-        base.Dispose(disposing);
+        _isDisposed = true;
+        _process?.Dispose();
+        _process = null;
+        _input?.Dispose();
+        _input = null;
     }
-
-    private void editbox_LinkClicked(object? sender, LinkClickedEventArgs e)
-    {
-        try
-        {
-            OsShellUtil.OpenUrlInDefaultBrowser(e.LinkText);
-        }
-        catch (Exception ex)
-        {
-            MessageBoxes.ShowError(this, ex.Message);
-        }
-    }
-
-    #region ProcessOutputThrottle
-
-    private sealed class ProcessOutputThrottle : IDisposable
-    {
-        private readonly Lock _textToAddLock = new();
-        private readonly StringBuilder _textToAdd = new();
-        private readonly Timer _timer;
-        private readonly Action<string> _doOutput;
-
-        /// <param name="doOutput">Will be called on the UI thread.</param>
-        public ProcessOutputThrottle(Action<string> doOutput)
-        {
-            _doOutput = doOutput;
-
-            _timer = new Timer { Interval = 1 };
-            _timer.Tick += delegate { FlushOutput(); };
-            _timer.Start();
-        }
-
-        public void Stop(bool flush)
-        {
-            if (flush)
-            {
-                FlushOutput();
-            }
-
-            _timer.Stop();
-        }
-
-        /// <remarks>Can be called on any thread.</remarks>
-        public void Append(string text)
-        {
-            lock (_textToAddLock)
-            {
-                _textToAdd.Append(text);
-            }
-        }
-
-        public void FlushOutput()
-        {
-            _timer.Stop();
-            _timer.Interval = 100;
-            _timer.Start();
-
-            string textToAdd = "";
-            lock (_textToAddLock)
-            {
-                if (_textToAdd.Length > 0)
-                {
-                    textToAdd = _textToAdd.ToString();
-                    _textToAdd.Clear();
-                }
-            }
-
-            if (textToAdd.Length > 0)
-            {
-                _doOutput?.Invoke(textToAdd);
-            }
-        }
-
-        public void Clear()
-        {
-            lock (_textToAddLock)
-            {
-                _textToAdd.Clear();
-            }
-        }
-
-        public void Dispose()
-        {
-            Stop(flush: false);
-
-            // clear will lock, to prevent outputting to disposed object
-            Clear();
-            _timer.Dispose();
-        }
-    }
-
-    #endregion
 }

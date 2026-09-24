@@ -9,13 +9,17 @@ namespace GitUI.Presentation.HelperDialogs;
 public interface IConsoleProcess
 {
     /// <summary>
-    ///  <see langword="true"/> for the plain text console: it does not display output by itself (the dialog passes it
-    ///  on through <see cref="WriteOutput"/>) and has no room for progress, which the dialog shows in its title.
+    ///  <see langword="true"/> for the plain text console: it has no window (<see cref="View"/>) and does not display
+    ///  output by itself: the dialog shows the text written through <see cref="WriteOutput"/> (see
+    ///  <see cref="PlainTextWritten"/>) and the progress in its title.
     /// </summary>
     bool IsPlainText { get; }
 
-    /// <summary>The console control to embed in the dialog.</summary>
-    IEmbeddedNativeView View { get; }
+    /// <summary>The native window of the console to embed in the dialog; <see langword="null"/> for the plain text console.</summary>
+    IEmbeddedNativeView? View { get; }
+
+    /// <summary>Raised with the text the plain text console shows (see <see cref="IsPlainText"/>); may be raised on any thread.</summary>
+    event EventHandler<string>? PlainTextWritten;
 
     /// <summary>Raised for each chunk of process output; may be raised on any thread.</summary>
     event EventHandler<string>? OutputReceived;

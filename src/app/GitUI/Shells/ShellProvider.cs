@@ -1,4 +1,5 @@
-﻿
+﻿using ConEmu.Inside;
+
 namespace GitUI.Shells;
 
 public class ShellProvider : IShellProvider

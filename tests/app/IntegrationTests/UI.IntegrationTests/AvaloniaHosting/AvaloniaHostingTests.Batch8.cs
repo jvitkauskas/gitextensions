@@ -142,37 +142,6 @@ public sealed partial class AvaloniaHostingTests
         }
     }
 
-    [Test]
-    public void Help_display_is_modeless_reused_and_closed_with_its_form()
-    {
-        using Form settings = new() { Text = "Settings", Width = 600, Height = 400 };
-        using UserControl page = new() { Dock = DockStyle.Fill };
-        settings.Controls.Add(page);
-        settings.Show(_owner);
-        Application.DoEvents();
-
-        GitUI.Avalonia.Hosting.DialogWindow? shown = null;
-        GitUI.Avalonia.Hosting.AvaloniaDialogHost.DialogShowingForTests = window => shown = window;
-
-        AvaloniaDialogs.TryShowSimpleHelpDisplay(page, "Arguments help", "{sHashes}\n{sTag}").Should().BeTrue();
-        PumpUntil(() => shown?.IsVisible == true);
-
-        shown.Should().NotBeNull();
-        ((SimpleHelpDisplayViewModel)shown!.DataContext!).Content.Should().Be("{sHashes}\n{sTag}");
-        IsWindowEnabled(settings.Handle).Should().BeTrue("the window is modeless");
-
-        GitUI.Avalonia.Hosting.DialogWindow first = shown;
-        shown = null;
-        AvaloniaDialogs.TryShowSimpleHelpDisplay(page, "Arguments help", "{sHashes}").Should().BeTrue();
-        shown.Should().BeNull("the open window is activated rather than a new one shown");
-
-        bool closed = false;
-        first.Closed += (_, _) => closed = true;
-        settings.Close();
-        PumpUntil(() => closed);
-        closed.Should().BeTrue();
-    }
-
     /// <summary>Runs the message loop until <paramref name="condition"/> holds (for modeless windows).</summary>
     private static void PumpUntil(Func<bool> condition)
     {

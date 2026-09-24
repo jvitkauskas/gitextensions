@@ -6,6 +6,7 @@ using GitCommands;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.CommandsDialogs;
+using GitUI.Presentation.BugReporter;
 
 namespace GitUI.NBugReports;
 
@@ -54,8 +55,9 @@ internal sealed class UIReporter : IBugReporter
     /// </summary>
     public static bool IgnoreFailedToLoadAnAssembly { get; set; } = false;
 
-    private static Form? OwnerForm
-        => Form.ActiveForm ?? (Application.OpenForms.Count > 0 ? Application.OpenForms[0] : null);
+    /// <summary>The active window of the application, which owns the reports (as <c>Form.ActiveForm</c>).</summary>
+    private static IWin32Window? OwnerForm
+        => new WindowOwner(NativeMethods.GetActiveWindow()).ToWin32Window();
 
     private static IntPtr OwnerFormHandle
         => OwnerForm?.Handle ?? IntPtr.Zero;
@@ -233,16 +235,8 @@ internal sealed class UIReporter : IBugReporter
 
         static void InvokeRestartGE()
         {
-            // Use Invoke to queue the restart on the message loop to avoid deadlocks
-            // when the new process calls Application.SetColorMode() which broadcasts system events
-            if (OwnerForm is Control control)
-            {
-                control.InvokeAndForget(RestartGE);
-            }
-            else
-            {
-                ThreadHelper.FileAndForget(RestartGE);
-            }
+            // Queue the restart on the message loop to avoid deadlocks when the new process broadcasts system events
+            ThreadHelper.FileAndForget(RestartGE);
 
             static void RestartGE()
             {
@@ -363,7 +357,7 @@ internal sealed class UIReporter : IBugReporter
            || (exception.InnerException is not null && HasFailedToLoadAnAssembly(exception.InnerException));
     }
 
-    private static void ShowGitRepo(Form? ownerForm, string? workingDir)
+    private static void ShowGitRepo(IWin32Window? ownerForm, string? workingDir)
     {
         // As FormBrowse.SetWorkingDir: the main window owning the report shows the repository.
         if (ownerForm is not null && workingDir is not null)
@@ -374,15 +368,16 @@ internal sealed class UIReporter : IBugReporter
 
     private static void ShowNBug(IWin32Window? owner, Exception exception, bool isExternalOperation, bool isUserExternalOperation, bool isTerminating)
     {
-        using BugReportForm form = new();
-        DialogResult result = form.ShowDialog(owner,
-                                              new SerializableException(exception),
-                                              exception.GetExceptionInfo().ToString(),
-                                              UserEnvironmentInformation.GetInformation(),
-                                              canIgnore: !isTerminating,
-                                              showIgnore: isExternalOperation,
-                                              focusDetails: isUserExternalOperation);
-        if (isTerminating || result == DialogResult.Abort)
+        BugReportResult result = BugReportDialog.Show(
+            owner,
+            AvaloniaHosting.AvaloniaDialogs.GetOptions,
+            new SerializableException(exception),
+            exception.GetExceptionInfo().ToString(),
+            UserEnvironmentInformation.GetInformation(),
+            canIgnore: !isTerminating,
+            showIgnore: isExternalOperation,
+            focusDetails: isUserExternalOperation);
+        if (isTerminating || result == BugReportResult.Quit)
         {
             Environment.Exit(-1);
         }

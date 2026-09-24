@@ -1,29 +1,28 @@
 using System.Globalization;
+using ConEmu.Inside;
 using GitCommands;
-using GitUI.ConsoleEmulation;
+using GitUI.Presentation.Services;
 using GitUI.Shells;
 using Microsoft;
 
 namespace GitUI.ConsoleEmulation.ConEmu;
 
 /// <summary>
-///  Wraps <see cref="ConEmuControl"/> for the repository browser's terminal tab.
+///  Wraps <c>ConEmuControl</c> for the repository browser's terminal tab.
 /// </summary>
 internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, ConsoleEmulatorSettings settings) : IConsoleShellRunner
 {
-    private readonly ConEmuControl _conEmu = new()
-    {
-        Dock = DockStyle.Fill,
-        IsStatusbarVisible = false
-    };
+    private readonly NativeHostWindow _window = new();
+    private ConEmuHost? _conEmu;
 
-    public Control Control => _conEmu;
+    /// <summary>The window in which ConEmu runs (in place of the WinForms <c>ConEmuControl</c>).</summary>
+    public IEmbeddedNativeView View => _window;
 
-    public bool IsShellRunning => _conEmu.IsConsoleEmulatorOpen;
+    public bool IsShellRunning => _conEmu?.RunningSession is not null;
 
     public void ChangeWorkingDirectory(string path)
     {
-        if (_conEmu.RunningSession is not { } session || string.IsNullOrWhiteSpace(path))
+        if (_conEmu?.RunningSession is not { } session || string.IsNullOrWhiteSpace(path))
         {
             return;
         }
@@ -63,12 +62,36 @@ internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, Con
 
     public void FocusTerminal()
     {
-        _conEmu.Focus();
+        // As ConEmuControl: the focus of the host window goes to the console emulator.
+        if (FindConEmuWindow() is not 0 and nint conEmuWindow)
+        {
+            SetFocus(conEmuWindow);
+        }
+        else
+        {
+            _window.Focus();
+        }
     }
+
+    public void Dispose()
+    {
+        _conEmu?.Dispose();
+        _conEmu = null;
+        _window.Dispose();
+    }
+
+    /// <summary>The window of ConEmu in the host window, if any.</summary>
+    private nint FindConEmuWindow() => FindWindowExW(_window.Handle, 0, null, null);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern nint FindWindowExW(nint parent, nint childAfter, string? className, string? windowName);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern nint SetFocus(nint window);
 
     public void StartShell(string workDir)
     {
-        if (_conEmu.IsConsoleEmulatorOpen)
+        if (IsShellRunning)
         {
             FocusTerminal();
             return;
@@ -96,6 +119,7 @@ internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, Con
         {
             Validates.NotNull(settings.Font);
 
+            _conEmu ??= new ConEmuHost(_window.Handle) { IsStatusbarVisible = false };
             _conEmu.Start(
                 startInfo,
                 ThreadHelper.JoinableTaskFactory,
@@ -106,7 +130,7 @@ internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, Con
         catch (InvalidOperationException)
         {
 #if DEBUG
-            MessageBoxes.ShowError(_conEmu, "ConEmu appears to be missing. Please perform a full rebuild and try again.");
+            MessageBoxes.ShowError(null, "ConEmu appears to be missing. Please perform a full rebuild and try again.");
 #else
             throw;
 #endif

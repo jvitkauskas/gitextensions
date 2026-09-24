@@ -5,6 +5,14 @@ using GitCommands;
 
 namespace GitUI;
 
+/// <summary>The state of a window, stored in the positions (the names and values of the WinForms <c>FormWindowState</c>).</summary>
+public enum WindowPositionState
+{
+    Normal = 0,
+    Minimized = 1,
+    Maximized = 2,
+}
+
 /// <summary>
 ///   Stores the state and position of a single window.
 /// </summary>
@@ -16,7 +24,7 @@ public class WindowPosition
         DeviceDpi = 96;
     }
 
-    public WindowPosition(Rectangle rect, int deviceDpi, FormWindowState state, string name)
+    public WindowPosition(Rectangle rect, int deviceDpi, WindowPositionState state, string name)
     {
         Rect = rect;
         DeviceDpi = deviceDpi;
@@ -27,7 +35,7 @@ public class WindowPosition
     public Rectangle Rect { get; set; }
     [DefaultValue(96)]
     public int DeviceDpi { get; set; }
-    public FormWindowState State { get; set; }
+    public WindowPositionState State { get; set; }
     public string? Name { get; set; }
 }
 

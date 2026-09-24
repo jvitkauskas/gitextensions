@@ -1,14 +1,17 @@
+using GitUI.Presentation.Services;
+
 namespace GitUI.ConsoleEmulation;
 
 /// <summary>
-///  Represents a control that executes a console command and displays its output.
+///  Represents a console that executes a console command and displays its output.
 /// </summary>
-public interface IConsoleCommandRunner
+public interface IConsoleCommandRunner : IDisposable
 {
     /// <summary>
-    ///  Gets the WinForms control to embed in the panel.
+    ///  Gets the native window of the console, which the progress dialog embeds; <see langword="null"/> for the plain text
+    ///  console, whose output the dialog shows itself.
     /// </summary>
-    Control Control { get; }
+    IEmbeddedNativeView? View { get; }
 
     /// <summary>
     ///  Occurs when the process writes output.

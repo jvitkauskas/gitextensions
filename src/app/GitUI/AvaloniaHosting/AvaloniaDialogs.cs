@@ -3,6 +3,7 @@ using GitCommands.Git;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.CommandsDialogs.CommitDialog;
 using GitUI.Avalonia.Hosting;
@@ -115,9 +116,6 @@ internal static partial class AvaloniaDialogs
 
     internal static AvaloniaUiOptions GetOptions()
     {
-        // The modeless Avalonia windows get their text input in the WinForms message loop.
-        AvaloniaKeyboardMessageFilter.Install();
-
         // The exceptions of Avalonia code are reported as those of WinForms code (Application.ThreadException).
         AvaloniaUi.UnhandledExceptionHandler ??= exception => GitUI.NBugReports.BugReportInvoker.Report(exception, isTerminating: false);
 

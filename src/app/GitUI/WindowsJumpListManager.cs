@@ -5,6 +5,7 @@ using System.Text;
 using GitCommands;
 using GitCommands.UserRepositoryHistory;
 using GitCommands.Utils;
+using GitExtUtils;
 using Microsoft;
 using Microsoft.WindowsAPICodePack.Taskbar;
 

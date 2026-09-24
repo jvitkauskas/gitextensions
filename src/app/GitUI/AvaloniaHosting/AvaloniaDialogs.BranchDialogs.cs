@@ -364,7 +364,7 @@ internal static partial class AvaloniaDialogs
             if (request.MergeMessage is not null)
             {
                 // [!] Do not reset the last commit message stored in AppSettings.LastCommitMessage
-                CommitMessageManager commitMessageManager = new(owner as Control ?? new Control(), Module.WorkingDirGitDir, Module.CommitEncoding);
+                CommitMessageManager commitMessageManager = new(owner, Module.WorkingDirGitDir, Module.CommitEncoding);
                 ThreadHelper.JoinableTaskFactory.Run(() => commitMessageManager.WriteCommitMessageToFileAsync(
                     request.MergeMessage, CommitMessageType.Merge, usingCommitTemplate: false, ensureCommitMessageSecondLineEmpty: false));
                 mergeMessagePath = commitMessageManager.MergeMessagePath;

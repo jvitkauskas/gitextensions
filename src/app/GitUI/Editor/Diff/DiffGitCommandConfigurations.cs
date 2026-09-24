@@ -1,6 +1,7 @@
 using GitCommands;
 using GitCommands.Git;
 using GitExtensions.Extensibility.Git;
+using GitExtUtils;
 
 namespace GitUI.Editor.Diff;
 

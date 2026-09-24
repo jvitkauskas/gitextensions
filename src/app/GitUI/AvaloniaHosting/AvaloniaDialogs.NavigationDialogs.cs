@@ -85,7 +85,7 @@ internal static partial class AvaloniaDialogs
         IGitModule module = commands.Module;
         IReadOnlyList<GitRefItem> tags = [.. module.GetRefs(RefsFilter.Tags).Take(maxDropDownCount).Select(r => new GitRefItem(r.LocalName, r.Guid ?? ""))];
         IReadOnlyList<GitRefItem> branches = [.. module.GetRefs(RefsFilter.Heads).Take(maxDropDownCount).Select(r => new GitRefItem(r.LocalName, r.Guid ?? ""))];
-        string clipboardText = Clipboard.GetText().Trim();
+        string clipboardText = ClipboardUtil.TryGetText(out string? text) ? text.Trim() : "";
         string? clipboardRevision = !string.IsNullOrEmpty(clipboardText) && !module.RevParse(clipboardText).IsZero ? clipboardText : null;
 
         GoToCommitViewModel viewModel = new(

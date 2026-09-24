@@ -58,6 +58,11 @@ public partial class ProcessWindow : DialogWindow
                 Icon = _statusIcons[_viewModel!.Status].Value;
                 break;
 
+            case nameof(ProcessViewModel.PlainText):
+                // As PlainTextConsoleCommandRunner: the end of the output is shown.
+                plainTextBox.CaretIndex = plainTextBox.Text?.Length ?? 0;
+                break;
+
             case nameof(ProcessViewModel.IsDone) when _viewModel!.IsDone:
                 // As in FormStatus: once done, OK takes the focus (and Enter).
                 Dispatcher.UIThread.Post(() => okButton.Focus());

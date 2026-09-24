@@ -251,7 +251,7 @@ internal static partial class AvaloniaDialogs
             // As FormRevertCommit.Revert_Click.
             NativeWindowOwner windowOwner = new(window);
             IGitModule module = commands.Module;
-            CommitMessageManager commitMessageManager = new(owner as Control ?? new Control(), module.WorkingDirGitDir, module.CommitEncoding);
+            CommitMessageManager commitMessageManager = new(owner, module.WorkingDirGitDir, module.CommitEncoding);
             string existingCommitMessage = ThreadHelper.JoinableTaskFactory.Run(() => commitMessageManager.GetMergeOrCommitMessageAsync());
 
             ArgumentString command = Commands.Revert(ObjectId.Parse(guid), autoCommit, parentNumber);

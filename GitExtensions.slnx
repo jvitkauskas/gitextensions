@@ -5,6 +5,7 @@
   <Folder Name="/externals/">
     <File Path="externals/Directory.Build.props" />
     <File Path="externals/Directory.Build.targets" />
+    <Project Path="externals/ConEmuInside/ConEmuInside.csproj" />
     <Project Path="externals/Git.hub/Git.hub/Git.hub.csproj" />
     <Project Path="externals/NetSpell.SpellChecker/SpellChecker.csproj" />
   </Folder>
@@ -71,6 +72,7 @@
     <Project Path="src/app/GitCommands/GitCommands.csproj" />
     <Project Path="src/app/GitExtensions.Extensibility/GitExtensions.Extensibility.csproj" />
     <Project Path="src/app/GitExtensions/GitExtensions.csproj">
+      <BuildDependency Project="externals/ConEmuInside/ConEmuInside.csproj" />
       <BuildDependency Project="externals/Git.hub/Git.hub/Git.hub.csproj" />
       <BuildDependency Project="externals/NetSpell.SpellChecker/SpellChecker.csproj" />
       <BuildDependency Project="setup/TranslationApp/TranslationApp.csproj" />

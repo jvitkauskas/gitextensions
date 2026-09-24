@@ -95,6 +95,18 @@ public static class ThreadHelper
     public static void FileAndForget(this Task task)
         => TaskManager.FileAndForget(task);
 
+    /// <summary>
+    /// Asynchronously run <paramref name="asyncAction"/> on the UI thread and forward all exceptions to <see cref="TaskManager.UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// </summary>
+    public static void InvokeAndForget(Func<Task> asyncAction, CancellationToken cancellationToken = default)
+        => TaskManager.InvokeAndForget(asyncAction, cancellationToken);
+
+    /// <summary>
+    /// Asynchronously run <paramref name="action"/> on the UI thread and forward all exceptions to <see cref="TaskManager.UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// </summary>
+    public static void InvokeAndForget(Action action, CancellationToken cancellationToken = default)
+        => TaskManager.InvokeAndForget(action, cancellationToken);
+
     public static async Task JoinPendingOperationsAsync(CancellationToken cancellationToken)
         => await TaskManager.JoinPendingOperationsAsync(cancellationToken);
 

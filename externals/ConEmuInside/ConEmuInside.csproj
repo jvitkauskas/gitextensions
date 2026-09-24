@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The session of ConEmu embedded in a window of Git Extensions: the WinForms-free parts of conemu-inside
+    (externals/conemu-inside/ConEmuWinForms, BSD 3-clause, see README.md), without its WinForms control (ConEmuHost
+    replaces it, hosting ConEmu in any native window).
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>ConEmu.Inside</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn),1591,1696</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ConEmu.Core" PrivateAssets="all" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The settings template of ConEmu, as the Resources.ConEmuSettingsTemplate of conemu-inside. -->
+    <EmbeddedResource Include="ConEmu.xml" LogicalName="ConEmu.Inside.ConEmu.xml" />
+  </ItemGroup>
+
+</Project>

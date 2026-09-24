@@ -12,13 +12,10 @@ using ResourceManager;
 namespace GitUI.AvaloniaHosting;
 
 /// <summary>
-///  Routing of the HOME directory dialog and the help text window of the settings (docs/avalonia-port/PLAN.md, phase 2, batch 8).
+///  Routing of the HOME directory dialog of the settings (docs/avalonia-port/PLAN.md, phase 2, batch 8).
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
-    /// <summary>The open help text window of each owner, which is reused as <c>ScriptsSettingsPage</c> does.</summary>
-    private static readonly ConditionalWeakTable<Control, DialogWindow> _helpDisplayWindows = [];
-
     public static bool TryShowFixHome(IWin32Window? owner)
     {
         FixHomeEnvironment environment = new(
@@ -58,33 +55,6 @@ internal static partial class AvaloniaDialogs
                 return null;
             }
         }
-    }
-
-    /// <summary>
-    ///  Shows the Avalonia port of <c>SimpleHelpDisplayDialog</c> modelessly over <paramref name="owner"/>, or activates
-    ///  the one already open; it closes with the form of <paramref name="owner"/>.
-    /// </summary>
-    public static bool TryShowSimpleHelpDisplay(Control owner, string title, string content)
-    {
-        if (_helpDisplayWindows.TryGetValue(owner, out DialogWindow? openWindow) && openWindow.IsVisible)
-        {
-            openWindow.Activate();
-            return true;
-        }
-
-        AvaloniaUi.EnsureInitialized(GetOptions);
-        SimpleHelpDisplayWindow window = new() { DataContext = new SimpleHelpDisplayViewModel(title, content) };
-        _helpDisplayWindows.AddOrUpdate(owner, window);
-
-        if (owner.FindForm() is Form form)
-        {
-            void CloseWithForm(object? sender, FormClosedEventArgs e) => window.Close();
-            form.FormClosed += CloseWithForm;
-            window.Closed += (_, _) => form.FormClosed -= CloseWithForm;
-        }
-
-        AvaloniaDialogHost.Show(window, owner.Handle);
-        return true;
     }
 
     private sealed class FixHomeHost : IFixHomeHost

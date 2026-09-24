@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Plugins;
 using GitExtensions.Extensibility.Settings;
+using GitExtUtils;
 using GitUI.Properties;
 
 namespace GitUI;
@@ -49,7 +51,7 @@ internal partial class FailedPluginWrapper : IGitPlugin
             TranslatedStrings.FailedToLoadPlugin, MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
         if (result == DialogResult.OK)
         {
-            Clipboard.SetText(_exception);
+            ClipboardUtil.TrySetText(_exception);
         }
 
         return false;

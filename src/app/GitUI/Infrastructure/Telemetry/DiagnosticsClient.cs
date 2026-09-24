@@ -22,7 +22,7 @@ public static class DiagnosticsClient
         _telemetryConfiguration.TelemetryInitializers.Add(new MonitorsTelemetryInitializer());
         _telemetryConfiguration.TelemetryInitializers.Add(new ThemingTelemetryInitializer());
 
-        Application.ApplicationExit += (s, e) =>
+        AppDomain.CurrentDomain.ProcessExit += (s, e) =>
         {
             TrackEvent("AppExit");
             OnExit();

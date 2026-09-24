@@ -3,7 +3,7 @@
 namespace GitExtensions.Plugins.FindLargeFiles;
 
 /// <summary>
-/// Custom sortable binding branches list, use for support user-defined sorting in <see cref="DataGridView"/>.
+/// Custom sortable binding branches list, use for support user-defined sorting in <c>DataGridView</c>.
 /// </summary>
 internal sealed class SortableObjectsList : SortableBindingList<GitObject>
 {

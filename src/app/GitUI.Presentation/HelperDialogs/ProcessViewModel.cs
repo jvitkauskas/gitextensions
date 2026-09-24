@@ -35,6 +35,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
     private readonly IProcessDialogHost _host;
     private readonly IMessageBoxService _messageBoxes;
     private readonly Action<Action> _postToUiThread;
+    private readonly StringBuilder _plainTextToAdd = new();
     private string _baseTitle;
     private readonly OutputLog _outputLog = new();
     private bool _isErrorDialog;
@@ -63,6 +64,7 @@ public sealed partial class ProcessViewModel : DialogViewModel
         ShowPasswordState = host.ShowPasswordInput;
 
         console.OutputReceived += (_, text) => OnOutputReceived(text);
+        console.PlainTextWritten += (_, text) => OnPlainTextWritten(text);
         console.Exited += (_, exitCode) => OnExited(exitCode);
         console.HostTerminated += (_, _) => Post(() => Close(accepted: false));
     }
@@ -92,7 +94,15 @@ public sealed partial class ProcessViewModel : DialogViewModel
         }
     }
 
-    public IEmbeddedNativeView ConsoleView => _console.View;
+    /// <summary>The native window of the console; <see langword="null"/> for the plain text console (see <see cref="PlainText"/>).</summary>
+    public IEmbeddedNativeView? ConsoleView => _console.View;
+
+    /// <summary>Whether the console is plain text, shown by the dialog (<see cref="PlainText"/>).</summary>
+    public bool IsPlainText => _console.IsPlainText;
+
+    /// <summary>The text of the plain text console (the RichTextBox of <c>PlainTextConsoleCommandRunner</c>).</summary>
+    [ObservableProperty]
+    public partial string PlainText { get; private set; } = "";
 
     public bool UseDialogSettings { get; }
 
@@ -250,6 +260,12 @@ public sealed partial class ProcessViewModel : DialogViewModel
     {
         Status = ProcessStatus.Running;
         _console.Reset();
+        lock (_plainTextToAdd)
+        {
+            _plainTextToAdd.Clear();
+        }
+
+        PlainText = "";
         _outputLog.Clear();
         IsShowPasswordVisible = true;
         OnPropertyChanged(nameof(IsPasswordInputVisible));
@@ -360,6 +376,32 @@ public sealed partial class ProcessViewModel : DialogViewModel
     });
 
     private void Post(Action action) => _postToUiThread(action);
+
+    // As the ProcessOutputThrottle of PlainTextConsoleCommandRunner: the text written meanwhile is shown at once.
+    private void OnPlainTextWritten(string text)
+    {
+        bool isFirst;
+        lock (_plainTextToAdd)
+        {
+            isFirst = _plainTextToAdd.Length == 0;
+            _plainTextToAdd.Append(text);
+        }
+
+        if (isFirst)
+        {
+            Post(() =>
+            {
+                string textToAdd;
+                lock (_plainTextToAdd)
+                {
+                    textToAdd = _plainTextToAdd.ToString();
+                    _plainTextToAdd.Clear();
+                }
+
+                PlainText += textToAdd;
+            });
+        }
+    }
 
     /// <summary>Thread-safe output log (as <c>FormStatusOutputLog</c>).</summary>
     private sealed class OutputLog

@@ -6,8 +6,6 @@ public interface ISettingsPage
 {
     string GetTitle();
 
-    Control? GuiControl { get; }
-
     void OnPageShown();
 
     void LoadSettings();

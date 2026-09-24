@@ -1,6 +1,5 @@
 ﻿using GitExtensions.Extensibility.Settings;
 using GitExtUtils.GitUI;
-using GitUI.SettingControlBindings;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
 

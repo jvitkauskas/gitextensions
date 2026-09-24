@@ -14,6 +14,9 @@ internal static class DialogNativeMethods
     [DllImport("comctl32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     public static extern int TaskDialogIndirect(ref TaskDialogConfig config, out int button, out int radioButton, [MarshalAs(UnmanagedType.Bool)] out bool verificationFlagChecked);
 
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern nint SendMessageW(nint window, int message, nint wordParameter, nint longParameter);
+
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern nint CreateActCtxW(ref ActivationContext context);
 

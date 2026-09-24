@@ -36,6 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\externals\ConEmuInside\ConEmuInside.csproj" />
     <ProjectReference Include="..\..\..\externals\Git.hub\Git.hub\Git.hub.csproj" />
     <ProjectReference Include="..\..\..\externals\NetSpell.SpellChecker\SpellChecker.csproj" />
     <ProjectReference Include="..\BugReporter\BugReporter.csproj" />

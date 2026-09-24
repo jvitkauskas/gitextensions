@@ -9,14 +9,15 @@ internal sealed class MonitorsTelemetryInitializer : ITelemetryInitializer
     public void Initialize(ITelemetry telemetry)
     {
         IDictionary<string, string> properties = telemetry.Context.GlobalProperties;
-        properties["Monitor count"] = Screen.AllScreens.Length.ToString();
+        IReadOnlyList<(Rectangle Bounds, bool IsPrimary)> screens = Screens.GetAll();
+        properties["Monitor count"] = screens.Count.ToString();
         properties["Monitor primary DPI"] = DpiUtil.DpiX.ToString();
 
-        for (int i = 0; i < Screen.AllScreens.Length; i++)
+        for (int i = 0; i < screens.Count; i++)
         {
-            string key = Screen.AllScreens[i].Primary ? "primary" : $"secondary{i}";
+            string key = screens[i].IsPrimary ? "primary" : $"secondary{i}";
 
-            Rectangle bounds = Screen.AllScreens[i].Bounds;
+            Rectangle bounds = screens[i].Bounds;
             properties[$"Monitor {key} resolution"] = $"{bounds.Width}x{bounds.Height}";
         }
     }

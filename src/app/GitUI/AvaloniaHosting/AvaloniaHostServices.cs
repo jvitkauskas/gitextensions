@@ -63,7 +63,7 @@ internal static partial class AvaloniaDialogs
                 WindowPosition? position = WindowPositionList.Load()?.Get(name);
                 return position is null || position.Rect.IsEmpty
                     ? null
-                    : new WindowPlacement(position.Rect.X, position.Rect.Y, position.Rect.Width, position.Rect.Height, position.DeviceDpi, position.State == FormWindowState.Maximized);
+                    : new WindowPlacement(position.Rect.X, position.Rect.Y, position.Rect.Width, position.Rect.Height, position.DeviceDpi, position.State == WindowPositionState.Maximized);
             }
             catch
             {
@@ -85,7 +85,7 @@ internal static partial class AvaloniaDialogs
                 list.AddOrUpdate(new WindowPosition(
                     new Rectangle(placement.X, placement.Y, placement.Width, placement.Height),
                     placement.Dpi,
-                    placement.IsMaximized ? FormWindowState.Maximized : FormWindowState.Normal,
+                    placement.IsMaximized ? WindowPositionState.Maximized : WindowPositionState.Normal,
                     name));
                 list.Save();
             }
@@ -122,13 +122,11 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>
-    ///  Wraps the configured WinForms console runner (ConEmu, Mintty or plain text) for the Avalonia progress dialog,
-    ///  which embeds its control as a child window.
+    ///  Wraps the configured console runner (ConEmu, Mintty or plain text) for the Avalonia progress dialog, which
+    ///  embeds its native window (ConEmu, Mintty) or shows its text (plain text).
     /// </summary>
-    private sealed class ConsoleProcess : IConsoleProcess, IEmbeddedNativeView, IDisposable
+    private sealed class ConsoleProcess : IConsoleProcess, IDisposable
     {
-        private static readonly nint HWND_MESSAGE = -3;
-
         private readonly IConsoleCommandRunner _runner;
         private readonly IGitUICommands _commands;
         private readonly string _process;
@@ -149,6 +147,10 @@ internal static partial class AvaloniaDialogs
             runner.CommandOutputReceived += (_, e) => OutputReceived?.Invoke(this, e.Text);
             runner.CommandProcessExited += (_, e) => Exited?.Invoke(this, e.ExitCode);
             runner.ConsoleHostTerminated += (_, _) => HostTerminated?.Invoke(this, EventArgs.Empty);
+            if (runner is IPlainTextConsoleCommandRunner plainText)
+            {
+                plainText.OutputTextWritten += (_, text) => PlainTextWritten?.Invoke(this, text);
+            }
         }
 
         public event EventHandler<string>? OutputReceived;
@@ -157,9 +159,11 @@ internal static partial class AvaloniaDialogs
 
         public event EventHandler? HostTerminated;
 
+        public event EventHandler<string>? PlainTextWritten;
+
         public bool IsPlainText => _runner is IPlainTextConsoleCommandRunner;
 
-        public IEmbeddedNativeView View => this;
+        public IEmbeddedNativeView? View => _runner.View;
 
         public string Process => _process;
 
@@ -171,7 +175,7 @@ internal static partial class AvaloniaDialogs
         }
 
         /// <summary>Marshals to the UI thread, as <c>FormProcess</c> does with <c>InvokeAndForget</c>.</summary>
-        public void PostToUiThread(Action action) => _runner.Control.InvokeAndForget(action);
+        public void PostToUiThread(Action action) => ThreadHelper.InvokeAndForget(action);
 
         public void Start() => _runner.StartCommand(_process, _arguments, _workingDirectory, _environment);
 
@@ -196,26 +200,7 @@ internal static partial class AvaloniaDialogs
 
         public void WriteOutput(string text) => ((IPlainTextConsoleCommandRunner)_runner).WriteOutputText(text);
 
-        public nint Attach(nint parentWindow)
-        {
-            // WinForms creates parentless controls as children of its parking window; move it into the Avalonia window.
-            nint handle = _runner.Control.Handle;
-            NativeMethods.SetParent(handle, parentWindow);
-            _runner.Control.Visible = true;
-            return handle;
-        }
-
-        public void Detach()
-        {
-            // The Avalonia window is going away; park the control so that it is not destroyed underneath WinForms.
-            if (_runner.Control.IsHandleCreated)
-            {
-                _runner.Control.Visible = false;
-                NativeMethods.SetParent(_runner.Control.Handle, HWND_MESSAGE);
-            }
-        }
-
-        public void Dispose() => _runner.Control.Dispose();
+        public void Dispose() => _runner.Dispose();
     }
 
     private sealed class ProcessDialogHost(IGitUICommands commands, ConsoleProcess console) : IProcessDialogHost

@@ -70,7 +70,7 @@ internal static partial class AvaloniaDialogs
             // Try to be more helpful to the user: use the clipboard text as a potential source URL.
             try
             {
-                if (Clipboard.ContainsText(TextDataFormat.Text) && TryExtractUrl(Clipboard.GetText(TextDataFormat.Text) ?? "", out string possibleUrl))
+                if (ClipboardUtil.TryGetText(out string? clipboardText) && TryExtractUrl(clipboardText, out string possibleUrl))
                 {
                     from = possibleUrl;
                 }

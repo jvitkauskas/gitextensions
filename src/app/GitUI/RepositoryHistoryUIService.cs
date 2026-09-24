@@ -3,10 +3,31 @@ using GitCommands;
 using GitCommands.UserRepositoryHistory;
 using GitExtensions.Extensibility.Git;
 using GitUI.CommandsDialogs;
-using GitUI.Properties;
 using Microsoft.VisualStudio.Threading;
 
 namespace GitUI;
+
+/// <summary>
+///  An item of the menu of the recent or favourite repositories: a repository (opened by <see cref="Open"/>), a category of
+///  repositories or a separator.
+/// </summary>
+/// <param name="Text">The text, with the access key of the number of the repository (e.g. "&amp;1: path").</param>
+/// <param name="IsPinned">Whether the repository is pinned (shown with the pin image).</param>
+/// <param name="BranchName">The current branch of the repository, if known (shown as the shortcut of the item).</param>
+/// <param name="ToolTip">The full path of the repository, if the text shortens it.</param>
+public sealed record RepositoryMenuItem(string Text, bool IsPinned = false, string? BranchName = null, string? ToolTip = null)
+{
+    /// <summary>A separator.</summary>
+    public static RepositoryMenuItem Separator { get; } = new("-");
+
+    /// <summary>The repositories of a category.</summary>
+    public IReadOnlyList<RepositoryMenuItem> Children { get; init; } = [];
+
+    /// <summary>Opens the repository: in this window, or in a new instance with Ctrl.</summary>
+    public Action? Open { get; init; }
+
+    public bool IsSeparator => ReferenceEquals(this, Separator);
+}
 
 /// <summary>
 ///  Represents a service for managing the git repository history.
@@ -19,18 +40,16 @@ public interface IRepositoryHistoryUIService
     event EventHandler<GitModuleEventArgs> GitModuleChanged;
 
     /// <summary>
-    ///  Populates the "Favourite repositories" menu in the Dashboard.
+    ///  The "Favourite repositories" menu, by category.
     ///  Both the submenu to the WorkingDir button in Browse and menu in Dashboard.
     /// </summary>
-    /// <param name="container">The container to populate with menu items.</param>
-    void PopulateFavouriteRepositoriesMenu(ToolStripDropDownItem container);
+    IReadOnlyList<RepositoryMenuItem> GetFavouriteRepositoriesMenu();
 
     /// <summary>
-    ///  Populates the "Recent repositories" menu.
+    ///  The "Recent repositories" menu.
     ///  Both the WorkingDir button in Browse and menu in Dashboard.
     /// </summary>
-    /// <param name="container">The container to populate with menu items.</param>
-    void PopulateRecentRepositoriesMenu(ToolStripDropDownItem container);
+    IReadOnlyList<RepositoryMenuItem> GetRecentRepositoriesMenu();
 
     /// <summary>
     ///  Start updating the branch name cache.
@@ -57,32 +76,17 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
         _invalidRepositoryRemover = invalidRepositoryRemover;
     }
 
-    private void AddRecentRepositories(ToolStripDropDownItem menuItemContainer, Repository repo, string? caption, int number, bool anchored = false)
+    private RepositoryMenuItem CreateRepositoryItem(Repository repo, string? caption, int number, bool anchored = false)
     {
         string numberString = number switch { < 10 => $"&{number}", 10 => "1&0", _ => $"{number}" };
-        ToolStripMenuItem item = new($"{numberString}: {caption}")
+        return new RepositoryMenuItem(
+            $"{numberString}: {caption}",
+            IsPinned: anchored,
+            BranchName: _branchNameCache.GetCachedBranchName(repo.Path),
+            ToolTip: repo.Path != caption ? repo.Path : null)
         {
-            DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
+            Open = () => OpenRepo(repo.Path),
         };
-
-        if (anchored)
-        {
-            item.Image = Images.Pin;
-        }
-
-        menuItemContainer.DropDownItems.Add(item);
-
-        item.Click += (_, _) => OpenRepo(repo.Path);
-
-        if (repo.Path != caption)
-        {
-            item.ToolTipText = repo.Path;
-        }
-
-        if (_branchNameCache.GetCachedBranchName(repo.Path) is string cachedBranchName)
-        {
-            item.ShortcutKeyDisplayString = cachedBranchName;
-        }
     }
 
     private void ChangeWorkingDir(string path)
@@ -99,7 +103,7 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
     private void OpenRepo(string repoPath)
     {
-        if (Control.ModifierKeys != Keys.Control)
+        if (!IsOnlyControlKeyDown())
         {
             ChangeWorkingDir(repoPath);
             return;
@@ -108,7 +112,7 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
         GitUICommands.LaunchBrowse(repoPath);
     }
 
-    public void PopulateFavouriteRepositoriesMenu(ToolStripDropDownItem container)
+    public IReadOnlyList<RepositoryMenuItem> GetFavouriteRepositoriesMenu()
     {
         JoinableTask? branchCacheUpdateTask = _branchCacheUpdateTask;
         if (branchCacheUpdateTask is not null && branchCacheUpdateTask.IsCompleted)
@@ -123,55 +127,40 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
             }
         }
 
-        container.DropDownItems.Clear();
-
         IList<Repository> repositoryHistory = ThreadHelper.JoinableTaskFactory.Run(
             RepositoryHistoryManager.Locals.LoadFavouriteHistoryAsync);
 
         if (repositoryHistory.Count < 1)
         {
-            return;
+            return [];
         }
 
-        PopulateFavouriteRepositoriesMenu(container, repositoryHistory);
+        return GetFavouriteRepositoriesMenu(repositoryHistory);
     }
 
-    private void PopulateFavouriteRepositoriesMenu(ToolStripDropDownItem container, in IList<Repository> repositoryHistory)
+    private IReadOnlyList<RepositoryMenuItem> GetFavouriteRepositoriesMenu(in IList<Repository> repositoryHistory)
     {
         List<RecentRepoInfo> pinnedRepos = [];
         List<RecentRepoInfo> allRecentRepos = [];
 
         RecentRepoSplitter splitter = new()
         {
-            MeasureFont = container.Font,
+            MeasureFont = SystemFonts.MenuFont,
         };
 
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);
 
-        foreach (IGrouping<string?, RecentRepoInfo> repo in pinnedRepos.Union(allRecentRepos).GroupBy(k => k.Repo.Category).OrderBy(k => k.Key))
+        return [.. pinnedRepos.Union(allRecentRepos).GroupBy(k => k.Repo.Category).OrderBy(k => k.Key).Select(repos =>
         {
-            AddFavouriteRepositories(repo.Key, repo);
-        }
-
-        return;
-
-        void AddFavouriteRepositories(string? category, IEnumerable<RecentRepoInfo> repos)
-        {
-            ToolStripMenuItem menuItemCategory = new(category);
-            container.DropDownItems.Add(menuItemCategory);
-
-            menuItemCategory.DropDown.SuspendLayout();
             int number = 0;
-            foreach (RecentRepoInfo r in repos)
+            return new RepositoryMenuItem(repos.Key ?? "")
             {
-                AddRecentRepositories(menuItemCategory, r.Repo, r.Caption, ++number);
-            }
-
-            menuItemCategory.DropDown.ResumeLayout();
-        }
+                Children = [.. repos.Select(r => CreateRepositoryItem(r.Repo, r.Caption, ++number))],
+            };
+        })];
     }
 
-    public void PopulateRecentRepositoriesMenu(ToolStripDropDownItem container)
+    public IReadOnlyList<RepositoryMenuItem> GetRecentRepositoriesMenu()
     {
         JoinableTask? branchCacheUpdateTask = _branchCacheUpdateTask;
         if (branchCacheUpdateTask is not null && branchCacheUpdateTask.IsCompleted)
@@ -194,34 +183,37 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
         if (repositoryHistory.Count < 1)
         {
-            return;
+            return [];
         }
 
         RecentRepoSplitter splitter = new()
         {
-            MeasureFont = container.Font,
+            MeasureFont = SystemFonts.MenuFont,
         };
 
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);
 
+        List<RepositoryMenuItem> items = [];
         int number = 0;
         foreach (RecentRepoInfo repo in CollectionsMarshal.AsSpan(pinnedRepos))
         {
-            AddRecentRepositories(container, repo.Repo, repo.Caption, ++number, repo.Anchored);
+            items.Add(CreateRepositoryItem(repo.Repo, repo.Caption, ++number, repo.Anchored));
         }
 
         if (allRecentRepos.Count > 0)
         {
             if (pinnedRepos.Count > 0)
             {
-                container.DropDownItems.Add(new ToolStripSeparator());
+                items.Add(RepositoryMenuItem.Separator);
             }
 
             foreach (RecentRepoInfo repo in CollectionsMarshal.AsSpan(allRecentRepos))
             {
-                AddRecentRepositories(container, repo.Repo, repo.Caption, ++number, repo.Anchored);
+                items.Add(CreateRepositoryItem(repo.Repo, repo.Caption, ++number, repo.Anchored));
             }
         }
+
+        return items;
     }
 
     public void TriggerBranchNameCacheUpdate(bool onlyIfEmpty = false)
@@ -290,15 +282,29 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
         }
     }
 
+    /// <summary>Whether Ctrl is the only modifier key pressed (as the WinForms <c>Control.ModifierKeys == Keys.Control</c>).</summary>
+    private static bool IsOnlyControlKeyDown()
+    {
+        static bool IsDown(int virtualKey) => (GetKeyState(virtualKey) & 0x8000) != 0;
+
+        const int VK_SHIFT = 0x10;
+        const int VK_CONTROL = 0x11;
+        const int VK_MENU = 0x12;
+        return IsDown(VK_CONTROL) && !IsDown(VK_SHIFT) && !IsDown(VK_MENU);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern short GetKeyState(int virtualKey);
+
     internal TestAccessor GetTestAccessor()
         => new(this);
 
     internal readonly struct TestAccessor(RepositoryHistoryUIService service)
     {
-        internal void AddRecentRepositories(ToolStripDropDownItem menuItemContainer, Repository repo, string? caption, int number)
-            => service.AddRecentRepositories(menuItemContainer, repo, caption, number);
+        internal RepositoryMenuItem CreateRepositoryItem(Repository repo, string? caption, int number)
+            => service.CreateRepositoryItem(repo, caption, number);
 
-        internal void PopulateFavouriteRepositoriesMenu(ToolStripDropDownItem container, in IList<Repository> repositoryHistory)
-            => service.PopulateFavouriteRepositoriesMenu(container, repositoryHistory);
+        internal IReadOnlyList<RepositoryMenuItem> GetFavouriteRepositoriesMenu(in IList<Repository> repositoryHistory)
+            => service.GetFavouriteRepositoriesMenu(repositoryHistory);
     }
 }

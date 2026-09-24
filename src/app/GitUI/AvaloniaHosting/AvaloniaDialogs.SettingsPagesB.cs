@@ -155,27 +155,11 @@ internal static partial class AvaloniaDialogs
             return [.. exports.Select(export => export.Metadata.BuildServerType.Combine(" - ", export.Metadata.CanBeLoaded)!)];
         });
 
-        /// <summary>As <c>CreateBuildServerSettingsUserControl</c>.</summary>
-        public IBuildServerSettingsControl? CreateSettingsControl(string buildServerType)
-        {
-            if (string.IsNullOrEmpty(Module.WorkingDir))
-            {
-                return null;
-            }
-
-            string defaultProjectName = Module.WorkingDir.Split(Delimiters.PathSeparators, StringSplitOptions.RemoveEmptyEntries)[^1];
-
-            IEnumerable<Lazy<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>> exports = ManagedExtensibility.GetExports<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>();
-            Lazy<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>? selectedExport = exports.SingleOrDefault(export => export.Metadata.BuildServerType == buildServerType);
-            if (selectedExport is null)
-            {
-                return null;
-            }
-
-            IBuildServerSettingsUserControl buildServerSettingsUserControl = selectedExport.Value;
-            buildServerSettingsUserControl.Initialize(defaultProjectName, GetRemoteUrls());
-            return new BuildServerSettingsControl(buildServerSettingsUserControl);
-        }
+        /// <summary>
+        ///  As <c>CreateBuildServerSettingsUserControl</c>: none, as the WinForms settings controls of the plugins of API v1
+        ///  are gone with WinForms (docs/avalonia-port/PLAN.md, phase 8); the plugins declare their settings (API v2).
+        /// </summary>
+        public IBuildServerSettingsControl? CreateSettingsControl(string buildServerType) => null;
 
         /// <summary>
         ///  Plugin API v2: the settings the plugin declares (<see cref="IBuildServerSettingsProvider"/>), as the settings of the
@@ -262,43 +246,5 @@ internal static partial class AvaloniaDialogs
             => Window is { } window
                 ? new AvaloniaFileDialogService(window).PickSaveFileAsync(title, filterName, extension, suggestedFileName, startDirectory)
                 : Task.FromResult<string?>(null);
-    }
-
-    /// <summary>
-    ///  The settings control of a build server plugin (a WinForms control), embedded in the Avalonia page as a child window, as
-    ///  <c>ConsoleProcess</c> embeds the console.
-    /// </summary>
-    private sealed class BuildServerSettingsControl(IBuildServerSettingsUserControl userControl) : IBuildServerSettingsControl
-    {
-        private static readonly nint HWND_MESSAGE = -3;
-
-        private readonly Control _control = (Control)userControl;
-
-        public double PreferredHeight => Math.Max(_control.Height, _control.PreferredSize.Height) * 96.0 / _control.DeviceDpi;
-
-        public void LoadSettings(SettingsSource buildServerConfig) => userControl.LoadSettings(buildServerConfig);
-
-        public void SaveSettings(SettingsSource buildServerConfig) => userControl.SaveSettings(buildServerConfig);
-
-        public nint Attach(nint parentWindow)
-        {
-            // WinForms creates parentless controls as children of its parking window; move it into the Avalonia window.
-            nint handle = _control.Handle;
-            NativeMethods.SetParent(handle, parentWindow);
-            _control.Visible = true;
-            return handle;
-        }
-
-        public void Detach()
-        {
-            // The page is not shown any more; park the control so that it is not destroyed underneath WinForms.
-            if (_control.IsHandleCreated)
-            {
-                _control.Visible = false;
-                NativeMethods.SetParent(_control.Handle, HWND_MESSAGE);
-            }
-        }
-
-        public void Dispose() => _control.Dispose();
     }
 }

@@ -4,7 +4,7 @@ namespace GitUIPluginInterfaces.BuildServerIntegration;
 
 /// <summary>
 ///  The repository whose build server settings are shown (as the arguments of
-///  <see cref="IBuildServerSettingsUserControl.Initialize"/>), and the values suggested for its unset settings.
+///  <c>IBuildServerSettingsUserControl.Initialize</c>), and the values suggested for its unset settings.
 /// </summary>
 public sealed class BuildServerSettingsContext
 {

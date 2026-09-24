@@ -1,14 +1,16 @@
+using GitUI.Presentation.Services;
+
 namespace GitUI.ConsoleEmulation;
 
 /// <summary>
 ///  Represents an interactive terminal session embedded in the repository browser's terminal tab.
 /// </summary>
-public interface IConsoleShellRunner
+public interface IConsoleShellRunner : IDisposable
 {
     /// <summary>
-    ///  Gets the WinForms control to embed in the tab panel.
+    ///  Gets the native window of the terminal, which the terminal tab embeds.
     /// </summary>
-    Control Control { get; }
+    IEmbeddedNativeView View { get; }
 
     /// <summary>
     ///  Gets a value indicating whether the shell running inside the terminal is still active.

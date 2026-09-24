@@ -21,6 +21,34 @@ public static class AvaloniaDialogHost
     /// </summary>
     internal static Action<DialogWindow>? DialogShowingForTests { get; set; }
 
+    /// <summary>The windows shown and not closed yet (as the WinForms <c>Application.OpenForms</c>).</summary>
+    private static readonly List<DialogWindow> _openWindows = [];
+
+    /// <summary>Whether a window is open (as <c>Application.OpenForms.Count &gt; 0</c>).</summary>
+    public static bool HasOpenWindows => _openWindows.Count > 0;
+
+    /// <summary>The open window of <paramref name="handle"/> (or of a window it contains), if any.</summary>
+    public static DialogWindow? FindOpenWindow(nint handle)
+    {
+        nint root = handle == 0 ? 0 : NativeMethods.GetAncestor(handle, NativeMethods.GA_ROOT);
+        return root == 0 ? null : _openWindows.FirstOrDefault(window => window.NativeHandle == root);
+    }
+
+    /// <summary>Closes all the open windows (as the WinForms <c>Application.Exit</c>), which ends the main loop.</summary>
+    public static void CloseAllWindows()
+    {
+        foreach (DialogWindow window in _openWindows.ToList())
+        {
+            window.Close();
+        }
+    }
+
+    private static void TrackOpenWindow(DialogWindow window)
+    {
+        _openWindows.Add(window);
+        window.Closed += (_, _) => _openWindows.Remove(window);
+    }
+
     /// <summary>
     ///  Shows <paramref name="window"/> modally and returns whether it was accepted.
     /// </summary>
@@ -78,6 +106,7 @@ public static class AvaloniaDialogHost
         };
 
         DialogShowingForTests?.Invoke(window);
+        TrackOpenWindow(window);
         window.Show();
         Dispatcher.UIThread.PushFrame(frame);
 
@@ -91,7 +120,8 @@ public static class AvaloniaDialogHost
 
     /// <summary>
     ///  Shows <paramref name="window"/> modelessly over a native owner, as WinForms' <c>Form.Show(owner)</c>:
-    ///  it stays above the owner and is minimised with it, but the owner stays usable.
+    ///  it stays above the owner and is minimised with it, but the owner stays usable; it closes with an owner shown here
+    ///  (Windows would otherwise destroy the owned window behind Avalonia's back).
     /// </summary>
     /// <param name="window">The window to show.</param>
     /// <param name="ownerHandle">Native handle of the owner (any window or control of it), or 0 for none.</param>
@@ -115,7 +145,15 @@ public static class AvaloniaDialogHost
             window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
+        if (owner != 0 && FindOpenWindow(owner) is { } ownerWindow)
+        {
+            void CloseWithOwner(object? sender, EventArgs e) => window.Close();
+            ownerWindow.Closed += CloseWithOwner;
+            window.Closed += (_, _) => ownerWindow.Closed -= CloseWithOwner;
+        }
+
         DialogShowingForTests?.Invoke(window);
+        TrackOpenWindow(window);
         window.Show();
     }
 

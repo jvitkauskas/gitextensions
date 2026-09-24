@@ -8,7 +8,6 @@ using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.Services;
-using GitUI.SettingControlBindings;
 using GitUIPluginInterfaces.BuildServerIntegration;
 using GitUIPluginInterfaces.RepositoryHosts;
 using NSubstitute;

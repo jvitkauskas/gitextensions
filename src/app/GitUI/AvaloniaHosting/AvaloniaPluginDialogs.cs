@@ -52,14 +52,7 @@ public static class AvaloniaPluginDialogs
         window.PositionName = positionName;
         window.PositionStore = AvaloniaDialogs.WindowPositionStore.Instance;
 
-        // An owned form closes with its owner; Windows would otherwise destroy the owned window behind Avalonia's back.
-        if (owner is not null && Control.FromChildHandle(owner.Handle)?.FindForm() is Form form)
-        {
-            void CloseWithForm(object? sender, FormClosedEventArgs e) => window.Close();
-            form.FormClosed += CloseWithForm;
-            window.Closed += (_, _) => form.FormClosed -= CloseWithForm;
-        }
-
+        // An owned window closes with its owner (AvaloniaDialogHost.Show).
         AvaloniaDialogHost.Show(window, owner?.Handle ?? 0);
         if (showInTaskbar)
         {

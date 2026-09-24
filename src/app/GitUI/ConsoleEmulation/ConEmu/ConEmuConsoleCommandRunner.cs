@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using ConEmu.Inside;
 using GitCommands;
 using GitCommands.Logging;
 using GitExtensions.Extensibility;
+using GitUI.Presentation.Services;
 using Microsoft;
 
 namespace GitUI.ConsoleEmulation.ConEmu;
@@ -10,28 +12,21 @@ namespace GitUI.ConsoleEmulation.ConEmu;
 /// <summary>
 ///  Embeds a ConEmu terminal in the output panel so command dialogs can host an interactive console.
 /// </summary>
-internal sealed class ConEmuConsoleCommandRunner : ContainerControl, IConsoleCommandRunner
+internal sealed class ConEmuConsoleCommandRunner : IConsoleCommandRunner
 {
     private readonly ConsoleEmulatorSettings _settings;
+    private readonly NativeHostWindow _window = new();
     private int _nLastExitCode;
 
-    private Panel _panel;
-    private ConEmuControl? _terminal;
+    private ConEmuHost? _terminal;
 
     public ConEmuConsoleCommandRunner(ConsoleEmulatorSettings settings)
     {
         _settings = settings;
-        InitializeComponent();
-
-        Validates.NotNull(_panel);
     }
 
-    private void InitializeComponent()
-    {
-        Controls.Add(_panel = new Panel { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None });
-    }
-
-    public Control Control => this;
+    /// <summary>The window in which ConEmu runs (in place of the WinForms panel of <c>ConEmuControl</c>).</summary>
+    public IEmbeddedNativeView? View => _window;
 
     public event EventHandler<ConsoleOutputEventArgs>? CommandOutputReceived;
     public event EventHandler<ConsoleProcessExitEventArgs>? CommandProcessExited;
@@ -46,7 +41,7 @@ internal sealed class ConEmuConsoleCommandRunner : ContainerControl, IConsoleCom
     public void WriteCommandProcessInput(string text)
     {
         Validates.NotNull(_terminal);
-        this.InvokeAndForget(() => _terminal.RunningSession?.WriteInputTextAsync(text)!);
+        ThreadHelper.InvokeAndForget(() => _terminal.RunningSession?.WriteInputTextAsync(text) ?? Task.CompletedTask);
     }
 
     public void KillCommandProcess()
@@ -55,39 +50,32 @@ internal sealed class ConEmuConsoleCommandRunner : ContainerControl, IConsoleCom
         KillProcess(_terminal);
     }
 
-    private static void KillProcess(ConEmuControl terminal)
+    private static void KillProcess(ConEmuHost terminal)
     {
         terminal.RunningSession?.SendControlCAsync();
     }
 
     public void ResetConsole()
     {
-        ConEmuControl? oldTerminal = _terminal;
+        ConEmuHost? oldTerminal = _terminal;
 
-        _terminal = new ConEmuControl
+        _terminal = new ConEmuHost(_window.Handle)
         {
-            Dock = DockStyle.Fill,
             IsStatusbarVisible = false
         };
 
         if (oldTerminal is not null)
         {
             KillProcess(oldTerminal);
-            _panel.Controls.Remove(oldTerminal);
             oldTerminal.Dispose();
         }
-
-        _panel.Controls.Add(_terminal);
     }
 
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
-        if (disposing)
-        {
-            _terminal?.Dispose();
-        }
-
-        base.Dispose(disposing);
+        _terminal?.Dispose();
+        _terminal = null;
+        _window.Dispose();
     }
 
     public void StartCommand(string command, string arguments, string workDir, Dictionary<string, string> envVariables)

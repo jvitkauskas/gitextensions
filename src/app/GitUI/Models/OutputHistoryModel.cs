@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using GitUI.Editor.Diff;
+using GitUI.Presentation.Editor;
 
 namespace GitUI.Models;
 
@@ -80,8 +80,8 @@ internal sealed class OutputHistoryModel : IOutputHistoryProvider, IOutputHistor
                 sb.Append(runProcess.Executable).Append(' ').AppendLine(runProcess.Arguments);
             }
 
-            List<TextMarker> textMarkers = [];
-            AnsiEscapeUtilities.ParseEscape(runProcess.Output.Trim(), sb, textMarkers, traceErrors: false);
+            // The text without the escape sequences of its colors.
+            AnsiEscapeParser.Parse(runProcess.Output.Trim(), sb, segments: [], DefaultThemeColors.Instance);
 
             return sb.AppendLine().AppendLine();
         }

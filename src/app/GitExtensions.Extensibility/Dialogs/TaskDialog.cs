@@ -28,9 +28,11 @@ public sealed class TaskDialogIcon
 public class TaskDialogButton
 {
     /// <summary>A button with <paramref name="text"/>.</summary>
-    public TaskDialogButton(string? text = null)
+    public TaskDialogButton(string? text = null, bool enabled = true, bool allowCloseDialog = true)
     {
         Text = text;
+        Enabled = enabled;
+        AllowCloseDialog = allowCloseDialog;
     }
 
     private TaskDialogButton(int standardId, int commonButtonFlag)
@@ -70,6 +72,9 @@ public class TaskDialogButton
     /// <summary>Whether clicking the button closes the dialog.</summary>
     public bool AllowCloseDialog { get; set; } = true;
 
+    /// <summary>Whether the button can be clicked.</summary>
+    public bool Enabled { get; set; } = true;
+
     /// <summary>Data of the caller.</summary>
     public object? Tag { get; set; }
 
@@ -102,8 +107,8 @@ public class TaskDialogButton
 /// <summary>A command link of a task dialog: a big button with a text and a description.</summary>
 public sealed class TaskDialogCommandLinkButton : TaskDialogButton
 {
-    public TaskDialogCommandLinkButton(string? text = null, string? descriptionText = null)
-        : base(text)
+    public TaskDialogCommandLinkButton(string? text = null, string? descriptionText = null, bool enabled = true, bool allowCloseDialog = true)
+        : base(text, enabled, allowCloseDialog)
     {
         DescriptionText = descriptionText;
     }
@@ -198,7 +203,9 @@ public static class TaskDialog
     private const int TDF_CAN_BE_MINIMIZED = 0x8000;
     private const int TDF_SIZE_TO_CONTENT = 0x01000000;
 
+    private const int TDN_CREATED = 0;
     private const int TDN_BUTTON_CLICKED = 2;
+    private const int TDM_ENABLE_BUTTON = 0x0400 + 111;
     private const int TDN_HYPERLINK_CLICKED = 3;
     private const int TDN_VERIFICATION_CLICKED = 8;
     private const int TDN_EXPANDO_BUTTON_CLICKED = 10;
@@ -327,6 +334,13 @@ public static class TaskDialog
                 {
                     switch (notification)
                     {
+                        case TDN_CREATED:
+                            foreach (TaskDialogButton button in buttons.Where(button => !button.Enabled))
+                            {
+                                DialogNativeMethods.SendMessageW(hwnd, TDM_ENABLE_BUTTON, ButtonId(button), 0);
+                            }
+
+                            break;
                         case TDN_BUTTON_CLICKED:
                             return ButtonOf((int)wordParameter) is { } clicked && !clicked.OnClick() ? S_FALSE : S_OK;
                         case TDN_HYPERLINK_CLICKED:

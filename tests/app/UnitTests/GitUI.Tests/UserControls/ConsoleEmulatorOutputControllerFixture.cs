@@ -1,5 +1,4 @@
-﻿using ConEmu.WinForms;
-using GitCommands;
+﻿using GitCommands;
 using GitUI.ConsoleEmulation;
 using GitUI.ConsoleEmulation.ConEmu;
 

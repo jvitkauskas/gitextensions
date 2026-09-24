@@ -105,21 +105,4 @@ public sealed class CommonLogic : Translate
             yield return Environment.GetEnvironmentVariable(AmbientGitEditorEnvVariableName);
         }
     }
-
-    public string SelectFile(string initialDirectory, string filter, string prev)
-    {
-        using System.Windows.Forms.OpenFileDialog dialog = new()
-        {
-            Filter = filter,
-            InitialDirectory = initialDirectory,
-            Title = _selectFile.Text
-        };
-        return dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : prev;
-    }
-
-    public static void FillEncodings(ComboBox combo)
-    {
-        combo.Items.AddRange([.. AppSettings.AvailableEncodings.Values]);
-        combo.DisplayMember = nameof(Encoding.EncodingName);
-    }
 }

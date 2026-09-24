@@ -143,7 +143,9 @@ internal static partial class AvaloniaDialogs
 
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     window.Close();
-                    Application.Exit();
+
+                    // As Application.Exit: all the windows are closed, which ends the application.
+                    AvaloniaDialogHost.CloseAllWindows();
                 }
                 catch (Win32Exception)
                 {

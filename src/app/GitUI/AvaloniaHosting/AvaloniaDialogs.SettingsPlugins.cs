@@ -70,12 +70,6 @@ internal static partial class AvaloniaDialogs
     internal static PluginSettingRow CreatePluginSettingRow(ISetting setting, Func<WindowOwner>? getOwner = null)
     {
         string? caption = string.IsNullOrWhiteSpace(setting.Caption) ? null : setting.Caption;
-        if (setting.CreateControlBinding() is not null)
-        {
-            // A WinForms control of the plugin itself cannot be shown here.
-            return PluginSettingRow.ForText(caption, "(this setting can be changed in the WinForms settings dialog only)");
-        }
-
         return setting switch
         {
             BoolSetting s => PluginSettingRow.ForValue(caption, new BoolSettingValue(s)),
@@ -83,38 +77,17 @@ internal static partial class AvaloniaDialogs
             PasswordSetting s => PluginSettingRow.ForValue(caption, new PasswordSettingValue(s)),
             StringSetting s => PluginSettingRow.ForValue(caption, new StringSettingValue(s)),
             ChoiceSetting s => PluginSettingRow.ForValue(caption, new ChoiceSettingValue(s)),
-            PseudoSetting s => CreatePseudoSettingRow(caption, s),
+            PseudoSetting s => PluginSettingRow.ForText(caption, s.Text),
 
             // Plugin API v2: a link that runs its action in the host context, on the values being edited.
             ActionSetting s => PluginSettingRow.ForAction(caption, s.Text, values => AvaloniaUi.RunInHostContext(
                 () => s.Execute(new SettingActionContext(getOwner?.Invoke() ?? WindowOwner.None, values)))),
-            NumberSetting<int> s when s.CustomControl is not TextBox => PluginSettingRow.ForValue(caption, new IntSettingValue(s)),
-            NumberSetting<int> s => PluginSettingRow.ForValue(caption, new NumberTextSettingValue<int>(s)),
+            NumberSetting<int> s => PluginSettingRow.ForValue(caption, new IntSettingValue(s)),
             NumberSetting<float> s => PluginSettingRow.ForValue(caption, new NumberTextSettingValue<float>(s)),
             NumberSetting<double> s => PluginSettingRow.ForValue(caption, new NumberTextSettingValue<double>(s)),
             NumberSetting<long> s => PluginSettingRow.ForValue(caption, new NumberTextSettingValue<long>(s)),
-            _ => throw new NotSupportedException($"""
-                No control binding registered for {setting.GetType().Name}.
-                Consider implementing ISetting.CreateControlBinding and provide your own control binding in your plugin.
-                """)
+            _ => throw new NotSupportedException($"No control binding registered for {setting.GetType().Name}.")
         };
-    }
-
-    /// <summary>
-    ///  A <c>PseudoSetting</c>: its text, or the text of its control; a link label is a link raising the click of the label
-    ///  (as the GitHub plugin's links).
-    /// </summary>
-    private static PluginSettingRow CreatePseudoSettingRow(string? caption, PseudoSetting setting)
-    {
-        Control? control = setting.CustomControl;
-        string text = control?.Text ?? "";
-        if (control is LinkLabel)
-        {
-            MethodInfo? onClick = typeof(Control).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(EventArgs)]);
-            return PluginSettingRow.ForText(caption, text, () => AvaloniaUi.RunInHostContext(() => onClick?.Invoke(control, [EventArgs.Empty])));
-        }
-
-        return PluginSettingRow.ForText(caption, text);
     }
 
     private static byte[]? ToPng(Image? image)

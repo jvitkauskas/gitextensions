@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using GitExtensions.Extensibility;
+using Microsoft.VisualStudio.Threading;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
@@ -7,20 +9,24 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace GitUI.ConsoleEmulation.Mintty;
 
-internal sealed class MinttyControl : Panel
+internal sealed class MinttyControl : IDisposable
 {
+    private readonly NativeHostWindow _host;
     private MinttySession? _runningSession;
     private CancellationTokenSource? _sessionCts;
     private HANDLE _jobHandle = NativeMethods.CreateKillOnCloseJob();
+    private bool _isDisposed;
 
-    public MinttyControl()
+    /// <param name="host">The window in which mintty runs (in place of the WinForms panel), owned by the caller.</param>
+    public MinttyControl(NativeHostWindow host)
     {
-        // Make the panel focusable so Focus() works programmatically and
-        // OnGotFocus runs whenever WinForms restores focus here (e.g. after
-        // alt-tabbing back to the host form). OnGotFocus then forwards focus
-        // to the embedded mintty hwnd — centralising what used to be scattered
+        _host = host;
+
+        // The host window forwards the focus to the embedded mintty hwnd whenever it gets it (e.g. after
+        // alt-tabbing back to the host window) — centralising what used to be scattered
         // FocusWindowWithAttachedInput calls at every entry point.
-        SetStyle(ControlStyles.Selectable, true);
+        _host.FocusReceived += OnGotFocus;
+        _host.Resized += OnResize;
     }
 
     internal MinttySession? RunningSession => _runningSession;
@@ -232,17 +238,17 @@ internal sealed class MinttyControl : Panel
             // terminated mid-write, leaving traces like index.lock behind. Let the command finish in
             // the hidden mintty window — its output still reaches the host via stdout.
             Trace.WriteLine($"MinttyControl: Failed to embed mintty window for PID {minttyProcess.Id}. The command will continue running invisibly until completion. Error: {ex}");
-            this.InvokeAndForget(() => ShowEmbedFailure(ex, minttyProcess));
+            ThreadHelper.InvokeAndForget(() => ShowEmbedFailure(ex, minttyProcess));
         }
     }
 
     private async Task EmbedWindowAsync(HWND hwnd)
     {
-        // Capture WinForms state on the UI thread - as it's required by the control.
-        TaskCompletionSource<(HWND Handle, int Width, int Height)> panelStateTcs = new();
-        BeginInvoke(() => panelStateTcs.SetResult(((HWND)Handle, Width, Height)));
-
-        (HWND panelHwnd, int width, int height) = await panelStateTcs.Task;
+        // Capture the state of the host window on the UI thread.
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+        HWND panelHwnd = (HWND)_host.Handle;
+        (int width, int height) = _host.ClientSize;
+        await TaskScheduler.Default;
 
         // The synchronous cross-process Win32 calls below all send messages to
         // mintty's thread. Running them on the UI thread freezes the entire app
@@ -280,19 +286,20 @@ internal sealed class MinttyControl : Panel
             | SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW
             | SET_WINDOW_POS_FLAGS.SWP_ASYNCWINDOWPOS);
 
-        // Defer Focus via BeginInvoke so our pump gets one cycle to drain. Mintty
-        // is now parented to our panel — that means cross-process messages
+        // Defer Focus via InvokeAndForget so our pump gets one cycle to drain. Mintty
+        // is now parented to our window — that means cross-process messages
         // (WM_PARENTNOTIFY, WM_MOUSEACTIVATE, focus-traversal traffic, etc.) can
         // flow synchronously from mintty into our pump. Anything mintty posts
         // while our continuation is dispatched gets handled before our queued
         // Focus runs, instead of being processed reentrantly underneath SetFocus.
-        BeginInvoke(Focus);
+        ThreadHelper.InvokeAndForget(Focus);
     }
 
-    protected override void OnGotFocus(EventArgs e)
-    {
-        base.OnGotFocus(e);
+    /// <summary>Gives the focus to the host window, which forwards it to mintty.</summary>
+    public void Focus() => _host.Focus();
 
+    private void OnGotFocus(object? sender, EventArgs e)
+    {
         HWND hwnd = _runningSession?.WindowHandle ?? HWND.Null;
         if (!hwnd.IsNull)
         {
@@ -300,27 +307,30 @@ internal sealed class MinttyControl : Panel
         }
     }
 
-    protected override void OnResize(EventArgs e)
+    private void OnResize(object? sender, EventArgs e)
     {
-        base.OnResize(e);
         HWND hwnd = _runningSession?.WindowHandle ?? HWND.Null;
-        if (!hwnd.IsNull && Width > 0 && Height > 0)
+        (int width, int height) = _host.ClientSize;
+        if (!hwnd.IsNull && width > 0 && height > 0)
         {
             // SWP_ASYNCWINDOWPOS posts the size change to mintty's thread instead of a
             // synchronous cross-process SendMessage. MoveWindow (and plain SetWindowPos)
             // blocks on mintty's message pump, which can deadlock with the modal resize
             // loop if mintty has a SendMessage pending into our window.
-            PInvoke.SetWindowPos(hwnd, HWND.Null, 0, 0, Width, Height,
+            PInvoke.SetWindowPos(hwnd, HWND.Null, 0, 0, width, height,
                 SET_WINDOW_POS_FLAGS.SWP_NOZORDER
                 | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE
                 | SET_WINDOW_POS_FLAGS.SWP_ASYNCWINDOWPOS);
         }
     }
 
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
-        if (disposing)
+        if (!_isDisposed)
         {
+            _isDisposed = true;
+            _host.FocusReceived -= OnGotFocus;
+            _host.Resized -= OnResize;
             _sessionCts?.Cancel();
             _sessionCts?.Dispose();
             _sessionCts = null;
@@ -342,46 +352,28 @@ internal sealed class MinttyControl : Panel
                 _jobHandle = HANDLE.Null;
             }
         }
-
-        base.Dispose(disposing);
     }
 
     private void ShowEmbedFailure(Exception ex, Process minttyProcess)
     {
-        if (IsDisposed)
+        if (_isDisposed)
         {
             return;
         }
 
-        TableLayoutPanel layout = new()
+        // ReSharper disable LocalizableElement - rare error, no need to localize
+        TaskDialogPage page = new()
         {
-            Dock = DockStyle.Fill,
-            BackColor = SystemColors.Control,
-            ColumnCount = 1,
-            RowCount = 2,
-            Padding = new Padding(20),
+            Icon = TaskDialogIcon.Warning,
+            Caption = "mintty",
+            Heading = "Failed to display the embedded console",
+            Text = ex.Message,
+            AllowCancel = true,
+            SizeToContent = true,
         };
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        TaskDialogCommandLinkButton showButton = new("Show mintty window externally");
 
-        Label errorLabel = new()
-        {
-            // ReSharper disable once LocalizableElement - rare error, no need to localize
-            Text = $"Failed to display the embedded console:{Environment.NewLine}{ex.Message}",
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            AutoSize = false,
-            ForeColor = SystemColors.GrayText,
-        };
-
-        Button showButton = new()
-        {
-            // ReSharper disable once LocalizableElement - rare error, no need to localize
-            Text = "Show mintty window externally",
-            AutoSize = true,
-            Anchor = AnchorStyles.None,
-            Margin = new Padding(0, 8, 0, 0),
-        };
+        // ReSharper restore LocalizableElement
         showButton.Click += (_, _) =>
         {
             try
@@ -412,8 +404,8 @@ internal sealed class MinttyControl : Panel
             }
         };
 
-        layout.Controls.Add(errorLabel, 0, 0);
-        layout.Controls.Add(showButton, 0, 1);
-        Controls.Add(layout);
+        page.Buttons.Add(showButton);
+        page.Buttons.Add(TaskDialogButton.Close);
+        TaskDialog.ShowDialog(_host.Handle, page);
     }
 }

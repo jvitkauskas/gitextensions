@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace GitUI;
 
 /// <summary>
-/// Custom sortable list, used to support user-defined sorting in <see cref="DataGridView"/>.
+/// Custom sortable list, used to support user-defined sorting in <c>DataGridView</c>.
 /// </summary>
 /// <remarks>The class is abstract so that it is not used directly.<br/>Instead, it is expected to be derived, with a static constructor adding sortable properties through the <see cref="AddSortableProperty{TValue}"/> method</remarks>
 public abstract class SortableBindingList<T> : BindingList<T>

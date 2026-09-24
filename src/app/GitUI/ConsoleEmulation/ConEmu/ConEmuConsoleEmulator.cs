@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Shells;
 
 namespace GitUI.ConsoleEmulation.ConEmu;

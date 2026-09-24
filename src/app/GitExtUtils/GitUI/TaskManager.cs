@@ -103,6 +103,32 @@ public class TaskManager
         FileAndForget(() => task.WaitAsync(infiniteTimeout));
     }
 
+    /// <summary>
+    /// Asynchronously run <paramref name="asyncAction"/> on the UI thread and forward all exceptions to <see cref="UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// </summary>
+    public void InvokeAndForget(Func<Task> asyncAction, CancellationToken cancellationToken = default)
+    {
+        _ = JoinableTaskFactory.RunAsync(() =>
+            HandleExceptionsAsync(async () =>
+                {
+                    if (!JoinableTaskContext.IsOnMainThread)
+                    {
+                        await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken.CombineWith(_switchToMainThreadCancellationToken).Token);
+                    }
+
+                    await asyncAction();
+                },
+                ReportExceptionOnMainThreadAsync));
+    }
+
+    /// <summary>
+    /// Asynchronously run <paramref name="action"/> on the UI thread and forward all exceptions to <see cref="UnhandledExceptionHandler"/> except for <see cref="OperationCanceledException"/>, which is ignored.
+    /// </summary>
+    public void InvokeAndForget(Action action, CancellationToken cancellationToken = default)
+    {
+        InvokeAndForget(AsyncAction(action), cancellationToken);
+    }
+
     public async Task JoinPendingOperationsAsync(CancellationToken cancellationToken)
     {
         try

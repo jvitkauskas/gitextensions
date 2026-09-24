@@ -38,7 +38,7 @@ internal static partial class AvaloniaDialogs
     {
         AvaloniaUi.EnsureInitialized(GetOptions);
         ShowBrowseWindow(commands, args);
-        if (!Application.MessageLoop && !AvaloniaUi.IsMainLoopRunning)
+        if (!AvaloniaUi.IsMainLoopRunning)
         {
             using CancellationTokenSource mainLoop = new();
             _mainLoop = mainLoop;
@@ -256,7 +256,6 @@ internal static partial class AvaloniaDialogs
         private readonly IGitUICommands _commands;
         private readonly BrowseWindow _window;
         private readonly BrowseSession _session;
-        private ToolStripMenuItem? _repositoriesMenu;
 
         public BrowseHost(IGitUICommands commands, BrowseWindow window, BrowseSession session)
         {
@@ -282,8 +281,6 @@ internal static partial class AvaloniaDialogs
             UnsubscribeOutputHistory();
             StopSubmoduleMenu();
             RepositoryChanged = null;
-            _repositoriesMenu?.Dispose();
-            _repositoriesMenu = null;
         }
 
         // As the DropDownOpening of StartToolStripMenuItem: the items of IRepositoryHistoryUIService, whose click opens the
@@ -291,39 +288,28 @@ internal static partial class AvaloniaDialogs
         public IReadOnlyList<BrowseMenuItem> GetRepositoriesMenu(bool favourites)
         {
             IRepositoryHistoryUIService service = _commands.GetRequiredService<IRepositoryHistoryUIService>();
-            _repositoriesMenu?.Dispose();
-            _repositoriesMenu = new ToolStripMenuItem();
-            if (favourites)
-            {
-                service.PopulateFavouriteRepositoriesMenu(_repositoriesMenu);
-            }
-            else
-            {
-                service.PopulateRecentRepositoriesMenu(_repositoriesMenu);
-            }
+            return Convert(favourites ? service.GetFavouriteRepositoriesMenu() : service.GetRecentRepositoriesMenu());
 
-            return Convert(_repositoriesMenu.DropDownItems);
-
-            IReadOnlyList<BrowseMenuItem> Convert(ToolStripItemCollection items)
-                => [.. items.Cast<ToolStripItem>().Select(item => item switch
+            IReadOnlyList<BrowseMenuItem> Convert(IReadOnlyList<RepositoryMenuItem> items)
+                => [.. items.Select(item => item switch
                 {
-                    ToolStripMenuItem { DropDownItems.Count: > 0 } category => new BrowseMenuItem(TranslatedText.ToAccessKeyText(category.Text ?? ""), null, Children: Convert(category.DropDownItems)),
-                    ToolStripMenuItem repository => new BrowseMenuItem(TranslatedText.ToAccessKeyText(repository.Text ?? ""), null, repository.Image is null ? null : "Pin")
+                    { IsSeparator: true } => BrowseMenuItem.Separator,
+                    { Children.Count: > 0 } category => new BrowseMenuItem(TranslatedText.ToAccessKeyText(category.Text), null, Children: Convert(category.Children)),
+                    _ => new BrowseMenuItem(TranslatedText.ToAccessKeyText(item.Text), null, item.IsPinned ? "Pin" : null)
                     {
-                        Invoke = () => Open(repository),
-                        Shortcut = repository.ShortcutKeyDisplayString,
-                        ToolTip = string.IsNullOrEmpty(repository.ToolTipText) ? null : repository.ToolTipText,
+                        Invoke = () => Open(item),
+                        Shortcut = item.BranchName,
+                        ToolTip = item.ToolTip,
                     },
-                    _ => BrowseMenuItem.Separator,
                 })];
 
-            void Open(ToolStripMenuItem repository) => AvaloniaUi.RunInHostContext(() =>
+            void Open(RepositoryMenuItem repository) => AvaloniaUi.RunInHostContext(() =>
             {
                 EventHandler<GitModuleEventArgs> handler = (_, e) => _session.SetGitModule(e.GitModule);
                 service.GitModuleChanged += handler;
                 try
                 {
-                    repository.PerformClick();
+                    repository.Open?.Invoke();
                 }
                 finally
                 {

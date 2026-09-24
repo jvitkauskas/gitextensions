@@ -70,7 +70,7 @@ internal static partial class AvaloniaDialogs
             revision?.ObjectId,
             showBlame);
         window.DataContext = viewModel;
-        if (Application.OpenForms.Count > 0)
+        if (AvaloniaDialogHost.HasOpenWindows)
         {
             AvaloniaDialogHost.Show(window, ownerHandle: 0);
         }

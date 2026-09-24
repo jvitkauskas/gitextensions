@@ -204,7 +204,7 @@ internal static partial class AvaloniaDialogs
 
             void UpdateAndReportExceptions(BuildInfo buildInfo)
             {
-                TaskManager.HandleExceptions(() => OnBuildInfoUpdate(buildInfo), Application.OnThreadException);
+                TaskManager.HandleExceptions(() => OnBuildInfoUpdate(buildInfo), exception => TaskManager.UnhandledExceptionHandler?.Invoke(exception));
             }
         }
 

@@ -650,7 +650,7 @@ internal static partial class AvaloniaDialogs
 
             // At the mouse pointer (the WinForms grid shows it at the selected row).
             IWin32Window window = owner();
-            Point location = Cursor.Position;
+            Point location = GetCursorPosition();
             if (TryShowQuickRefSelector(window, actionLabel, gitRefs, location, out IGitRef? selectedRef) && selectedRef is not null)
             {
                 action(selectedRef);
@@ -997,4 +997,11 @@ internal static partial class AvaloniaDialogs
         grid.DrawNonRelativesTextGray = AppSettings.RevisionGraphDrawNonRelativesTextGray;
         grid.HighlightAuthoredRevisions = AppSettings.HighlightAuthoredRevisions;
     }
+
+    /// <summary>The position of the mouse pointer, in screen pixels (as <c>Cursor.Position</c>).</summary>
+    private static Point GetCursorPosition() => GetCursorPos(out Point point) ? point : Point.Empty;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out Point point);
 }

@@ -42,14 +42,7 @@ internal static partial class AvaloniaDialogs
         _gitCommandLogWindow = window;
         window.Closed += (_, _) => _gitCommandLogWindow = null;
 
-        // An owned form closes with its owner.
-        if (owner is not null && Control.FromChildHandle(owner.Handle)?.FindForm() is Form form)
-        {
-            void CloseWithForm(object? sender, FormClosedEventArgs e) => window.Close();
-            form.FormClosed += CloseWithForm;
-            window.Closed += (_, _) => form.FormClosed -= CloseWithForm;
-        }
-
+        // An owned window closes with its owner (AvaloniaDialogHost.Show).
         AvaloniaDialogHost.Show(window, owner?.Handle ?? 0);
 
         // As FormGitCommandLog (ShowInTaskbar = true), although owned.

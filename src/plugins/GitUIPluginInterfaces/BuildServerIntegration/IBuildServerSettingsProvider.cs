@@ -4,7 +4,7 @@ namespace GitUIPluginInterfaces.BuildServerIntegration;
 
 /// <summary>
 ///  The settings of a build server integration, declared as settings (plugin API v2 of
-///  <see cref="IBuildServerSettingsUserControl"/>, a WinForms control): the host shows them on the build server integration
+///  <c>IBuildServerSettingsUserControl</c>, a WinForms control): the host shows them on the build server integration
 ///  page of both settings dialogs, as the settings of the plugins (a caption and a control for each), and loads and saves them
 ///  in the settings of the build server (<c>BuildServerSettings.GetSettingsSource</c>), which the adapter reads.
 /// </summary>
@@ -12,7 +12,7 @@ namespace GitUIPluginInterfaces.BuildServerIntegration;
 ///  <para>
 ///   Export it with <c>[Export(typeof(IBuildServerSettingsProvider))]</c>,
 ///   <c>[BuildServerSettingsProviderMetadata(buildServerType)]</c> and <c>[PartCreationPolicy(CreationPolicy.NonShared)]</c>.
-///   The host uses it rather than an <see cref="IBuildServerSettingsUserControl"/> exported for the same build server type.
+///   The host uses it rather than an <c>IBuildServerSettingsUserControl</c> exported for the same build server type.
 ///  </para>
 ///  <para>
 ///   The settings are the kinds rendered by both dialogs: <see cref="StringSetting"/>, <see cref="PasswordSetting"/>,

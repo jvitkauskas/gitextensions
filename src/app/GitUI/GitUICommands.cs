@@ -336,40 +336,6 @@ public sealed class GitUICommands : IGitUICommands
         });
     }
 
-    public void ShowModelessForm(IWin32Window? owner, bool requiresValidWorkingDir,
-        EventHandler<GitUIEventArgs>? preEvent, EventHandler<GitUIPostActionEventArgs>? postEvent, Func<Form> provideForm)
-    {
-        if (requiresValidWorkingDir && !RequiresValidWorkingDir(owner))
-        {
-            return;
-        }
-
-        if (!InvokeEvent(owner, preEvent))
-        {
-            return;
-        }
-
-        Form form = provideForm();
-
-        void FormClosed(object? sender, FormClosedEventArgs e)
-        {
-            form.FormClosed -= FormClosed;
-            InvokePostEvent(owner, true, postEvent);
-        }
-
-        form.FormClosed += FormClosed;
-        form.ShowInTaskbar = true;
-
-        if (Application.OpenForms.Count > 0)
-        {
-            form.Show();
-        }
-        else
-        {
-            form.ShowDialog();
-        }
-    }
-
     /// <param name="requiresValidWorkingDir">If action requires valid working directory.</param>
     /// <param name="owner">Owner window.</param>
     /// <param name="changesRepo">if successfully done action changes repo state.</param>
@@ -800,24 +766,21 @@ public sealed class GitUICommands : IGitUICommands
             return false;
         }
 
-        using (WaitCursorScope.Enter())
+        // Reset all changes.
+        if (names.Length == 0)
         {
-            // Reset all changes.
-            if (names.Length == 0)
-            {
-                return Module.ResetAllChanges(clean: resetType == ResetChangesAction.ResetAndDelete, onlyWorkTree: false);
-            }
+            return Module.ResetAllChanges(clean: resetType == ResetChangesAction.ResetAndDelete, onlyWorkTree: false);
+        }
 
-            if (selectedItems.Length == 0)
-            {
-                return false;
-            }
+        if (selectedItems.Length == 0)
+        {
+            return false;
+        }
 
-            Module.ResetChanges(resetId: default, selectedItems, resetAndDelete: resetType == ResetChangesAction.ResetAndDelete, _fullPathResolver, out StringBuilder output, progressAction: null);
-            if (output.Length > 0)
-            {
-                MessageBoxes.Show(owner: null, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+        Module.ResetChanges(resetId: default, selectedItems, resetAndDelete: resetType == ResetChangesAction.ResetAndDelete, _fullPathResolver, out StringBuilder output, progressAction: null);
+        if (output.Length > 0)
+        {
+            MessageBoxes.Show(owner: null, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         return true;
