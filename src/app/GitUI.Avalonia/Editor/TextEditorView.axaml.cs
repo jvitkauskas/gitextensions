@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
@@ -32,6 +33,7 @@ public partial class TextEditorView : UserControl
     private readonly DarkThemeHighlightingAdapter _darkThemeAdapter = new();
     private readonly DiffLineNumberMargin _diffLineNumbers = new();
     private readonly DiffColorizer _diffColorizer = new();
+    private TextMateColorizer? _textMate;
     private DiffBrushes? _diffBrushes;
     private DiffBackgroundRenderer? _diffBackground;
     private DiffAnchorRenderer? _diffAnchors;
@@ -48,6 +50,21 @@ public partial class TextEditorView : UserControl
 
         // Before the text area handles the keys (the search commands of AvaloniaEdit).
         editor.AddHandler(KeyDownEvent, OnEditorPreviewKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        editor.Document.Changed += OnDocumentChanged;
+        editor.DocumentChanged += (_, e) =>
+        {
+            if (e.OldDocument is not null)
+            {
+                e.OldDocument.Changed -= OnDocumentChanged;
+            }
+
+            if (e.NewDocument is not null)
+            {
+                e.NewDocument.Changed += OnDocumentChanged;
+            }
+
+            _textMate?.Invalidate(fromLine: 1);
+        };
         ActualThemeVariantChanged += (_, _) =>
         {
             if (_viewModel is not null)
@@ -288,14 +305,29 @@ public partial class TextEditorView : UserControl
         editor.Options.ShowSpaces = viewModel.ShowWhitespace;
         editor.Options.ShowTabs = viewModel.ShowWhitespace;
         editor.Options.ShowEndOfLine = viewModel.ShowWhitespace;
-        editor.SyntaxHighlighting = viewModel.FileName is { } fileName && Path.GetExtension(fileName) is { Length: > 0 } extension
+
+        // The TextMate grammar of the language, else the highlighting definition of AvaloniaEdit (fewer languages).
+        IList<IVisualLineTransformer> transformers = editor.TextArea.TextView.LineTransformers;
+        if (_textMate is not null)
+        {
+            transformers.Remove(_textMate);
+            _textMate = null;
+        }
+
+        bool isDarkTheme = ActualThemeVariant == ThemeVariant.Dark;
+        _textMate = viewModel.FileName is { } highlightedFile ? TextMateColorizer.TryCreate(highlightedFile, isDarkTheme) : null;
+        editor.SyntaxHighlighting = _textMate is null && viewModel.FileName is { } fileName && Path.GetExtension(fileName) is { Length: > 0 } extension
             ? HighlightingManager.Instance.GetDefinitionByExtension(extension)
             : null;
+        if (_textMate is not null)
+        {
+            _textMate.SetDiff(viewModel.DiffLines, DiffLinesAnalyzer.IsCombinedDiff(editor.Text));
+            transformers.Insert(0, _textMate);
+        }
 
         // After the highlighting, which setting it may have added.
-        IList<IVisualLineTransformer> transformers = editor.TextArea.TextView.LineTransformers;
         transformers.Remove(_darkThemeAdapter);
-        if (editor.SyntaxHighlighting is not null && ActualThemeVariant == ThemeVariant.Dark)
+        if (editor.SyntaxHighlighting is not null && isDarkTheme)
         {
             transformers.Add(_darkThemeAdapter);
         }
@@ -307,6 +339,18 @@ public partial class TextEditorView : UserControl
         }
 
         ApplyVerticalRuler();
+    }
+
+    private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e)
+    {
+        if (_textMate is null)
+        {
+            return;
+        }
+
+        // The lines after the change are tokenized again from the new state of the changed line.
+        _textMate.Invalidate(editor.Document.GetLineByOffset(Math.Min(e.Offset, editor.Document.TextLength)).LineNumber);
+        editor.TextArea.TextView.Redraw();
     }
 
     private void OnTextLoaded(object? sender, EventArgs e)
@@ -349,6 +393,7 @@ public partial class TextEditorView : UserControl
         }
 
         textView.LineTransformers.Remove(_diffColorizer);
+        _textMate?.SetDiff(lines, isDiff && DiffLinesAnalyzer.IsCombinedDiff(editor.Text));
         if (!isDiff)
         {
             return;
