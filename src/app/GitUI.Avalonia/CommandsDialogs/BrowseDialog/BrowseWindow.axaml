@@ -2,6 +2,7 @@
                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                 xmlns:h="using:GitUI.Avalonia.Hosting"
                 xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:bd="using:GitUI.Avalonia.CommandsDialogs.BrowseDialog"
                 xmlns:ed="using:GitUI.Avalonia.Editor"
                 xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
                 xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
@@ -19,10 +20,13 @@
       <Setter Property="BorderThickness" Value="0" />
     </Style>
   </Window.Styles>
-  <!-- Equivalent of FormBrowse: the main menu, the main toolbar (ToolStripMain), the grid and the tabs of the selected commit. -->
+  <!--
+    Equivalent of FormBrowse: the main menu, the main toolbar (ToolStripMain), the grid and the tabs of the selected commit;
+    without a valid repository, the dashboard instead of the toolbar, the grid and the tabs (as ShowDashboard).
+  -->
   <DockPanel>
     <Menu Name="mainMenu" DockPanel.Dock="Top" />
-    <StackPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="4,2">
+    <StackPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="4,2" IsVisible="{Binding !IsDashboard}">
       <Button Name="refreshButton" Classes="toolbar" Command="{Binding RefreshRevisionsCommand}" ToolTip.Tip="{Binding Strings.Refresh.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
       </Button>
@@ -69,11 +73,11 @@
       <rg:FilterToolBarView Name="filterToolBar" DataContext="{Binding Filters}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </StackPanel>
     <Grid RowDefinitions="*,Auto,320" Margin="4,0,4,4">
-      <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding !IsDashboard}">
         <rg:RevisionGridView Name="revisionGrid" DataContext="{Binding Grid}" />
       </Border>
-      <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" />
-      <TabControl Name="tabs" Grid.Row="2" Padding="0,4,0,0">
+      <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" IsVisible="{Binding !IsDashboard}" />
+      <TabControl Name="tabs" Grid.Row="2" Padding="0,4,0,0" IsVisible="{Binding !IsDashboard}">
         <TabItem Name="commitTab">
           <TabItem.Header>
             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -116,6 +120,7 @@
           </Grid>
         </TabItem>
       </TabControl>
+      <bd:DashboardView Name="dashboard" Grid.RowSpan="3" Margin="-4,0,-4,-4" DataContext="{Binding Dashboard}" IsVisible="{Binding $parent[Window].((vm:BrowseViewModel)DataContext).IsDashboard}" />
     </Grid>
   </DockPanel>
 </h:DialogWindow>

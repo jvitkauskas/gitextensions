@@ -253,7 +253,16 @@ internal static partial class AvaloniaDialogs
 
     private static class NativeMethods
     {
+        public const uint GA_ROOT = 2;
+        public const uint GW_OWNER = 4;
+
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         public static extern nint SetParent(nint hWndChild, nint hWndNewParent);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern nint GetAncestor(nint hwnd, uint gaFlags);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern nint GetWindow(nint hWnd, uint uCmd);
     }
 }

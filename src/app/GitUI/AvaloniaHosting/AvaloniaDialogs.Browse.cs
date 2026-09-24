@@ -10,6 +10,7 @@ using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.CommandsDialogs.WorktreeDialog;
 using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -25,8 +26,8 @@ namespace GitUI.AvaloniaHosting;
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
+    private static readonly List<BrowseSession> _browseSessions = [];
     private static ApplicationContext? _browseContext;
-    private static int _openBrowseWindows;
 
     /// <summary>
     ///  The Avalonia port of <see cref="GitUICommands.StartBrowseDialog"/>: the main window, shown modeless; without a message
@@ -60,60 +61,15 @@ internal static partial class AvaloniaDialogs
             PositionStore = WindowPositionStore.Instance,
             SelectedId = args.SelectedId.IsZero ? null : args.SelectedId,
         };
-        BrowseHost host = new(commands, window);
-        BrowseGridFilter gridFilter = new(commands, () => new NativeWindowOwner(window), CreateBrowseFilter(args));
-        RevisionGridHost gridHost = new(
-            commands,
-            currentCheckout => gridFilter.Filter.GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
-            showArtificial: true,
-            getPathFilter: _ => gridFilter.GetPathFilter());
-        RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
-        {
-            MultiSelect = true,
-        };
-        gridFilter.Grid = grid;
-        ApplyColumns(grid);
-        BrowseViewModel? browseViewModel = null;
-        RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => browseViewModel?.RefreshRevisions())
-        {
-            Filter = gridFilter,
-        };
-        grid.ContextMenuProvider = gridMenu.Build;
-        BrowseViewModel viewModel = new(
-            ViewStrings.Load<BrowseStrings>(),
-            host,
-            grid,
-            new CommitInfoHost(commands),
-            new FileViewerHost(commands),
-            ViewStrings.Load<FileStatusListStrings>(),
-            GetFileStatusTreeOptions())
-        {
-            Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
-        };
-        browseViewModel = viewModel;
-        UseFileStatusListMenu(viewModel.Files, commands, window);
-        if (viewModel.FileTree is { } fileTree)
-        {
-            // Not UseFileStatusListMenu: the sorting of the file tree is not the one of the diff lists.
-            fileTree.MenuHost = new FileStatusListMenuHost(commands, window);
-        }
+        BrowseSession session = new(window, args);
+        session.Load(commands);
 
-        window.DataContext = viewModel;
-
-        // As FormBrowse (IBrowseRepo): the scripts and the plugins see the selection of the grid.
-        commands.BrowseRepo = new BrowseRepoAdapter(commands, grid, window);
-
-        _openBrowseWindows++;
+        _browseSessions.Add(session);
         window.Closed += (_, _) =>
         {
-            host.Dispose();
-            grid.Dispose();
-            if (commands.BrowseRepo is BrowseRepoAdapter adapter && adapter.Window == window)
-            {
-                commands.BrowseRepo = null;
-            }
-
-            if (--_openBrowseWindows == 0)
+            session.Dispose();
+            _browseSessions.Remove(session);
+            if (_browseSessions.Count == 0)
             {
                 _browseContext?.ExitThread();
             }
@@ -122,26 +78,224 @@ internal static partial class AvaloniaDialogs
         return window;
     }
 
+    /// <summary>
+    ///  As <c>FormBrowse.SetWorkingDir</c> for <see cref="GitUICommands.WorktreeSwitch"/>: the Avalonia main window owning
+    ///  <paramref name="owner"/> (e.g. through the worktrees dialog) shows the directory.
+    /// </summary>
+    public static bool TrySetBrowseWorkingDir(IWin32Window? owner, string path)
+    {
+        nint handle = owner is null ? 0 : NativeMethods.GetAncestor(owner.Handle, NativeMethods.GA_ROOT);
+        for (; handle != 0; handle = NativeMethods.GetWindow(handle, NativeMethods.GW_OWNER))
+        {
+            if (_browseSessions.FirstOrDefault(s => s.Handle == handle) is { } session)
+            {
+                session.SetWorkingDir(path);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///  The main window and the view model of its current repository: as <c>FormBrowse.SetGitModule</c>, another repository
+    ///  gets new commands, and a new view model (the grid, the menus and the title; the dashboard without a valid repository).
+    /// </summary>
+    private sealed class BrowseSession(BrowseWindow window, BrowseArguments args) : IDisposable
+    {
+        private BrowseHost? _host;
+        private RevisionGridViewModel? _grid;
+
+        // The filters of the command line apply to the first repository only.
+        private BrowseArguments? _arguments = args;
+
+        public nint Handle => window.NativeHandle;
+
+        public IGitUICommands? Commands => _host?.Commands;
+
+        public void Load(IGitUICommands commands)
+        {
+            Dispose();
+
+            BrowseHost host = new(commands, window, this);
+            BrowseGridFilter gridFilter = new(commands, () => new NativeWindowOwner(window), _arguments is { } arguments ? CreateBrowseFilter(arguments) : new FilterInfo());
+            _arguments = null;
+            RevisionGridHost gridHost = new(
+                commands,
+                currentCheckout => gridFilter.Filter.GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
+                showArtificial: true,
+                getPathFilter: _ => gridFilter.GetPathFilter());
+            RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
+            {
+                MultiSelect = true,
+            };
+            gridFilter.Grid = grid;
+            ApplyColumns(grid);
+            BrowseViewModel? browseViewModel = null;
+            RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => browseViewModel?.RefreshRevisions())
+            {
+                Filter = gridFilter,
+            };
+            grid.ContextMenuProvider = gridMenu.Build;
+
+            // As ShowDashboard: the dashboard without a valid repository.
+            bool isValid = commands.Module.IsValidGitWorkingDir();
+            DashboardViewModel? dashboard = isValid
+                ? null
+                : new DashboardViewModel(ViewStrings.Load<DashboardStrings>(), ViewStrings.Load<UserRepositoriesListStrings>(), new DashboardHost(commands, window, this));
+            BrowseViewModel viewModel = new(
+                ViewStrings.Load<BrowseStrings>(),
+                host,
+                grid,
+                new CommitInfoHost(commands),
+                new FileViewerHost(commands),
+                ViewStrings.Load<FileStatusListStrings>(),
+                GetFileStatusTreeOptions(),
+                dashboard)
+            {
+                Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
+            };
+            browseViewModel = viewModel;
+            UseFileStatusListMenu(viewModel.Files, commands, window);
+            if (viewModel.FileTree is { } fileTree)
+            {
+                // Not UseFileStatusListMenu: the sorting of the file tree is not the one of the diff lists.
+                fileTree.MenuHost = new FileStatusListMenuHost(commands, window);
+            }
+
+            // As FormBrowse (IBrowseRepo): the scripts and the plugins see the selection of the grid.
+            commands.BrowseRepo = new BrowseRepoAdapter(commands, grid, window, this);
+            _host = host;
+            _grid = grid;
+
+            if (isValid)
+            {
+                // As WorkingDirectoryToolStripSplitButton.RefreshContent: the repository is the most recent one.
+                ThreadHelper.JoinableTaskFactory.Run(() => RepositoryHistory.AddAsMostRecentAsync(commands.Module.WorkingDir));
+            }
+
+            window.ShowViewModel(viewModel);
+        }
+
+        /// <summary>As <c>FormBrowse.SetGitModule</c>, once the current event is handled (e.g. the click of a menu item).</summary>
+        public void SetGitModule(IGitModule module)
+            => global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_host is not { } host)
+                {
+                    return;
+                }
+
+                // Reset branch colors whenever we open a new repository.
+                module.ResetRemoteColors();
+                if (module.IsValidGitWorkingDir())
+                {
+                    AppSettings.RecentWorkingDir = module.WorkingDir;
+                }
+
+                Load(host.Commands.WithGitModule(module));
+            });
+
+        /// <summary>As <c>FormBrowse.SetWorkingDir</c>: an empty path shows the dashboard.</summary>
+        public void SetWorkingDir(string path)
+        {
+            if (_host is { } host)
+            {
+                SetGitModule(new GitModule(host.Commands.GetRequiredService<IGitExecutorProvider>(), path));
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_host?.Commands is { BrowseRepo: BrowseRepoAdapter adapter } commands && adapter.Window == window)
+            {
+                commands.BrowseRepo = null;
+            }
+
+            _host?.Dispose();
+            _grid?.Dispose();
+            _host = null;
+            _grid = null;
+        }
+    }
+
     /// <summary>The dialogs and the git operations of the menus of <c>FormBrowse</c>, for the Avalonia main window.</summary>
     private sealed partial class BrowseHost : IBrowseHost, IDisposable
     {
         private readonly IGitUICommands _commands;
         private readonly BrowseWindow _window;
+        private readonly BrowseSession _session;
+        private ToolStripMenuItem? _repositoriesMenu;
 
-        public BrowseHost(IGitUICommands commands, BrowseWindow window)
+        public BrowseHost(IGitUICommands commands, BrowseWindow window, BrowseSession session)
         {
             _commands = commands;
             _window = window;
+            _session = session;
             commands.PostRepositoryChanged += OnPostRepositoryChanged;
         }
 
         public event EventHandler? RepositoryChanged;
 
+        public IGitUICommands Commands => _commands;
+
         private IGitModule Module => _commands.Module;
 
         private NativeWindowOwner Owner => new(_window);
 
-        public void Dispose() => _commands.PostRepositoryChanged -= OnPostRepositoryChanged;
+        public void Dispose()
+        {
+            _commands.PostRepositoryChanged -= OnPostRepositoryChanged;
+            RepositoryChanged = null;
+            _repositoriesMenu?.Dispose();
+            _repositoriesMenu = null;
+        }
+
+        // As the DropDownOpening of StartToolStripMenuItem: the items of IRepositoryHistoryUIService, whose click opens the
+        // repository (GitModuleChanged, handled here in this window) or, with Ctrl, a new instance.
+        public IReadOnlyList<BrowseMenuItem> GetRepositoriesMenu(bool favourites)
+        {
+            IRepositoryHistoryUIService service = _commands.GetRequiredService<IRepositoryHistoryUIService>();
+            _repositoriesMenu?.Dispose();
+            _repositoriesMenu = new ToolStripMenuItem();
+            if (favourites)
+            {
+                service.PopulateFavouriteRepositoriesMenu(_repositoriesMenu);
+            }
+            else
+            {
+                service.PopulateRecentRepositoriesMenu(_repositoriesMenu);
+            }
+
+            return Convert(_repositoriesMenu.DropDownItems);
+
+            IReadOnlyList<BrowseMenuItem> Convert(ToolStripItemCollection items)
+                => [.. items.Cast<ToolStripItem>().Select(item => item switch
+                {
+                    ToolStripMenuItem { DropDownItems.Count: > 0 } category => new BrowseMenuItem(TranslatedText.ToAccessKeyText(category.Text ?? ""), null, Children: Convert(category.DropDownItems)),
+                    ToolStripMenuItem repository => new BrowseMenuItem(TranslatedText.ToAccessKeyText(repository.Text ?? ""), null, repository.Image is null ? null : "Pin")
+                    {
+                        Invoke = () => Open(repository),
+                        Shortcut = repository.ShortcutKeyDisplayString,
+                        ToolTip = string.IsNullOrEmpty(repository.ToolTipText) ? null : repository.ToolTipText,
+                    },
+                    _ => BrowseMenuItem.Separator,
+                })];
+
+            void Open(ToolStripMenuItem repository) => AvaloniaUi.RunInHostContext(() =>
+            {
+                EventHandler<GitModuleEventArgs> handler = (_, e) => _session.SetGitModule(e.GitModule);
+                service.GitModuleChanged += handler;
+                try
+                {
+                    repository.PerformClick();
+                }
+                finally
+                {
+                    service.GitModuleChanged -= handler;
+                }
+            });
+        }
 
         // As FormBrowse.SetTitle.
         public string GetTitle()
@@ -162,7 +316,7 @@ internal static partial class AvaloniaDialogs
             NativeWindowOwner owner = Owner;
             switch (command)
             {
-                // Start (StartToolStripMenuItem): another repository opens in a new window.
+                // Start (StartToolStripMenuItem): another repository is shown in this window (SetGitModule).
                 case BrowseCommand.Open:
                     if (FormOpenDirectory.OpenModule(owner, _commands.GetRequiredService<IGitExecutorProvider>(), Module) is { } module)
                     {
@@ -176,6 +330,14 @@ internal static partial class AvaloniaDialogs
                 case BrowseCommand.Init:
                     _commands.StartInitializeDialog(owner, gitModuleChanged: (_, e) => OpenModule(e.GitModule));
                     break;
+                case BrowseCommand.ClearRecentRepositories:
+                    // As tsmiRecentRepositoriesClear_Click.
+                    ThreadHelper.JoinableTaskFactory.Run(() => RepositoryHistory.SaveRecentHistoryAsync([]));
+                    break;
+                case BrowseCommand.CloseRepository:
+                    // As CloseToolStripMenuItemClick; the view model is replaced, so it is not refreshed.
+                    _session.SetWorkingDir("");
+                    return;
 
                 // Repository
                 case BrowseCommand.FileExplorer:
@@ -473,12 +635,8 @@ internal static partial class AvaloniaDialogs
             }
         }
 
-        // As GitModuleChanged of the start menu: another repository opens in a new main window, this one closes.
-        private void OpenModule(IGitModule module)
-        {
-            ShowBrowseWindow(_commands.WithGitModule(module), new BrowseArguments());
-            _window.Close();
-        }
+        // As GitModuleChanged of the start menu: another repository is shown in this window.
+        private void OpenModule(IGitModule module) => _session.SetGitModule(module);
 
         private void OnPostRepositoryChanged(object? sender, GitUIEventArgs e) => RepositoryChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -507,7 +665,7 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>The main window for the scripts and the plugins (<c>IBrowseRepo</c> of <c>FormBrowse</c>).</summary>
-    private sealed class BrowseRepoAdapter(IGitUICommands commands, RevisionGridViewModel grid, BrowseWindow window) : IBrowseRepo
+    private sealed class BrowseRepoAdapter(IGitUICommands commands, RevisionGridViewModel grid, BrowseWindow window, BrowseSession session) : IBrowseRepo
     {
         public BrowseWindow Window => window;
 
@@ -531,11 +689,7 @@ internal static partial class AvaloniaDialogs
             }
         }
 
-        // As FormBrowse.SetWorkingDir: another repository opens in the main window.
-        public void SetWorkingDir(string? path, ObjectId selectedId = default, ObjectId firstId = default)
-        {
-            ShowBrowseWindow(commands.WithWorkingDirectory(path), new BrowseArguments { SelectedId = selectedId, FirstId = firstId });
-            window.Close();
-        }
+        // As FormBrowse.SetWorkingDir: another repository is shown in the main window (the revisions to select are not passed yet).
+        public void SetWorkingDir(string? path, ObjectId selectedId = default, ObjectId firstId = default) => session.SetWorkingDir(path ?? "");
     }
 }

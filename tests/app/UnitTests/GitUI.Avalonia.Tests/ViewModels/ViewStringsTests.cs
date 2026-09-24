@@ -81,6 +81,8 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new SubmodulesStrings()).SetArgDisplayNames(nameof(SubmodulesStrings));
         yield return new TestCaseData(new ReflogStrings()).SetArgDisplayNames(nameof(ReflogStrings));
         yield return new TestCaseData(new RecentReposSettingsStrings()).SetArgDisplayNames(nameof(RecentReposSettingsStrings));
+        yield return new TestCaseData(new DashboardStrings()).SetArgDisplayNames(nameof(DashboardStrings));
+        yield return new TestCaseData(new UserRepositoriesListStrings()).SetArgDisplayNames(nameof(UserRepositoriesListStrings));
         yield return new TestCaseData(new RemotesStrings()).SetArgDisplayNames(nameof(RemotesStrings));
         yield return new TestCaseData(new ChooseCommitStrings()).SetArgDisplayNames(nameof(ChooseCommitStrings));
         yield return new TestCaseData(new FormatPatchStrings()).SetArgDisplayNames(nameof(FormatPatchStrings));

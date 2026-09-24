@@ -349,6 +349,10 @@ public sealed class GitUICommands : IGitUICommands
         {
             browse.SetWorkingDir(Path.GetFullPath(worktreePath));
         }
+        else
+        {
+            AvaloniaHosting.AvaloniaDialogs.TrySetBrowseWorkingDir(owner, Path.GetFullPath(worktreePath));
+        }
 
         return true;
     }
