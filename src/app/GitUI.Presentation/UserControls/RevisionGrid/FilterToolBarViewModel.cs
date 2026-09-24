@@ -342,6 +342,9 @@ public sealed partial class FilterToolBarViewModel : ObservableObject
     [RelayCommand]
     private void ResetPathFilter() => _host.SetAndApplyPathFilter("");
 
+    /// <summary>As <c>tsmiFilterFileInGrid</c>: the revisions of the file (or folder) only.</summary>
+    public void ApplyPathFilter(string filter) => _host.SetAndApplyPathFilter(filter);
+
     [RelayCommand]
     private void ResetAllFilters() => _host.ResetAllFiltersAndRefresh();
 

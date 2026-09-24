@@ -44,13 +44,15 @@ internal static partial class AvaloniaDialogs
             {
                 if (e.State == GitStatusMonitorState.Stopped)
                 {
-                    // Fall back to the button without the status.
-                    ReportStatus(status: null, showCount: false);
+                    // Fall back to the button without the status, and the taskbar without the overlay.
+                    ReportStatus(status: null, showCount: false, countArtificial: false);
+                    UpdateStatusInTaskbar(RepoStateVisualiser.Unknown.Item1, brush: null);
                 }
             };
-            _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (_, e) => ReportStatus(e?.ItemStatuses, AppSettings.ShowGitStatusInBrowseToolbar);
+            _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (_, e)
+                => ReportStatus(e?.ItemStatuses, AppSettings.ShowGitStatusInBrowseToolbar, AppSettings.ShowGitStatusForArtificialCommits && AppSettings.RevisionGraphShowArtificialCommits);
             _gitStatusMonitor.Active = NeedsGitStatusMonitor() && Module.IsValidGitWorkingDir();
-            ReportStatus(status: null, AppSettings.ShowGitStatusInBrowseToolbar);
+            ReportStatus(status: null, AppSettings.ShowGitStatusInBrowseToolbar, countArtificial: false);
         }
 
         private void StopGitStatusMonitor()
@@ -59,14 +61,21 @@ internal static partial class AvaloniaDialogs
             _gitStatusMonitor = null;
         }
 
-        // As UpdateCommitButtonAndGetBrush: the image of the state and the number of changes, or the clean image without them.
-        private void ReportStatus(IReadOnlyList<GitItemStatus>? status, bool showCount)
+        // As UpdateCommitButtonAndGetBrush: the image of the state and the number of changes, or the clean image without them;
+        // and as UpdateArtificialCommitCount, the changes for the artificial commits.
+        private void ReportStatus(IReadOnlyList<GitItemStatus>? status, bool showCount, bool countArtificial)
         {
             RepoStateVisualiser visualiser = new();
-            Image image = showCount ? visualiser.Invoke(status).image : visualiser.Invoke([]).image;
+            (Image statusImage, Brush brush) = visualiser.Invoke(status);
+            Image image = showCount ? statusImage : visualiser.Invoke([]).image;
+            if (status is not null && (showCount || countArtificial))
+            {
+                UpdateStatusInTaskbar(statusImage, brush);
+            }
+
             using MemoryStream stream = new();
             image.Save(stream, ImageFormat.Png);
-            _workingDirectoryStatusChanged?.Invoke(this, new BrowseWorkingDirectoryStatus(showCount ? status?.Count : null, stream.ToArray()));
+            _workingDirectoryStatusChanged?.Invoke(this, new BrowseWorkingDirectoryStatus(showCount ? status?.Count : null, stream.ToArray(), countArtificial ? status : null));
         }
 
         /// <summary>The commands of this repository, which don't change (another repository gets another session).</summary>

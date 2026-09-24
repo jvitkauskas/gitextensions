@@ -141,6 +141,7 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\SolveMerge.png" Link="Assets\SolveMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Settings.png" Link="Assets\Settings.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateClean.png" Link="Assets\RepoStateClean.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateUnknown.png" Link="Assets\RepoStateUnknown.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Key.png" Link="Assets\Key.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Push.png" Link="Assets\Push.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GitLogo16.png" Link="Assets\GitLogo16.png" />

@@ -151,6 +151,57 @@ public sealed class RevisionGridMenuViewTests : HeadlessTest
         viewModel.Rows.Select(r => r.Index).Should().Equal(Enumerable.Range(0, history.Count + 2));
     });
 
+    [Test]
+    public Task The_artificial_commits_show_the_counts_of_their_changes() => OnUiThreadAsync(() =>
+    {
+        IReadOnlyList<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel viewModel = new(new InsertingHost(history), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false))
+        {
+            ShowArtificialCommitChanges = true,
+        };
+        Window window = new() { Width = 760, Height = 260, Content = new RevisionGridView { DataContext = viewModel } };
+        window.Show();
+        viewModel.Load();
+        Dispatcher.UIThread.RunJobs();
+        RevisionGridRow workTree = viewModel.Rows[0];
+        RevisionGridRow index = viewModel.Rows[1];
+
+        // As DataValid false: the state is unknown until the status is read.
+        workTree.ChangeCounts.Should().Equal(new ArtificialChangeCount("RepoStateUnknown", ""));
+        viewModel.Rows[2].ChangeCounts.Should().BeEmpty("a commit has no counts");
+
+        viewModel.UpdateArtificialCommitCount(
+        [
+            new GitItemStatus("a.cs") { Staged = StagedStatus.WorkTree, IsChanged = true },
+            new GitItemStatus("b.cs") { Staged = StagedStatus.WorkTree, IsChanged = true },
+            new GitItemStatus("new.cs") { Staged = StagedStatus.WorkTree, IsNew = true },
+            new GitItemStatus("old.cs") { Staged = StagedStatus.Index, IsDeleted = true },
+        ]);
+        workTree.ChangeCounts.Should().Equal(new ArtificialChangeCount("FileStatusModified", "2"), new ArtificialChangeCount("FileStatusAdded", "1"));
+        index.ChangeCounts.Should().Equal(new ArtificialChangeCount("FileStatusRemoved", "1"));
+        workTree.ChangesToolTip.Should().Be("2 changed files\r\n- a.cs\r\n- b.cs\r\n\r\n1 new file\r\n- new.cs\r\n".Replace("\r\n", Environment.NewLine));
+        SaveScreenshot(window.CaptureRenderedFrame(), "revision-grid-artificial-counts");
+
+        // No changes: the clean state, without a tooltip; the counts are kept when the rows are loaded again.
+        viewModel.UpdateArtificialCommitCount([]);
+        workTree.ChangeCounts.Should().Equal(new ArtificialChangeCount("RepoStateClean", ""));
+        workTree.ChangesToolTip.Should().BeNull();
+        viewModel.Load();
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Rows[0].ChangeCounts.Should().Equal(new ArtificialChangeCount("RepoStateClean", ""));
+        window.Close();
+    });
+
+    [Test]
+    public Task The_artificial_commits_have_no_counts_when_they_are_not_shown() => OnUiThreadAsync(() =>
+    {
+        RevisionGridViewModel viewModel = new(new InsertingHost(RevisionGridViewTests.CreateHistory()), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false));
+        viewModel.Load();
+        Dispatcher.UIThread.RunJobs();
+        viewModel.UpdateArtificialCommitCount([new GitItemStatus("a.cs") { Staged = StagedStatus.WorkTree, IsChanged = true }]);
+        viewModel.Rows[0].ChangeCounts.Should().BeEmpty();
+    });
+
     private sealed class InsertingHost(IReadOnlyList<GitRevision> revisions) : IRevisionGridHost
     {
         public string CurrentBranch => "main";

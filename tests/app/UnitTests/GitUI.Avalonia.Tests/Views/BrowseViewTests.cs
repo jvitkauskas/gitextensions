@@ -1,8 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using GitCommands.Git.Gpg;
 using GitExtensions.Extensibility.BuildServerIntegration;
 using GitExtensions.Extensibility.Git;
@@ -32,7 +34,7 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.CommitInfo.RevisionInfo.Should().NotBeEmpty("the commit info of the selected revision is shown");
         host.DiffsRequested.Should().ContainSingle().Which.Should().Equal(viewModel.Grid.Rows[0].Subject);
         viewModel.Files.AllEntries.Select(e => e.Item.Name).Should().Equal("src/file.cs");
-        window.MainMenu.Items.Cast<MenuItem>().Where(m => m.IsVisible).Select(m => m.Header).Should().Equal("_Start", "_Repository", "_Commands", "_Plugins", "_Tools", "_Help");
+        window.MainMenu.Items.Cast<MenuItem>().Where(m => m.IsVisible).Select(m => m.Header).Should().Equal("_Start", "_Repository", "_View", "_Commands", "_Plugins", "_Tools", "_Help");
         SaveScreenshot(window.CaptureRenderedFrame(), $"browse-commit-{theme}");
 
         window.Tabs.SelectedIndex = 1;
@@ -62,7 +64,7 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.RunCommand.Execute(BrowseCommand.PullDefault);
         host.Runs[^1].Command.Should().Be(BrowseCommand.PullDefault);
         viewModel.Menus[0].Children!.Should().Contain(m => m.IsSeparator);
-        viewModel.PullItems.Where(i => !i.IsSeparator).Select(i => i.Command).Should().Equal(
+        viewModel.PullItems.Where(i => i.Command is not null).Select(i => i.Command).Should().Equal(
             BrowseCommand.PullMerge, BrowseCommand.PullRebase, BrowseCommand.Fetch, BrowseCommand.FetchAll, BrowseCommand.FetchPruneAll, BrowseCommand.OpenPullDialog);
 
         // A dialog changed the repository: the revisions are loaded again, keeping the selection.
@@ -275,7 +277,7 @@ public sealed class BrowseViewTests : HeadlessTest
         host.LoadPlugins([new("Statistics", null, true, "statistics"), new("Plugin Manager", null, false, "manager"), new("Delete obsolete branches", null, true, "delete")], "GitHub");
         Dispatcher.UIThread.RunJobs();
 
-        Headers().Should().Equal("_Start", "_Repository", "_Commands", "GitHub", "_Plugins", "_Tools", "_Help");
+        Headers().Should().Equal("_Start", "_Repository", "_View", "_Commands", "GitHub", "_Plugins", "_Tools", "_Help");
         List<object?> plugins = [.. Menu("_Plugins").Items.Select(i => i is MenuItem m ? m.Header : "-")];
         plugins.Should().Equal("Delete obsolete branches", "Statistics", "-", "Plugin Manager", "Plugins _settings...");
         MenuItem statistics = Menu("_Plugins").Items.OfType<MenuItem>().Single(m => (string?)m.Header == "Statistics");
@@ -300,7 +302,8 @@ public sealed class BrowseViewTests : HeadlessTest
         });
 
         List<MenuItem> menus = [.. window.MainMenu.Items.Cast<MenuItem>()];
-        menus.Where(m => m.IsVisible).Select(m => m.Header).Should().StartWith(["_Start", "_Repository", "_Navigate", "_Commands"], "View is hidden without items");
+        menus.Where(m => m.IsVisible).Select(m => m.Header).Should().StartWith(["_Start", "_Repository", "_Navigate", "_View", "_Commands"]);
+        menus.Single(m => (string?)m.Header == "_View").Items.OfType<MenuItem>().Select(m => m.Header).Should().Equal(["Toolbars"], "only the Toolbars menu without the items of the grid");
         MenuItem navigate = menus.Single(m => (string?)m.Header == "_Navigate");
         navigate.Items.OfType<MenuItem>().Select(m => m.Header).Should().Equal("Go to _parent commit");
         built.Should().Be(1);
@@ -442,6 +445,153 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_pull_button_runs_the_default_action_chosen_in_its_menu() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        viewModel.PullButtonIcon.Should().Be("Pull");
+        viewModel.PullButtonToolTip.Should().Be("Open pull dialog");
+
+        // As FillNextPullActionAsDefaultToolStripMenuItems: the actions, the default one checked; saved when chosen.
+        BrowseMenuItem setDefault = viewModel.PullItems[^1];
+        setDefault.Header.Should().Be("Set _default Pull button action");
+        setDefault.Children!.Select(i => (i.Header, i.IsChecked)).Should().Equal(
+            ("Pull - _merge", false), ("Pull - _rebase", false), ("_Fetch", false), ("Fetch _all", false), ("F_etch and prune all", false), ("Open _pull dialog...", true));
+        setDefault.Children![3].Invoke!();
+        host.DefaultPullAction.Should().Be(GitPullAction.FetchAll);
+        viewModel.PullButtonIcon.Should().Be("PullFetchAll");
+        viewModel.PullButtonToolTip.Should().Be("Fetch all");
+        viewModel.PullItems[^1].Children!.Single(i => i.IsChecked == true).Header.Should().Be("Fetch _all");
+        ToolTip.GetTip(window.FindControl<SplitButton>("pullButton")!).Should().Be("Fetch all");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_toolbars_menu_shows_or_hides_the_toolbars_and_their_items() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        StackPanel shortcuts = window.FindControl<StackPanel>("fetchPullShortcuts")!;
+        shortcuts.Children.Select(c => c.Name).Should().Equal(
+            "pull_shortcut_fetchToolStripMenuItem", "pull_shortcut_fetchAllToolStripMenuItem", "pull_shortcut_fetchPruneAllToolStripMenuItem",
+            "pull_shortcut_mergeToolStripMenuItem", "pull_shortcut_rebaseToolStripMenuItem1", "pull_shortcut_pullToolStripMenuItem1");
+        shortcuts.Children.Should().AllSatisfy(c => c.IsVisible.Should().BeFalse("the shortcuts are hidden by default"));
+
+        IReadOnlyList<BrowseMenuItem> toolbars = viewModel.GetToolbarsMenuItems();
+        toolbars.Select(t => t.Header).Should().Equal("Standard", "Filters", "Scripts");
+        IReadOnlyList<BrowseMenuItem> standard = toolbars[0].Children!;
+        standard[0].Should().Match<BrowseMenuItem>(i => i.Header == "Standard" && i.IsChecked == true);
+        standard.Skip(2).Select(i => i.Header).Should().StartWith(["Refresh", "Toggle split view layout", "Commit info position"], "without the left panel");
+        standard.Should().OnlyContain(i => i.IsSeparator || i.IsChecked != null);
+
+        // An item of the menu shows the shortcut, saved as not the default.
+        standard.Single(i => i.Header == "Fetch").Invoke!();
+        Dispatcher.UIThread.RunJobs();
+        shortcuts.Children[0].IsVisible.Should().BeTrue();
+        host.ToolbarVisibility.Should().ContainKey("pull_shortcut_fetchToolStripMenuItem").WhoseValue.Should().Be((true, false));
+        ((Button)shortcuts.Children[0]).Command.Should().BeSameAs(viewModel.RunCommand);
+        ((Button)shortcuts.Children[0]).CommandParameter.Should().Be(BrowseCommand.Fetch);
+
+        // Another hides a button; the separator of a group without shown items is hidden (AdaptSeparatorsVisibility).
+        Button refresh = window.FindControl<Button>("refreshButton")!;
+        Separator afterRefresh = window.FindControl<WrapPanel>("toolbar")!.Children.OfType<Separator>().First();
+        afterRefresh.IsVisible.Should().BeTrue();
+        viewModel.SetToolbarItemShown("RefreshButton", false);
+        Dispatcher.UIThread.RunJobs();
+        refresh.IsVisible.Should().BeFalse();
+        afterRefresh.IsVisible.Should().BeFalse("no item is shown before it");
+        host.ToolbarVisibility["RefreshButton"].Should().Be((false, true));
+        viewModel.GetToolbarsMenuItems()[0].Children!.Single(i => i.Header == "Refresh").IsChecked.Should().BeFalse();
+
+        // The whole toolbar, and the Filters and Scripts toolbars (not saved).
+        standard[0].Invoke!();
+        Dispatcher.UIThread.RunJobs();
+        window.FindControl<Button>("pushButton")!.IsVisible.Should().BeFalse();
+        viewModel.GetToolbarsMenuItems()[0].Children![0].IsChecked.Should().BeFalse();
+        toolbars[1].Invoke!();
+        toolbars[2].Invoke!();
+        window.FindControl<Panel>("filterToolBarHost")!.IsVisible.Should().BeFalse();
+        window.FindControl<StackPanel>("scriptsToolBar")!.IsVisible.Should().BeFalse();
+        viewModel.GetToolbarsMenuItems().Skip(1).Select(t => t.IsChecked).Should().Equal(false, false);
+        window.Close();
+
+        // Loaded from the settings.
+        (BrowseWindow window2, BrowseViewModel viewModel2, FakeBrowseHost _) = Show(configure: h => h.ToolbarVisibility["toolStripButtonPush"] = (false, true));
+        viewModel2.ToolbarItems["toolStripButtonPush"].Should().BeFalse();
+        window2.FindControl<Button>("pushButton")!.IsVisible.Should().BeFalse();
+        window2.Close();
+    });
+
+    [Test]
+    public Task The_working_directory_menu_searches_the_recent_repositories() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel _, FakeBrowseHost _) = Show(configure: h => h.RecentRepositoriesMenu =
+        [
+            new("~/other", null) { Invoke = () => { } },
+            new("C:/work/my__lib", null) { Invoke = () => { } },
+        ]);
+        MenuFlyout flyout = (MenuFlyout)window.FindControl<DropDownButton>("workingDirButton")!.Flyout!;
+        TextBox search = (TextBox)((MenuItem)flyout.Items[0]!).Header!;
+        search.PlaceholderText.Should().Be("Search repositories...");
+        flyout.Items[1].Should().BeOfType<Separator>();
+
+        List<MenuItem> items = [.. flyout.Items.OfType<MenuItem>().Skip(1)];
+        items.Select(i => i.Header).Should().Equal("_Favorite repositories", "~/other", "C:/work/my__lib", "_Open...", "_Close (go to Dashboard)", "Co_nfigure this menu...");
+
+        // As the TextChanged of _txtFilter: only the recent repositories are filtered, ignoring the case.
+        search.Text = "MY_L";
+        items.Where(i => i.IsVisible).Select(i => i.Header).Should().Equal("_Favorite repositories", "C:/work/my__lib", "_Open...", "_Close (go to Dashboard)", "Co_nfigure this menu...");
+        search.Text = " ";
+        items.Should().OnlyContain(i => i.IsVisible);
+        window.Close();
+    });
+
+    [Test]
+    public Task The_diff_and_file_tree_hotkeys_run_the_commands_of_the_selected_files() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(
+            configure: h => h.TreeFiles = ["README.md", "src/file.cs"],
+            revisionDiffHotkeys:
+            [
+                new HotkeyBinding((int)RevisionDiffHotkeyCommand.OpenWithDifftool, 0x44 /* D */ | HotkeyBinding.Control),
+                new HotkeyBinding((int)RevisionDiffHotkeyCommand.Blame, 0x42 /* B */ | HotkeyBinding.Control),
+            ]);
+        FileStatusListMenuTests.FakeMenuHost menu = new() { State = new() { CanOpenWithDifftool = true, CanDiffFirstToSelected = true, CanShowFileHistory = true } };
+        viewModel.Files.MenuHost = menu;
+        window.Tabs.SelectedIndex = (int)BrowseTab.Diff;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Files.SelectedEntry!.Item.Name.Should().Be("src/file.cs");
+
+        // As RevisionDiffControl.ProcessCmdKey: the keys in the diff tab run the item of the context menu.
+        window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<TreeViewItem>().Last().Focus().Should().BeTrue();
+        window.KeyPressQwerty(PhysicalKey.D, RawInputModifiers.Control);
+        menu.Log.Should().Contain("difftool FirstToSelected: src/file.cs");
+
+        // Not for a disabled item (blame), nor outside the tab.
+        window.KeyPressQwerty(PhysicalKey.B, RawInputModifiers.Control);
+        menu.Log.Should().NotContain(l => l.StartsWith("history"));
+        int logged = menu.Log.Count;
+        window.FindControl<Button>("refreshButton")!.Focus().Should().BeTrue();
+        window.KeyPressQwerty(PhysicalKey.D, RawInputModifiers.Control);
+        menu.Log.Should().HaveCount(logged);
+
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.ShowHistory, fileTree: false).Should().BeTrue();
+        menu.Log.Should().Contain("history: src/file.cs");
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.OpenAsTempFile, fileTree: false).Should().BeFalse("the item is hidden");
+
+        // As tsmiShowInFileTree: the file tree tab, with the file selected once loaded.
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.ShowFileTree, fileTree: false).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.FileTree);
+        viewModel.FileTree!.SelectedEntry!.Item.Name.Should().Be("src/file.cs");
+
+        // As GoToFirstParent of the grid.
+        GitRevision selected = viewModel.Grid.SelectedRow!.Revision;
+        viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.GoToFirstParent, fileTree: true).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Grid.SelectedRow!.Revision.ObjectId.Should().Be(selected.FirstParentId);
+        window.Close();
+    });
+
+    [Test]
     public Task The_submodules_button_lists_the_submodules_or_goes_to_the_superproject() => OnUiThreadAsync(() =>
     {
         (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
@@ -465,9 +615,10 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
-    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null)
+    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null, Action<FakeBrowseHost>? configure = null, IReadOnlyList<HotkeyBinding>? revisionDiffHotkeys = null)
     {
         FakeBrowseHost host = new();
+        configure?.Invoke(host);
         RevisionGridViewModel grid = new(new RevisionGridViewTests.FakeRevisionGridHost(RevisionGridViewTests.CreateHistory()), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false))
         {
             MultiSelect = true,
@@ -482,6 +633,7 @@ public sealed class BrowseViewTests : HeadlessTest
             new FileStatusTreeOptions())
         {
             NavigateMenuProvider = navigate,
+            RevisionDiffHotkeys = revisionDiffHotkeys ?? [],
         };
         BrowseWindow window = new() { Width = 1100, Height = 760, DataContext = viewModel };
         window.Show();
@@ -533,8 +685,18 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost, IBrowseLayoutHost
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost, IBrowseLayoutHost, IBrowseToolbarItemsHost
     {
+        public GitPullAction DefaultPullAction { get; set; }
+
+        /// <summary>The saved visibility of the toolbar items, with their default.</summary>
+        public Dictionary<string, (bool Visible, bool Default)> ToolbarVisibility { get; } = [];
+
+        public bool GetToolbarItemVisibility(string key, bool defaultValue)
+            => ToolbarVisibility.TryGetValue(key, out (bool Visible, bool Default) saved) ? saved.Visible : defaultValue;
+
+        public void SetToolbarItemVisibility(string key, bool visible, bool defaultValue) => ToolbarVisibility[key] = (visible, defaultValue);
+
         public bool ShowSplitViewLayout { get; set; } = true;
 
         public GitCommands.CommitInfoPosition CommitInfoPosition { get; set; }
@@ -693,10 +855,12 @@ public sealed class BrowseViewTests : HeadlessTest
             return Task.FromResult<IReadOnlyList<FileStatusGroup>>([new FileStatusGroup(first, second, "Parent", [file])]);
         }
 
+        public IReadOnlyList<string> TreeFiles { get; set; } = ["README.md", "src/a.cs", "src/b.cs"];
+
         public Task<FileStatusGroup> GetTreeFilesAsync(GitRevision revision, CancellationToken cancellationToken)
         {
             TreesRequested.Add(revision.Subject);
-            GitItemStatus[] files = [.. new[] { "README.md", "src/a.cs", "src/b.cs" }.Select(name => new GitItemStatus(name) { IsTracked = true })];
+            GitItemStatus[] files = [.. TreeFiles.Select(name => new GitItemStatus(name) { IsTracked = true })];
             return Task.FromResult(new FileStatusGroup(null, revision, $"grep:  {revision.ObjectId.ToShortString()}", files, IconName: FileStatusIcons.GitGrepIconName));
         }
 

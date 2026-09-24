@@ -524,6 +524,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         InitializeToolbar();
         InitializeOutputHistory();
         InitializeLayout();
+        InitializeToolbarItems();
         InitializeBuildReport();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
@@ -575,6 +576,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
         new(Strings.FetchPruneAll.AccessKeyText, BrowseCommand.FetchPruneAll, "PullFetchPruneAll"),
         BrowseMenuItem.Separator,
         new(Strings.OpenPullDialog.AccessKeyText, BrowseCommand.OpenPullDialog, "Pull"),
+        BrowseMenuItem.Separator,
+        CreateDefaultPullActionMenu(),
     ];
 
     /// <summary>The items of the drop down of the stash button (<c>toolStripSplitStash</c>).</summary>

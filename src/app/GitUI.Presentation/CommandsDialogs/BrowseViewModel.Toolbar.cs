@@ -11,6 +11,7 @@ public sealed class BrowseToolbarStrings : ViewStrings
     {
         NoWorkingFolder = Add("_noWorkingFolderText", "Text", "No working directory");
         ConfigureWorkingDirMenu = Add("_configureWorkingDirMenu", "Text", "Co&nfigure this menu...");
+        RepositorySearch = Add("_repositorySearchPlaceholder", "Text", "Search repositories...");
         WorkingDirToolTip = Add("_toolTip", "Text", "Change working directory\nLeft click opens the drop-down menu.\nThen hold Ctrl in order to open the selected repository in a new instance.\nRight click starts the \"Open repository\" dialog.");
         WorktreesToolTip = Add("toolStripWorktrees", "ToolTipText", "Worktrees");
         SubmodulesToolTip = Add("toolStripButtonLevelUp", "ToolTipText", "Submodules");
@@ -38,6 +39,8 @@ public sealed class BrowseToolbarStrings : ViewStrings
     public TranslatedText NoWorkingFolder { get; }
 
     public TranslatedText ConfigureWorkingDirMenu { get; }
+
+    public TranslatedText RepositorySearch { get; }
 
     public TranslatedText WorkingDirToolTip { get; }
 

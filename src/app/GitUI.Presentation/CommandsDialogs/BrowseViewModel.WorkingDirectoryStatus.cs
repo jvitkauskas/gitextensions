@@ -1,11 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using GitExtensions.Extensibility.Git;
 
 namespace GitUI.Presentation.CommandsDialogs;
 
 /// <summary>The status of the working directory shown by the commit button (as <c>UpdateCommitButtonAndGetBrush</c>).</summary>
 /// <param name="ChangeCount">The number of changed files, or <see langword="null"/> when unknown or not shown.</param>
 /// <param name="Icon">The image of the state of the repository (<c>RepoStateVisualiser</c>): an asset name or PNG data.</param>
-public sealed record BrowseWorkingDirectoryStatus(int? ChangeCount, object? Icon);
+/// <param name="ArtificialCommitStatus">The changes for the artificial commits of the grid, or <see langword="null"/> when unknown or not shown.</param>
+public sealed record BrowseWorkingDirectoryStatus(int? ChangeCount, object? Icon, IReadOnlyList<GitItemStatus>? ArtificialCommitStatus = null);
 
 /// <summary>What the commit button needs from the application (<c>GitStatusMonitor</c>).</summary>
 public interface IBrowseStatusHost
@@ -34,6 +36,7 @@ public sealed partial class BrowseViewModel
             {
                 CommitButtonText = status.ChangeCount is int count ? $"{Strings.CommitButton.Text} ({count})" : Strings.CommitButton.Text;
                 CommitButtonIcon = status.Icon ?? "RepoStateClean";
+                Grid.UpdateArtificialCommitCount(status.ArtificialCommitStatus);
             };
         }
     }

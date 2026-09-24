@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
              xmlns:vm="using:GitUI.Presentation.UserControls.RevisionGrid"
+             xmlns:s="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog"
              x:Class="GitUI.Avalonia.Controls.RevisionGrid.RevisionGridView"
              x:DataType="vm:RevisionGridViewModel">
   <UserControl.Resources>
@@ -148,6 +149,22 @@
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock Classes="cellText" Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <!-- As DrawArtificialRevision: the counts of the changes of the working directory or the index. -->
+                <ItemsControl ItemsSource="{Binding ChangeCounts}" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip.Tip="{Binding ChangesToolTip}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" Spacing="4" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ArtificialChangeCount">
+                      <StackPanel Orientation="Horizontal" Spacing="2">
+                        <Image Source="{Binding Icon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="12" Height="12" VerticalAlignment="Center" />
+                        <TextBlock Classes="cellText" Text="{Binding Count}" VerticalAlignment="Center" MinWidth="14" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

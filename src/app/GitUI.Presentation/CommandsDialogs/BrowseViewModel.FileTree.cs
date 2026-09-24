@@ -75,8 +75,8 @@ public sealed partial class BrowseViewModel
         CancellationToken cancellationToken = _loadingTree.Token;
         FileStatusListViewModel fileTree = FileTree!;
 
-        // As RevisionDiffControl: the selected file stays selected in the next revision, if it has it.
-        string? selectedPath = fileTree.SelectedEntry?.Item.Name;
+        // As RevisionDiffControl: the selected file stays selected in the next revision, if it has it (or the file to show in the tree).
+        string? selectedPath = _pendingTreePath ?? fileTree.SelectedEntry?.Item.Name;
         if (revision is null)
         {
             fileTree.SetGroups([]);
@@ -100,6 +100,7 @@ public sealed partial class BrowseViewModel
         }
 
         fileTree.SetGroups([files]);
+        _pendingTreePath = null;
         if (selectedPath is not null)
         {
             fileTree.Select(entry => entry.Item.Name == selectedPath);

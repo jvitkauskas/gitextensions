@@ -393,7 +393,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         {
             if (Graph.GetNodeForRow(index)?.GitRevision is { } revision)
             {
-                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip });
+                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip, Changes = revision.IsArtificial ? GetArtificialCommitChanges(revision.ObjectId) : null });
             }
         }
 

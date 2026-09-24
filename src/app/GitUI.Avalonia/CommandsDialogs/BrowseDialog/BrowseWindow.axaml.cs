@@ -25,6 +25,15 @@ public partial class BrowseWindow : DialogWindow
     {
         InitializeComponent();
 
+        foreach (Control child in toolbar.Children)
+        {
+            child.PropertyChanged += OnToolbarChildPropertyChanged;
+        }
+
+        toolbar.ContextRequested += OnToolbarContextRequested;
+        diffPanel.HotkeyHandler = keyData => _viewModel?.ProcessRevisionDiffHotkey(keyData, fileTree: false) == true;
+        treePanel.HotkeyHandler = keyData => _viewModel?.ProcessRevisionDiffHotkey(keyData, fileTree: true) == true;
+
         // As OnRuntimeLoad: the revisions are loaded once the window is shown.
         Opened += (_, _) =>
         {
@@ -142,7 +151,7 @@ public partial class BrowseWindow : DialogWindow
         }
 
         BuildMainMenu();
-        workingDirButton.Flyout = CreateFlyout(_viewModel.GetWorkingDirectoryItems());
+        workingDirButton.Flyout = CreateWorkingDirectoryFlyout();
         worktreesButton.Flyout = CreateFlyout(_viewModel.WorktreeItems);
         submodulesButton.Flyout = CreateFlyout(_viewModel.SubmoduleItems);
         commitInfoPositionButton.Flyout = CreateFlyout(_viewModel.CommitInfoPositionItems);
@@ -151,6 +160,133 @@ public partial class BrowseWindow : DialogWindow
         FillScriptsToolBar(_viewModel.ScriptItems);
         pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
         stashButton.Flyout = CreateFlyout(_viewModel.StashItems);
+        FillFetchPullShortcuts(_viewModel.FetchPullShortcuts);
+        AdaptSeparatorsVisibility();
+    }
+
+    // As FillDropDown of WorkingDirectoryToolStripSplitButton: the search box, then the repositories and the commands.
+    private MenuFlyout CreateWorkingDirectoryFlyout()
+    {
+        IReadOnlyList<BrowseMenuItem> items = _viewModel!.GetWorkingDirectoryItems();
+        MenuFlyout flyout = CreateFlyout(items);
+
+        // The recent repositories are filtered: the items between the favourites and the commands.
+        int first = items.ToList().FindIndex(item => item.IsSeparator) + 1;
+        int last = items.ToList().FindIndex(first, item => item.IsSeparator);
+        List<(MenuItem Item, string Text)> repositories = [];
+        for (int i = first; i < last; i++)
+        {
+            if (flyout.Items[i] is MenuItem menuItem)
+            {
+                repositories.Add((menuItem, items[i].Header.Replace("__", "_")));
+            }
+        }
+
+        TextBox search = new()
+        {
+            Name = "repositorySearch",
+            PlaceholderText = _viewModel.ToolbarStrings.RepositorySearch.Text,
+            MinWidth = 250,
+        };
+        search.PropertyChanged += (_, e) =>
+        {
+            if (e.Property != TextBox.TextProperty)
+            {
+                return;
+            }
+
+            foreach ((MenuItem item, string text) in repositories)
+            {
+                item.IsVisible = string.IsNullOrWhiteSpace(search.Text) || text.Contains(search.Text, StringComparison.CurrentCultureIgnoreCase);
+            }
+        };
+        flyout.Items.Insert(0, new MenuItem { Header = search, StaysOpenOnClick = true });
+        flyout.Items.Insert(1, new Separator());
+
+        // Cleared when the drop down opens, and focused to type at once.
+        flyout.Opened += (_, _) =>
+        {
+            search.Text = "";
+            search.Focus();
+        };
+        return flyout;
+    }
+
+    // As InsertFetchPullShortcuts: an image button for each action of the pull menu, before the pull button.
+    private void FillFetchPullShortcuts(IReadOnlyList<BrowseToolbarShortcut> shortcuts)
+    {
+        fetchPullShortcuts.Children.Clear();
+        foreach (BrowseToolbarShortcut shortcut in shortcuts)
+        {
+            Button button = new()
+            {
+                Name = shortcut.Key,
+                Classes = { "toolbar" },
+                Command = _viewModel!.RunCommand,
+                CommandParameter = shortcut.Command,
+                Content = new Image
+                {
+                    Source = (global::Avalonia.Media.IImage?)SettingsIconConverter.Instance.Convert(shortcut.Icon, typeof(object), null, System.Globalization.CultureInfo.InvariantCulture),
+                    Width = 16,
+                    Height = 16,
+                },
+            };
+            ToolTip.SetTip(button, shortcut.ToolTip);
+            button.Bind(IsVisibleProperty, new global::Avalonia.Data.Binding($"ToolbarItems[{shortcut.Key}]"));
+            button.PropertyChanged += OnToolbarChildPropertyChanged;
+            fetchPullShortcuts.Children.Add(button);
+        }
+    }
+
+    // As AdaptSeparatorsVisibility: a separator only between shown items.
+    private void AdaptSeparatorsVisibility()
+    {
+        bool itemBefore = false;
+        Separator? pending = null;
+        foreach (Control child in toolbar.Children)
+        {
+            if (child is Separator separator)
+            {
+                separator.IsVisible = false;
+                if (itemBefore)
+                {
+                    pending ??= separator;
+                }
+
+                continue;
+            }
+
+            if (IsShown(child))
+            {
+                pending?.IsVisible = true;
+                pending = null;
+                itemBefore = true;
+            }
+        }
+
+        static bool IsShown(Control control)
+            => control.IsVisible && (control is not Panel panel || panel.Children.Any(IsShown));
+    }
+
+    private void OnToolbarChildPropertyChanged(object? sender, global::Avalonia.AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == IsVisibleProperty && sender is not Separator)
+        {
+            AdaptSeparatorsVisibility();
+        }
+    }
+
+    // As the context menu of the toolbars (ShowToolStripContextMenu), on the free space of the toolbar.
+    private void OnToolbarContextRequested(object? sender, global::Avalonia.Input.ContextRequestedEventArgs e)
+    {
+        if (_viewModel is null || e.Source != toolbar)
+        {
+            return;
+        }
+
+        ContextMenu menu = new() { ItemsSource = _viewModel.GetToolbarsMenuItems().Select(CreateItem).ToList() };
+        menu.Open(toolbar);
+        e.Handled = true;
     }
 
     // As LoadUserMenu: a button with the icon and the name of each script.
@@ -184,6 +320,11 @@ public partial class BrowseWindow : DialogWindow
         if (e.PropertyName == nameof(BrowseViewModel.SubmoduleItems) && _viewModel is not null)
         {
             submodulesButton.Flyout = CreateFlyout(_viewModel.SubmoduleItems);
+        }
+
+        if (e.PropertyName == nameof(BrowseViewModel.PullItems) && _viewModel is not null)
+        {
+            pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
         }
 
         if (e.PropertyName is nameof(BrowseViewModel.ShowSplitViewLayout) or nameof(BrowseViewModel.CommitInfoPosition) or nameof(BrowseViewModel.ShowTabs))
@@ -320,6 +461,16 @@ public partial class BrowseWindow : DialogWindow
         foreach ((MenuItem item, BrowseSubmenu submenu) in _modelSubmenus)
         {
             List<Control> items = MenuModelRenderer.CreateItems(_viewModel.GetModelSubmenuItems(submenu));
+            if (submenu == BrowseSubmenu.View)
+            {
+                if (items.Count > 0)
+                {
+                    items.Add(new Separator());
+                }
+
+                items.Add(CreateItem(_viewModel.ToolbarsMenu));
+            }
+
             item.ItemsSource = items;
             item.IsVisible = items.Count > 0;
         }

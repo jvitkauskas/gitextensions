@@ -103,7 +103,7 @@ internal static partial class AvaloniaDialogs
     ///  The main window and the view model of its current repository: as <c>FormBrowse.SetGitModule</c>, another repository
     ///  gets new commands, and a new view model (the grid, the menus and the title; the dashboard without a valid repository).
     /// </summary>
-    private sealed class BrowseSession(BrowseWindow window, BrowseArguments args) : IDisposable
+    private sealed partial class BrowseSession(BrowseWindow window, BrowseArguments args) : IDisposable
     {
         private BrowseHost? _host;
         private RevisionGridViewModel? _grid;
@@ -132,6 +132,7 @@ internal static partial class AvaloniaDialogs
             RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
             {
                 MultiSelect = true,
+                ShowArtificialCommitChanges = AppSettings.ShowGitStatusForArtificialCommits && AppSettings.RevisionGraphShowArtificialCommits,
             };
             gridFilter.Grid = grid;
             ApplyColumns(grid);
@@ -165,6 +166,7 @@ internal static partial class AvaloniaDialogs
                 Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
                 NavigateMenuProvider = gridMenu.CreateNavigateItems,
                 ViewMenuProvider = gridMenu.CreateViewItems,
+                RevisionDiffHotkeys = LoadHotkeys(commands, RevisionDiffControl.HotkeySettingsName),
             };
             browseViewModel = viewModel;
             UseFileStatusListMenu(viewModel.Files, commands, window);
@@ -204,6 +206,7 @@ internal static partial class AvaloniaDialogs
             // As LoadHotkeys(HotkeySettingsName): the "Browse" hotkeys, with the ones of the scripts.
             window.Hotkeys = LoadHotkeys(commands, FormBrowse.HotkeySettingsName);
             window.ShowViewModel(viewModel);
+            AttachTaskbar(commands, isValid);
         }
 
         /// <summary>As <c>FormBrowse.SetGitModule</c>, once the current event is handled (e.g. the click of a menu item).</summary>
