@@ -186,6 +186,24 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task Another_repository_keeps_the_selected_tab() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel _, FakeBrowseHost _) = Show();
+        window.Tabs.SelectedIndex = 2;
+        Dispatcher.UIThread.RunJobs();
+
+        // As SetGitModule: a new view model for the other repository; its file tree is loaded, as its tab is shown.
+        (BrowseWindow other, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        other.Close();
+        window.ShowViewModel(viewModel);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.FileTree);
+        window.Tabs.SelectedIndex.Should().Be(2);
+        host.TreesRequested.Should().NotBeEmpty();
+        window.Close();
+    });
+
     private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show()
     {
         FakeBrowseHost host = new();

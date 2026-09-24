@@ -95,6 +95,12 @@ public partial class BrowseWindow : DialogWindow
             return;
         }
 
+        // Another repository (SetGitModule) keeps the selected tab, as the tab control of FormBrowse.
+        if (tabs.SelectedIndex >= 0)
+        {
+            _viewModel.SelectedTab = (BrowseTab)tabs.SelectedIndex;
+        }
+
         mainMenu.ItemsSource = _viewModel.Menus.Select(CreateItem).ToList();
         pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
         stashButton.Flyout = CreateFlyout(_viewModel.StashItems);

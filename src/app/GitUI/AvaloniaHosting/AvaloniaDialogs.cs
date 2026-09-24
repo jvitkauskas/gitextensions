@@ -132,6 +132,9 @@ internal static partial class AvaloniaDialogs
 
     private static AvaloniaUiOptions GetOptions()
     {
+        // The modeless Avalonia windows get their text input in the WinForms message loop.
+        AvaloniaKeyboardMessageFilter.Install();
+
         // As GitExtensionsDialog.OnHelpButtonClicked: F1 opens the section of the user manual.
         DialogWindow.OpenManualSection ??= (subfolder, anchor) => OsShellUtil.OpenUrlInDefaultBrowser(UserManual.UserManual.UrlFor(subfolder, anchor));
 

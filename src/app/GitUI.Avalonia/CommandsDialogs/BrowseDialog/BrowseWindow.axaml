@@ -28,7 +28,7 @@
   -->
   <DockPanel>
     <Menu Name="mainMenu" DockPanel.Dock="Top" />
-    <StackPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="4,2" IsVisible="{Binding !IsDashboard}">
+    <WrapPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" ItemSpacing="2" Margin="4,2" IsVisible="{Binding !IsDashboard}">
       <Button Name="refreshButton" Classes="toolbar" Command="{Binding RefreshRevisionsCommand}" ToolTip.Tip="{Binding Strings.Refresh.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
       </Button>
@@ -78,7 +78,7 @@
       </Button>
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding Filters, Converter={x:Static ObjectConverters.IsNotNull}}" />
       <rg:FilterToolBarView Name="filterToolBar" DataContext="{Binding Filters}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
-    </StackPanel>
+    </WrapPanel>
     <!-- The left panel (RepoObjectsTree in MainSplitContainer.Panel1) beside the grid and the tabs. -->
     <Grid Name="mainSplit" ColumnDefinitions="260,Auto,*" Margin="4,0,4,4">
     <lp:LeftPanelView Name="leftPanel" DataContext="{Binding LeftPanel}" />
