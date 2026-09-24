@@ -51,6 +51,7 @@ public partial class TextEditorView : UserControl
     {
         InitializeComponent();
         Search = SearchPanel.Install(editor);
+        UseFindNextInSearchPanel();
 
         // Before the text area handles the keys (the search commands of AvaloniaEdit).
         editor.AddHandler(KeyDownEvent, OnEditorPreviewKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -120,19 +121,23 @@ public partial class TextEditorView : UserControl
 
     /// <summary>
     ///  As <c>FindAndReplaceForm.ShowFor</c>: opens the search panel with the text selected on one line, or else the word at the
-    ///  caret (the previous search is kept without one, or with a selection of several lines), in replace mode only if the
-    ///  text is editable.
+    ///  caret, in replace mode only if the text is editable. A selection of several lines is searched only (<c>SetScanRegion</c>),
+    ///  with the previous search.
     /// </summary>
     public void OpenSearch(bool replace)
     {
+        ScanRegion = null;
         string text = editor.TextArea.Selection switch
         {
             { IsEmpty: true } => TextSearch.GetWordAt(editor.Document.Text, editor.CaretOffset),
             { IsMultiline: false } selection => selection.GetText(),
-
-            // FindAndReplaceForm searches a selection of several lines only (not ported); the previous search is kept.
             _ => "",
         };
+        if (editor.TextArea.Selection is { IsEmpty: false, IsMultiline: true, SurroundingSegment: { } region })
+        {
+            ScanRegion = (region.Offset, region.EndOffset);
+        }
+
         Search.IsReplaceMode = replace && !editor.IsReadOnly;
         Search.Open();
         if (text.Length > 0)
@@ -143,9 +148,14 @@ public partial class TextEditorView : UserControl
         Dispatcher.UIThread.Post(Search.Reactivate, DispatcherPriority.Input);
     }
 
+    /// <summary>The part of the text searched only (a selection of several lines when the search was opened), if any.</summary>
+    public (int Start, int End)? ScanRegion { get; private set; }
+
     /// <summary>
-    ///  As <c>FindAndReplaceForm.FindNextAsync</c> (F3, Shift+F3): selects the next (or previous) match, from the caret and
-    ///  looping around; once the panel is closed, with its last search and options.
+    ///  As <c>FindAndReplaceForm.FindNextAsync</c> (F3, Shift+F3, and the search panel): selects the next (or previous) match,
+    ///  from the caret and looping around; once the panel is closed, with its last search and options. In a scan region, only
+    ///  its matches (the region is dropped once the caret is out of it and the panel closed). With a <see cref="TextEditorViewModel.NextFileLoader"/>,
+    ///  the search goes on in the next (or previous) files instead of looping around, while the panel is open.
     /// </summary>
     /// <returns>
     ///  <see langword="false"/> if the panel is closed and nothing was found, or there is nothing to search for; the panel is then
@@ -153,38 +163,69 @@ public partial class TextEditorView : UserControl
     /// </returns>
     public bool FindNext(bool backward)
     {
-        if (Search.IsOpened)
+        if (ScanRegion is { } scanRegion && !Search.IsOpened && (editor.CaretOffset < scanRegion.Start || editor.CaretOffset > scanRegion.End))
         {
-            if (backward)
-            {
-                Search.FindPrevious();
-            }
-            else
-            {
-                Search.FindNext();
-            }
+            // The user moved out of the region once the search was closed (while it is open, the incremental search of the
+            // panel may select a match out of it).
+            ScanRegion = null;
+        }
 
+        List<ISearchResult>? results = FindAll();
+        Func<bool, Task<object?>>? loadNextFile = Search.IsOpened && ScanRegion is null ? _viewModel?.NextFileLoader : null;
+        if (results is { Count: 0 } && loadNextFile is not null)
+        {
+            _ = FindInNextFilesAsync(backward, loadNextFile);
             return true;
         }
 
-        if (FindClosed(backward))
+        if (results is not { Count: > 0 })
         {
+            if (Search.IsOpened)
+            {
+                return true;
+            }
+
+            Search.IsReplaceMode = false;
+            Search.Open();
+            Dispatcher.UIThread.Post(Search.Reactivate, DispatcherPriority.Input);
+            return false;
+        }
+
+        int caret = editor.CaretOffset;
+        ISearchResult? result = backward
+            ? results.LastOrDefault(r => r.Offset < caret - editor.SelectionLength)
+            : results.FirstOrDefault(r => r.Offset >= caret);
+        if (result is null && loadNextFile is not null)
+        {
+            _ = FindInNextFilesAsync(backward, loadNextFile);
             return true;
         }
 
-        Search.IsReplaceMode = false;
-        Search.Open();
-        Dispatcher.UIThread.Post(Search.Reactivate, DispatcherPriority.Input);
-        return false;
+        Select(result ?? (backward ? results[^1] : results[0]));
+        return true;
     }
 
-    /// <summary>As the <c>SearchPanel</c> does while open: the matches of its search, the one after (or before) the caret.</summary>
-    private bool FindClosed(bool backward)
+    /// <summary>As the multi-file search of <c>FindNextAsync</c>: the first (or last) match of the next files that have one.</summary>
+    private async Task FindInNextFilesAsync(bool backward, Func<bool, Task<object?>> loadNextFile)
+    {
+        HashSet<object> searched = [];
+        while (await loadNextFile(backward) is { } file && searched.Add(file))
+        {
+            if (FindAll() is { Count: > 0 } results)
+            {
+                Select(backward ? results[^1] : results[0]);
+                return;
+            }
+        }
+    }
+
+    /// <summary>The matches of the search of the panel (in the scan region, if any); <see langword="null"/> without a valid search.</summary>
+    private List<ISearchResult>? FindAll()
     {
         string pattern = Search.SearchPattern ?? "";
         if (pattern.Length == 0)
         {
-            return false;
+            return null;
         }
 
         ISearchStrategy strategy;
@@ -194,23 +235,50 @@ public partial class TextEditorView : UserControl
         }
         catch (SearchPatternException)
         {
-            return false;
+            return null;
         }
 
-        List<ISearchResult> results = [.. strategy.FindAll(editor.Document, 0, editor.Document.TextLength).Where(r => r.Length > 0)];
-        if (results.Count == 0)
-        {
-            return false;
-        }
+        (int start, int end) = ScanRegion ?? (0, editor.Document.TextLength);
+        return [.. strategy.FindAll(editor.Document, start, end - start).Where(r => r.Length > 0 && r.EndOffset <= end)];
+    }
 
-        int caret = editor.CaretOffset;
-        ISearchResult result = backward
-            ? results.LastOrDefault(r => r.Offset < caret - editor.SelectionLength) ?? results[^1]
-            : results.FirstOrDefault(r => r.Offset >= caret) ?? results[0];
+    /// <summary>As <c>SelectResult</c>: the match is selected, the caret at its end (where the next search starts).</summary>
+    private void Select(ISearchResult result)
+    {
         editor.Select(result.Offset, result.Length);
         editor.TextArea.Caret.Offset = result.EndOffset;
         editor.TextArea.Caret.BringCaretToView();
-        return true;
+    }
+
+    /// <summary>
+    ///  The find next / previous of the search panel (its buttons, Enter and F3) search as <see cref="FindNext"/>: in the scan
+    ///  region, and on in the next files.
+    /// </summary>
+    private void UseFindNextInSearchPanel()
+    {
+        Replace(SearchCommands.FindNext, backward: false);
+        Replace(SearchCommands.FindPrevious, backward: true);
+
+        void Replace(global::AvaloniaEdit.RoutedCommand command, bool backward)
+        {
+            foreach (global::AvaloniaEdit.RoutedCommandBinding binding in Search.CommandBindings.Where(b => b.Command == command).ToList())
+            {
+                Search.CommandBindings.Remove(binding);
+            }
+
+            Search.CommandBindings.Add(new global::AvaloniaEdit.RoutedCommandBinding(
+                command,
+                (_, e) =>
+                {
+                    FindNext(backward);
+                    e.Handled = true;
+                },
+                (_, e) =>
+                {
+                    e.CanExecute = true;
+                    e.Handled = true;
+                }));
+        }
     }
 
     /// <summary>The offsets of the occurrences of the selected text, e.g. for tests.</summary>
@@ -325,8 +393,21 @@ public partial class TextEditorView : UserControl
     /// <summary>The keys of <c>FindAndReplaceForm</c>, unless they are typed in the search panel (which handles them itself).</summary>
     private void OnEditorPreviewKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Handled || (e.Source as global::Avalonia.Visual)?.FindAncestorOfType<SearchPanel>(includeSelf: true) is not null)
+        if (e.Handled)
         {
+            return;
+        }
+
+        if ((e.Source as global::Avalonia.Visual)?.FindAncestorOfType<SearchPanel>(includeSelf: true) is { } panel)
+        {
+            // Enter in the search box and F3 search as FindNext; the other keys are the panel's (e.g. Enter to replace).
+            bool inSearchBox = e.Source is TextBox box && ReferenceEquals(box, panel.GetVisualDescendants().OfType<TextBox>().FirstOrDefault());
+            if ((e.Key == Key.Enter && inSearchBox) || e.Key == Key.F3)
+            {
+                FindNext(backward: e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+                e.Handled = true;
+            }
+
             return;
         }
 

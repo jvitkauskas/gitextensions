@@ -198,7 +198,8 @@ public sealed record FileViewerSettings(
 /// <param name="EncodingName">The encoding chosen in the viewer, or <see langword="null"/> for the files encoding.</param>
 /// <param name="TreatAllFilesAsText">Whether binary files are diffed as texts (<c>TreatAllFilesAsText</c>, not saved).</param>
 /// <param name="ViewerWidth">The width of the viewer, which the width of the output of difftastic depends on.</param>
-public sealed record FileViewRequest(string? EncodingName = null, bool TreatAllFilesAsText = false, double ViewerWidth = 0);
+/// <param name="RangeDiffPathFilter">The paths a range diff is limited to (the path filter of the grid of the main window), if any.</param>
+public sealed record FileViewRequest(string? EncodingName = null, bool TreatAllFilesAsText = false, double ViewerWidth = 0, string RangeDiffPathFilter = "");
 
 /// <summary>The line patches of the context menu (<c>StageSelectedLines</c>, <c>UnstageSelectedLines</c>, <c>ResetSelectedLines</c>).</summary>
 public enum LinePatchOperation
@@ -366,6 +367,9 @@ public sealed partial class FileViewerViewModel : ObservableObject
     [ObservableProperty]
     public partial bool TreatAllFilesAsText { get; private set; }
 
+    /// <summary>The paths a range diff is limited to (<c>RevisionGrid.CurrentFilter.PathFilter</c> in the main window), if any.</summary>
+    public Func<string>? RangeDiffPathFilter { get; set; }
+
     /// <summary>The width of the viewer, which the view reports (the width of the output of difftastic depends on it).</summary>
     public double ViewerWidth { get; set; }
 
@@ -399,14 +403,17 @@ public sealed partial class FileViewerViewModel : ObservableObject
     [ObservableProperty]
     public partial string? SelectedEncoding { get; set; }
 
+    /// <summary>The loading of the file shown last, complete once it is shown.</summary>
+    public Task Loading { get; private set; } = Task.CompletedTask;
+
     /// <summary>The file shown (as <c>ViewChangesAsync</c>), <see langword="null"/> to clear.</summary>
     /// <param name="defaultText">The text shown if there are no changes (the <c>defaultText</c> of <c>ViewChangesAsync</c>).</param>
     public Task ShowChangesAsync(FileStatusEntry? entry, string? defaultText = null)
-        => LoadAsync(entry, entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, new FileViewRequest(EncodingName, TreatAllFilesAsText, ViewerWidth), cancellationToken), defaultText);
+        => Loading = LoadAsync(entry, entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, new FileViewRequest(EncodingName, TreatAllFilesAsText, ViewerWidth, RangeDiffPathFilter?.Invoke() ?? ""), cancellationToken), defaultText);
 
     /// <summary>The file in the revision, or in the working directory for the artificial commits (as <c>ViewGitItemAsync</c>).</summary>
     public Task ShowFileAsync(GitItemStatus file, ObjectId objectId)
-        => LoadAsync(entry: null, cancellationToken => _host.GetFileAsync(file, objectId, EncodingName, cancellationToken), defaultText: null);
+        => Loading = LoadAsync(entry: null, cancellationToken => _host.GetFileAsync(file, objectId, EncodingName, cancellationToken), defaultText: null);
 
     private string? EncodingName => SelectedEncoding is { } name && name != _host.FilesEncoding ? name : null;
 
@@ -636,6 +643,32 @@ public sealed partial class FileViewerViewModel : ObservableObject
         _lastScrollReached = now;
         (bottom ? BottomScrollReached : TopScrollReached)?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    ///  As <c>SetFileLoader(GetNextPatchFile)</c> of <c>RevisionDiffControl</c>: a search goes on in the next (or previous) file
+    ///  of the list <paramref name="getFiles"/> returns, looping around.
+    /// </summary>
+    public void SearchOnThrough(Func<FileStatusListViewModel?> getFiles)
+        => Editor.NextFileLoader = async backwards =>
+        {
+            if (getFiles() is not { } files)
+            {
+                return null;
+            }
+
+            FileStatusEntry? shown = files.SelectedEntry;
+            files.SelectNextItem(backwards, loop: true);
+            if (files.SelectedEntry is not { } entry || ReferenceEquals(entry, shown))
+            {
+                return null;
+            }
+
+            // The loading this view model started on the UI thread for the selection.
+#pragma warning disable VSTHRD003 // Avoid awaiting foreign Tasks
+            await Loading;
+#pragma warning restore VSTHRD003
+            return entry;
+        };
 
     /// <summary>
     ///  As <c>FileViewer_TopScrollReached</c> and <c>FileViewer_BottomScrollReached</c> of the dialogs: scrolling on shows the

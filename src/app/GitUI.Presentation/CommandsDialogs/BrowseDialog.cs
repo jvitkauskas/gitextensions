@@ -519,6 +519,10 @@ public sealed partial class BrowseViewModel : DialogViewModel
         // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached of RevisionDiffControl, without the menu item.
         Viewer.ScrollOnThrough(() => Files);
         Viewer.EnableAutomaticContinuousScroll = false;
+        Viewer.SearchOnThrough(() => Files);
+
+        // As the additionalCommandInfo of ShowSelectedFileDiffAsync: a range diff of the paths the grid is filtered by.
+        Viewer.RangeDiffPathFilter = () => Filters?.State.PathFilter ?? "";
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
         InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);

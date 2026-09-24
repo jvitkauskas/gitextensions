@@ -27,8 +27,9 @@ public partial class FileViewerView : UserControl, IHotkeyControl
     {
         InitializeComponent();
 
-        // As internalFileViewer.MouseMove and MouseLeave: the toolbar shows while the mouse is over the text.
-        textView.PointerMoved += (_, _) => toolbar.IsVisible = true;
+        // As internalFileViewer.MouseMove and MouseLeave: the toolbar shows while the mouse is over the text, unless the search
+        // panel is open (which it would cover; the WinForms search is a separate window).
+        textView.PointerMoved += (_, _) => toolbar.IsVisible = !textView.Search.IsOpened;
         PointerExited += (_, _) => toolbar.IsVisible = false;
         nextChangeButton.Click += (_, _) => GoToChange(backwards: false);
         previousChangeButton.Click += (_, _) => GoToChange(backwards: true);
@@ -317,9 +318,11 @@ public partial class FileViewerView : UserControl, IHotkeyControl
             // As Find and FindNextAsync of FileViewerInternal (FindAndReplaceForm).
             case FileViewerHotkeyCommand.Find:
                 textView.OpenSearch(replace: false);
+                toolbar.IsVisible = false;
                 return true;
             case FileViewerHotkeyCommand.Replace when !editor.IsReadOnly:
                 textView.OpenSearch(replace: true);
+                toolbar.IsVisible = false;
                 return true;
             case FileViewerHotkeyCommand.FindNextOrOpenWithDifftool:
                 // As FindNextAsync: without a search, the changes open in the difftool.

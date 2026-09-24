@@ -272,14 +272,14 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         if (item.IsRangeDiff)
         {
             // Git range-diff has cubic runtime complexity and can be slow and memory consuming (the WinForms viewer shows the
-            // command meanwhile). The path filter of the diff tab of the main window is not ported.
+            // command meanwhile).
             ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetRangeDiffAsync(
                 firstId,
                 secondId,
                 entry.BaseA ?? default,
                 entry.BaseB ?? default,
                 GetExtraDiffArguments(request, isRangeDiff: true),
-                pathFilter: "",
+                pathFilter: Module.GitVersion.SupportRangeDiffPath ? request.RangeDiffPathFilter : "",
                 useGitColoring: true,
                 commandConfiguration: DiffGitCommandConfigurations.ForRangeDiff(Module),
                 cancellationToken));

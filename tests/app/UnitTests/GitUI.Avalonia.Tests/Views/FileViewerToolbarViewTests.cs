@@ -40,6 +40,14 @@ public sealed class FileViewerToolbarViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         next.IsVisible.Should().BeFalse("a text has no changes");
         view.GetLogicalDescendants().OfType<ComboBox>().Single(c => c.Name == "encodingComboBox").IsVisible.Should().BeTrue();
+
+        // Not over the search panel, which it would cover.
+        view.ExecuteHotkeyCommand(FileViewerHotkeyCommand.Find);
+        Dispatcher.UIThread.RunJobs();
+        view.Toolbar.IsVisible.Should().BeFalse();
+        window.MouseMove(new Point(210, 160));
+        Dispatcher.UIThread.RunJobs();
+        view.Toolbar.IsVisible.Should().BeFalse();
         window.Close();
     });
 

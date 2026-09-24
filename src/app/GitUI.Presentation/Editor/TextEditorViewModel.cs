@@ -94,6 +94,12 @@ public sealed partial class TextEditorViewModel : ObservableObject
     /// </summary>
     public TextScrollRequest PendingScroll { get; set; }
 
+    /// <summary>
+    ///  As <c>SetFileLoader</c>: shows the next (or previous, for <see langword="true"/>) file, looping around, for a search
+    ///  that goes on in it; returns what it shows once it is shown, <see langword="null"/> if there is no other file.
+    /// </summary>
+    public Func<bool, Task<object?>>? NextFileLoader { get; set; }
+
     /// <summary>The column of the vertical ruler, 0 for none (as <c>FileViewerInternal.VRulerPosition</c>).</summary>
     [ObservableProperty]
     public partial int VerticalRulerColumn { get; set; }
