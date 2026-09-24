@@ -2,10 +2,12 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using GitCommands.Git.Gpg;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
@@ -117,6 +119,73 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task The_gpg_tab_verifies_the_signatures_of_the_selected_commit() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        host.GpgRequested.Should().BeEmpty("the signatures are verified when the tab is shown");
+        TaskCompletionSource<GpgInfo?> verification = new();
+        host.GpgResult = verification.Task;
+
+        window.Tabs.SelectedIndex = 3;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.Gpg);
+        host.GpgRequested.Should().Equal(viewModel.Grid.SelectedRow!.Subject);
+        viewModel.CommitGpgText.Should().Be("Loading data...", "not the result of another revision while verifying");
+
+        verification.SetResult(new GpgInfo(CommitStatus.GoodSignature, "gpg: Good signature from \"Alice\"", TagStatus.OneGood, "gpg: Good signature (tag)"));
+        Dispatcher.UIThread.RunJobs();
+        viewModel.CommitGpgIcon.Should().Be("CommitSignatureOk");
+        viewModel.CommitGpgText.Should().Contain("Good signature from");
+        viewModel.TagGpgIcon.Should().Be("TagOk");
+        viewModel.TagGpgText.Should().Be("gpg: Good signature (tag)");
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-gpg");
+
+        // Neither signed: "not signed" and no tag row.
+        host.GpgResult = Task.FromResult<GpgInfo?>(null);
+        viewModel.Grid.SelectedRow = viewModel.Grid.Rows.First(r => r != viewModel.Grid.SelectedRow && !r.Revision.IsArtificial);
+        Dispatcher.UIThread.RunJobs();
+        host.GpgRequested.Should().HaveCount(2);
+        viewModel.CommitGpgText.Should().Be("Commit is not signed");
+        viewModel.CommitGpgIcon.Should().BeNull();
+        viewModel.TagGpgText.Should().BeNull("without a tag the tag row is hidden");
+
+        // A tag that is not signed.
+        host.GpgResult = Task.FromResult<GpgInfo?>(new GpgInfo(CommitStatus.NoSignature, "", TagStatus.TagNotSigned, null));
+        viewModel.Grid.SelectedRow = viewModel.Grid.Rows.First(r => r != viewModel.Grid.SelectedRow && !r.Revision.IsArtificial);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.TagGpgText.Should().Be("Tag is not signed");
+        viewModel.TagGpgIcon.Should().BeNull();
+        window.Close();
+    });
+
+    [Test]
+    public Task The_console_tab_starts_the_shell_when_it_is_first_shown() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        viewModel.HasConsole.Should().BeTrue();
+        host.Terminals.Should().BeEmpty("the terminal is created when its tab is first selected");
+
+        viewModel.SelectedTab = BrowseTab.Console;
+        FakeTerminal terminal = host.Terminals.Single();
+        viewModel.ConsoleView.Should().BeSameAs(terminal);
+        terminal.Calls.Should().Equal("start");
+
+        // Back to the tab: the running shell is focused; an exited one is started again.
+        viewModel.SelectedTab = BrowseTab.Diff;
+        viewModel.SelectedTab = BrowseTab.Console;
+        terminal.Calls.Should().Equal("start", "focus");
+        terminal.IsShellRunning = false;
+        viewModel.SelectedTab = BrowseTab.Diff;
+        viewModel.SelectedTab = BrowseTab.Console;
+        terminal.Calls.Should().Equal("start", "focus", "start");
+        host.Terminals.Should().HaveCount(1);
+
+        viewModel.Dispose();
+        terminal.Calls[^1].Should().Be("dispose");
+        window.Close();
+    });
+
     private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show()
     {
         FakeBrowseHost host = new();
@@ -138,8 +207,58 @@ public sealed class BrowseViewTests : HeadlessTest
         return (window, viewModel, host);
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost
+    internal sealed class FakeTerminal : IBrowseTerminal, IEmbeddedNativeView
     {
+        public List<string> Calls { get; } = [];
+
+        public IEmbeddedNativeView View => this;
+
+        public bool IsShellRunning { get; set; }
+
+        public void StartShell()
+        {
+            Calls.Add("start");
+            IsShellRunning = true;
+        }
+
+        public void Focus() => Calls.Add("focus");
+
+        public void Dispose() => Calls.Add("dispose");
+
+        public nint Attach(nint parentWindow) => 0;
+
+        public void Detach()
+        {
+        }
+    }
+
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost
+    {
+        public List<string> GpgRequested { get; } = [];
+
+        public Task<GpgInfo?> GpgResult { get; set; } = Task.FromResult<GpgInfo?>(null);
+
+        public bool ShowGpgInformation => true;
+
+        public Task<GpgInfo?> LoadGpgInfoAsync(GitRevision revision)
+        {
+            GpgRequested.Add(revision.Subject);
+#pragma warning disable VSTHRD003 // The test completes the task.
+            return GpgResult;
+#pragma warning restore VSTHRD003
+        }
+
+        public List<FakeTerminal> Terminals { get; } = [];
+
+        public bool IsConsoleAvailable => true;
+
+        public IBrowseTerminal? CreateTerminal()
+        {
+            FakeTerminal terminal = new();
+            Terminals.Add(terminal);
+            return terminal;
+        }
+
         public DiffViewModelTests.FakeViewerHost ViewerHost { get; } = new();
 
         public List<string> TreesRequested { get; } = [];

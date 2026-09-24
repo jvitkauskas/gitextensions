@@ -22,6 +22,7 @@ public sealed class BrowseStrings : ViewStrings
         CommitTab = Add("CommitInfoTabPage", "Text", "Commit");
         DiffTab = Add("DiffTabPage", "Text", "Diff");
         TreeTab = Add("TreeTabPage", "Text", "File tree");
+        ConsoleTab = Add("_consoleTabCaption", "Text", "Console");
         Refresh = Add("RefreshButton", "ToolTipText", "Refresh");
         CommitButton = Add("toolStripButtonCommit", "Text", "Commit");
         PullButton = Add("toolStripButtonPull", "Text", "Pull");
@@ -134,6 +135,8 @@ public sealed class BrowseStrings : ViewStrings
     public TranslatedText DiffTab { get; }
 
     public TranslatedText TreeTab { get; }
+
+    public TranslatedText ConsoleTab { get; }
 
     public TranslatedText Refresh { get; }
 
@@ -462,6 +465,8 @@ public enum BrowseTab
     Commit,
     Diff,
     FileTree,
+    Gpg,
+    Console,
 }
 
 /// <summary>
@@ -494,6 +499,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
         InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);
+        InitializeGpg();
+        InitializeConsole();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
         Grid.Loaded += (_, _) =>
@@ -640,6 +647,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         CommitInfo.SetRevision(selected.Count == 0 ? null : selected[0]);
         _ = ShowDiffsAsync(selected);
         UpdateFileTree(revisionChanged: true);
+        UpdateGpgInfo(revisionChanged: true);
     }
 
     private async Task ShowDiffsAsync(IReadOnlyList<GitRevision> revisions)

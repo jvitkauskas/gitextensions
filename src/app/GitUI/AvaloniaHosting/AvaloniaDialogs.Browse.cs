@@ -105,6 +105,7 @@ internal static partial class AvaloniaDialogs
     {
         private BrowseHost? _host;
         private RevisionGridViewModel? _grid;
+        private BrowseViewModel? _viewModel;
 
         // The filters of the command line apply to the first repository only.
         private BrowseArguments? _arguments = args;
@@ -167,6 +168,7 @@ internal static partial class AvaloniaDialogs
             commands.BrowseRepo = new BrowseRepoAdapter(commands, grid, window, this);
             _host = host;
             _grid = grid;
+            _viewModel = viewModel;
 
             if (isValid)
             {
@@ -212,8 +214,10 @@ internal static partial class AvaloniaDialogs
                 commands.BrowseRepo = null;
             }
 
+            _viewModel?.Dispose();
             _host?.Dispose();
             _grid?.Dispose();
+            _viewModel = null;
             _host = null;
             _grid = null;
         }

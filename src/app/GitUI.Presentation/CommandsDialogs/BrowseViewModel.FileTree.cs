@@ -123,5 +123,10 @@ public sealed partial class BrowseViewModel
         }
     }
 
-    partial void OnSelectedTabChanged(BrowseTab value) => UpdateFileTree(revisionChanged: false);
+    partial void OnSelectedTabChanged(BrowseTab value)
+    {
+        UpdateFileTree(revisionChanged: false);
+        UpdateGpgInfo(revisionChanged: false);
+        UpdateConsole();
+    }
 }

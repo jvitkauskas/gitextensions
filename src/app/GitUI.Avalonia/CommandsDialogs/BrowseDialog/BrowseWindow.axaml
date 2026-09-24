@@ -6,6 +6,7 @@
                 xmlns:ed="using:GitUI.Avalonia.Editor"
                 xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
                 xmlns:rg="using:GitUI.Avalonia.Controls.RevisionGrid"
+                xmlns:s="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog"
                 xmlns:vm="using:GitUI.Presentation.CommandsDialogs"
                 x:Class="GitUI.Avalonia.CommandsDialogs.BrowseDialog.BrowseWindow"
                 x:DataType="vm:BrowseViewModel"
@@ -118,6 +119,37 @@
               <ed:FileViewerView Name="treeViewer" DataContext="{Binding TreeViewer}" />
             </Border>
           </Grid>
+        </TabItem>
+        <TabItem Name="gpgTab" IsVisible="{Binding HasGpgInfo}">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Key.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding GpgStrings.GpgTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <!-- Equivalent of RevisionGpgInfoControl: the signature of the commit, then of its tags if it has any. -->
+          <UniformGrid Columns="1" Margin="6">
+            <DockPanel>
+              <Image DockPanel.Dock="Left" Source="{Binding CommitGpgIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="32" Height="32" VerticalAlignment="Top" Margin="0,0,6,0"
+                     IsVisible="{Binding CommitGpgIcon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <TextBox Name="commitGpgInfo" Text="{Binding CommitGpgText}" IsReadOnly="True" TextWrapping="Wrap" />
+            </DockPanel>
+            <DockPanel Margin="0,6,0,0" IsVisible="{Binding TagGpgText, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <Image DockPanel.Dock="Left" Source="{Binding TagGpgIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="32" Height="32" VerticalAlignment="Top" Margin="0,0,6,0"
+                     IsVisible="{Binding TagGpgIcon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <TextBox Name="tagGpgInfo" Text="{Binding TagGpgText}" IsReadOnly="True" TextWrapping="Wrap" />
+            </DockPanel>
+          </UniformGrid>
+        </TabItem>
+        <TabItem Name="consoleTab" IsVisible="{Binding HasConsole}">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/Console.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.ConsoleTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <!-- The terminal of the configured console emulator (ConEmu or Mintty), a WinForms control as a child window. -->
+          <c:EmbeddedNativeViewPresenter Name="consoleView" View="{Binding ConsoleView}" />
         </TabItem>
       </TabControl>
       <bd:DashboardView Name="dashboard" Grid.RowSpan="3" Margin="-4,0,-4,-4" DataContext="{Binding Dashboard}" IsVisible="{Binding $parent[Window].((vm:BrowseViewModel)DataContext).IsDashboard}" />
