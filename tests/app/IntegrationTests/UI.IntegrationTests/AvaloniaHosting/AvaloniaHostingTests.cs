@@ -38,10 +38,14 @@ public sealed partial class AvaloniaHostingTests
     private Form _owner = null!;
     private Exception? _driveFailure;
 
+    // The positions of the windows, instead of the user's WindowPositions.xml; shared by the tests, as the file would be.
+    private static readonly InMemoryPositionStore _positions = new();
+
     [SetUp]
     public void SetUp()
     {
         Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all");
+        DialogWindow.PositionStoreForTests = _positions;
         UserEnvironmentInformation.Initialise("0123456789012345678901234567890123456789", isDirty: false);
 
         _referenceRepository = new ReferenceRepository();
@@ -538,4 +542,14 @@ public sealed partial class AvaloniaHostingTests
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool PrintWindow(nint handle, nint deviceContext, uint flags);
+
+    /// <summary>The window positions of the tests, in memory.</summary>
+    private sealed class InMemoryPositionStore : GitUI.Presentation.Services.IWindowPositionStore
+    {
+        private readonly Dictionary<string, GitUI.Presentation.Services.WindowPlacement> _placements = [];
+
+        public GitUI.Presentation.Services.WindowPlacement? Load(string name) => _placements.TryGetValue(name, out GitUI.Presentation.Services.WindowPlacement? placement) ? placement : null;
+
+        public void Save(string name, GitUI.Presentation.Services.WindowPlacement placement) => _placements[name] = placement;
+    }
 }

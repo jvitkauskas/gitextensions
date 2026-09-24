@@ -64,6 +64,14 @@ public class DialogWindow : Window
     public IWindowPositionStore? PositionStore { get; set; }
 
     /// <summary>
+    ///  The store of all the windows instead of their <see cref="PositionStore"/>, for the integration tests, which would
+    ///  otherwise save the sizes of their windows in the user's <c>WindowPositions.xml</c>.
+    /// </summary>
+    internal static IWindowPositionStore? PositionStoreForTests { get; set; }
+
+    private IWindowPositionStore? EffectivePositionStore => PositionStoreForTests ?? PositionStore;
+
+    /// <summary>
     ///  Set by the host when the dialog is centered over an owner: only the size is restored then, not the location.
     /// </summary>
     public bool IsCenteredOnOwner { get; set; }
@@ -297,7 +305,7 @@ public class DialogWindow : Window
 
     private void RestorePosition()
     {
-        if (PositionName is null || PositionStore?.Load(PositionName) is not { } placement || placement.Dpi <= 0)
+        if (PositionName is null || EffectivePositionStore?.Load(PositionName) is not { } placement || placement.Dpi <= 0)
         {
             return;
         }
@@ -342,7 +350,7 @@ public class DialogWindow : Window
 
     private void SavePosition()
     {
-        if (PositionName is null || PositionStore is null)
+        if (PositionName is null || EffectivePositionStore is not { } store)
         {
             return;
         }
@@ -353,7 +361,7 @@ public class DialogWindow : Window
             return;
         }
 
-        PositionStore.Save(
+        store.Save(
             PositionName,
             new WindowPlacement(bounds.X, bounds.Y, bounds.Width, bounds.Height, CurrentDpi, WindowState == WindowState.Maximized));
     }
