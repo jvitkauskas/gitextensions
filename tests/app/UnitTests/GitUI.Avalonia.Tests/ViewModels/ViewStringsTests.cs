@@ -33,6 +33,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new ProcessStrings()).SetArgDisplayNames(nameof(ProcessStrings));
         yield return new TestCaseData(new RemoteProcessStrings()).SetArgDisplayNames(nameof(RemoteProcessStrings));
         yield return new TestCaseData(new BrowseStrings()).SetArgDisplayNames(nameof(BrowseStrings));
+        yield return new TestCaseData(new RevisionGridMenuStrings()).SetArgDisplayNames(nameof(RevisionGridMenuStrings));
         yield return new TestCaseData(new CommandlineHelpStrings()).SetArgDisplayNames(nameof(CommandlineHelpStrings));
         yield return new TestCaseData(new AddFilesStrings()).SetArgDisplayNames(nameof(AddFilesStrings));
         yield return new TestCaseData(new DonateStrings()).SetArgDisplayNames(nameof(DonateStrings));

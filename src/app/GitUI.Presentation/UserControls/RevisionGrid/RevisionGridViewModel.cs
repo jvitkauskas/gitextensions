@@ -29,7 +29,9 @@ public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsC
 /// <param name="ShowAuthorDate">Whether the author date rather than the commit date is shown (<c>AppSettings.ShowAuthorDate</c>).</param>
 /// <param name="QuickSearchLabel">The text before the quick search string (<c>TranslatedStrings.SearchingFor</c>).</param>
 /// <param name="QuickSearchTimeout">How long the quick search string is kept after typing (<c>AppSettings.RevisionGridQuickSearchTimeout</c>).</param>
-public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000);
+/// <param name="ShowRemoteBranches">As <c>AppSettings.ShowRemoteBranches</c>: the remote branches are shown as references.</param>
+/// <param name="ShowTags">As <c>AppSettings.ShowTags</c>: the tags are shown as references.</param>
+public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000, bool ShowRemoteBranches = true, bool ShowTags = true);
 
 /// <summary>A row of the revision grid: a revision and its row in the <see cref="RevisionGraph"/>.</summary>
 public sealed class RevisionGridRow
@@ -41,6 +43,7 @@ public sealed class RevisionGridRow
         ShortId = revision.IsArtificial ? "" : revision.ObjectId.ToShortString();
         Date = FormatDate(options.ShowAuthorDate ? revision.AuthorDate : revision.CommitDate, options.RelativeDate);
         Refs = [.. revision.Refs
+            .Where(r => (options.ShowRemoteBranches || !r.IsRemote) && (options.ShowTags || !r.IsTag))
             .OrderBy(r => r.IsTag ? 2 : r.IsRemote ? 1 : 0)
             .Select(r => new RevisionRefItem(
                 r.Name,
@@ -123,7 +126,7 @@ public interface IRevisionGridHost
 public sealed partial class RevisionGridViewModel : ObservableObject, IDisposable
 {
     private readonly IRevisionGridHost _host;
-    private readonly RevisionGridDisplayOptions _options;
+    private RevisionGridDisplayOptions _options;
     private CancellationTokenSource? _loadCancellation;
     private ObjectId? _toBeSelected;
     private bool _isCaching;
@@ -133,6 +136,17 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     {
         _host = host;
         _options = options;
+    }
+
+    /// <summary>How the revisions are shown; setting it loads them again (as the view settings of the grid).</summary>
+    public RevisionGridDisplayOptions DisplayOptions
+    {
+        get => _options;
+        set
+        {
+            _options = value;
+            Load(SelectedRow?.ObjectId);
+        }
     }
 
     /// <summary>The layout of the graph, which the graph column draws from.</summary>

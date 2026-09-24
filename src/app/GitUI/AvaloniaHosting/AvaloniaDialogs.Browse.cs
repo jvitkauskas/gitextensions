@@ -65,10 +65,14 @@ internal static partial class AvaloniaDialogs
             commands,
             currentCheckout => new FilterInfo().GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
             showArtificial: true);
-        RevisionGridViewModel grid = new(gridHost, new RevisionGridDisplayOptions(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout))
+        RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
         {
             MultiSelect = true,
         };
+        ApplyColumns(grid);
+        BrowseViewModel? browseViewModel = null;
+        RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => browseViewModel?.RefreshRevisions());
+        grid.ContextMenuProvider = gridMenu.Build;
         BrowseViewModel viewModel = new(
             ViewStrings.Load<BrowseStrings>(),
             host,
@@ -77,14 +81,23 @@ internal static partial class AvaloniaDialogs
             new FileViewerHost(commands),
             ViewStrings.Load<FileStatusListStrings>(),
             GetFileStatusTreeOptions());
+        browseViewModel = viewModel;
         UseFileStatusListMenu(viewModel.Files, commands, window);
         window.DataContext = viewModel;
+
+        // As FormBrowse (IBrowseRepo): the scripts and the plugins see the selection of the grid.
+        commands.BrowseRepo = new BrowseRepoAdapter(commands, grid, window);
 
         _openBrowseWindows++;
         window.Closed += (_, _) =>
         {
             host.Dispose();
             grid.Dispose();
+            if (commands.BrowseRepo is BrowseRepoAdapter adapter && adapter.Window == window)
+            {
+                commands.BrowseRepo = null;
+            }
+
             if (--_openBrowseWindows == 0)
             {
                 _browseContext?.ExitThread();
@@ -476,5 +489,38 @@ internal static partial class AvaloniaDialogs
         }
 
         public string GetCurrentBranch() => module.GetSelectedBranch();
+    }
+
+    /// <summary>The main window for the scripts and the plugins (<c>IBrowseRepo</c> of <c>FormBrowse</c>).</summary>
+    private sealed class BrowseRepoAdapter(IGitUICommands commands, RevisionGridViewModel grid, BrowseWindow window) : IBrowseRepo
+    {
+        public BrowseWindow Window => window;
+
+        public GitRevision? GetLatestSelectedRevision() => grid.GetSelectedRevisionsLatestSelectedFirst().FirstOrDefault();
+
+        public IReadOnlyList<GitRevision> GetSelectedRevisions() => grid.GetSelectedRevisionsLatestSelectedFirst();
+
+        public System.Drawing.Point GetQuickItemSelectorLocation()
+        {
+            global::Avalonia.PixelPoint position = window.Position;
+            return new System.Drawing.Point(position.X + 100, position.Y + 100);
+        }
+
+        // As FormBrowse.GoToRef: the revision of the reference is selected.
+        public void GoToRef(string refName, bool showNoRevisionMsg, bool toggleSelection = false)
+        {
+            ObjectId objectId = commands.Module.RevParse(refName);
+            if (!objectId.IsZero && !grid.SelectRevision(objectId) && showNoRevisionMsg)
+            {
+                AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(new NativeWindowOwner(window), objectId));
+            }
+        }
+
+        // As FormBrowse.SetWorkingDir: another repository opens in the main window.
+        public void SetWorkingDir(string? path, ObjectId selectedId = default, ObjectId firstId = default)
+        {
+            ShowBrowseWindow(commands.WithWorkingDirectory(path), new BrowseArguments { SelectedId = selectedId, FirstId = firstId });
+            window.Close();
+        }
     }
 }

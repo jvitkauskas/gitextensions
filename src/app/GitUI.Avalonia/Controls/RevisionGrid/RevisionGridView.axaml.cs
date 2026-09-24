@@ -44,6 +44,10 @@ public partial class RevisionGridView : UserControl
         revisionsGrid.HeadersVisibility = DataGridHeadersVisibility.None;
         revisionsGrid.SelectionChanged += (_, _) => _viewModel?.SetSelectedRows(revisionsGrid.SelectedItems.OfType<RevisionGridRow>());
 
+        // As mainContextMenu: the menu of the selected revisions, built when opening; a right click selects the row first.
+        revisionsGrid.ContextRequested += OnContextRequested;
+        revisionsGrid.AddHandler(PointerPressedEvent, OnGridPointerPressed, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
         // Quick search (as RevisionGridControl with QuickSearchProvider).
         revisionsGrid.AddHandler(TextInputEvent, OnGridTextInput, handledEventsToo: true);
         _quickSearchTimer.Tick += (_, _) =>
@@ -82,6 +86,7 @@ public partial class RevisionGridView : UserControl
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.QuickSearchRestarted += OnQuickSearchRestarted;
         Graph = _viewModel?.Graph;
+        UpdateColumns();
         revisionsGrid.SelectionMode = _viewModel?.MultiSelect == true ? DataGridSelectionMode.Extended : DataGridSelectionMode.Single;
         _maxLaneCount = 1;
         _laneCountScannedTo = 0;
@@ -99,6 +104,11 @@ public partial class RevisionGridView : UserControl
                     cell.InvalidateVisual();
                 }
 
+                break;
+
+            case nameof(RevisionGridViewModel.ShowGraphColumn) or nameof(RevisionGridViewModel.ShowAuthorColumn)
+                or nameof(RevisionGridViewModel.ShowDateColumn) or nameof(RevisionGridViewModel.ShowIdColumn):
+                UpdateColumns();
                 break;
 
             case nameof(RevisionGridViewModel.SelectedRow) when _viewModel?.SelectedRow is { } row:
@@ -133,6 +143,77 @@ public partial class RevisionGridView : UserControl
         _laneCountScannedTo = _viewModel.CachedGraphRowCount;
 
         revisionsGrid.Columns[0].Width = new DataGridLength(RevisionGraphRenderer.GetWidth(_maxLaneCount) + 4);
+    }
+
+    /// <summary>The context menu opened last, e.g. for tests.</summary>
+    public ContextMenu? LastContextMenu { get; private set; }
+
+    /// <summary>Opens the context menu of the selected revisions (as the menu key or a right click).</summary>
+    public void OpenContextMenu()
+    {
+        if (_viewModel?.ContextMenuProvider is not { } provider)
+        {
+            return;
+        }
+
+        LastContextMenu = MenuModelRenderer.CreateContextMenu(provider());
+        LastContextMenu.Open(revisionsGrid);
+    }
+
+    // The columns, as the column visibility of RevisionGridControl (the graph, author name, date and id columns).
+    private void UpdateColumns()
+    {
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        revisionsGrid.Columns[0].IsVisible = _viewModel.ShowGraphColumn;
+        revisionsGrid.Columns[2].IsVisible = _viewModel.ShowAuthorColumn;
+        revisionsGrid.Columns[3].IsVisible = _viewModel.ShowDateColumn;
+        revisionsGrid.Columns[4].IsVisible = _viewModel.ShowIdColumn;
+    }
+
+    private void OnContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (_viewModel?.ContextMenuProvider is null || ContextMenu is not null)
+        {
+            // The menu set by the window (e.g. the file history), if any.
+            return;
+        }
+
+        e.Handled = true;
+        if (_viewModel.SelectedRow is not null)
+        {
+            OpenContextMenu();
+        }
+    }
+
+    private void OnGridPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        PointerPointProperties properties = e.GetCurrentPoint(revisionsGrid).Properties;
+        if (properties.IsXButton1Pressed || properties.IsXButton2Pressed)
+        {
+            // As OnGridViewMouseClick: the mouse back and forward buttons navigate.
+            e.Handled = true;
+            if (properties.IsXButton1Pressed)
+            {
+                _viewModel?.NavigateBackward();
+            }
+            else
+            {
+                _viewModel?.NavigateForward();
+            }
+
+            return;
+        }
+
+        if (properties.IsRightButtonPressed
+            && (e.Source as Visual)?.FindAncestorOfType<DataGridRow>(includeSelf: true)?.DataContext is RevisionGridRow row
+            && !revisionsGrid.SelectedItems.Contains(row))
+        {
+            revisionsGrid.SelectedItem = row;
+        }
     }
 
     private void OnQuickSearchRestarted(object? sender, EventArgs e)
