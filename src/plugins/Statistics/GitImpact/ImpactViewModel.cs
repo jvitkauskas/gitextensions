@@ -9,7 +9,7 @@ namespace GitExtensions.Plugins.GitImpact;
 public sealed class ImpactStrings : ViewStrings
 {
     public ImpactStrings()
-        : base(nameof(FormImpact))
+        : base("FormImpact")
     {
         Title = Add("$this", "Text", "Impact");
         AuthorCommits = Add("_authorCommits", "Text", "{0} ({1} Commits, {2} Changed Lines)");

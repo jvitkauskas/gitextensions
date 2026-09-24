@@ -8,7 +8,7 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using ResourceManager;
@@ -26,7 +26,7 @@ internal static partial class AvaloniaDialogs
             {
                 ResolveConflictsWindow window = new();
                 ResolveConflictsStrings strings = ViewStrings.Load<ResolveConflictsStrings>();
-                window.Hotkeys = LoadHotkeys(commands, FormResolveConflicts.HotkeySettingsName);
+                window.Hotkeys = LoadHotkeys(commands, HotkeyCommands.ResolveConflictsSettingsName);
                 window.DataContext = new ResolveConflictsViewModel(
                     strings,
                     new ResolveConflictsHost(commands, window, strings),
@@ -38,7 +38,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormResolveConflicts));
+            positionName: "FormResolveConflicts");
         return true;
     }
 
@@ -119,7 +119,7 @@ internal static partial class AvaloniaDialogs
             string output = Module.GitExecutable.GetOutput(args);
             if (!string.IsNullOrWhiteSpace(output))
             {
-                AvaloniaUi.RunInHostContext(() => FormStatus.ShowErrorDialog(Owner, commands, errorTitle, errorTitle, output));
+                AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowErrorDialog(Owner, commands, errorTitle, errorTitle, output));
             }
         }
 
@@ -131,13 +131,7 @@ internal static partial class AvaloniaDialogs
 
         public bool MergeSubmodule(string fileName) => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowMergeSubmodule(Owner, commands, fileName, out bool accepted))
-            {
-                return accepted;
-            }
-
-            using FormMergeSubmodule form = new(commands, fileName);
-            return form.ShowDialog(Owner) == DialogResult.OK;
+            return TryShowMergeSubmodule(Owner, commands, fileName, out bool accepted) && accepted;
         });
 
         public (string? BaseFile, string? LocalFile, string? RemoteFile) CheckoutConflictedFiles(ConflictData conflict) => Module.CheckoutConflictedFiles(conflict);

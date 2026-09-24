@@ -10,10 +10,8 @@ using GitUI.Avalonia.Editor;
 using GitUI.Avalonia.Hosting;
 using GitUI.Avalonia.ScriptsEngine;
 using GitUI.CommandsDialogs;
-using GitUI.CommandsDialogs.AboutBoxDialog;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.Editor;
-using GitUI.HelperDialogs;
 using GitUI.Presentation;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.ScriptsEngine;
@@ -31,8 +29,8 @@ internal static partial class AvaloniaDialogs
 {
     public static bool TryShowCommandlineHelp()
     {
-        // The command list is a (non-translated) resource of the WinForms form.
-        string commands = new ComponentResourceManager(typeof(FormCommandlineHelp)).GetString("_NO_TRANSLATE_commands.Text") ?? "";
+        // The command list (not translated), as the resource of the WinForms FormCommandlineHelp.
+        string commands = CommandlineHelpText;
         ShowDialog(() => new CommandlineHelpWindow { DataContext = new CommandlineHelpViewModel(ViewStrings.Load<CommandlineHelpStrings>(), commands) }, owner: null);
         return true;
     }
@@ -46,12 +44,12 @@ internal static partial class AvaloniaDialogs
                 window.DataContext = new AddFilesViewModel(
                     ViewStrings.Load<AddFilesStrings>(),
                     filter,
-                    arguments => AvaloniaUi.RunInHostContext(() => FormProcess.ShowDialog(
+                    arguments => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowProcess(
                         new NativeWindowOwner(window), commands, arguments, commands.Module.WorkingDir, input: null, useDialogSettings: false)));
                 return window;
             },
             owner,
-            positionName: nameof(FormAddFiles));
+            positionName: "FormAddFiles");
         return true;
     }
 
@@ -60,7 +58,7 @@ internal static partial class AvaloniaDialogs
         ShowDialog(
             () => new DonateWindow
             {
-                DataContext = new DonateViewModel(ViewStrings.Load<DonateStrings>(), FormDonate.DonationUrl, url => AvaloniaUi.RunInHostContext(() => OsShellUtil.OpenUrlInDefaultBrowser(url))),
+                DataContext = new DonateViewModel(ViewStrings.Load<DonateStrings>(), DonationUrl, url => AvaloniaUi.RunInHostContext(() => OsShellUtil.OpenUrlInDefaultBrowser(url))),
             },
             owner);
         return true;
@@ -74,18 +72,26 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
-    public static bool TryShowResetChanges(IWin32Window? owner, bool hasExistingFiles, bool hasNewFiles, string? confirmationMessage, out FormResetChanges.ActionEnum action)
+    /// <summary>As <c>SearchWindow</c>: finds an item by the name typed, from the matches of <paramref name="getCandidates"/>.</summary>
+    /// <returns>The chosen item, or <see langword="null"/> if cancelled.</returns>
+    public static T? ShowSearch<T>(IWin32Window? owner, Func<string, IEnumerable<T>> getCandidates)
+        where T : class
     {
-        action = FormResetChanges.ActionEnum.Cancel;
+        GitUI.Avalonia.HelperDialogs.SearchWindow? window = null;
+        ShowDialog(
+            () => window = new GitUI.Avalonia.HelperDialogs.SearchWindow(
+                text => getCandidates(text).Cast<object>(),
+                ViewStrings.Load<GitUI.Presentation.HelperDialogs.SearchWindowStrings>().EnterFileName.Text),
+            owner);
+        return window?.SelectedItem as T;
+    }
+
+    /// <summary>As <c>FormResetChanges.ShowResetDialog</c>: whether to reset, and to delete the new files too.</summary>
+    public static ResetChangesAction ShowResetChanges(IWin32Window? owner, bool hasExistingFiles, bool hasNewFiles, string? confirmationMessage = null)
+    {
         ResetChangesViewModel viewModel = new(ViewStrings.Load<ResetChangesStrings>(), hasExistingFiles, hasNewFiles, confirmationMessage);
         ShowDialog(() => new ResetChangesWindow { DataContext = viewModel }, owner);
-        action = viewModel.SelectedAction switch
-        {
-            ResetChangesAction.Reset => FormResetChanges.ActionEnum.Reset,
-            ResetChangesAction.ResetAndDelete => FormResetChanges.ActionEnum.ResetAndDelete,
-            _ => FormResetChanges.ActionEnum.Cancel,
-        };
-        return true;
+        return viewModel.SelectedAction;
     }
 
     public static bool TryShowDeleteTag(IWin32Window? owner, IGitUICommands commands, string? tag, out bool deleted)
@@ -110,7 +116,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormDeleteTag));
+            positionName: "FormDeleteTag");
         return true;
     }
 
@@ -133,7 +139,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormInit));
+            positionName: "FormInit");
         return true;
     }
 
@@ -268,4 +274,48 @@ internal static partial class AvaloniaDialogs
             ThreadHelper.JoinableTaskFactory.Run(() => RepositoryHistoryManager.Locals.AddAsMostRecentAsync(directory));
         });
     }
+
+    /// <summary>The command line verbs (<c>_NO_TRANSLATE_commands</c> of <c>FormCommandlineHelp</c>); update it with the verbs of <c>GitUICommands.RunCommand</c>.</summary>
+    private const string CommandlineHelpText = """
+        [path]
+        browse [path] [-filter=] [--pathFilter=<filepath>] [-commit=<selectedSha>[,<firstSha>]]
+        about
+        add [filename]
+        addfiles [filename]
+        apply [filename]
+        applypatch [filename]
+        blame filename
+        branch
+        checkout
+        checkoutbranch
+        checkoutrevision
+        cherry
+        cleanup
+        clone [path]
+        commit [--quiet] [--message commitmessage]
+        difftool filename
+        filehistory filename
+        fileeditor filename
+        formatpatch
+        gitignore
+        help (shows this dialog)
+        init [path]
+        merge [--branch name]
+        mergeconflicts [--quiet]
+        mergetool [--quiet]
+        openrepo [path] [-filter=]
+        pull [--rebase] [--merge] [--fetch] [--quiet] [--remotebranch name]
+        push [--quiet]
+        rebase [--branch name]
+        remotes
+        reset
+        revert filename
+        searchfile
+        settings
+        stash
+        synchronize [--rebase] [--merge] [--fetch] [--quiet]
+        tag
+        viewdiff
+        viewpatch [filename]
+        """;
 }

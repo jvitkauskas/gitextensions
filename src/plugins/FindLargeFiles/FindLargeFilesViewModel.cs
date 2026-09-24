@@ -16,7 +16,7 @@ namespace GitExtensions.Plugins.FindLargeFiles;
 public sealed class FindLargeFilesStrings : ViewStrings
 {
     public FindLargeFilesStrings()
-        : base(nameof(FindLargeFilesForm))
+        : base("FindLargeFilesForm")
     {
         Title = Add("$this", "Text", "Find large files");
         Instructions = Add("label1", "Text", "Reset local changes before deleting files. Choose files to delete. Force push for replacing data on remote repository.");

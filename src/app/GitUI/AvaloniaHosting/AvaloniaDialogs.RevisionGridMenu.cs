@@ -7,7 +7,6 @@ using GitExtUtils;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.BrowseDialog;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -455,7 +454,7 @@ internal static partial class AvaloniaDialogs
                 new(_s.AuthorDateSort.AccessKeyText, () => ToggleSortOrder(RevisionSortOrder.AuthorDate), IsChecked: AppSettings.RevisionSortOrder == RevisionSortOrder.AuthorDate),
                 new(_s.TopoOrder.AccessKeyText, () => ToggleSortOrder(RevisionSortOrder.Topology), IsChecked: AppSettings.RevisionSortOrder == RevisionSortOrder.Topology),
                 MenuModelItem.Separator,
-                new(_s.SaveAsDefault.AccessKeyText, RevisionGridMenuCommands.SaveCurrentViewSettingsAsDefault),
+                new(_s.SaveAsDefault.AccessKeyText, SaveCurrentViewSettingsAsDefault),
             ];
 
             void ToggleSortOrder(RevisionSortOrder order)
@@ -603,7 +602,7 @@ internal static partial class AvaloniaDialogs
                 InitiateRefAction(
                     new GitRefListsForRevision(revision).GetRenameableLocalBranches(),
                     gitRef => commands.StartRenameDialog(owner(), gitRef.Name),
-                    FormQuickGitRefSelector.QuickAction.Rename);
+                    QuickRefAction.Rename);
             }
         }
 
@@ -632,11 +631,11 @@ internal static partial class AvaloniaDialogs
                         commands.StartDeleteBranchDialog(owner(), gitRef.Name);
                     }
                 },
-                FormQuickGitRefSelector.QuickAction.Delete);
+                QuickRefAction.Delete);
         }
 
         // As InitiateRefAction: the action on the only reference, else on the one chosen in the quick selector.
-        private void InitiateRefAction(IReadOnlyList<IGitRef>? gitRefs, Action<IGitRef> action, FormQuickGitRefSelector.QuickAction actionLabel)
+        private void InitiateRefAction(IReadOnlyList<IGitRef>? gitRefs, Action<IGitRef> action, QuickRefAction actionLabel)
         {
             if (gitRefs?.Count is not > 0)
             {
@@ -652,22 +651,9 @@ internal static partial class AvaloniaDialogs
             // At the mouse pointer (the WinForms grid shows it at the selected row).
             IWin32Window window = owner();
             Point location = Cursor.Position;
-            if (TryShowQuickRefSelector(window, actionLabel, gitRefs, location, out IGitRef? selectedRef))
+            if (TryShowQuickRefSelector(window, actionLabel, gitRefs, location, out IGitRef? selectedRef) && selectedRef is not null)
             {
-                if (selectedRef is not null)
-                {
-                    action(selectedRef);
-                }
-
-                return;
-            }
-
-            using FormQuickGitRefSelector dlg = new();
-            dlg.Init(actionLabel, gitRefs);
-            dlg.Location = location;
-            if (dlg.ShowDialog(window) == DialogResult.OK && dlg.SelectedRef is not null)
-            {
-                action(dlg.SelectedRef);
+                action(selectedRef);
             }
         }
 
@@ -699,10 +685,10 @@ internal static partial class AvaloniaDialogs
         });
 
         private void ContinueBisect(GitBisectOption option, GitRevision revision)
-            => FormProcess.ShowDialog(owner(), commands, arguments: Commands.ContinueBisect(option, revision.ObjectId), Module.WorkingDir, input: null, useDialogSettings: false);
+            => ProcessDialogs.ShowProcess(owner(), commands, arguments: Commands.ContinueBisect(option, revision.ObjectId), Module.WorkingDir, input: null, useDialogSettings: false);
 
         private void StopBisect()
-            => FormProcess.ShowDialog(owner(), commands, arguments: Commands.StopBisect(), Module.WorkingDir, input: null, useDialogSettings: true);
+            => ProcessDialogs.ShowProcess(owner(), commands, arguments: Commands.StopBisect(), Module.WorkingDir, input: null, useDialogSettings: true);
 
         private void ResetChanges()
             => commands.StartResetChangesDialog(owner(), Module.GetWorkTreeFiles(), onlyWorkTree: grid.SelectedRow?.ObjectId == ObjectId.WorkTreeId);
@@ -754,49 +740,25 @@ internal static partial class AvaloniaDialogs
         private void ResetCurrentBranch(GitRevision revision)
             => commands.DoActionOnRepo(() =>
             {
-                if (TryShowResetCurrentBranch(owner(), commands, revision, FormResetCurrentBranch.ResetType.Soft, out bool reset))
-                {
-                    return reset;
-                }
-
-                using FormResetCurrentBranch form = FormResetCurrentBranch.Create(commands, revision);
-                return form.ShowDialog(owner()) == DialogResult.OK;
+                return TryShowResetCurrentBranch(owner(), commands, revision, ResetCurrentBranchType.Soft, out bool reset) && reset;
             });
 
         private void ResetAnotherBranch(GitRevision revision)
             => commands.DoActionOnRepo(() =>
             {
-                if (TryShowResetAnotherBranch(owner(), commands, revision, out bool reset))
-                {
-                    return reset;
-                }
-
-                using FormResetAnotherBranch form = FormResetAnotherBranch.Create(commands, revision);
-                return form.ShowDialog(owner()) == DialogResult.OK;
+                return TryShowResetAnotherBranch(owner(), commands, revision, out bool reset) && reset;
             });
 
         private void CreateBranch(GitRevision revision)
             => commands.DoActionOnRepo(() =>
             {
-                if (TryShowCreateBranch(owner(), commands, revision.ObjectId, new(BranchName: null), out bool created))
-                {
-                    return created;
-                }
-
-                using FormCreateBranch form = new(commands, revision.ObjectId);
-                return form.ShowDialog(owner()) == DialogResult.OK;
+                return TryShowCreateBranch(owner(), commands, revision.ObjectId, new(BranchName: null), out bool created) && created;
             });
 
         private void CreateTag(GitRevision revision)
             => commands.DoActionOnRepo(() =>
             {
-                if (TryShowCreateTag(owner(), commands, revision.ObjectId, out bool created))
-                {
-                    return created;
-                }
-
-                using FormCreateTag form = new(commands, revision.ObjectId);
-                return form.ShowDialog(owner()) == DialogResult.OK;
+                return TryShowCreateTag(owner(), commands, revision.ObjectId, out bool created) && created;
             });
 
         private void RevertCommits()
@@ -831,11 +793,10 @@ internal static partial class AvaloniaDialogs
                 SupportRebaseMerges = Module.GitVersion.SupportRebaseMerges,
             });
 
-            using FormProcess formProcess = new(commands, arguments: rebaseCmd, Module.WorkingDir, input: null, useDialogSettings: true);
             const string sequenceEditor = "GIT_SEQUENCE_EDITOR";
-            formProcess.ProcessEnvVariables.Add(sequenceEditor, string.Format("sed -i -re '0,/pick/s//{0}/'", command));
-            formProcess.ProcessEnvVariables.ForwardEnvironmentVariableToWsl(Module.WorkingDir, sequenceEditor);
-            formProcess.ShowDialog(owner());
+            Dictionary<string, string> environment = new() { [sequenceEditor] = string.Format("sed -i -re '0,/pick/s//{0}/'", command) };
+            environment.ForwardEnvironmentVariableToWsl(Module.WorkingDir, sequenceEditor);
+            TryShowProcess(owner(), commands, rebaseCmd, Module.WorkingDir, input: null, useDialogSettings: true, process: null, out _, out _, environment);
         });
 
         // As GetFirstAndSelected.
@@ -866,11 +827,7 @@ internal static partial class AvaloniaDialogs
                 return;
             }
 
-            if (!TryShowCompareToBranch(owner(), commands, head.ObjectId, out string? branchName))
-            {
-                using FormCompareToBranch form = new(commands, head.ObjectId);
-                branchName = form.ShowDialog(owner()) == DialogResult.OK ? form.BranchName : null;
-            }
+            TryShowCompareToBranch(owner(), commands, head.ObjectId, out string? branchName);
 
             if (branchName is not null)
             {
@@ -946,10 +903,7 @@ internal static partial class AvaloniaDialogs
 
         private void ShowFormDiff(ObjectId baseCommit, ObjectId headCommit, string baseDisplay, string headDisplay)
         {
-            if (!TryShowDiff(commands, baseCommit, headCommit, baseDisplay, headDisplay))
-            {
-                new FormDiff(commands, baseCommit, headCommit, baseDisplay, headDisplay) { ShowInTaskbar = true }.Show();
-            }
+            TryShowDiff(commands, baseCommit, headCommit, baseDisplay, headDisplay);
         }
 
         // As ToggleBetweenArtificialAndHeadCommits: working directory -> index -> HEAD.
@@ -965,20 +919,9 @@ internal static partial class AvaloniaDialogs
 
         private void GotoCommit() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowGoToCommit(owner(), commands, out bool accepted, out ObjectId commitId))
+            if (TryShowGoToCommit(owner(), commands, out bool accepted, out ObjectId commitId) && accepted && !grid.SelectRevision(commitId))
             {
-                if (accepted && !grid.SelectRevision(commitId))
-                {
-                    MessageBoxes.RevisionFilteredInGrid(owner(), commitId);
-                }
-
-                return;
-            }
-
-            using FormGoToCommit form = new(commands);
-            if (form.ShowDialog(owner()) == DialogResult.OK && form.ValidateAndGetSelectedObjectId() is { IsZero: false } objectId && !grid.SelectRevision(objectId))
-            {
-                MessageBoxes.RevisionFilteredInGrid(owner(), objectId);
+                MessageBoxes.RevisionFilteredInGrid(owner(), commitId);
             }
         });
 
@@ -1020,6 +963,20 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>The display options of the grid from the settings (as <c>RevisionGridControl</c> reads them).</summary>
+    /// <summary>
+    ///  As <c>RevisionGridMenuCommands.SaveCurrentViewSettingsAsDefault</c>: the settings changed for the session (the runtime
+    ///  settings) are saved.
+    /// </summary>
+    internal static void SaveCurrentViewSettingsAsDefault()
+    {
+        foreach (System.Reflection.FieldInfo field in typeof(AppSettings).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static))
+        {
+            (field.GetValue(null) as GitCommands.Settings.IRuntimeSetting)?.Save();
+        }
+
+        AppSettings.SaveSettings();
+    }
+
     internal static RevisionGridDisplayOptions GetDisplayOptions()
         => new(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout, AppSettings.ShowRemoteBranches, AppSettings.ShowTags, AppSettings.ShowCommitBodyInRevisionGrid);
 

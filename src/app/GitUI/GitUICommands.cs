@@ -13,8 +13,7 @@ using GitExtUtils;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.RepoHosting;
 using GitUI.CommandsDialogs.SettingsDialog;
-using GitUI.CommandsDialogs.WorktreeDialog;
-using GitUI.HelperDialogs;
+using GitUI.Presentation.CommandsDialogs;
 using GitUIPluginInterfaces;
 using JetBrains.Annotations;
 
@@ -109,7 +108,7 @@ public sealed class GitUICommands : IGitUICommands
                 writer.Write(batchFile);
             }
 
-            FormProcess.ShowDialog(owner: null, this, arguments: $"/C \"{tempFile}\"", Module.WorkingDir, input: null, useDialogSettings: true, process: "cmd.exe");
+            ProcessDialogs.ShowProcess(owner: null, this, arguments: $"/C \"{tempFile}\"", Module.WorkingDir, input: null, useDialogSettings: true, process: "cmd.exe");
         }
         finally
         {
@@ -120,8 +119,8 @@ public sealed class GitUICommands : IGitUICommands
     public bool StartCommandLineProcessDialog(IWin32Window? owner, IGitCommand command)
     {
         bool success = command.AccessesRemote
-            ? FormRemoteProcess.ShowDialog(owner, this, command.Arguments)
-            : FormProcess.ShowDialog(owner, this, arguments: command.Arguments, Module.WorkingDir, input: null, useDialogSettings: true);
+            ? ProcessDialogs.ShowRemoteProcess(owner, this, command.Arguments)
+            : ProcessDialogs.ShowProcess(owner, this, arguments: command.Arguments, Module.WorkingDir, input: null, useDialogSettings: true);
 
         if (success && command.ChangesRepoState)
         {
@@ -133,12 +132,12 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartCommandLineProcessDialog(IWin32Window? owner, string? command, ArgumentString arguments)
     {
-        return FormProcess.ShowDialog(owner, this, arguments, Module.WorkingDir, input: null, useDialogSettings: true, process: command);
+        return ProcessDialogs.ShowProcess(owner, this, arguments, Module.WorkingDir, input: null, useDialogSettings: true, process: command);
     }
 
     public bool StartGitCommandProcessDialog(IWin32Window? owner, ArgumentString arguments)
     {
-        return FormProcess.ShowDialog(owner, this, arguments, Module.WorkingDir, input: null, useDialogSettings: true);
+        return ProcessDialogs.ShowProcess(owner, this, arguments, Module.WorkingDir, input: null, useDialogSettings: true);
     }
 
     public bool StartDeleteBranchDialog(IWin32Window? owner, string branch)
@@ -179,7 +178,7 @@ public sealed class GitUICommands : IGitUICommands
             return false;
         }
 
-        return AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(owner, this, Module.GetRevision(objectId), FormResetCurrentBranch.ResetType.Soft, out bool reset) && reset;
+        return AvaloniaHosting.AvaloniaDialogs.TryShowResetCurrentBranch(owner, this, Module.GetRevision(objectId), ResetCurrentBranchType.Soft, out bool reset) && reset;
     }
 
     public bool StashSave(IWin32Window? owner, bool includeUntrackedFiles, bool keepIndex = false, string message = "", IReadOnlyList<string>? selectedFiles = null)
@@ -187,7 +186,7 @@ public sealed class GitUICommands : IGitUICommands
         bool Action()
         {
             ArgumentString arguments = Commands.StashSave(includeUntrackedFiles, keepIndex, message, selectedFiles);
-            FormProcess.ShowDialog(owner, this, arguments, Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(owner, this, arguments, Module.WorkingDir, input: null, useDialogSettings: true);
 
             // git-stash may have changed commits also if aborted, the grid must be refreshed
             return true;
@@ -200,7 +199,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            FormProcess.ShowDialog(owner, this, arguments: "stash --staged", Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(owner, this, arguments: "stash --staged", Module.WorkingDir, input: null, useDialogSettings: true);
 
             // git-stash may have changed commits also if aborted, the grid must be refreshed
             return true;
@@ -213,7 +212,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            FormProcess.ShowDialog(owner, this, arguments: $"stash pop {stashName.QuoteNE()}", Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(owner, this, arguments: $"stash pop {stashName.QuoteNE()}", Module.WorkingDir, input: null, useDialogSettings: true);
             MergeConflictHandler.HandleMergeConflicts(this, owner, false, false);
 
             // git-stash may have changed commits also if aborted, the grid must be refreshed
@@ -227,7 +226,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            FormProcess.ShowDialog(owner, this, arguments: $"stash drop {stashName.Quote()}", Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(owner, this, arguments: $"stash drop {stashName.Quote()}", Module.WorkingDir, input: null, useDialogSettings: true);
 
             // git-stash may have changed commits also if aborted, the grid must be refreshed
             return true;
@@ -240,7 +239,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            FormProcess.ShowDialog(owner, this, arguments: $"stash apply {stashName.Quote()}", Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(owner, this, arguments: $"stash apply {stashName.Quote()}", Module.WorkingDir, input: null, useDialogSettings: true);
             MergeConflictHandler.HandleMergeConflicts(this, owner, false, false);
 
             // git-stash may have changed commits also if aborted, the grid must be refreshed
@@ -677,10 +676,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (!AvaloniaHosting.AvaloniaDialogs.TryShowPull(owner, this, remoteBranch, remote, pullAction, pullOnShow, out bool accepted, out bool errorOccurred))
-            {
-                return false;
-            }
+            AvaloniaHosting.AvaloniaDialogs.TryShowPull(owner, this, remoteBranch, remote, pullAction, pullOnShow, out bool accepted, out bool errorOccurred);
 
             pulled = accepted && !errorOccurred;
             return accepted;
@@ -768,9 +764,9 @@ public sealed class GitUICommands : IGitUICommands
     public bool StartResetChangesDialog(IWin32Window? owner, IReadOnlyCollection<GitItemStatus> workTreeFiles, bool onlyWorkTree)
     {
         // Show a form asking the user if they want to reset the changes.
-        FormResetChanges.ActionEnum resetType = FormResetChanges.ShowResetDialog(owner, hasExistingFiles: workTreeFiles.Any(item => !item.IsNew), hasNewFiles: workTreeFiles.Any(item => item.IsNew));
+        ResetChangesAction resetType = AvaloniaHosting.AvaloniaDialogs.ShowResetChanges(owner, hasExistingFiles: workTreeFiles.Any(item => !item.IsNew), hasNewFiles: workTreeFiles.Any(item => item.IsNew));
 
-        if (resetType == FormResetChanges.ActionEnum.Cancel)
+        if (resetType == ResetChangesAction.Cancel)
         {
             return false;
         }
@@ -779,7 +775,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            return Module.ResetAllChanges(clean: resetType == FormResetChanges.ActionEnum.ResetAndDelete, onlyWorkTree);
+            return Module.ResetAllChanges(clean: resetType == ResetChangesAction.ResetAndDelete, onlyWorkTree);
         }
     }
 
@@ -797,9 +793,9 @@ public sealed class GitUICommands : IGitUICommands
             .Where(item => allItems || relativeFilePaths.Contains(item.Name) || relativeFolderPaths.Any(folder => item.Path.Value.StartsWith(folder)))];
 
         // Show a form asking the user if they want to reset the changes.
-        FormResetChanges.ActionEnum resetType = FormResetChanges.ShowResetDialog(null, hasExistingFiles: selectedItems.Any(item => item.IsTracked), hasNewFiles: selectedItems.Any(item => item.IsNew));
+        ResetChangesAction resetType = AvaloniaHosting.AvaloniaDialogs.ShowResetChanges(null, hasExistingFiles: selectedItems.Any(item => item.IsTracked), hasNewFiles: selectedItems.Any(item => item.IsNew));
 
-        if (resetType == FormResetChanges.ActionEnum.Cancel)
+        if (resetType == ResetChangesAction.Cancel)
         {
             return false;
         }
@@ -809,7 +805,7 @@ public sealed class GitUICommands : IGitUICommands
             // Reset all changes.
             if (names.Length == 0)
             {
-                return Module.ResetAllChanges(clean: resetType == FormResetChanges.ActionEnum.ResetAndDelete, onlyWorkTree: false);
+                return Module.ResetAllChanges(clean: resetType == ResetChangesAction.ResetAndDelete, onlyWorkTree: false);
             }
 
             if (selectedItems.Length == 0)
@@ -817,7 +813,7 @@ public sealed class GitUICommands : IGitUICommands
                 return false;
             }
 
-            Module.ResetChanges(resetId: default, selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out StringBuilder output, progressAction: null);
+            Module.ResetChanges(resetId: default, selectedItems, resetAndDelete: resetType == ResetChangesAction.ResetAndDelete, _fullPathResolver, out StringBuilder output, progressAction: null);
             if (output.Length > 0)
             {
                 MessageBoxes.Show(owner: null, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1055,7 +1051,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            return FormProcess.ShowDialog(owner, this, arguments: Commands.SubmoduleUpdate(submoduleLocalPath), Module.WorkingDir, input: null, useDialogSettings: true);
+            return ProcessDialogs.ShowProcess(owner, this, arguments: Commands.SubmoduleUpdate(submoduleLocalPath), Module.WorkingDir, input: null, useDialogSettings: true);
         }
 
         return DoActionOnRepo(owner, Action, postEvent: PostUpdateSubmodules);
@@ -1066,7 +1062,7 @@ public sealed class GitUICommands : IGitUICommands
         bool Action()
         {
             // Execute the submodule update comment from the submodule's parent directory
-            return FormProcess.ShowDialog(owner, this, arguments: Commands.SubmoduleUpdate(submoduleLocalPath), submoduleParentPath, null, true);
+            return ProcessDialogs.ShowProcess(owner, this, arguments: Commands.SubmoduleUpdate(submoduleLocalPath), submoduleParentPath, null, true);
         }
 
         return DoActionOnRepo(owner, Action, postEvent: PostUpdateSubmodules);
@@ -1076,7 +1072,7 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
-            return FormProcess.ShowDialog(owner, this, arguments: Commands.SubmoduleSync(""), Module.WorkingDir, input: null, useDialogSettings: true);
+            return ProcessDialogs.ShowProcess(owner, this, arguments: Commands.SubmoduleSync(""), Module.WorkingDir, input: null, useDialogSettings: true);
         }
 
         return DoActionOnRepo(owner, Action);
@@ -1099,7 +1095,7 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartGeneralSettingsDialog(IWin32Window? owner)
     {
-        return StartSettingsDialog(owner, CommandsDialogs.SettingsDialog.Pages.GeneralSettingsPage.GetPageReference());
+        return StartSettingsDialog(owner, new CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("GeneralSettingsPage"));
     }
 
     public bool StartPluginSettingsDialog(IWin32Window? owner)
@@ -1109,7 +1105,7 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartRepoSettingsDialog(IWin32Window? owner)
     {
-        return StartSettingsDialog(owner, CommandsDialogs.SettingsDialog.Pages.GitConfigSettingsPage.GetPageReference());
+        return StartSettingsDialog(owner, new CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("GitConfigSettingsPage"));
     }
 
     /// <summary>
@@ -1174,10 +1170,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            if (!AvaloniaHosting.AvaloniaDialogs.TryShowPush(owner, this, pushOnShow, forceWithLease, branchName, out bool accepted, out bool avaloniaPushed))
-            {
-                return false;
-            }
+            AvaloniaHosting.AvaloniaDialogs.TryShowPush(owner, this, pushOnShow, forceWithLease, branchName, out bool accepted, out bool avaloniaPushed);
 
             pushed = avaloniaPushed;
             return accepted;
@@ -1523,13 +1516,11 @@ public sealed class GitUICommands : IGitUICommands
 
     private bool RunSearchFileCommand()
     {
-        SearchWindow<string> searchWindow = new(FindFileMatches);
-        Application.Run(searchWindow);
-        if (searchWindow.SelectedItem is not null)
+        if (AvaloniaHosting.AvaloniaDialogs.ShowSearch<string>(owner: null, FindFileMatches) is { } selectedItem)
         {
             // We need to return the file that has been found, the visual studio plugin uses the return value
             // to open the selected file.
-            Console.WriteLine(Path.Combine(Module.WorkingDir, searchWindow.SelectedItem));
+            Console.WriteLine(Path.Combine(Module.WorkingDir, selectedItem));
             return true;
         }
 
@@ -1888,32 +1879,19 @@ public sealed class GitUICommands : IGitUICommands
                 throw new InvalidOperationException("CommandText is required");
             }
 
-            using FormRemoteProcess form = new(_commands, CommandText);
-            if (Title is not null)
-            {
-                form.Text = Title;
-            }
-
-            if (Remote is not null)
-            {
-                form.Remote = Remote;
-            }
-
-            form.HandleOnExitCallback = HandleOnExit;
-
-            form.ShowDialog(OwnerForm as IWin32Window);
-
-            ErrorOccurred = form.ErrorOccurred();
-            CommandOutput = form.GetOutputString();
+            AvaloniaHosting.RemoteProcessResult result = AvaloniaHosting.AvaloniaDialogs.RunRemoteProcess(
+                OwnerForm as IWin32Window, _commands, CommandText, Remote, Title, onExit: HandleOnExit);
+            ErrorOccurred = result.ErrorOccurred;
+            CommandOutput = result.Output;
         }
 
-        private bool HandleOnExit(ref bool isError, FormProcess form)
+        private bool HandleOnExit(ref bool isError, AvaloniaHosting.IRemoteProcessDialog dialog)
         {
-            CommandOutput = form.GetOutputString();
+            CommandOutput = dialog.GetOutputString();
 
             GitRemoteCommandCompletedEventArgs e = new(this, isError, false);
 
-            Completed?.Invoke(form, e);
+            Completed?.Invoke(dialog, e);
 
             isError = e.IsError;
 

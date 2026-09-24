@@ -18,10 +18,10 @@ namespace GitUI.AvaloniaHosting;
 internal static partial class AvaloniaDialogs
 {
     public static bool TryShowEditGitAttributes(IWin32Window? owner, IGitUICommands commands)
-        => TryShowRepoFileEditor<GitAttributesEditorStrings>(owner, commands, nameof(FormGitAttributes), ".gitattributes", notifyRepoChanged: false);
+        => TryShowRepoFileEditor<GitAttributesEditorStrings>(owner, commands, "FormGitAttributes", ".gitattributes", notifyRepoChanged: false);
 
     public static bool TryShowMailMap(IWin32Window? owner, IGitUICommands commands)
-        => TryShowRepoFileEditor<MailMapEditorStrings>(owner, commands, nameof(FormMailMap), ".mailmap", notifyRepoChanged: true);
+        => TryShowRepoFileEditor<MailMapEditorStrings>(owner, commands, "FormMailMap", ".mailmap", notifyRepoChanged: true);
 
     /// <summary>As <c>FormGitAttributes</c> and <c>FormMailMap</c>, which differ in the file and their strings.</summary>
     private static bool TryShowRepoFileEditor<TStrings>(IWin32Window? owner, IGitUICommands commands, string formName, string fileName, bool notifyRepoChanged)
@@ -103,7 +103,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner: null,
-            positionName: nameof(FormEditor));
+            positionName: "FormEditor");
         accepted = viewModel?.Accepted ?? false;
         return true;
     }

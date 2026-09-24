@@ -4,7 +4,6 @@ using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
 using GitUI.Avalonia.Hosting;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 
@@ -175,7 +174,7 @@ internal static partial class AvaloniaDialogs
         {
             if (Module.SuperprojectModule is { } superproject)
             {
-                FormProcess.ShowDialog(Owner, _commands, arguments: GitCommands.Git.Commands.SubmoduleUpdate(submodule), superproject.WorkingDir, input: null, useDialogSettings: true);
+                ProcessDialogs.ShowProcess(Owner, _commands, arguments: GitCommands.Git.Commands.SubmoduleUpdate(submodule), superproject.WorkingDir, input: null, useDialogSettings: true);
             }
 
             RepositoryChanged?.Invoke(this, EventArgs.Empty);

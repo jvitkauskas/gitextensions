@@ -46,7 +46,7 @@ internal static partial class AvaloniaDialogs
                     return window;
                 },
                 owner,
-                positionName: nameof(FormFormatPatch));
+                positionName: "FormFormatPatch");
         }
         finally
         {

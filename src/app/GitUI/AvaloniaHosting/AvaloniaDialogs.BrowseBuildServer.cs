@@ -19,7 +19,6 @@ using GitExtUtils.GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.SettingsDialog;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -51,54 +50,9 @@ internal static partial class AvaloniaDialogs
         public IBrowseWebView? CreateWebView()
             => BrowseWebViews.Create(
                 BrowseWebViews.GetAvailableBrowserVersion,
-                () => new WebView2BrowseWebView(BrowseWebViews.UserDataFolder, OpenUrl),
-                () => new WebBrowserControlWebView());
+                () => new WebView2BrowseWebView(BrowseWebViews.UserDataFolder, OpenUrl));
 
         public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
-    }
-
-    /// <summary>
-    ///  The web browser of the build report tab without the WebView2 runtime: <c>WebBrowserControl</c> (Internet Explorer),
-    ///  embedded as the console tab embeds its terminal.
-    /// </summary>
-    private sealed class WebBrowserControlWebView : IBrowseWebView, IEmbeddedNativeView
-    {
-        private static readonly nint HWND_MESSAGE = -3;
-        private readonly WebBrowserControl _browser = new();
-
-        public IEmbeddedNativeView View => this;
-
-        public void Navigate(string url) => _browser.Navigate(url);
-
-        public void Clear()
-        {
-            if (_browser.IsHandleCreated)
-            {
-                _browser.Stop();
-                _browser.Document?.Write(string.Empty);
-            }
-        }
-
-        public nint Attach(nint parentWindow)
-        {
-            // WinForms creates parentless controls as children of its parking window; move it into the Avalonia window.
-            nint handle = _browser.Handle;
-            NativeMethods.SetParent(handle, parentWindow);
-            _browser.Visible = true;
-            return handle;
-        }
-
-        public void Detach()
-        {
-            // The tab is not shown (or the window is closing): park the control so that WinForms does not lose it.
-            if (_browser.IsHandleCreated)
-            {
-                _browser.Visible = false;
-                NativeMethods.SetParent(_browser.Handle, HWND_MESSAGE);
-            }
-        }
-
-        public void Dispose() => _browser.Dispose();
     }
 
     /// <summary>
@@ -390,14 +344,7 @@ internal static partial class AvaloniaDialogs
 
             return AvaloniaUi.RunInHostContext(() =>
             {
-                if (TryShowBuildServerCredentials(_owner(), buildServerUniqueKey, buildServerCredentials, out bool accepted))
-                {
-                    return accepted ? buildServerCredentials : null;
-                }
-
-                using FormBuildServerCredentials form = new(buildServerUniqueKey);
-                form.BuildServerCredentials = buildServerCredentials;
-                return form.ShowDialog(_owner()) == DialogResult.OK ? buildServerCredentials : null;
+                return TryShowBuildServerCredentials(_owner(), buildServerUniqueKey, buildServerCredentials, out bool accepted) && accepted ? buildServerCredentials : null;
             });
         }
 
@@ -488,7 +435,7 @@ internal static partial class AvaloniaDialogs
                             ThreadHelper.JoinableTaskFactory.Run(async () =>
                             {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                AvaloniaUi.RunInHostContext(() => _commands.StartSettingsDialog(_owner(), new SettingsPageReferenceByType(typeof(BuildServerIntegrationSettingsPage))));
+                                AvaloniaUi.RunInHostContext(() => _commands.StartSettingsDialog(_owner(), new SettingsPageReferenceByName("BuildServerIntegrationSettingsPage")));
                             });
                         },
                         objectId => _grid.GetRevision(objectId) is not null);

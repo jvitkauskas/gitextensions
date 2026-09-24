@@ -10,7 +10,7 @@ namespace GitUI.AvaloniaHosting;
 
 /// <summary>
 ///  The web browser of the build report tab of the Avalonia main window: WebView2 (Edge) when its runtime is installed,
-///  else the WinForms (Internet Explorer) <c>WebBrowserControl</c>.
+///  else none.
 /// </summary>
 internal static class BrowseWebViews
 {
@@ -40,14 +40,14 @@ internal static class BrowseWebViews
         }
         catch (Exception ex) when (ex is WebView2RuntimeNotFoundException or DllNotFoundException or BadImageFormatException or FileNotFoundException)
         {
-            Trace.WriteLine($"WebView2 is not available, the build report is shown with Internet Explorer: {ex.Message}");
+            Trace.WriteLine($"WebView2 is not available, the build report tab has no browser: {ex.Message}");
             return false;
         }
     }
 
-    /// <summary>WebView2 if its runtime is available, else the fallback (the WinForms <c>WebBrowserControl</c>).</summary>
-    internal static IBrowseWebView Create(Func<string?> getAvailableBrowserVersion, Func<IBrowseWebView> createWebView2, Func<IBrowseWebView> createFallback)
-        => IsWebView2Available(getAvailableBrowserVersion) ? createWebView2() : createFallback();
+    /// <summary>WebView2 if its runtime is available, else none (the report is then opened in the default browser).</summary>
+    internal static IBrowseWebView? Create(Func<string?> getAvailableBrowserVersion, Func<IBrowseWebView> createWebView2)
+        => IsWebView2Available(getAvailableBrowserVersion) ? createWebView2() : null;
 }
 
 /// <summary>What <see cref="WebViewNavigationQueue"/> drives once the browser is ready.</summary>

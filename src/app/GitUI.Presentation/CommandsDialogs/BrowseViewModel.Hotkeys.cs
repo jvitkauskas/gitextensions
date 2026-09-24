@@ -1,6 +1,6 @@
 namespace GitUI.Presentation.CommandsDialogs;
 
-/// <summary>The commands of the "Browse" hotkeys; the values are the ones of <c>FormBrowse.Command</c>, which the settings store.</summary>
+/// <summary>The commands of the "Browse" hotkeys; the values are the ones of <c>HotkeyCommands.Browse</c>, which the settings store.</summary>
 public enum BrowseHotkeyCommand
 {
     GitBash = 0,

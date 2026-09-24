@@ -365,13 +365,10 @@ internal sealed class UIReporter : IBugReporter
 
     private static void ShowGitRepo(Form? ownerForm, string? workingDir)
     {
-        if (ownerForm is FormBrowse formBrowse)
+        // As FormBrowse.SetWorkingDir: the main window owning the report shows the repository.
+        if (ownerForm is not null && workingDir is not null)
         {
-            ThreadHelper.JoinableTaskFactory.Run(async () =>
-            {
-                await formBrowse.SwitchToMainThreadAsync();
-                formBrowse.SetWorkingDir(workingDir);
-            });
+            AvaloniaHosting.AvaloniaDialogs.TrySetBrowseWorkingDir(ownerForm, workingDir);
         }
     }
 

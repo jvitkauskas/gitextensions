@@ -8,7 +8,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using Microsoft.VisualStudio.Threading;
@@ -71,7 +70,7 @@ internal static partial class AvaloniaDialogs
             // Try to be more helpful to the user: use the clipboard text as a potential source URL.
             try
             {
-                if (Clipboard.ContainsText(TextDataFormat.Text) && FormClone.TryExtractUrl(Clipboard.GetText(TextDataFormat.Text) ?? "", out string possibleUrl))
+                if (Clipboard.ContainsText(TextDataFormat.Text) && TryExtractUrl(Clipboard.GetText(TextDataFormat.Text) ?? "", out string possibleUrl))
                 {
                     from = possibleUrl;
                 }
@@ -172,14 +171,14 @@ internal static partial class AvaloniaDialogs
 
                 if (hostKeyFail)
                 {
-                    if (AvaloniaUi.RunInHostContext(() => FormRemoteProcess.AskForCacheHostkey(Owner!, from)))
+                    if (AvaloniaUi.RunInHostContext(() => ProcessDialogs.AskForCacheHostkey(Owner!, from)))
                     {
                         LoadBranches(from, report);
                     }
                 }
                 else if (authenticationFail)
                 {
-                    if (AvaloniaUi.RunInHostContext(() => FormPuttyError.AskForKey(Owner!, out _)))
+                    if (AvaloniaUi.RunInHostContext(() => TryShowPuttyError(Owner!, out bool retry, out _) && retry))
                     {
                         LoadBranches(from, report);
                     }
@@ -262,5 +261,42 @@ internal static partial class AvaloniaDialogs
             => MessageBoxes.Show(Owner, string.Format(strings.QuestionOpenRepo.Text, dirTo), strings.QuestionOpenRepoCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
 
         public void Dispose() => _branchLoaderSequence.Dispose();
+    }
+
+    // Moved out of FormClone.
+
+    /// <summary>
+    /// Check whether the given string contains one or more valid git URLs and extracts
+    /// the first URL that exists, if any.
+    /// </summary>
+    /// <remarks>
+    /// PathUtil.CanBeGitURL is used as a standard way to detect a git URL.
+    /// The first URL extracted from <paramref name="contents"/> is assigned to
+    /// <paramref name="url"/>. If <paramref name="contents"/> contains more than one URL,
+    /// subsequent URLs are not extracted.
+    /// </remarks>
+    /// <param name="contents">A string to attempt to extract URLs from.</param>
+    /// <param name="url">A <see cref="string"/> that contains the URL, if any, extracted from <paramref name="contents"/>.</param>
+    /// <returns><see langword="true"/> if a URL was extracted; otherwise <see langword="false"/>.</returns>
+    internal static bool TryExtractUrl(string contents, out string url)
+    {
+        url = "";
+
+        if (string.IsNullOrEmpty(contents))
+        {
+            return false;
+        }
+
+        string[] parts = contents.Split(' ');
+        foreach (string s in parts)
+        {
+            if (PathUtil.CanBeGitURL(s))
+            {
+                url = s;
+                break;
+            }
+        }
+
+        return !string.IsNullOrEmpty(url);
     }
 }

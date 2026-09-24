@@ -15,7 +15,7 @@ namespace GitExtensions.Plugins.ReleaseNotesGenerator;
 public sealed class ReleaseNotesGeneratorStrings : ViewStrings
 {
     public ReleaseNotesGeneratorStrings()
-        : base(nameof(ReleaseNotesGeneratorForm))
+        : base("ReleaseNotesGeneratorForm")
     {
         Title = Add("$this", "Text", "Release Notes Generator");
         From = Add("label2", "Text", "Commit expression \"From\" (excluding):");

@@ -111,7 +111,7 @@ internal sealed class CommitInfoHost : ICommitInfoHost
         {
             // having both lightweight & annotated tags in thisRevisionTagNames, but GetAnnotatedTagsInfo will process annotated only:
             List<string> thisRevisionTagNames = [.. revision.Refs.Where(r => r.IsTag).Select(r => r.LocalName)];
-            thisRevisionTagNames.Sort(new GitUI.CommitInfo.CommitInfo.TagsComparer(_tagsOrderDict));
+            thisRevisionTagNames.Sort(new GitUI.CommitInfo.TagsComparer(_tagsOrderDict));
             annotatedTagsInfo = GetAnnotatedTagsInfo(thisRevisionTagNames, annotatedTagsMessages);
         }
 
@@ -121,14 +121,14 @@ internal sealed class CommitInfoHost : ICommitInfoHost
             bool getLocal = AppSettings.CommitInfoShowContainedInBranchesLocal || AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
             bool getRemote = AppSettings.CommitInfoShowContainedInBranchesRemote || AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
             string[] branches = [.. Module.GetAllBranchesWhichContainGivenCommit(revision.ObjectId, getLocal, getRemote, cancellationToken)];
-            Array.Sort(branches, new GitUI.CommitInfo.CommitInfo.BranchComparer(branches, Module.GetSelectedBranch()));
+            Array.Sort(branches, new GitUI.CommitInfo.BranchComparer(branches, Module.GetSelectedBranch()));
             branchInfo = _refsFormatter.FormatBranches(branches, showBranchesAsLinks, limit: !showAll.Contains("branches"));
         }
 
         if (AppSettings.CommitInfoShowContainedInTags)
         {
             string[] tags = [.. Module.GetAllTagsWhichContainGivenCommit(revision.ObjectId, cancellationToken)];
-            Array.Sort(tags, new GitUI.CommitInfo.CommitInfo.TagsComparer(_tagsOrderDict));
+            Array.Sort(tags, new GitUI.CommitInfo.TagsComparer(_tagsOrderDict));
             tagInfo = _refsFormatter.FormatTags(tags, showBranchesAsLinks, limit: !showAll.Contains("tags"));
         }
 

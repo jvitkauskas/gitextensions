@@ -7,7 +7,6 @@ using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
@@ -34,6 +33,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCherryPicks(IWin32Window? owner, IGitUICommands commands, IEnumerable<GitRevision> revisions, out bool repoChanged)
     {
         repoChanged = false;
+
         // Each dialog starts with the options of the previous one, which saves them when accepted.
         foreach (GitRevision revision in revisions)
         {
@@ -69,7 +69,7 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
-    public static bool TryShowResetCurrentBranch(IWin32Window? owner, IGitUICommands commands, GitRevision revision, FormResetCurrentBranch.ResetType resetType, out bool reset)
+    public static bool TryShowResetCurrentBranch(IWin32Window? owner, IGitUICommands commands, GitRevision revision, ResetCurrentBranchType resetType, out bool reset)
     {
         reset = false;
         reset = ShowDialog(
@@ -87,13 +87,14 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormResetCurrentBranch));
+            positionName: "FormResetCurrentBranch");
         return true;
     }
 
     public static bool TryShowResetAnotherBranch(IWin32Window? owner, IGitUICommands commands, GitRevision revision, out bool reset)
     {
         reset = false;
+
         // As FormResetAnotherBranch.InitLocalBranchesWithoutCurrent.
         IGitModule module = commands.Module;
         string currentBranch = module.GetSelectedBranch();
@@ -133,7 +134,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormResetAnotherBranch));
+            positionName: "FormResetAnotherBranch");
         return true;
     }
 
@@ -158,7 +159,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormArchive));
+            positionName: "FormArchive");
         return true;
     }
 
@@ -204,14 +205,8 @@ internal static partial class AvaloniaDialogs
     private static RevisionInfo? ChooseRevision(DialogWindow window, IGitUICommands commands, string? currentGuid, bool withParents = true)
         => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryChooseCommit(new NativeWindowOwner(window), commands, currentGuid, out GitRevision? chosen))
-            {
-                return chosen is null ? null : ToRevisionInfo(commands.Module, chosen, withParents);
-            }
-
-            using FormChooseCommit chooseForm = new(commands, currentGuid);
-            return chooseForm.ShowDialog(new NativeWindowOwner(window)) == DialogResult.OK && chooseForm.SelectedRevision is GitRevision selected
-                ? ToRevisionInfo(commands.Module, selected, withParents)
+            return TryChooseCommit(new NativeWindowOwner(window), commands, currentGuid, out GitRevision? chosen) && chosen is not null
+                ? ToRevisionInfo(commands.Module, chosen, withParents)
                 : null;
         });
 
@@ -238,7 +233,7 @@ internal static partial class AvaloniaDialogs
 
             // Don't verify whether the command is successful.
             // If it fails, likely there is a conflict that needs to be resolved.
-            FormProcess.ShowDialog(owner, commands, command, commands.Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(owner, commands, command, commands.Module.WorkingDir, input: null, useDialogSettings: true);
             MergeConflictHandler.HandleMergeConflicts(commands, owner, autoCommit);
         });
 
@@ -263,7 +258,7 @@ internal static partial class AvaloniaDialogs
 
             // Don't verify whether the command is successful.
             // If it fails, likely there is a conflict that needs to be resolved.
-            FormProcess.ShowDialog(windowOwner, commands, command, module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(windowOwner, commands, command, module.WorkingDir, input: null, useDialogSettings: true);
 
             if (!string.IsNullOrWhiteSpace(existingCommitMessage))
             {
@@ -306,7 +301,7 @@ internal static partial class AvaloniaDialogs
                 _ => ResetMode.Hard,
             };
             ObjectId currentCheckout = module.GetCurrentCheckout();
-            bool success = FormProcess.ShowDialog(owner, commands, Commands.Reset(mode, revision.Guid, quiet: false), module.WorkingDir, input: null, useDialogSettings: true);
+            bool success = ProcessDialogs.ShowProcess(owner, commands, Commands.Reset(mode, revision.Guid, quiet: false), module.WorkingDir, input: null, useDialogSettings: true);
             if (mode == ResetMode.Hard && success && currentCheckout != revision.ObjectId)
             {
                 commands.UpdateSubmodules(owner);
@@ -344,7 +339,7 @@ internal static partial class AvaloniaDialogs
             NativeWindowOwner owner = new(window);
             IGitRef gitRef = localRefs.First(r => r.Name == branch);
             ArgumentString command = Commands.UpdateRef(gitRef.CompleteName, revision.ObjectId);
-            if (!FormProcess.ShowDialog(owner, commands, command, commands.Module.WorkingDir, input: null, useDialogSettings: true))
+            if (!ProcessDialogs.ShowProcess(owner, commands, command, commands.Module.WorkingDir, input: null, useDialogSettings: true))
             {
                 return false;
             }
@@ -374,7 +369,7 @@ internal static partial class AvaloniaDialogs
         {
             // As FormArchive.Save_Click.
             string arguments = string.Format(@"archive --format=""{0}"" {1} --output ""{2}"" {3}", format, revisionGuid, outputPath, pathArguments);
-            FormProcess.ShowDialog(new NativeWindowOwner(window), commands, arguments, commands.Module.WorkingDir, input: null, useDialogSettings: true);
+            ProcessDialogs.ShowProcess(new NativeWindowOwner(window), commands, arguments, commands.Module.WorkingDir, input: null, useDialogSettings: true);
         });
     }
 }

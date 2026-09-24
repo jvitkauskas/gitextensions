@@ -25,7 +25,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormViewPatch));
+            positionName: "FormViewPatch");
         return true;
     }
 

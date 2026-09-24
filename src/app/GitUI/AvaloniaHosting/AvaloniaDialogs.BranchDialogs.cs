@@ -9,7 +9,6 @@ using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Infrastructure;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.HelperDialogs;
@@ -130,7 +129,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormMergeBranch));
+            positionName: "FormMergeBranch");
         return true;
     }
 
@@ -178,7 +177,7 @@ internal static partial class AvaloniaDialogs
             NativeWindowOwner owner = new(window);
             IGitRef[] selectedBranches = [.. ToRefs(branches)];
             string currentWorkingDir = Path.GetFullPath(Module.WorkingDir).TrimEnd(Path.DirectorySeparatorChar);
-            FormDeleteBranch.WorktreeBranchClassification classification = FormDeleteBranch.ClassifyWorktreeBranches(selectedBranches, worktrees, currentWorkingDir);
+            WorktreeBranchClassification classification = ClassifyWorktreeBranches(selectedBranches, worktrees, currentWorkingDir);
             if (!classification.HasDeletedWorktrees
                 && classification.MainWorktreeBranches.Count == 0
                 && classification.LinkedWorktreeBranches.Count == 0)
@@ -381,7 +380,7 @@ internal static partial class AvaloniaDialogs
                 mergeMessagePath,
                 Module.GetPathForGitExecution,
                 request.LogMessages);
-            bool success = FormProcess.ShowDialog(windowOwner, commands, command, Module.WorkingDir, input: null, useDialogSettings: true, out string commandOutput);
+            bool success = ProcessDialogs.ShowProcess(windowOwner, commands, command, Module.WorkingDir, input: null, useDialogSettings: true, out string commandOutput);
 
             bool wasConflict = MergeConflictHandler.HandleMergeConflicts(commands, windowOwner, !request.NoCommit)
                 || Module.CanContinueAction(commandOutput);
@@ -395,4 +394,70 @@ internal static partial class AvaloniaDialogs
             return true;
         });
     }
+
+    // Moved out of FormDeleteBranch.
+
+    /// <summary>
+    ///  Classifies selected branches by how they relate to worktrees: in the main worktree,
+    ///  in a linked worktree, or in a deleted (stale) worktree. Branches in the current
+    ///  working directory's worktree are excluded (handled separately as "current branch").
+    /// </summary>
+    internal static WorktreeBranchClassification ClassifyWorktreeBranches(
+        IReadOnlyList<IGitRef> selectedBranches,
+        IReadOnlyList<GitWorktree> worktrees,
+        string currentWorkingDir)
+    {
+        bool hasDeletedWorktrees = false;
+        List<(IGitRef Branch, GitWorktree Worktree)> mainWorktreeBranches = [];
+        List<(IGitRef Branch, GitWorktree Worktree)> linkedWorktreeBranches = [];
+
+        for (int i = 0; i < worktrees.Count; i++)
+        {
+            GitWorktree worktree = worktrees[i];
+            if (worktree.Branch is null)
+            {
+                continue;
+            }
+
+            if (worktree.IsDeleted)
+            {
+                if (selectedBranches.Any(b => b.Name == worktree.Branch))
+                {
+                    hasDeletedWorktrees = true;
+                }
+
+                continue;
+            }
+
+            string worktreeDir = Path.GetFullPath(worktree.Path).TrimEnd(Path.DirectorySeparatorChar);
+            if (string.Equals(worktreeDir, currentWorkingDir, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            foreach (IGitRef branch in selectedBranches)
+            {
+                if (branch.Name == worktree.Branch)
+                {
+                    if (i == 0)
+                    {
+                        mainWorktreeBranches.Add((branch, worktree));
+                    }
+                    else
+                    {
+                        linkedWorktreeBranches.Add((branch, worktree));
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return new(hasDeletedWorktrees, mainWorktreeBranches, linkedWorktreeBranches);
+    }
+
+    internal readonly record struct WorktreeBranchClassification(
+        bool HasDeletedWorktrees,
+        IReadOnlyList<(IGitRef Branch, GitWorktree Worktree)> MainWorktreeBranches,
+        IReadOnlyList<(IGitRef Branch, GitWorktree Worktree)> LinkedWorktreeBranches);
 }

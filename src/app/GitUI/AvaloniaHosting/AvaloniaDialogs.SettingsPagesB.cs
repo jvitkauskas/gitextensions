@@ -87,11 +87,7 @@ internal static partial class AvaloniaDialogs
 
         public void ShowFixHome() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (!TryShowFixHome(Owner))
-            {
-                using FormFixHome form = new();
-                form.ShowDialog(Owner);
-            }
+            TryShowFixHome(Owner);
         });
 
         public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
@@ -106,13 +102,7 @@ internal static partial class AvaloniaDialogs
 
         public bool ShowAvailableEncodings() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowAvailableEncodings(Owner, out bool accepted))
-            {
-                return accepted;
-            }
-
-            using FormAvailableEncodings form = new();
-            return form.ShowDialog(Owner) == DialogResult.OK;
+            return TryShowAvailableEncodings(Owner, out bool accepted) && accepted;
         });
 
         // SshSettingsPage
@@ -193,7 +183,7 @@ internal static partial class AvaloniaDialogs
         /// </summary>
         public BuildServerPluginSettings? CreatePluginSettings(string buildServerType)
         {
-            if (string.IsNullOrEmpty(Module.WorkingDir) || BuildServerSettingsProviderControl.FindProvider(buildServerType) is not { } provider)
+            if (string.IsNullOrEmpty(Module.WorkingDir) || GitUI.BuildServerIntegration.BuildServerSettingsProviders.FindProvider(buildServerType) is not { } provider)
             {
                 return null;
             }

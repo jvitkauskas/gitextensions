@@ -1,7 +1,7 @@
 namespace GitUI.Presentation.CommandsDialogs.CommitDialog;
 
 /// <summary>
-///  The hotkey commands of the commit dialog, with the codes of <c>FormCommit.Command</c> (the hotkeys are loaded from
+///  The hotkey commands of the commit dialog, with the codes of <c>HotkeyCommands.Commit</c> (the hotkeys are loaded from
 ///  the "Commit" hotkey settings).
 /// </summary>
 public enum CommitHotkeyCommand

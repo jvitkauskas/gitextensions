@@ -9,7 +9,7 @@ using GitUI.Avalonia.CommandsDialogs.CommitDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.CommitDialog;
-using GitUI.HelperDialogs;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
@@ -57,12 +57,12 @@ internal static partial class AvaloniaDialogs
                 });
                 commands.PostRepositoryChanged += onRepositoryChanged;
                 window.Closed += (_, _) => commands.PostRepositoryChanged -= onRepositoryChanged;
-                window.Hotkeys = LoadHotkeys(commands, FormCommit.HotkeySettingsName);
+                window.Hotkeys = LoadHotkeys(commands, HotkeyCommands.CommitSettingsName);
                 window.DataContext = viewModel;
                 return window;
             },
             owner,
-            positionName: nameof(FormCommit));
+            positionName: "FormCommit");
         return true;
     }
 
@@ -216,7 +216,7 @@ internal static partial class AvaloniaDialogs
             bool wereErrors = !Module.StageFiles(files, out string output);
             if (wereErrors && AppSettings.ShowErrorsWhenStagingFiles)
             {
-                AvaloniaUi.RunInHostContext(() => FormStatus.ShowErrorDialog(Owner, _commands, _strings.StageDetails.Text, string.Format(_strings.StageFiles.Text + "\n", files.Count), output));
+                AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowErrorDialog(Owner, _commands, _strings.StageDetails.Text, string.Format(_strings.StageFiles.Text + "\n", files.Count), output));
             }
 
             return !wereErrors;
@@ -297,11 +297,7 @@ internal static partial class AvaloniaDialogs
 
         public void EditCommitTemplateSettings() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (!TryShowCommitTemplateSettings(Owner))
-            {
-                using FormCommitTemplateSettings form = new(_commands);
-                form.ShowDialog(Owner);
-            }
+            TryShowCommitTemplateSettings(Owner);
         });
 
         public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
@@ -412,7 +408,7 @@ internal static partial class AvaloniaDialogs
                 request.GpgKeyId,
                 request.AllowEmpty,
                 request.ResetAuthor);
-            bool success = FormProcess.ShowDialog(Owner, _commands, arguments: commitCmd, Module.WorkingDir, input: null, useDialogSettings: true);
+            bool success = ProcessDialogs.ShowProcess(Owner, _commands, arguments: commitCmd, Module.WorkingDir, input: null, useDialogSettings: true);
             _commands.RepoChangedNotifier.Notify();
             if (!success)
             {
@@ -455,7 +451,7 @@ internal static partial class AvaloniaDialogs
         public bool CreateBranch() => AvaloniaUi.RunInHostContext(() => _commands.StartCreateBranchDialog(Owner));
 
         public void EditCommitterSettings()
-            => AvaloniaUi.RunInHostContext(() => _commands.StartSettingsDialog(Owner, CommandsDialogs.SettingsDialog.Pages.GitConfigSettingsPage.GetPageReference()));
+            => AvaloniaUi.RunInHostContext(() => _commands.StartSettingsDialog(Owner, new CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("GitConfigSettingsPage")));
 
         public void NotifyRepositoryChanged()
         {

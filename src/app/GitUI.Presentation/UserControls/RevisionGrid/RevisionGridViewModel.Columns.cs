@@ -5,7 +5,7 @@ using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.UserControls.RevisionGrid;
 
-/// <summary>The commands of the "RevisionGrid" hotkeys; the codes are the ones of <c>RevisionGridControl.Command</c>.</summary>
+/// <summary>The commands of the "RevisionGrid" hotkeys; the codes are the ones of <c>HotkeyCommands.RevisionGrid</c>.</summary>
 public enum RevisionGridCommand
 {
     ToggleRevisionGraph = 0,

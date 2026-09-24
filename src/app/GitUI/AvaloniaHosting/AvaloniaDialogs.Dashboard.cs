@@ -150,13 +150,7 @@ internal static partial class AvaloniaDialogs
         // As UserRepositoriesList.PromptCategoryName.
         public string? PromptCategoryName(IReadOnlyList<string> existingCategories, string? originalName) => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowDashboardCategoryTitle(Owner, existingCategories, originalName, out string? name))
-            {
-                return name;
-            }
-
-            using FormDashboardCategoryTitle dialog = new(existingCategories, originalName);
-            return dialog.ShowDialog(Owner) == DialogResult.OK ? dialog.Category : null;
+            return TryShowDashboardCategoryTitle(Owner, existingCategories, originalName, out string? name) ? name : null;
         });
 
         public bool Confirm(string question, string caption) => AvaloniaUi.RunInHostContext(()
@@ -167,13 +161,7 @@ internal static partial class AvaloniaDialogs
 
         public bool ShowRecentReposSettings() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowRecentReposSettings(Owner, out bool saved))
-            {
-                return saved;
-            }
-
-            using FormRecentReposSettings form = new();
-            return form.ShowDialog(Owner) == DialogResult.OK;
+            return TryShowRecentReposSettings(Owner, out bool saved) && saved;
         });
 
         public void Run(DashboardLink link) => AvaloniaUi.RunInHostContext(() =>
@@ -184,7 +172,7 @@ internal static partial class AvaloniaDialogs
                     commands.StartInitializeDialog(Owner, commands.Module.WorkingDir, OnGitModuleChanged);
                     break;
                 case DashboardLink.OpenRepository:
-                    if (FormOpenDirectory.OpenModule(Owner, commands.GetRequiredService<IGitExecutorProvider>(), currentModule: null) is { } module)
+                    if (TryShowOpenDirectory(Owner, commands.GetRequiredService<IGitExecutorProvider>(), currentModule: null, out IGitModule? module) && module is not null)
                     {
                         session.SetGitModule(module);
                     }
@@ -197,7 +185,7 @@ internal static partial class AvaloniaDialogs
                     OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions");
                     break;
                 case DashboardLink.Donate:
-                    OsShellUtil.OpenUrlInDefaultBrowser(FormDonate.DonationUrl);
+                    OsShellUtil.OpenUrlInDefaultBrowser(DonationUrl);
                     break;
                 case DashboardLink.Translate:
                     OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/wiki/Translations");

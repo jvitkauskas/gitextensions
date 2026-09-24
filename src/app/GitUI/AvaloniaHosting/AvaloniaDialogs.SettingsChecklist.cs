@@ -139,11 +139,7 @@ internal static partial class AvaloniaDialogs
                     // As translationConfig_Click: the chosen translation is set in the settings.
                     AvaloniaUi.RunInHostContext(() =>
                     {
-                        if (!TryShowChooseTranslation(owner()))
-                        {
-                            using FormChooseTranslation form = new();
-                            form.ShowDialog(owner());
-                        }
+                        TryShowChooseTranslation(owner());
                     });
                     actions.LoadAll();
                     actions.SaveAndRescan();

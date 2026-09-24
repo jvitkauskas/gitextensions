@@ -144,7 +144,7 @@ internal static partial class AvaloniaDialogs
 
         // Diff viewer
 
-        public void SaveCurrentViewSettingsAsDefault() => RevisionGridMenuCommands.SaveCurrentViewSettingsAsDefault();
+        public void SaveCurrentViewSettingsAsDefault() => AvaloniaDialogs.SaveCurrentViewSettingsAsDefault();
 
         // Browse repository window
 
@@ -153,8 +153,8 @@ internal static partial class AvaloniaDialogs
 
         public string FocusOutputHistoryHotkey
             => commands.GetRequiredService<IHotkeySettingsManager>()
-                .LoadHotkeys(FormBrowse.HotkeySettingsName)
-                .GetShortcutDisplay(FormBrowse.Command.FocusOutputHistoryAndToggleIfPanel);
+                .LoadHotkeys(HotkeyCommands.BrowseSettingsName)
+                .GetShortcutDisplay(HotkeyCommands.Browse.FocusOutputHistoryAndToggleIfPanel);
 
         public void ShowShellNotFound() => AvaloniaUi.RunInHostContext(() => MessageBoxes.ShellNotFound(Owner));
 

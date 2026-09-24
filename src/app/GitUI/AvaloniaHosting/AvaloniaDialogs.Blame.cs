@@ -7,7 +7,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
@@ -44,7 +43,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormBlame));
+            positionName: "FormBlame");
         return true;
     }
 
@@ -87,16 +86,7 @@ internal static partial class AvaloniaDialogs
         public int GetOriginalLineInPreviousCommit(GitRevision revision, string fileName, int line)
             => new GitBlameParser(() => Module).GetOriginalLineInPreviousCommit(revision, fileName, line);
 
-        public void ShowCommitDiff(ObjectId objectId) => AvaloniaUi.RunInHostContext(() =>
-        {
-            if (TryShowCommitDiff(Owner, commands, objectId))
-            {
-                return;
-            }
-
-            using FormCommitDiff form = new(commands, objectId);
-            form.ShowDialog(Owner);
-        });
+        public void ShowCommitDiff(ObjectId objectId) => AvaloniaUi.RunInHostContext(() => TryShowCommitDiff(Owner, commands, objectId));
 
         public void ShowRevisionFiltered(ObjectId objectId) => AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(Owner, objectId));
 

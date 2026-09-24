@@ -8,7 +8,7 @@ using GitExtUtils;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.BrowseDialog;
-using GitUI.HelperDialogs;
+using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUI.ScriptsEngine;
@@ -44,7 +44,7 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
     {
         FileStatusItem[] selectedItems = ToItems(selected);
         IFullPathResolver fullPathResolver = FullPathResolver;
-        ContextMenuSelectionInfo selectionInfo = FileStatusList.GetSelectionInfo(selectedItems, selectedFolder, isBareRepository: Module.IsBareRepository(), supportLinePatching, fullPathResolver);
+        ContextMenuSelectionInfo selectionInfo = FileStatusListSelection.GetSelectionInfo(selectedItems, selectedFolder, isBareRepository: Module.IsBareRepository(), supportLinePatching, fullPathResolver);
         RevisionDiffController controller = RevisionDiffController;
         ContextMenuDiffToolInfo diffToolInfo = GetContextMenuDiffToolInfo(selectedItems, fullPathResolver);
 
@@ -52,8 +52,8 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         ObjectId selectedId = selectedItems.SecondIds().FirstOrDefault();
         ObjectId parentId = selectedItems.FirstIds().FirstOrDefault();
         bool canReset = controller.ShouldShowResetFileMenus(selectionInfo);
-        bool canResetToSecond = canReset && FileStatusList.CanResetToSecond(selectedId);
-        bool canResetToFirst = canReset && FileStatusList.CanResetToFirst(parentId, selectedItems);
+        bool canResetToSecond = canReset && FileStatusListSelection.CanResetToSecond(selectedId);
+        bool canResetToFirst = canReset && FileStatusListSelection.CanResetToFirst(parentId, selectedItems);
 
         bool canOpenFile = selectionInfo.SelectedGitItemCount == 1 && selectionInfo.AllFilesExist;
 
@@ -307,16 +307,16 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
             : $"{_strings.SelectedRevision.Text}{DescribeRevisions([.. items.SecondRevs()])}";
         string confirmationMessage = string.Format(_strings.ResetSelectedChanges.Text, revDescription);
 
-        FormResetChanges.ActionEnum resetType = FormResetChanges.ShowResetDialog(Owner, hasExistingFiles, hasNewFiles, confirmationMessage);
-        if (resetType == FormResetChanges.ActionEnum.Cancel)
+        ResetChangesAction resetType = AvaloniaHosting.AvaloniaDialogs.ShowResetChanges(Owner, hasExistingFiles, hasNewFiles, confirmationMessage);
+        if (resetType == ResetChangesAction.Cancel)
         {
             return false;
         }
 
-        bool resetAndDelete = resetType == FormResetChanges.ActionEnum.ResetAndDelete;
+        bool resetAndDelete = resetType == ResetChangesAction.ResetAndDelete;
         foreach (ObjectId id in toParent ? items.FirstIds() : items.SecondIds())
         {
-            if (toParent ? !FileStatusList.CanResetToFirst(id, items) : !FileStatusList.CanResetToSecond(id))
+            if (toParent ? !FileStatusListSelection.CanResetToFirst(id, items) : !FileStatusListSelection.CanResetToSecond(id))
             {
                 // Cannot reset to artificial commit, may be included in multi selections
                 continue;
@@ -507,19 +507,17 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         return refresh;
     });
 
-    /// <summary>As <c>FindFile_Click</c>, with the WinForms search window.</summary>
-    public GitItemStatus? FindFile(IReadOnlyList<GitItemStatus> candidates) => AvaloniaUi.RunInHostContext(() =>
+    /// <summary>As <c>FindFile_Click</c>.</summary>
+    public GitItemStatus? FindFile(IReadOnlyList<GitItemStatus> candidates)
     {
         IFindFilePredicateProvider findFilePredicateProvider = new FindFilePredicateProvider();
         string workingDir = Module.WorkingDir;
-        using SearchWindow<GitItemStatus> searchWindow = new(name =>
+        return AvaloniaDialogs.ShowSearch(Owner, name =>
         {
             Func<string?, bool> predicate = findFilePredicateProvider.Get(name, workingDir);
             return candidates.Where(item => predicate(item.Name) || predicate(item.OldName));
         });
-        searchWindow.ShowDialog(Owner);
-        return searchWindow.SelectedItem;
-    });
+    }
 
     /// <summary>As <c>AddFileToIgnoreFile</c>.</summary>
     public bool AddToIgnoreFile(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, bool localExclude)
@@ -561,19 +559,19 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         switch (action)
         {
             case SubmoduleMenuAction.Update:
-                FormProcess.ShowDialog(Owner, commands, arguments: Commands.SubmoduleUpdate(submodules), Module.WorkingDir, input: null, useDialogSettings: true);
+                ProcessDialogs.ShowProcess(Owner, commands, arguments: Commands.SubmoduleUpdate(submodules), Module.WorkingDir, input: null, useDialogSettings: true);
                 break;
             case SubmoduleMenuAction.Reset:
                 // Show a form asking the user if they want to reset the changes.
-                FormResetChanges.ActionEnum resetType = FormResetChanges.ShowResetDialog(Owner, true, true);
-                if (resetType == FormResetChanges.ActionEnum.Cancel)
+                ResetChangesAction resetType = AvaloniaHosting.AvaloniaDialogs.ShowResetChanges(Owner, true, true);
+                if (resetType == ResetChangesAction.Cancel)
                 {
                     return false;
                 }
 
                 foreach (string name in submodules)
                 {
-                    Module.GetSubmodule(name).ResetAllChanges(clean: resetType == FormResetChanges.ActionEnum.ResetAndDelete);
+                    Module.GetSubmodule(name).ResetAllChanges(clean: resetType == ResetChangesAction.ResetAndDelete);
                 }
 
                 break;

@@ -7,9 +7,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.CommandsDialogs.SubmodulesDialog;
-using GitUI.CommandsDialogs.WorktreeDialog;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using Microsoft.VisualStudio.Threading;
@@ -133,18 +130,14 @@ internal static partial class AvaloniaDialogs
 
         public void Add() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (!TryShowAddSubmodule(Owner, commands))
-            {
-                using FormAddSubmodule form = new(commands);
-                form.ShowDialog(Owner);
-            }
+            TryShowAddSubmodule(Owner, commands);
         });
 
         public void Synchronize(string localPath) => AvaloniaUi.RunInHostContext(()
-            => FormProcess.ShowDialog(Owner, commands, arguments: Commands.SubmoduleSync(localPath), Module.WorkingDir, input: null, useDialogSettings: true));
+            => ProcessDialogs.ShowProcess(Owner, commands, arguments: Commands.SubmoduleSync(localPath), Module.WorkingDir, input: null, useDialogSettings: true));
 
         public void Update(string localPath) => AvaloniaUi.RunInHostContext(()
-            => FormProcess.ShowDialog(Owner, commands, arguments: Commands.SubmoduleUpdate(localPath), Module.WorkingDir, input: null, useDialogSettings: true));
+            => ProcessDialogs.ShowProcess(Owner, commands, arguments: Commands.SubmoduleUpdate(localPath), Module.WorkingDir, input: null, useDialogSettings: true));
 
         public void Remove(string name, string localPath) => AvaloniaUi.RunInHostContext(() =>
         {

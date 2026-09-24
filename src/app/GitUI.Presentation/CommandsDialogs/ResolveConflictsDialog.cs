@@ -297,7 +297,7 @@ public sealed class ResolveConflictsStrings : ViewStrings
     public TranslatedText HelpTooltip { get; }
 }
 
-/// <summary>The hotkey commands of the merge conflicts dialog (<c>FormResolveConflicts.Commands</c>).</summary>
+/// <summary>The hotkey commands of the merge conflicts dialog (<c>HotkeyCommands.ResolveConflicts</c>).</summary>
 public enum ResolveConflictsHotkeyCommand
 {
     Merge = 0,

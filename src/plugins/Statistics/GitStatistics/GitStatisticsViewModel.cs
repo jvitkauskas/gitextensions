@@ -11,7 +11,7 @@ namespace GitExtensions.Plugins.GitStatistics;
 public sealed class GitStatisticsStrings : ViewStrings
 {
     public GitStatisticsStrings()
-        : base(nameof(FormGitStatistics))
+        : base("FormGitStatistics")
     {
         Title = Add("$this", "Text", "Statistics");
         CommitsPerContributorTab = Add("tabPage2", "Text", "Commits per contributor");

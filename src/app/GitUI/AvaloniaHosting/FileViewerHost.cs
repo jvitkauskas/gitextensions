@@ -13,6 +13,7 @@ using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.Editor;
 using GitUI.Editor.Diff;
+using GitUI.Hotkey;
 using GitUI.Presentation.Editor;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
@@ -55,7 +56,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         get
         {
             IGitModule module = Module;
-            return _difftasticCmdCache.GetOrAdd(module.WorkingDir, _ => new Lazy<bool>(() => FileViewer.IsDifftasticConfigured(module))).Value;
+            return _difftasticCmdCache.GetOrAdd(module.WorkingDir, _ => new Lazy<bool>(() => FileViewerArguments.IsDifftasticConfigured(module))).Value;
         }
     }
 
@@ -76,7 +77,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             isTracked: entry.Item.IsTracked);
     }
 
-    public IReadOnlyList<HotkeyBinding> Hotkeys => field ??= [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(FileViewer.HotkeySettingsName)
+    public IReadOnlyList<HotkeyBinding> Hotkeys => field ??= [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(HotkeyCommands.FileViewerSettingsName)
         .Select(hotkey => new HotkeyBinding(hotkey.CommandCode, (int)hotkey.KeyData))];
 
     public void CopyToClipboard(string text, bool adjustLineEndings)
@@ -209,7 +210,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
 
     /// <summary>As <c>settingsButton_Click</c>.</summary>
     public void OpenSettings()
-        => AvaloniaUi.RunInHostContext(() => commands.StartSettingsDialog(owner: null, CommandsDialogs.SettingsDialog.Pages.DiffViewerSettingsPage.GetPageReference()));
+        => AvaloniaUi.RunInHostContext(() => commands.StartSettingsDialog(owner: null, new CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("DiffViewerSettingsPage")));
 
     public async Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, FileViewRequest request, CancellationToken cancellationToken)
     {
@@ -290,7 +291,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             }
 
             // Try set highlighting from first found filename
-            Match match = GitUIExtensions.FileNameRegex.Match(result.StandardOutput);
+            Match match = FileViewerArguments.FileNameRegex.Match(result.StandardOutput);
             string fileName = match.Groups["file"].Success ? match.Groups["file"].Value : item.Name;
             return new FileViewContent(FileViewKind.Diff, result.StandardOutput, fileName, HasGitColors: true, DiffMode: DiffViewMode.RangeDiff);
         }
@@ -301,7 +302,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetGrepFileAsync(
                 secondId,
                 item.Name,
-                FileViewer.GetExtraGrepArguments(AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, request.TreatAllFilesAsText),
+                FileViewerArguments.GetExtraGrepArguments(AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, request.TreatAllFilesAsText),
                 item.GrepString,
                 useGitColoring: true,
                 showFunctionName: true,
@@ -357,7 +358,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             // As the width of the viewer in pixels.
             int viewerWidth = (int)Math.Round(request.ViewerWidth * DpiUtil.ScaleX);
             FileViewerSettings settings = Settings;
-            (ArgumentString diffArgs, string extraCacheKey) = FileViewer.GetDifftasticArguments(settings.IgnoreWhitespace, settings.ShowSyntaxHighlighting, settings.ShowEntireFile,
+            (ArgumentString diffArgs, string extraCacheKey) = FileViewerArguments.GetDifftasticArguments(settings.IgnoreWhitespace, settings.ShowSyntaxHighlighting, settings.ShowEntireFile,
                 settings.NumberOfContextLines, request.TreatAllFilesAsText, viewerWidth, out int width);
             ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetSingleDifftoolAsync(firstId, secondId, item.Name, item.OldName,
                 diffArgs,
@@ -429,7 +430,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
 
     /// <summary>As <c>FileViewer.GetExtraDiffArguments</c> with the settings of the viewer.</summary>
     private static ArgumentString GetExtraDiffArguments(FileViewRequest request, bool isRangeDiff = false, bool isCombinedDiff = false)
-        => FileViewer.GetExtraDiffArguments(AppSettings.IgnoreWhitespaceKind.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, request.TreatAllFilesAsText,
+        => FileViewerArguments.GetExtraDiffArguments(AppSettings.IgnoreWhitespaceKind.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, request.TreatAllFilesAsText,
             AppSettings.DiffDisplayAppearance.Value, isRangeDiff, isCombinedDiff);
 
     /// <summary>As <c>FileViewer.ViewGitItemAsync</c>: the blob of the revision, or the file of the working directory.</summary>

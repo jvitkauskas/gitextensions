@@ -8,9 +8,6 @@ using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.BrowseDialog;
-using GitUI.CommandsDialogs.SubmodulesDialog;
-using GitUI.CommandsDialogs.WorktreeDialog;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using ResourceManager;
@@ -33,15 +30,15 @@ internal static partial class AvaloniaDialogs
                 window.DataContext = new AddSubmoduleViewModel(
                     ViewStrings.Load<AddSubmoduleStrings>(),
                     [.. history.Select(r => r.Path)],
-                    url => [.. FormAddSubmodule.LoadRemoteRepoBranches(commands.Module.GitExecutable, url)],
-                    arguments => AvaloniaUi.RunInHostContext(() => FormProcess.ShowDialog(
+                    url => [.. LoadRemoteRepoBranches(commands.Module.GitExecutable, url)],
+                    arguments => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowProcess(
                         new NativeWindowOwner(window), commands, arguments, commands.Module.WorkingDir, input: null, useDialogSettings: true)),
                     new MessageBoxService(window),
                     new AvaloniaFileDialogService(window));
                 return window;
             },
             owner,
-            positionName: nameof(FormAddSubmodule));
+            positionName: "FormAddSubmodule");
         return true;
     }
 
@@ -57,14 +54,14 @@ internal static partial class AvaloniaDialogs
                     module.WorkingDir,
                     module.WorkingDirGitDir,
                     path,
-                    arguments => AvaloniaUi.RunInHostContext(() => FormProcess.ReadDialog(
+                    arguments => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ReadProcess(
                         new NativeWindowOwner(window), commands, arguments, module.WorkingDir, input: null, useDialogSettings: true)),
                     new MessageBoxService(window),
                     new AvaloniaFileDialogService(window));
                 return window;
             },
             owner,
-            positionName: nameof(FormCleanupRepository));
+            positionName: "FormCleanupRepository");
         return true;
     }
 
@@ -88,7 +85,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormMergeSubmodule));
+            positionName: "FormMergeSubmodule");
         return true;
 
         static string? ToText(ObjectId? id) => id is { IsZero: false } value ? value.ToString() : null;
@@ -117,7 +114,7 @@ internal static partial class AvaloniaDialogs
                         string relativePath = Path.GetRelativePath(module.WorkingDir, directory).ToPosixPath().Quote();
                         return commands.StartGitCommandProcessDialog(
                             new NativeWindowOwner(window),
-                            FormCreateWorktree.CreateWorktreeCommand(module, relativePath, branchOption));
+                            CreateWorktreeCommand(module, relativePath, branchOption));
                     }),
                     new AvaloniaFileDialogService(window));
                 window.DataContext = viewModel;
@@ -133,7 +130,7 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
-    /// <summary>The Avalonia port of <see cref="FormOpenDirectory.OpenModule"/>.</summary>
+    /// <summary>The Avalonia port of <c>FormOpenDirectory.OpenModule</c>.</summary>
     public static bool TryShowOpenDirectory(IWin32Window? owner, IGitExecutorProvider executorProvider, IGitModule? currentModule, out IGitModule? module)
     {
         module = null;
@@ -156,7 +153,7 @@ internal static partial class AvaloniaDialogs
                     TranslatedStrings.Error,
                     path =>
                     {
-                        chosenModule = FormOpenDirectory.OpenGitRepository(executorProvider, path, RepositoryHistoryManager.Locals);
+                        chosenModule = OpenGitRepository(executorProvider, path, RepositoryHistoryManager.Locals);
                         return chosenModule is not null;
                     },
                     new MessageBoxService(window),
@@ -191,7 +188,7 @@ internal static partial class AvaloniaDialogs
             }
 
             string text = string.Format(strings.StageFilename.Text, filename);
-            AvaloniaUi.RunInHostContext(() => FormStatus.ShowErrorDialog(new NativeWindowOwner(window), commands, text, text, output));
+            AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowErrorDialog(new NativeWindowOwner(window), commands, text, text, output));
         }
 
         public void OpenSubmodule() => AvaloniaUi.RunInHostContext(() => GitUICommands.LaunchBrowse(workingDir: Module.GetSubmoduleFullPath(filename)));
@@ -201,5 +198,85 @@ internal static partial class AvaloniaDialogs
             IGitUICommands submoduleCommands = commands.WithWorkingDirectory(Module.GetSubmoduleFullPath(filename));
             return submoduleCommands.StartCheckoutBranch(new NativeWindowOwner(window), [ObjectId.Parse(localCommit), ObjectId.Parse(remoteCommit)]);
         });
+    }
+
+    // Moved out of FormAddSubmodule.
+
+    /// <summary>
+    /// Returns the branches of a remote repository as strings; ignores git errors and warnings.
+    /// </summary>
+    /// 'git ls-remotes --heads "URL"' is completely independent from a local repo clone.
+    /// Hence there is no need for a GitModule.
+    /// <param name="gitExecutable">the git executable.</param>
+    /// <param name="url">the repo URL; can also be a local path.</param>
+    internal static IEnumerable<string> LoadRemoteRepoBranches(IExecutable gitExecutable, string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return [];
+        }
+
+        GitArgumentBuilder gitArguments = new("ls-remote") { "--heads", url.ToPosixPath().Quote() };
+        string heads = gitExecutable.GetOutput(gitArguments);
+        return heads.LazySplit('\n', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(head =>
+                    {
+                        int branchIndex = head.IndexOf(GitRefName.RefsHeadsPrefix);
+                        return branchIndex == -1 ? null : head[(branchIndex + GitRefName.RefsHeadsPrefix.Length)..];
+                    })
+                    .WhereNotNull()
+                    .ToList();
+    }
+
+    // Moved out of FormCreateWorktree.
+    internal static GitArgumentBuilder CreateWorktreeCommand(IGitModule module, string relativePath, string newBranchOption)
+    {
+        // https://git-scm.com/docs/git-worktree
+
+        // Get the default value, set if unset in config.
+        // Similar in DiffHighlightService.
+        const string command = "worktree";
+        GitCommandConfiguration commandConfiguration = new();
+        IReadOnlyList<GitConfigItem> items = GitCommandConfiguration.Default.Get(command);
+        foreach (GitConfigItem cfg in items)
+        {
+            commandConfiguration.Add(cfg, command);
+        }
+
+        SetIfUnsetInGit("worktree.useRelativePaths", "true");
+        GitArgumentBuilder args = new(command, commandConfiguration)
+        {
+            "add",
+            relativePath,
+            newBranchOption,
+        };
+
+        return args;
+
+        void SetIfUnsetInGit(string key, string value)
+        {
+            if (string.IsNullOrEmpty(module.GetEffectiveSetting(key)))
+            {
+                commandConfiguration.Add(new GitConfigItem(key, value), command);
+            }
+        }
+    }
+
+    // Moved out of FormOpenDirectory.
+    internal static IGitModule? OpenGitRepository(IGitExecutorProvider executorProvider, string path, ILocalRepositoryManager localRepositoryManager)
+    {
+        if (!Directory.Exists(path))
+        {
+            return null;
+        }
+
+        GitModule chosenModule = new(executorProvider, path.EnsureTrailingPathSeparator());
+        if (!chosenModule.IsValidGitWorkingDir())
+        {
+            return null;
+        }
+
+        ThreadHelper.JoinableTaskFactory.Run(() => localRepositoryManager.AddAsMostRecentAsync(chosenModule.WorkingDir));
+        return chosenModule;
     }
 }

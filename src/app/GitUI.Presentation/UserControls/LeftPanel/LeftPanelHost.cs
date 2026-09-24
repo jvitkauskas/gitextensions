@@ -17,7 +17,7 @@ public enum LeftPanelTreeKind
     Stashes,
 }
 
-/// <summary>The hotkeys of the left panel; the codes match <c>RepoObjectsTree.Command</c> (settings name "LeftPanel").</summary>
+/// <summary>The hotkeys of the left panel; the codes match <c>HotkeyCommands.LeftPanel</c> (settings name "LeftPanel").</summary>
 public enum LeftPanelHotkeyCommand
 {
     Delete = 0,

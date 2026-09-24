@@ -9,6 +9,6 @@ internal sealed class FilePromptCreator : IFilePromptCreator
 {
     public IUserInputPrompt Create()
     {
-        return AvaloniaHosting.AvaloniaDialogs.CreateFilePrompt() ?? new FormFilePrompt();
+        return AvaloniaHosting.AvaloniaDialogs.CreateFilePrompt();
     }
 }

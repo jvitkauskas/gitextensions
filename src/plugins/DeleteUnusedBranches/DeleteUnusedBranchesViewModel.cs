@@ -17,7 +17,7 @@ namespace GitExtensions.Plugins.DeleteUnusedBranches;
 public sealed class DeleteUnusedBranchesStrings : ViewStrings
 {
     public DeleteUnusedBranchesStrings()
-        : base(nameof(DeleteUnusedBranchesForm))
+        : base("DeleteUnusedBranchesForm")
     {
         Title = Add("$this", "Text", "Delete obsolete branches");
         OlderThanDays = Add("label1", "Text", "Delete branches older than x days");

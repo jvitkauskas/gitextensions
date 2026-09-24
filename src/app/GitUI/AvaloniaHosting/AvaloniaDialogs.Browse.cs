@@ -7,8 +7,7 @@ using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.BrowseDialog;
-using GitUI.CommandsDialogs.WorktreeDialog;
-using GitUI.HelperDialogs;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.Translations;
@@ -54,7 +53,7 @@ internal static partial class AvaloniaDialogs
     {
         BrowseWindow window = new()
         {
-            PositionName = nameof(FormBrowse),
+            PositionName = "FormBrowse",
             PositionStore = WindowPositionStore.Instance,
             SelectedId = args.SelectedId.IsZero ? null : args.SelectedId,
         };
@@ -139,7 +138,7 @@ internal static partial class AvaloniaDialogs
             grid.ContextMenuProvider = gridMenu.Build;
 
             // As RevisionGridControl: the "RevisionGrid" hotkeys, and the build statuses of the build server (ShowBuildServerInfo).
-            grid.Hotkeys = LoadHotkeys(commands, RevisionGridControl.HotkeySettingsName);
+            grid.Hotkeys = LoadHotkeys(commands, HotkeyCommands.RevisionGridSettingsName);
             grid.CommandHandler = gridMenu.ExecuteCommand;
             GridBuildServerWatcher buildServerWatcher = new(commands, grid, () => new NativeWindowOwner(window));
 
@@ -161,7 +160,7 @@ internal static partial class AvaloniaDialogs
                 Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
                 NavigateMenuProvider = gridMenu.CreateNavigateItems,
                 ViewMenuProvider = gridMenu.CreateViewItems,
-                RevisionDiffHotkeys = LoadHotkeys(commands, RevisionDiffControl.HotkeySettingsName),
+                RevisionDiffHotkeys = LoadHotkeys(commands, HotkeyCommands.RevisionDiffSettingsName),
             };
             browseViewModel = viewModel;
             UseFileStatusListMenu(viewModel.Files, commands, window);
@@ -199,7 +198,7 @@ internal static partial class AvaloniaDialogs
             }
 
             // As LoadHotkeys(HotkeySettingsName): the "Browse" hotkeys, with the ones of the scripts.
-            window.Hotkeys = LoadHotkeys(commands, FormBrowse.HotkeySettingsName);
+            window.Hotkeys = LoadHotkeys(commands, HotkeyCommands.BrowseSettingsName);
             window.ShowViewModel(viewModel);
             AttachTaskbar(commands, isValid);
         }
@@ -354,7 +353,7 @@ internal static partial class AvaloniaDialogs
             {
                 // Start (StartToolStripMenuItem): another repository is shown in this window (SetGitModule).
                 case BrowseCommand.Open:
-                    if (FormOpenDirectory.OpenModule(owner, _commands.GetRequiredService<IGitExecutorProvider>(), Module) is { } module)
+                    if (TryShowOpenDirectory(owner, _commands.GetRequiredService<IGitExecutorProvider>(), Module, out IGitModule? module) && module is not null)
                     {
                         OpenModule(module);
                     }
@@ -392,12 +391,7 @@ internal static partial class AvaloniaDialogs
                     _commands.StartSyncSubmodulesDialog(owner);
                     break;
                 case BrowseCommand.ManageWorktrees:
-                    if (!TryShowManageWorktree(owner, _commands, out bool refresh))
-                    {
-                        using FormManageWorktree form = new((GitUICommands)_commands);
-                        form.ShowDialog(owner);
-                        refresh = form.ShouldRefreshRevisionGrid;
-                    }
+                    TryShowManageWorktree(owner, _commands, out bool refresh);
 
                     if (refresh)
                     {
@@ -418,7 +412,7 @@ internal static partial class AvaloniaDialogs
                     _commands.StartMailMapDialog(owner);
                     break;
                 case BrowseCommand.CompressGitDatabase:
-                    FormProcess.ReadDialog(owner, _commands, arguments: "gc", Module.WorkingDir, input: null, useDialogSettings: true);
+                    ProcessDialogs.ReadProcess(owner, _commands, arguments: "gc", Module.WorkingDir, input: null, useDialogSettings: true);
                     break;
                 case BrowseCommand.RecoverLostObjects:
                     _commands.StartVerifyDatabaseDialog(owner);
@@ -547,10 +541,7 @@ internal static partial class AvaloniaDialogs
                     _commands.StartCheckoutRevisionDialog(owner);
                     break;
                 case BrowseCommand.Bisect:
-                    if (!TryShowBisect(owner, _commands, new SelectionGridInfo(Module, selection)))
-                    {
-                        MessageBoxes.ShowError(owner, "The bisect dialog needs the WinForms revision grid.", "Bisect");
-                    }
+                    TryShowBisect(owner, _commands, new SelectionGridInfo(Module, selection));
 
                     break;
                 case BrowseCommand.FormatPatch:
@@ -563,11 +554,7 @@ internal static partial class AvaloniaDialogs
                     _commands.StartViewPatchDialog(owner);
                     break;
                 case BrowseCommand.Reflog:
-                    if (!TryShowReflog(owner, _commands))
-                    {
-                        using FormReflog form = new(_commands);
-                        form.ShowDialog(owner);
-                    }
+                    TryShowReflog(owner, _commands);
 
                     break;
 
@@ -582,7 +569,7 @@ internal static partial class AvaloniaDialogs
                     Module.RunGitK();
                     break;
                 case BrowseCommand.GitCommandLog:
-                    FormGitCommandLog.ShowOrActivate(owner);
+                    TryShowGitCommandLog(owner);
                     break;
                 case BrowseCommand.Settings:
                     _commands.StartSettingsDialog(owner);
@@ -593,40 +580,25 @@ internal static partial class AvaloniaDialogs
                     OsShellUtil.OpenUrlInDefaultBrowser(AppSettings.DocumentationBaseUrl);
                     break;
                 case BrowseCommand.Changelog:
-                    if (!TryShowChangeLog(owner))
-                    {
-                        using FormChangeLog form = new();
-                        form.ShowDialog(owner);
-                    }
+                    TryShowChangeLog(owner);
 
                     break;
                 case BrowseCommand.Translate:
                     OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/wiki/Translations");
                     break;
                 case BrowseCommand.Donate:
-                    if (!TryShowDonate(owner))
-                    {
-                        using FormDonate form = new();
-                        form.ShowDialog(owner);
-                    }
+                    TryShowDonate(owner);
 
                     break;
                 case BrowseCommand.ReportAnIssue:
                     OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/issues");
                     break;
                 case BrowseCommand.CheckForUpdates:
-                    if (!TrySearchForUpdatesAndShow(owner, alwaysShow: true))
-                    {
-                        new FormUpdates(AppSettings.AppVersion).SearchForUpdatesAndShow(owner, true);
-                    }
+                    TrySearchForUpdatesAndShow(owner, alwaysShow: true);
 
                     break;
                 case BrowseCommand.About:
-                    if (!TryShowAbout(owner))
-                    {
-                        using FormAbout form = new();
-                        form.ShowDialog(owner);
-                    }
+                    TryShowAbout(owner);
 
                     break;
             }

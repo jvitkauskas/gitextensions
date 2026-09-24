@@ -14,7 +14,7 @@ namespace GitExtensions.Plugins.ProxySwitcher;
 public sealed class ProxySwitcherStrings : ViewStrings
 {
     public ProxySwitcherStrings()
-        : base(nameof(ProxySwitcherForm))
+        : base("ProxySwitcherForm")
     {
         Title = Add("_pluginDescription", "Text", "Proxy Switcher");
         LocalHttpProxy = Add("LocalHttpProxy_Label", "Text", "Local http.proxy:");

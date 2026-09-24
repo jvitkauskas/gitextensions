@@ -6,7 +6,6 @@ using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.ConsoleEmulation;
 using GitUI.ConsoleEmulation.PlainText;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 
@@ -15,9 +14,9 @@ namespace GitUI.AvaloniaHosting;
 internal static partial class AvaloniaDialogs
 {
     /// <summary>
-    ///  Avalonia port of <see cref="FormProcess.ShowDialog(IWin32Window?, IGitUICommands, ArgumentString, string, string?, bool, out string, string?)"/>
-    ///  and <see cref="FormProcess.ReadDialog"/>.
+    ///  Avalonia port of <c>FormProcess.ShowDialog</c> and <c>FormProcess.ReadDialog</c> (<see cref="ProcessDialogs"/>).
     /// </summary>
+    /// <param name="environment">The environment variables of the process (<c>FormProcess.ProcessEnvVariables</c>).</param>
     public static bool TryShowProcess(
         IWin32Window? owner,
         IGitUICommands commands,
@@ -27,7 +26,8 @@ internal static partial class AvaloniaDialogs
         bool useDialogSettings,
         string? process,
         out bool success,
-        out string output)
+        out string output,
+        Dictionary<string, string>? environment = null)
     {
         success = false;
         output = "";
@@ -45,7 +45,8 @@ internal static partial class AvaloniaDialogs
             commands,
             resolvedProcess,
             resolvedArguments,
-            workingDirectory);
+            workingDirectory,
+            environment);
 
         ProcessViewModel? viewModel = null;
         ShowDialog(
@@ -64,14 +65,14 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormProcess));
+            positionName: "FormProcess");
 
         success = !viewModel!.ErrorOccurred;
         output = viewModel.Output;
         return true;
     }
 
-    /// <summary>Avalonia port of <see cref="FormStatus.ShowErrorDialog"/>.</summary>
+    /// <summary>Avalonia port of <c>FormStatus.ShowErrorDialog</c>.</summary>
     public static bool TryShowErrorDialog(IWin32Window owner, IGitUICommands commands, string text, string[]? output)
     {
         using ConsoleProcess console = new(new PlainTextConsoleCommandRunner(), commands, process: "", arguments: "", workingDirectory: "");
@@ -93,7 +94,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormStatus));
+            positionName: "FormStatus");
         return true;
     }
 

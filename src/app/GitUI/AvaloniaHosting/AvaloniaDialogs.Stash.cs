@@ -33,7 +33,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormStash));
+            positionName: "FormStash");
         return true;
     }
 

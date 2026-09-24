@@ -11,10 +11,11 @@ namespace GitUI.AvaloniaHosting;
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
-    /// <summary>The Avalonia port of <see cref="FormRevisionFilter"/>; <paramref name="filterInfo"/> is updated if accepted.</summary>
+    /// <summary>The Avalonia port of <c>FormRevisionFilter</c>; <paramref name="filterInfo"/> is updated if accepted.</summary>
     public static bool TryShowRevisionFilter(IWin32Window? owner, FilterInfo filterInfo, out bool accepted)
     {
         accepted = false;
+
         // As FormRevisionFilter.OnLoad: the dialog shows the raw values.
         FilterInfo raw = filterInfo with { IsRaw = true };
         RevisionFilterViewModel viewModel = new(

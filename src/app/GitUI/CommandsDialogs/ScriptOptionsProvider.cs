@@ -21,14 +21,6 @@ internal sealed class ScriptOptionsProvider : ScriptOptionsProviderBase
         _getCurrentColumnNumber = getCurrentColumnNumber;
     }
 
-    public ScriptOptionsProvider(FileStatusList fileStatusList, Func<int?> getCurrentLineNumber, Func<int?> getCurrentColumn)
-        : this(getSelectedRelativePaths: () => fileStatusList.SelectedFolder is RelativePath folder
-                ? [folder.Value]
-                : fileStatusList.SelectedItems.Select(item => item.Item.Name),
-            getCurrentLineNumber, getCurrentColumn)
-    {
-    }
-
     private static string[] ImplementedOptions => [_selectedRelativePaths, _lineNumber, _columnNumber];
 
     public override IEnumerable<string> GetValues(string option)

@@ -12,7 +12,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Infrastructure;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
@@ -47,7 +46,7 @@ internal static partial class AvaloniaDialogs
         }
         else
         {
-            pushed = ShowDialog(() => window, owner, positionName: nameof(FormPush));
+            pushed = ShowDialog(() => window, owner, positionName: "FormPush");
         }
 
         pushCompleted = pushed && !viewModel.ErrorOccurred;

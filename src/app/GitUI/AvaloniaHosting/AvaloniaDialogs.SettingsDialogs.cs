@@ -88,7 +88,7 @@ internal static partial class AvaloniaDialogs
 
     private sealed class FixHomeHost : IFixHomeHost
     {
-        public bool HasGlobalGitConfig(string? path) => FormFixHome.HasGlobalGitConfig(path);
+        public bool HasGlobalGitConfig(string? path) => HomeDirectoryCheck.HasGlobalGitConfig(path);
 
         public string? ApplyHome(string customHomeDir, bool userProfileHomeDir)
         {

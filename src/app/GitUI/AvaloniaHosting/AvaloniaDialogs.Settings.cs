@@ -53,11 +53,16 @@ internal static partial class AvaloniaDialogs
                     settingsWindow = window;
                     generalHost.Window = window;
                     gitHost.Window = window;
-                    window.Opened += (_, _) => viewModel.Open(initialPage is SettingsPageReferenceByType byType ? byType.SettingsPageType.Name : null);
+                    window.Opened += (_, _) => viewModel.Open(initialPage switch
+                    {
+                        SettingsPageReferenceByType byType => byType.SettingsPageType.Name,
+                        SettingsPageReferenceByName byName => byName.PageName,
+                        _ => null,
+                    });
                     return window;
                 },
                 owner,
-                positionName: nameof(FormSettings));
+                positionName: "FormSettings");
         });
 
         // The pages holding controls (the settings controls of the build server plugins) release them.
@@ -123,7 +128,7 @@ internal static partial class AvaloniaDialogs
 
         // >> Appearance
         Add(new AppearanceSettingsPageViewModel(ViewStrings.Load<AppearanceSettingsPageStrings>(), generalHost), gitExtensions, "Appearance", global);
-        const string appearance = nameof(AppearanceSettingsPage);
+        const string appearance = "AppearanceSettingsPage";
         Add(new SortingSettingsPageViewModel(ViewStrings.Load<SortingSettingsPageStrings>(), generalHost), appearance, "SortBy", global);
         Add(new ColorsSettingsPageViewModel(ViewStrings.Load<ColorsSettingsPageStrings>(), generalHost), appearance, "Colors", global);
         Add(new AppearanceFontsSettingsPageViewModel(ViewStrings.Load<AppearanceFontsSettingsPageStrings>(), generalHost), appearance, "Font", global);
@@ -141,12 +146,12 @@ internal static partial class AvaloniaDialogs
 
         // >> Advanced
         Add(new AdvancedSettingsPageViewModel(ViewStrings.Load<AdvancedSettingsPageStrings>(), generalHost), gitExtensions, "AdvancedSettings", global);
-        const string advanced = nameof(AdvancedSettingsPage);
+        const string advanced = "AdvancedSettingsPage";
         Add(new ConfirmationsSettingsPageViewModel(ViewStrings.Load<ConfirmationsSettingsPageStrings>()), advanced, "BisectGood", global);
 
         // >> Detailed
         Add(new DetailedSettingsPageViewModel(ViewStrings.Load<DetailedSettingsPageStrings>()), gitExtensions, "Settings", distributedLevels);
-        const string detailed = nameof(DetailedSettingsPage);
+        const string detailed = "DetailedSettingsPage";
         Add(new FormBrowseRepoSettingsPageViewModel(ViewStrings.Load<FormBrowseRepoSettingsPageStrings>(), generalHost), detailed, "BranchFolder", global);
         Add(new CommitDialogSettingsPageViewModel(ViewStrings.Load<CommitDialogSettingsPageStrings>()), detailed, "CommitSummary", global);
         Add(new DiffViewerSettingsPageViewModel(ViewStrings.Load<DiffViewerSettingsPageStrings>(), generalHost), detailed, "Diff", global);
@@ -189,7 +194,7 @@ internal static partial class AvaloniaDialogs
                 commonLogic.DistributedSettingsSet.Save();
                 if (OperatingSystem.IsWindows())
                 {
-                    FormFixHome.CheckHomePath();
+                    HomeDirectoryCheck.CheckHomePath();
                 }
 
                 // Saves some specific settings only, despite its name.

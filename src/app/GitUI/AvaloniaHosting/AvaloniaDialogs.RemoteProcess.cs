@@ -7,7 +7,6 @@ using GitExtUtils;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.ConsoleEmulation;
-using GitUI.HelperDialogs;
 using GitUI.Infrastructure;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
@@ -87,35 +86,17 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormRemoteProcess));
+            positionName: "FormRemoteProcess");
 
         return new RemoteProcessResult(dialog!.ViewModel.ErrorOccurred, dialog.ViewModel.Aborted, dialog.ViewModel.Output);
     }
 
-    /// <summary>The Avalonia port of <see cref="FormRemoteProcess.ShowDialog(IWin32Window?, IGitUICommands, ArgumentString)"/>.</summary>
+    /// <summary>The Avalonia port of <see cref="ProcessDialogs.ShowRemoteProcess(IWin32Window?, IGitUICommands, ArgumentString)"/>.</summary>
     public static bool TryShowRemoteProcess(IWin32Window? owner, IGitUICommands commands, ArgumentString arguments, out bool success)
     {
         success = false;
         success = !RunRemoteProcess(owner, commands, arguments).ErrorOccurred;
         return true;
-    }
-
-    /// <summary>The WinForms dialog for the exit handlers.</summary>
-    private sealed class WinFormsRemoteProcessDialog(FormRemoteProcess form) : IRemoteProcessDialog
-    {
-        public nint Handle => form.Handle;
-
-        public string? Remote => form.Remote;
-
-        public string ProcessArguments
-        {
-            get => form.ProcessArguments ?? "";
-            set => form.ProcessArguments = value;
-        }
-
-        public string GetOutputString() => form.GetOutputString();
-
-        public void Retry() => form.Retry();
     }
 
     /// <summary>
@@ -196,7 +177,7 @@ internal static partial class AvaloniaDialogs
                 if (output.Contains("FATAL ERROR") && output.Contains("authentication"))
                 {
                     string? loadedKey = null;
-                    if (AvaloniaUi.RunInHostContext(() => FormPuttyError.AskForKey(this, out loadedKey)))
+                    if (AvaloniaUi.RunInHostContext(() => TryShowPuttyError(this, out bool retry, out loadedKey) && retry))
                     {
                         // The key is saved for the remote, against future authentication errors.
                         if (!string.IsNullOrEmpty(loadedKey) && !string.IsNullOrEmpty(Remote)
@@ -211,7 +192,7 @@ internal static partial class AvaloniaDialogs
                 }
 
                 if (output.Contains("the server's host key is not cached in the registry", StringComparison.OrdinalIgnoreCase)
-                    && AvaloniaUi.RunInHostContext(() => FormRemoteProcess.AskForCacheHostkey(this, GetRemoteUrl())))
+                    && AvaloniaUi.RunInHostContext(() => ProcessDialogs.AskForCacheHostkey(this, GetRemoteUrl())))
                 {
                     Retry();
                     return true;

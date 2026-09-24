@@ -10,7 +10,7 @@ namespace GitExtensions.Plugins.Gource;
 public sealed class GourceStartStrings : ViewStrings
 {
     public GourceStartStrings()
-        : base(nameof(GourceStart))
+        : base("GourceStart")
     {
         Title = Add("$this", "Text", "Gource");
         PathToGource = Add("label1", "Text", "Path to Gource");

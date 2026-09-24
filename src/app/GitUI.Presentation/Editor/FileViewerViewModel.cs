@@ -186,7 +186,7 @@ public enum LinePatchOperation
     Reset,
 }
 
-/// <summary>The hotkey commands of the viewer, with the codes of <c>FileViewer.Command</c> (the "FileViewer" hotkey settings).</summary>
+/// <summary>The hotkey commands of the viewer, with the codes of <c>HotkeyCommands.FileViewer</c> (the "FileViewer" hotkey settings).</summary>
 public enum FileViewerHotkeyCommand
 {
     Find = 0,
@@ -550,7 +550,7 @@ public sealed partial class FileViewerViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings() => _host.OpenSettings();
 
-    /// <summary>The hotkeys of the viewer (<c>FileViewer.HotkeySettingsName</c>).</summary>
+    /// <summary>The hotkeys of the viewer (<c>HotkeyCommands.FileViewerSettingsName</c>).</summary>
     public IReadOnlyList<Services.HotkeyBinding> Hotkeys => _host.Hotkeys;
 
     /// <summary>

@@ -46,3 +46,15 @@ public sealed class SelectMultipleBranchesStrings : ViewStrings
 
     public TranslatedText Ok { get; }
 }
+
+/// <summary>Strings of the search window of the files (find file); ids match <c>SearchWindow</c>.</summary>
+public sealed class SearchWindowStrings : ViewStrings
+{
+    public SearchWindowStrings()
+        : base("SearchWindow")
+    {
+        EnterFileName = Add("lblEnterFileName", "Text", "Enter File Name");
+    }
+
+    public TranslatedText EnterFileName { get; }
+}

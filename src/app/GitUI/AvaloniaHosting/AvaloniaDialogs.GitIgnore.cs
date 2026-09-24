@@ -37,7 +37,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormGitIgnore));
+            positionName: "FormGitIgnore");
         return true;
     }
 

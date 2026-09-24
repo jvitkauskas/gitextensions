@@ -3,7 +3,6 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
@@ -20,7 +19,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowDiff(IGitUICommands commands, ObjectId firstId, ObjectId secondId, string firstDisplayName, string secondDisplayName)
     {
         AvaloniaUi.EnsureInitialized(GetOptions);
-        DiffWindow window = new() { PositionName = nameof(FormDiff), PositionStore = WindowPositionStore.Instance };
+        DiffWindow window = new() { PositionName = "FormDiff", PositionStore = WindowPositionStore.Instance };
         window.DataContext = new DiffViewModel(
             ViewStrings.Load<DiffStrings>(),
             new DiffHost(commands, window),
@@ -95,11 +94,7 @@ internal static partial class AvaloniaDialogs
         /// <summary>As <c>FormDiff.PickAnotherBranch</c>.</summary>
         public (string DisplayName, GitRevision? Revision)? PickBranch(GitRevision preselect) => AvaloniaUi.RunInHostContext<(string, GitRevision?)?>(() =>
         {
-            if (!TryShowCompareToBranch(Owner, commands, preselect.ObjectId, out string? branchName))
-            {
-                using FormCompareToBranch form = new(commands, preselect.ObjectId);
-                branchName = form.ShowDialog(Owner) == DialogResult.OK ? form.BranchName : null;
-            }
+            TryShowCompareToBranch(Owner, commands, preselect.ObjectId, out string? branchName);
 
             if (branchName is null)
             {
@@ -113,13 +108,7 @@ internal static partial class AvaloniaDialogs
         /// <summary>As <c>FormDiff.PickAnotherCommit</c>.</summary>
         public GitRevision? PickCommit(GitRevision preselect) => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryChooseCommit(Owner, commands, preselect.Guid, out GitRevision? chosen, showArtificial: true))
-            {
-                return chosen;
-            }
-
-            using FormChooseCommit form = new(commands, preselectCommit: preselect.Guid, showArtificial: true);
-            return form.ShowDialog(Owner) == DialogResult.OK ? form.SelectedRevision : null;
+            return TryChooseCommit(Owner, commands, preselect.Guid, out GitRevision? chosen, showArtificial: true) ? chosen : null;
         });
 
         public void OpenDirectoryDiff(GitRevision first, GitRevision second)

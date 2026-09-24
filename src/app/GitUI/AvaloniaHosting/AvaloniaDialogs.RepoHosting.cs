@@ -8,7 +8,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs.RepoHosting;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.RepoHosting;
-using GitUI.HelperDialogs;
 using GitUI.NBugReports;
 using GitUI.Presentation.CommandsDialogs.RepoHosting;
 using GitUI.Presentation.Translations;
@@ -63,7 +62,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(ViewPullRequestsForm),
+            positionName: "ViewPullRequestsForm",
             showInTaskbar: true);
         return true;
     }
@@ -86,7 +85,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(CreatePullRequestForm),
+            positionName: "CreatePullRequestForm",
             showInTaskbar: true);
         return true;
     }
@@ -167,7 +166,7 @@ internal static partial class AvaloniaDialogs
                 .First(r => string.IsNullOrEmpty(currentRemote) || r.Name == currentRemote).FetchUrl.IsUrlUsingHttp() ? GitProtocol.Https : GitProtocol.Ssh;
 
         public bool RunGit(string arguments)
-            => AvaloniaUi.RunInHostContext(() => FormProcess.ShowDialog(Owner, commands, arguments: arguments, Module.WorkingDir, input: null, useDialogSettings: true));
+            => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowProcess(Owner, commands, arguments: arguments, Module.WorkingDir, input: null, useDialogSettings: true));
 
         public string AddRemote(string name, string url) => Module.AddRemote(name, url);
 

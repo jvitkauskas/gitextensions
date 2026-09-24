@@ -1,7 +1,6 @@
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
@@ -16,7 +15,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCommitDiff(IWin32Window? owner, IGitUICommands commands, ObjectId objectId, bool modeless = false)
     {
         AvaloniaUi.EnsureInitialized(GetOptions);
-        CommitDiffWindow window = new() { PositionName = nameof(FormCommitDiff), PositionStore = WindowPositionStore.Instance };
+        CommitDiffWindow window = new() { PositionName = "FormCommitDiff", PositionStore = WindowPositionStore.Instance };
         CommitDiffViewModel viewModel = new(
             ViewStrings.Load<CommitDiffStrings>(),
             new CommitDiffHost(commands),

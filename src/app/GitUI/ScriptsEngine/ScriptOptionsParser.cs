@@ -3,6 +3,7 @@ using GitCommands.Config;
 using GitCommands.UserRepositoryHistory;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
+using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 
@@ -173,30 +174,12 @@ public sealed partial class ScriptOptionsParser
             return string.Empty;
         }
 
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowQuickRefSelector(owner, FormQuickGitRefSelector.QuickAction.Select, items, uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point(), out IGitRef? selectedRef))
-        {
-            return selectedRef?.Name ?? "";
-        }
-
-        using FormQuickGitRefSelector f = new();
-        f.Location = uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point();
-        f.Init(FormQuickGitRefSelector.QuickAction.Select, items);
-        f.ShowDialog(owner);
-        return f.SelectedRef?.Name ?? "";
+        return AvaloniaHosting.AvaloniaDialogs.TryShowQuickRefSelector(owner, QuickRefAction.Select, items, uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point(), out IGitRef? selectedRef) ? selectedRef?.Name ?? "" : "";
     }
 
     private static string AskToSpecify(IEnumerable<string> options, IGitUICommands uiCommands, IWin32Window owner)
     {
-        if (AvaloniaHosting.AvaloniaDialogs.TryShowQuickStringSelector(owner, [.. options], uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point(), out string? selectedString))
-        {
-            return selectedString ?? "";
-        }
-
-        using FormQuickStringSelector f = new();
-        f.Location = uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point();
-        f.Init(options.ToList());
-        f.ShowDialog(owner);
-        return f.SelectedString ?? "";
+        return AvaloniaHosting.AvaloniaDialogs.TryShowQuickStringSelector(owner, [.. options], uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point(), out string? selectedString) ? selectedString ?? "" : "";
     }
 
     private static GitRevision? CalculateSelectedRevision(IGitUICommands uiCommands, List<IGitRef> selectedRemoteBranches,

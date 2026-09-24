@@ -30,7 +30,7 @@ internal static partial class AvaloniaDialogs
         saved = ShowDialog(
             () => new RecentReposSettingsWindow { DataContext = new RecentReposSettingsViewModel(ViewStrings.Load<RecentReposSettingsStrings>(), options, host) },
             owner,
-            positionName: nameof(FormRecentReposSettings));
+            positionName: "FormRecentReposSettings");
         return true;
     }
 

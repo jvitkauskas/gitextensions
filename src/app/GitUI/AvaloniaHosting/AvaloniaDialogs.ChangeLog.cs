@@ -15,7 +15,7 @@ internal static partial class AvaloniaDialogs
         ShowDialog(
             () => new ChangeLogWindow { DataContext = new ChangeLogViewModel(ViewStrings.Load<ChangeLogStrings>(), Resources.ChangeLog) },
             owner,
-            positionName: nameof(FormChangeLog));
+            positionName: "FormChangeLog");
         return true;
     }
 }

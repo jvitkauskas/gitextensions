@@ -4,7 +4,6 @@ using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Plugins;
 using GitExtUtils;
-using GitUI.HelperDialogs;
 
 namespace GitUI.ScriptsEngine;
 
@@ -205,7 +204,7 @@ partial class ScriptsManager
 
             if (!script.RunInBackground)
             {
-                bool success = FormProcess.ShowDialog(owner, uiCommands, argument, uiCommands.Module.WorkingDir, null, true, process: command);
+                bool success = ProcessDialogs.ShowProcess(owner, uiCommands, argument, uiCommands.Module.WorkingDir, null, true, process: command);
                 if (!success)
                 {
                     return false;

@@ -12,6 +12,10 @@ public sealed class FixHomeStrings : ViewStrings
         : base("FormFixHome")
     {
         Title = Add("$this", "Text", "Home");
+        GitGlobalConfigNotFound = Add("_gitGlobalConfigNotFound", "Text",
+            "The environment variable HOME does not point to a directory that contains the global git config file:" + System.Environment.NewLine +
+            "\" {0} \"" + System.Environment.NewLine + System.Environment.NewLine + "Do you want Git Extensions to help locate the correct folder?");
+        GitGlobalConfigNotFoundCaption = Add("_gitGlobalConfigNotFoundCaption", "Text", "Global config");
         Explanation = Add("label51", "Text", "The global config file located in the location stored environment variable %HOME%. \nBy default %HOME% will be set to %HOMEDRIVE%%HOMEPATH% if empty. \nChange the default behaviour only if you experience problems.");
         Environment = Add("groupBox8", "Text", "Environment");
         DefaultHome = Add("defaultHome", "Text", "&Use default for HOME");
@@ -31,6 +35,11 @@ public sealed class FixHomeStrings : ViewStrings
     public const string InformationCaption = "Information";
 
     public TranslatedText Title { get; }
+
+    /// <summary>The question at startup when HOME has no git configuration (<c>ShowIfUserWant</c>).</summary>
+    public TranslatedText GitGlobalConfigNotFound { get; }
+
+    public TranslatedText GitGlobalConfigNotFoundCaption { get; }
 
     public TranslatedText Explanation { get; }
 

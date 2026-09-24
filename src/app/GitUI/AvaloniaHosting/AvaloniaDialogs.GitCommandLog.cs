@@ -36,7 +36,7 @@ internal static partial class AvaloniaDialogs
         }
 
         AvaloniaUi.EnsureInitialized(GetOptions);
-        GitCommandLogWindow window = new() { PositionName = nameof(FormGitCommandLog), PositionStore = WindowPositionStore.Instance };
+        GitCommandLogWindow window = new() { PositionName = "FormGitCommandLog", PositionStore = WindowPositionStore.Instance };
         window.DataContext = new GitCommandLogViewModel(ViewStrings.Load<GitCommandLogStrings>(), new GitCommandLogHost(window));
         _gitCommandLogWindow = window;
         window.Closed += (_, _) => _gitCommandLogWindow = null;
@@ -136,7 +136,7 @@ internal static partial class AvaloniaDialogs
         {
             using SaveFileDialog fileDialog = new()
             {
-                Title = nameof(FormGitCommandLog),
+                Title = "FormGitCommandLog",
                 DefaultExt = ".txt",
                 AddExtension = true,
                 Filter = "Text files (*.txt)|*.txt|CSV files|*.csv|All files *.*|*.*"

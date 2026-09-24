@@ -10,7 +10,7 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.CommandsDialogs.WorktreeDialog;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
@@ -205,7 +205,7 @@ internal static partial class AvaloniaDialogs
 
         public string WorkingDir => Module.WorkingDir;
 
-        public IReadOnlyList<HotkeyBinding> Hotkeys => _hotkeys ??= LoadHotkeys(_commands, LeftPanel.RepoObjectsTree.HotkeySettingsName);
+        public IReadOnlyList<HotkeyBinding> Hotkeys => _hotkeys ??= LoadHotkeys(_commands, GitUI.Hotkey.HotkeyCommands.LeftPanelSettingsName);
 
         public bool IsBranchFilterActive => _isBranchFilterActive?.Invoke() is true;
 
@@ -551,25 +551,20 @@ internal static partial class AvaloniaDialogs
         // As SubmoduleTree.ResetSubmodule.
         private bool ResetSubmodule(IWin32Window owner, SubmoduleNode submodule)
         {
-            FormResetChanges.ActionEnum resetType = FormResetChanges.ShowResetDialog(owner, true, true);
-            if (resetType == FormResetChanges.ActionEnum.Cancel)
+            ResetChangesAction resetType = AvaloniaHosting.AvaloniaDialogs.ShowResetChanges(owner, true, true);
+            if (resetType == ResetChangesAction.Cancel)
             {
                 return false;
             }
 
             GitModule module = new(_commands.GetRequiredService<IGitExecutorProvider>(), submodule.Info.Path);
-            return module.ResetAllChanges(clean: resetType == FormResetChanges.ActionEnum.ResetAndDelete);
+            return module.ResetAllChanges(clean: resetType == ResetChangesAction.ResetAndDelete);
         }
 
         // As WorktreeTree.ManageWorktrees.
         private bool ManageWorktrees(IWin32Window owner)
         {
-            if (!TryShowManageWorktree(owner, _commands, out bool shouldRefreshRevisionGrid))
-            {
-                using FormManageWorktree form = new((GitUICommands)_commands);
-                form.ShowDialog(owner);
-                shouldRefreshRevisionGrid = form.ShouldRefreshRevisionGrid;
-            }
+            TryShowManageWorktree(owner, _commands, out bool shouldRefreshRevisionGrid);
 
             if (shouldRefreshRevisionGrid)
             {

@@ -1,0 +1,11 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                x:Class="GitUI.Avalonia.HelperDialogs.SearchWindow"
+                Width="420" SizeToContent="Height" CanResize="False" ShowInTaskbar="False">
+  <!-- Equivalent of SearchWindow / SearchControl: the name to search, with the matches as it is typed. -->
+  <StackPanel Margin="8" Spacing="4">
+    <TextBlock Name="label" />
+    <AutoCompleteBox Name="searchBox" FilterMode="None" MinimumPrefixLength="1" MinimumPopulateDelay="0:0:0.2" />
+  </StackPanel>
+</h:DialogWindow>

@@ -8,7 +8,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
@@ -28,6 +27,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCreateBranch(IWin32Window? owner, IGitUICommands commands, ObjectId objectId, CreateBranchOptions options, out bool created)
     {
         created = false;
+
         // As the FormCreateBranch constructor.
         IGitModule module = commands.Module;
         if (objectId.IsArtificial)
@@ -86,6 +86,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCreateTag(IWin32Window? owner, IGitUICommands commands, ObjectId objectId, out bool created)
     {
         created = false;
+
         // As FormCreateTag.
         IGitModule module = commands.Module;
         if (objectId.IsArtificial)
@@ -120,7 +121,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormCreateTag));
+            positionName: "FormCreateTag");
         return true;
     }
 
@@ -151,13 +152,7 @@ internal static partial class AvaloniaDialogs
 
         public string? ChooseCommit(ObjectId? current) => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryChooseCommit(new NativeWindowOwner(window), commands, current?.ToString(), out GitRevision? chosen))
-            {
-                return chosen?.Guid;
-            }
-
-            using FormChooseCommit chooseForm = new(commands, current?.ToString());
-            return chooseForm.ShowDialog(new NativeWindowOwner(window)) == DialogResult.OK ? chooseForm.SelectedRevision?.Guid : null;
+            return TryChooseCommit(new NativeWindowOwner(window), commands, current?.ToString(), out GitRevision? chosen) ? chosen?.Guid : null;
         });
     }
 
@@ -179,10 +174,10 @@ internal static partial class AvaloniaDialogs
                     ? Commands.CreateOrphan(branchName, objectId)
                     : Commands.Branch(branchName, objectId, checkout);
 
-                bool success = FormProcess.ShowDialog(owner, commands, command, module.WorkingDir, input: null, useDialogSettings: true);
+                bool success = ProcessDialogs.ShowProcess(owner, commands, command, module.WorkingDir, input: null, useDialogSettings: true);
                 if (orphan && success && clearOrphan)
                 {
-                    FormProcess.ShowDialog(owner, commands, Commands.Remove(), module.WorkingDir, input: null, useDialogSettings: true);
+                    ProcessDialogs.ShowProcess(owner, commands, Commands.Remove(), module.WorkingDir, input: null, useDialogSettings: true);
                 }
 
                 if (success && checkout && objectId != originalHash)

@@ -10,7 +10,6 @@ using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.CommandsDialogs.BrowseDialog.DashboardControl;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
@@ -53,7 +52,7 @@ internal static partial class AvaloniaDialogs
             ViewStrings.Load<CompareToBranchStrings>(),
             new LocalRemoteBranchSelectorViewModel(
                 ViewStrings.Load<LocalRemoteBranchSelectorStrings>(), remote: true, new LocalRemoteBranchSelectorHost(commands, commitToCompare)));
-        if (ShowDialog(() => new CompareToBranchWindow { DataContext = viewModel }, owner, positionName: nameof(FormCompareToBranch)))
+        if (ShowDialog(() => new CompareToBranchWindow { DataContext = viewModel }, owner, positionName: "FormCompareToBranch"))
         {
             branchName = viewModel.BranchName;
         }
@@ -71,7 +70,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormBisect));
+            positionName: "FormBisect");
         return true;
     }
 
@@ -80,6 +79,7 @@ internal static partial class AvaloniaDialogs
     {
         accepted = false;
         commitId = default;
+
         // As FormGoToCommit: at most 1000 refs per list, and a revision on the clipboard is offered.
         const int maxDropDownCount = 1_000;
         IGitModule module = commands.Module;
@@ -94,7 +94,7 @@ internal static partial class AvaloniaDialogs
             branches,
             clipboardRevision,
             () => AvaloniaUi.RunInHostContext(() => OsShellUtil.OpenUrlInDefaultBrowser(@"https://git-scm.com/docs/git-rev-parse#_specifying_revisions")));
-        accepted = ShowDialog(() => new GoToCommitWindow { DataContext = viewModel }, owner, positionName: nameof(FormGoToCommit));
+        accepted = ShowDialog(() => new GoToCommitWindow { DataContext = viewModel }, owner, positionName: "FormGoToCommit");
         if (accepted)
         {
             commitId = module.RevParse(viewModel.SelectedRevision);
@@ -133,7 +133,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormAddToGitIgnore));
+            positionName: "FormAddToGitIgnore");
         return true;
     }
 
@@ -155,7 +155,7 @@ internal static partial class AvaloniaDialogs
                 }
 
                 string command = Commands.Checkout(objectId.ToString(), force ? LocalChangesAction.Reset : 0);
-                bool success = FormProcess.ShowDialog(owner, commands, command, module.WorkingDir, input: null, useDialogSettings: true);
+                bool success = ProcessDialogs.ShowProcess(owner, commands, command, module.WorkingDir, input: null, useDialogSettings: true);
                 if (success && objectId != checkedOutObjectId)
                 {
                     commands.UpdateSubmodules(owner);
@@ -223,7 +223,7 @@ internal static partial class AvaloniaDialogs
         public void Stop() => RunGit(Commands.StopBisect(), useDialogSettings: false);
 
         private bool RunGit(ArgumentString arguments, bool useDialogSettings) => AvaloniaUi.RunInHostContext(()
-            => FormProcess.ShowDialog(new NativeWindowOwner(window), commands, arguments, Module.WorkingDir, input: null, useDialogSettings));
+            => ProcessDialogs.ShowProcess(new NativeWindowOwner(window), commands, arguments, Module.WorkingDir, input: null, useDialogSettings));
     }
 
     private sealed class AddToGitIgnoreHost(IGitUICommands commands, bool localExclude) : IAddToGitIgnoreHost, IDisposable

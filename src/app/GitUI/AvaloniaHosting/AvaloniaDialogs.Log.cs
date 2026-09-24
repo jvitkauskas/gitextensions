@@ -21,7 +21,7 @@ internal static partial class AvaloniaDialogs
         accepted = false;
         AvaloniaUi.EnsureInitialized(GetOptions);
 
-        LogWindow window = new() { PositionName = nameof(FormLog), PositionStore = WindowPositionStore.Instance };
+        LogWindow window = new() { PositionName = "FormLog", PositionStore = WindowPositionStore.Instance };
 
         // As the RevisionGridControl of FormLog: its default filter, the artificial commits and a multiple selection.
         RevisionGridHost gridHost = new(commands, GetRevisionFilterFactory(showCurrentBranchOnly: false, lastRevisionToDisplayHash: null), showArtificial: true);
@@ -53,12 +53,7 @@ internal static partial class AvaloniaDialogs
         public void ViewRevisions(IReadOnlyList<GitRevision> revisions) => AvaloniaUi.RunInHostContext(() =>
         {
             NativeWindowOwner owner = new(window);
-            if (TryShowCommitDiff(owner, commands, revisions[0].ObjectId, modeless: true))
-            {
-                return;
-            }
-
-            commands.ShowModelessForm(owner, false, null, null, () => new GitUI.HelperDialogs.FormCommitDiff(commands, revisions[0].ObjectId));
+            TryShowCommitDiff(owner, commands, revisions[0].ObjectId, modeless: true);
         });
     }
 }

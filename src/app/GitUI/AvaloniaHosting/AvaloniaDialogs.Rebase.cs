@@ -4,7 +4,6 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
@@ -82,12 +81,12 @@ internal static partial class AvaloniaDialogs
 
         public string RunGit(ArgumentString arguments) => AvaloniaUi.RunInHostContext(() =>
         {
-            FormProcess.ShowDialog(Owner, commands, arguments, Module.WorkingDir, input: null, useDialogSettings: true, out string cmdOutput);
+            ProcessDialogs.ShowProcess(Owner, commands, arguments, Module.WorkingDir, input: null, useDialogSettings: true, out string cmdOutput);
             return cmdOutput;
         });
 
         public string ReadGit(ArgumentString arguments)
-            => AvaloniaUi.RunInHostContext(() => FormProcess.ReadDialog(Owner, commands, arguments, Module.WorkingDir, input: null, useDialogSettings: true));
+            => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ReadProcess(Owner, commands, arguments, Module.WorkingDir, input: null, useDialogSettings: true));
 
         public bool CanContinueAction(string output) => Module.CanContinueAction(output);
 
@@ -128,14 +127,8 @@ internal static partial class AvaloniaDialogs
                     }
                 }
 
-                if (TryChooseCommit(Owner, commands, preSelectedCommit, out GitRevision? chosen, showCurrentBranchOnly: true, lastRevisionToDisplayHash: mergeBaseCommitId))
-                {
-                    return chosen?.ObjectId.ToShortString();
-                }
-
-                using FormChooseCommit chooseForm = new(commands, preSelectedCommit, showCurrentBranchOnly: true, lastRevisionToDisplayHash: mergeBaseCommitId);
-                return chooseForm.ShowDialog(Owner) == DialogResult.OK && chooseForm.SelectedRevision is not null
-                    ? chooseForm.SelectedRevision.ObjectId.ToShortString()
+                return TryChooseCommit(Owner, commands, preSelectedCommit, out GitRevision? chosen, showCurrentBranchOnly: true, lastRevisionToDisplayHash: mergeBaseCommitId)
+                    ? chosen?.ObjectId.ToShortString()
                     : null;
             }
             finally

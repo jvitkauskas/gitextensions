@@ -134,9 +134,12 @@ internal static partial class AvaloniaDialogs
         private readonly string _process;
         private string _arguments;
         private readonly string _workingDirectory;
+        private readonly Dictionary<string, string> _environment;
 
-        public ConsoleProcess(IConsoleCommandRunner runner, IGitUICommands commands, string process, string arguments, string workingDirectory)
+        /// <param name="environment">The environment variables of the process (as <c>FormProcess.ProcessEnvVariables</c>).</param>
+        public ConsoleProcess(IConsoleCommandRunner runner, IGitUICommands commands, string process, string arguments, string workingDirectory, Dictionary<string, string>? environment = null)
         {
+            _environment = environment ?? [];
             _runner = runner;
             _commands = commands;
             _process = process;
@@ -170,7 +173,7 @@ internal static partial class AvaloniaDialogs
         /// <summary>Marshals to the UI thread, as <c>FormProcess</c> does with <c>InvokeAndForget</c>.</summary>
         public void PostToUiThread(Action action) => _runner.Control.InvokeAndForget(action);
 
-        public void Start() => _runner.StartCommand(_process, _arguments, _workingDirectory, []);
+        public void Start() => _runner.StartCommand(_process, _arguments, _workingDirectory, _environment);
 
         public void Kill()
         {

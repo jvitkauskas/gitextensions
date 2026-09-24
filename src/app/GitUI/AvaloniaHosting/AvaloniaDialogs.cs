@@ -7,10 +7,8 @@ using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.CommandsDialogs.CommitDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.CommandsDialogs.AboutBoxDialog;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.CommandsDialogs.CommitDialog;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.Services;
@@ -41,7 +39,7 @@ internal static partial class AvaloniaDialogs
                     AppSettings.ApplicationName,
                     UserEnvironmentInformation.GetInformation().Replace("- ", "").TrimEnd(),
                     GetContributors(),
-                    FormDonate.DonationUrl,
+                    DonationUrl,
                     new AboutDialogHost(window));
                 return window;
             },
@@ -70,7 +68,7 @@ internal static partial class AvaloniaDialogs
                     commands.GetRequiredService<IGitBranchNameNormaliser>(),
                     new GitBranchNameOptions(AppSettings.AutoNormaliseSymbol),
                     AppSettings.AutoNormaliseBranchName,
-                    (oldName, newName) => AvaloniaUi.RunInHostContext(() => FormProcess.ShowDialog(
+                    (oldName, newName) => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowProcess(
                         new NativeWindowOwner(window),
                         commands,
                         arguments: Commands.RenameBranch(oldName, newName),
@@ -80,7 +78,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormRenameBranch));
+            positionName: "FormRenameBranch");
         return true;
     }
 
@@ -143,15 +141,12 @@ internal static partial class AvaloniaDialogs
 
         public void ShowContributors() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowContributors(new NativeWindowOwner(window)))
-            {
-                return;
-            }
-
-            using FormContributors formContributors = new();
-            formContributors.ShowDialog(new NativeWindowOwner(window));
+            TryShowContributors(new NativeWindowOwner(window));
         });
 
         public void CopyEnvironmentInfo() => AvaloniaUi.RunInHostContext(UserEnvironmentInformation.CopyInformation);
     }
+
+    /// <summary>The donation page (<c>FormDonate.DonationUrl</c>).</summary>
+    internal const string DonationUrl = @"https://opencollective.com/gitextensions";
 }

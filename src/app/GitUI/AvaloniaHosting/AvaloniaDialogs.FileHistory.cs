@@ -30,7 +30,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowFileHistory(IGitUICommands commands, string fileName, GitRevision? revision, bool filterByRevision, bool showBlame)
     {
         AvaloniaUi.EnsureInitialized(GetOptions);
-        FileHistoryWindow window = new() { PositionName = nameof(FormFileHistory), PositionStore = WindowPositionStore.Instance };
+        FileHistoryWindow window = new() { PositionName = "FormFileHistory", PositionStore = WindowPositionStore.Instance };
         FileHistoryHost host = new(commands, window, fileName.Trim('"').ToPosixPath());
         FilterInfo filter = new() { ByPathFilter = true, PathFilter = host.FileName.Quote() };
         if (filterByRevision && revision is not null)
@@ -245,16 +245,11 @@ internal static partial class AvaloniaDialogs
         {
             if (revisions.Count > 0 && !revisions[0].IsArtificial)
             {
-                if (TryShowCommitDiff(Owner, commands, revisions[0].ObjectId, modeless: true))
-                {
-                    return;
-                }
-
-                commands.ShowModelessForm(Owner, false, null, null, () => new GitUI.HelperDialogs.FormCommitDiff(commands, revisions[0].ObjectId));
+                TryShowCommitDiff(Owner, commands, revisions[0].ObjectId, modeless: true);
             }
         });
 
-        public void ShowGitCommandLog() => AvaloniaUi.RunInHostContext(() => FormGitCommandLog.ShowOrActivate(Owner));
+        public void ShowGitCommandLog() => AvaloniaUi.RunInHostContext(() => TryShowGitCommandLog(Owner));
 
         public void ShowRevisionFiltered(ObjectId objectId) => AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(Owner, objectId));
 

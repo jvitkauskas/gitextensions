@@ -13,7 +13,7 @@ namespace GitExtensions.Plugins.CreateLocalBranches;
 public sealed class CreateLocalBranchesStrings : ViewStrings
 {
     public CreateLocalBranchesStrings()
-        : base(nameof(CreateLocalBranchesForm))
+        : base("CreateLocalBranchesForm")
     {
         Title = Add("$this", "Text", "Create local tracking branches");
         Remote = Add("label1", "Text", "Remote to create tracking branches for");

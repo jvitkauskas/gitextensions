@@ -4,7 +4,6 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls;
@@ -43,7 +42,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormApplyPatch));
+            positionName: "FormApplyPatch");
         return true;
     }
 
@@ -62,7 +61,7 @@ internal static partial class AvaloniaDialogs
         public string? GetPathForGitExecution(string? path) => Module.GetPathForGitExecution(path);
 
         public void RunGit(ArgumentString arguments)
-            => AvaloniaUi.RunInHostContext(() => FormProcess.ShowDialog(Owner, commands, arguments, Module.WorkingDir, input: null, useDialogSettings: true));
+            => AvaloniaUi.RunInHostContext(() => ProcessDialogs.ShowProcess(Owner, commands, arguments, Module.WorkingDir, input: null, useDialogSettings: true));
 
         public void ApplyPatchDirectory(string directory, ArgumentString arguments) => Module.ApplyPatch(directory, arguments);
 

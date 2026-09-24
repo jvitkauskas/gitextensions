@@ -6,12 +6,10 @@ using GitExtUtils.GitUI;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.BrowseDialog;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid;
-using GitUI.UserControls.RevisionGrid.Columns;
 using GitUI.UserControls.RevisionGrid.Graph;
 using GitUIPluginInterfaces;
 using Microsoft.VisualStudio.Threading;
@@ -59,7 +57,7 @@ internal static partial class AvaloniaDialogs
                     return window;
                 },
                 owner,
-                positionName: nameof(FormChooseCommit)))
+                positionName: "FormChooseCommit"))
             {
                 selected = viewModel?.SelectedRevision;
             }
@@ -110,13 +108,7 @@ internal static partial class AvaloniaDialogs
 
         public ObjectId? ChooseCommitToGoTo() => AvaloniaUi.RunInHostContext<ObjectId?>(() =>
         {
-            if (TryShowGoToCommit(Owner, commands, out bool accepted, out ObjectId commitId))
-            {
-                return accepted ? commitId : null;
-            }
-
-            using FormGoToCommit form = new(commands);
-            return form.ShowDialog(Owner) == DialogResult.OK ? form.ValidateAndGetSelectedObjectId() : null;
+            return TryShowGoToCommit(Owner, commands, out bool accepted, out ObjectId commitId) && accepted ? commitId : null;
         });
 
         public void ShowRevisionFiltered(ObjectId objectId) => AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(Owner, objectId));
@@ -131,6 +123,10 @@ internal static partial class AvaloniaDialogs
     {
         private readonly GitRevisionTester _revisionTester = new(new FullPathResolver(() => commands.Module.WorkingDir));
         private HoverHighlightCalculator? _hoverHighlight;
+
+        // As MessageColumnProvider.MaxSuperprojectRefs.
+        private const int MaxSuperprojectRefs = 4;
+
         private SuperProjectInfo? _superproject;
         private RevisionGraph? _hoverGraph;
         private VisibleRowRange _visibleRange;
@@ -142,9 +138,27 @@ internal static partial class AvaloniaDialogs
         // As AuthorRevisionHighlighting.ProcessRevisionSelectionChange without a selected revision.
         public string UserEmail => commands.Module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.UserEmail);
 
-        public string GetAuthorToolTip(GitRevision revision) => AuthorNameColumnProvider.GetAuthorAndCommiterToolTip(revision);
+        public string GetAuthorToolTip(GitRevision revision) => GetAuthorAndCommiterToolTip(revision);
 
         public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
+
+        // Moved out of AuthorNameColumnProvider.
+        private static string GetAuthorAndCommiterToolTip(GitRevision revision)
+        {
+            string toolTip;
+            if (revision.Author == revision.Committer && revision.AuthorEmail == revision.CommitterEmail)
+            {
+                toolTip = $"{revision.Author} <{revision.AuthorEmail}> {TranslatedStrings.AuthoredAndCommitted}";
+            }
+            else
+            {
+                toolTip =
+                    $"{revision.Author} <{revision.AuthorEmail}> {TranslatedStrings.Authored}\n" +
+                    $"{revision.Committer} <{revision.CommitterEmail}> {TranslatedStrings.Committed}";
+            }
+
+            return toolTip;
+        }
 
         // As AvatarColumnProvider.GetAvatar: the image of the provider, or the placeholder (Images.User80).
         public async Task<byte[]?> GetAvatarAsync(string email, string? name, int size)
@@ -299,9 +313,9 @@ internal static partial class AvaloniaDialogs
             if (superproject.Refs is not null && superproject.Refs.TryGetValue(revision.ObjectId, out IReadOnlyList<IGitRef>? refs))
             {
                 List<IGitRef> shown = [.. refs.Where(gitRef => !revision.Refs.Any(own => own.CompleteName == gitRef.CompleteName))];
-                for (int i = 0; i < Math.Min(MessageColumnProvider.MaxSuperprojectRefs, shown.Count); i++)
+                for (int i = 0; i < Math.Min(MaxSuperprojectRefs, shown.Count); i++)
                 {
-                    string name = i < MessageColumnProvider.MaxSuperprojectRefs - 1 ? shown[i].Name : "\u2026";
+                    string name = i < MaxSuperprojectRefs - 1 ? shown[i].Name : "\u2026";
                     items.Add(new RevisionRefItem(name, RevisionRefKind.Superproject, IsCurrentBranch: shown[i].IsSelected));
                 }
             }

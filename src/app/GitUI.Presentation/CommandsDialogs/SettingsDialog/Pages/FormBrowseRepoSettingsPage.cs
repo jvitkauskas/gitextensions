@@ -77,7 +77,7 @@ public interface IFormBrowseRepoSettingsPageHost : ISettingsPageServices
     /// <summary>As <c>IShellProvider.GetShells</c>.</summary>
     IReadOnlyList<ShellChoice> GetShells();
 
-    /// <summary>The hotkey of <c>FormBrowse.Command.FocusOutputHistoryAndToggleIfPanel</c>, as shown.</summary>
+    /// <summary>The hotkey of <c>HotkeyCommands.Browse.FocusOutputHistoryAndToggleIfPanel</c>, as shown.</summary>
     string FocusOutputHistoryHotkey { get; }
 
     /// <summary>As <c>MessageBoxes.ShellNotFound</c>.</summary>

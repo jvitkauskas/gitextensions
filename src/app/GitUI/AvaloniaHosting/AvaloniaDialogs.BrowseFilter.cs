@@ -155,18 +155,7 @@ internal static partial class AvaloniaDialogs
 
         public void ShowRevisionFilterDialog() => AvaloniaUi.RunInHostContext(() =>
         {
-            if (TryShowRevisionFilter(owner(), filter, out bool accepted))
-            {
-                if (accepted)
-                {
-                    Refresh();
-                }
-
-                return;
-            }
-
-            using FormRevisionFilter form = new(commands, filter);
-            if (form.ShowDialog(owner()) == DialogResult.OK)
+            if (TryShowRevisionFilter(owner(), filter, out bool accepted) && accepted)
             {
                 Refresh();
             }

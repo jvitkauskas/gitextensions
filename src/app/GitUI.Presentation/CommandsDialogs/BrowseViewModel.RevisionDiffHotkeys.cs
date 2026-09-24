@@ -7,7 +7,7 @@ using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.CommandsDialogs;
 
-/// <summary>The commands of the "RevisionDiff" hotkeys; the values are the ones of <c>RevisionDiffControl.Command</c>.</summary>
+/// <summary>The commands of the "RevisionDiff" hotkeys; the values are the ones of <c>HotkeyCommands.RevisionDiff</c>.</summary>
 public enum RevisionDiffHotkeyCommand
 {
     DeleteSelectedFiles = 0,

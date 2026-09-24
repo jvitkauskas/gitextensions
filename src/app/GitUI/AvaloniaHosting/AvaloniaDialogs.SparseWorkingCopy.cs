@@ -3,7 +3,6 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 
@@ -25,7 +24,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormSparseWorkingCopy));
+            positionName: "FormSparseWorkingCopy");
         return true;
     }
 

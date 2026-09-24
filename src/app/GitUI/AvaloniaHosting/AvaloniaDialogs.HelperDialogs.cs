@@ -7,7 +7,6 @@ using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.SettingsDialog;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
@@ -20,7 +19,7 @@ namespace GitUI.AvaloniaHosting;
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
-    /// <summary>The Avalonia port of <see cref="FormPuttyError.AskForKey"/>.</summary>
+    /// <summary>The Avalonia port of <c>FormPuttyError.AskForKey</c>.</summary>
     public static bool TryShowPuttyError(IWin32Window? owner, out bool retry, out string? keyPath)
     {
         retry = false;
@@ -44,7 +43,7 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>
-    ///  The Avalonia port of <see cref="FormBuildServerCredentials"/>; <paramref name="credentials"/> are updated if accepted.
+    ///  The Avalonia port of <c>FormBuildServerCredentials</c>; <paramref name="credentials"/> are updated if accepted.
     /// </summary>
     public static bool TryShowBuildServerCredentials(IWin32Window? owner, string buildServerUniqueKey, IBuildServerCredentials credentials, out bool accepted)
     {
@@ -79,7 +78,7 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
-    /// <summary>The Avalonia port of <see cref="FormSelectMultipleBranches"/>.</summary>
+    /// <summary>The Avalonia port of <c>FormSelectMultipleBranches</c>.</summary>
     public static bool TrySelectMultipleBranches(IWin32Window? owner, IReadOnlyList<IGitRef> branches, IEnumerable<IGitRef> selectedBranches, out IReadOnlyList<IGitRef> selected)
     {
         selected = [];
@@ -87,14 +86,14 @@ internal static partial class AvaloniaDialogs
             ViewStrings.Load<SelectMultipleBranchesStrings>(),
             branches.Select(b => ((object)b, b.Name)),
             selectedBranches.Select(b => b.Name));
-        ShowDialog(() => new SelectMultipleBranchesWindow { DataContext = viewModel }, owner, positionName: nameof(FormSelectMultipleBranches));
+        ShowDialog(() => new SelectMultipleBranchesWindow { DataContext = viewModel }, owner, positionName: "FormSelectMultipleBranches");
 
         // As FormSelectMultipleBranches, which has no cancel button: closing the dialog keeps the checked branches.
         selected = [.. viewModel.SelectedBranches.Cast<IGitRef>()];
         return true;
     }
 
-    /// <summary>The Avalonia port of <see cref="FormChooseTranslation"/>; sets <see cref="AppSettings.Translation"/>.</summary>
+    /// <summary>The Avalonia port of <c>FormChooseTranslation</c>; sets <c>AppSettings.Translation</c>.</summary>
     public static bool TryShowChooseTranslation(IWin32Window? owner)
     {
         ChooseTranslationViewModel viewModel = new(
@@ -114,7 +113,7 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
-    /// <summary>The Avalonia port of <see cref="FormAvailableEncodings"/>; updates <see cref="AppSettings.AvailableEncodings"/> if accepted.</summary>
+    /// <summary>The Avalonia port of <c>FormAvailableEncodings</c>; updates <c>AppSettings.AvailableEncodings</c> if accepted.</summary>
     public static bool TryShowAvailableEncodings(IWin32Window? owner, out bool accepted)
     {
         accepted = false;

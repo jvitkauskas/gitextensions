@@ -15,10 +15,10 @@ internal static partial class AvaloniaDialogs
     ///  <c>GetQuickItemSelectorLocation</c>).
     /// </summary>
     /// <param name="selected">The chosen ref, or <see langword="null"/> if cancelled (or there are no refs).</param>
-    public static bool TryShowQuickRefSelector(IWin32Window? owner, FormQuickGitRefSelector.QuickAction action, IReadOnlyList<IGitRef> refs, Point location, out IGitRef? selected)
+    public static bool TryShowQuickRefSelector(IWin32Window? owner, QuickRefAction action, IReadOnlyList<IGitRef> refs, Point location, out IGitRef? selected)
     {
         selected = null;
-        QuickItemSelectorViewModel viewModel = QuickItemSelectorViewModel.ForRefs(ViewStrings.Load<QuickItemSelectorStrings>(), (QuickRefAction)(int)action, refs);
+        QuickItemSelectorViewModel viewModel = QuickItemSelectorViewModel.ForRefs(ViewStrings.Load<QuickItemSelectorStrings>(), action, refs);
         selected = ShowQuickItemSelector(owner, viewModel, location) as IGitRef;
         return true;
     }

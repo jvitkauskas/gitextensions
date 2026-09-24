@@ -51,7 +51,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormRemotes));
+            positionName: "FormRemotes");
         return true;
     }
 

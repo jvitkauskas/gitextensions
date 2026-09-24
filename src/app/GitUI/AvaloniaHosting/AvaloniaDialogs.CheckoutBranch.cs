@@ -30,6 +30,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowCheckoutBranch(IWin32Window? owner, IGitUICommands commands, string branch, bool remote, IReadOnlyList<ObjectId>? containObjectIds, out bool notCancelled)
     {
         notCancelled = false;
+
         // The dirty check is very expensive on large repositories, so it is optional (as in FormCheckoutBranch).
         IGitModule module = commands.Module;
         CheckoutBranchOptions options = new(
@@ -67,7 +68,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormCheckoutBranch));
+            positionName: "FormCheckoutBranch");
         return true;
     }
 

@@ -6,7 +6,6 @@ using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUIPluginInterfaces;
@@ -47,7 +46,7 @@ internal static partial class AvaloniaDialogs
                 return window;
             },
             owner,
-            positionName: nameof(FormReflog));
+            positionName: "FormReflog");
         return true;
     }
 
@@ -76,32 +75,17 @@ internal static partial class AvaloniaDialogs
         {
             // As FormReflog.createABranchOnThisCommitToolStripMenuItem_Click.
             ObjectId objectId = ObjectId.Parse(sha);
-            if (TryShowCreateBranch(Owner, commands, objectId, new(BranchName: null, CheckoutAfterCreation: false, UserAbleToChangeRevision: false, CouldBeOrphan: false), out bool created))
-            {
-                return created;
-            }
-
-            using FormCreateBranch form = new(commands, objectId);
-            form.CheckoutAfterCreation = false;
-            form.UserAbleToChangeRevision = false;
-            form.CouldBeOrphan = false;
-            return form.ShowDialog(Owner) == DialogResult.OK;
+            return TryShowCreateBranch(Owner, commands, objectId, new(BranchName: null, CheckoutAfterCreation: false, UserAbleToChangeRevision: false, CouldBeOrphan: false), out bool created) && created;
         }));
 
         public bool ResetCurrentBranch(string sha, bool soft) => AvaloniaUi.RunInHostContext(() =>
         {
             // As FormReflog.resetCurrentBranchOnThisCommitToolStripMenuItem_Click.
             GitRevision revision = commands.Module.GetRevision(ObjectId.Parse(sha));
-            FormResetCurrentBranch.ResetType resetType = soft ? FormResetCurrentBranch.ResetType.Soft : FormResetCurrentBranch.ResetType.Hard;
+            ResetCurrentBranchType resetType = soft ? ResetCurrentBranchType.Soft : ResetCurrentBranchType.Hard;
             return commands.DoActionOnRepo(() =>
             {
-                if (TryShowResetCurrentBranch(Owner, commands, revision, resetType, out bool reset))
-                {
-                    return reset;
-                }
-
-                using FormResetCurrentBranch form = FormResetCurrentBranch.Create(commands, revision, resetType);
-                return form.ShowDialog(Owner) == DialogResult.OK;
+                return TryShowResetCurrentBranch(Owner, commands, revision, resetType, out bool reset) && reset;
             });
         });
 
