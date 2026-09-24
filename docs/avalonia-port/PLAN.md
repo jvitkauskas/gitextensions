@@ -263,8 +263,8 @@ WinForms `ConEmuControl` are no longer built, and the `GE_AVALONIA` switch with 
   plugins); the plugins declare settings and menus with the API v2.
 - **Tests**: the STA tests run on a `MessageWindowSynchronizationContext` (a message-only window, as the WinForms context),
   pump with `MessagePump.DoEvents`, and the Avalonia hosting tests own their dialogs by a native `TestOwnerWindow`.
-- Gaps: the git grep prompt of the file status list is ported (`FindInCommitFilesGitGrepWindow`) but not wired to the
-  Avalonia list yet.
+- Gaps: the parity gaps that remain are listed by area in the ledger ("Remaining gaps", audited 2026-09-25); the largest
+  are git grep in the file lists and the custom difftool submenus.
 
 ### Later, out of scope for now: cross-platform
 - Retarget the core libraries to `net10.0`, removing `System.Drawing` `Font` / `Color` / `Image` from `AppSettings`, `GitModule` and the plugin API.
