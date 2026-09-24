@@ -9,8 +9,10 @@ git log <ported-from>..upstream/master -- <WinForms sources>
 
 Then update **Ported from** to the merged upstream commit.
 
-The WinForms forms are kept (not deleted) until phase 8, so upstream merges apply cleanly and
-`GE_AVALONIA=none` falls back to them.
+The WinForms forms were deleted in phase 8 (see "Phase 8: WinForms removed" below). Their paths in this table are the
+upstream paths, so the `git log` above still lists what changed in them upstream; an upstream change to a deleted
+file shows as a modify/delete conflict in the merge, which is resolved by keeping the file deleted and re-applying the
+change to the Avalonia version.
 
 | WinForms form | WinForms sources | Ported from | Avalonia view / view model | Routed in | Notes |
 |---|---|---|---|---|---|
@@ -126,6 +128,36 @@ The WinForms forms are kept (not deleted) until phase 8, so upstream merges appl
 | `FindAndReplaceForm` | `src/app/GitUI/Editor/FindAndReplaceForm*.cs` | `66050831e` | the AvaloniaEdit search panel of `TextEditorView`/`FileViewerView`, `Editor/SearchPanelLocalization.cs`, `GitUI.Presentation/Editor/FindAndReplaceStrings.cs` | Ctrl+F, Ctrl+H, F3 in the Avalonia editors | Match case, whole word, regex, highlight all and replace (all) in editable files were covered; added: the search starts with the selection or the word at the caret, F3/Shift+F3 after the panel closed, no replace in read-only text, the translated texts (through a private field of AvaloniaEdit, checked by a test). Not ported: searching on into the next file, "selection only" for several lines. |
 | `FormResolveConflicts` | `src/app/GitUI/CommandsDialogs/FormResolveConflicts*.cs` | `66050831e` | `CommandsDialogs/ResolveConflictsWindow.axaml`, `GitUI.Presentation/CommandsDialogs/ResolveConflictsDialog.cs` (`ResolveConflictsViewModel`, `IResolveConflictsHost`); `GitUI/AvaloniaHosting/AvaloniaDialogs.ResolveConflicts.cs` | `GitUICommands.StartResolveConflictsDialog` | The conflicted files (sorted, multiple selection, the selection kept on rescan), their local/base/remote (ours/theirs swapped in a rebase) with the submodule hashes; the merge tool as WinForms reads it (kdiff3 compatibility, .exe split), merge with the modified-file check and "Is the merge conflict solved?" or git mergetool, the binary file question, the 2-way fallback, the Diff-Scripts; choose local/remote/base with the counters and "apply to all"; submodule conflicts in the merge submodule dialog; the full context menu (also on Merge) with the custom merge tools; the hotkeys and Ctrl+1/2/3; the end: update submodules, the suppressible "commit now?" and the commit dialog. Deliberate differences: cancelling the "Solve merge conflict" question does nothing (WinForms applied the previous choice); "apply to all" is reset by each choose command; the files are handled in list order; Ctrl+1/2/3 work anywhere in the dialog; the binary file question has the Question icon; long descriptions wrap. The hidden Author column is not ported. |
 | `FormPull` | `src/app/GitUI/CommandsDialogs/FormPull*.cs` | `66050831e` | `CommandsDialogs/PullWindow.axaml`, `GitUI.Presentation/CommandsDialogs/PullDialog.cs` (`PullViewModel`, `IPullHost`, `PullStrings`); `GitUI/AvaloniaHosting/AvaloniaDialogs.Pull.cs` (`PullHost`) | `GitUICommands.StartPullDialog`, `StartPullDialogAndPullImmediately` (menus, toolbar, left panel, push and remotes dialogs, `pull` verb) | The constructor (the pull actions, the remote of the branch, the shallow check), the remotes and URL sources with the URL history and the folder picker, the local and remote branches (listed when the list drops down, as `BranchesDropDown`), the merge and tag options with their enabling (`MergeCheckedChanged`, `RebaseCheckedChanged`, `FetchCheckedChanged`, `RemotesValidating`, `Prune_CheckedChanged`, `PruneTags_CheckedChanged`, `localBranch_Leave`), the help images, the title and button, manage remotes, stash, solve conflicts (the content is disabled while the merge tool runs, as `FormBusyScope`), auto stash. `PullChanges` in the view model: the validations, the settings, the merge commit and detached HEAD questions, `CalculateLocalBranch` with its task dialogs, the event scripts, the auto stash and its pop, the submodules, the conflicts. "Pull immediately" (`PullAndShowDialogWhenFailed`, with the fetch and prune all confirmation) runs the same view model without a window, owned by the caller, and shows the dialog only if nothing was pulled. Git runs in the WinForms `FormRemoteProcess`; `CreateFormProcess`, `HandlePullOnExit` (the prune offer, with the `IsRefRemoved` regex), `LoadPuttyKey` and the question of `PopStash` are duplicated in `PullHost`. No position restore, as the WinForms form (`enablePositionRestore: false`). Deliberate differences: the dialog stays open when nothing was pulled (a validation error, a declined question), as `PullClick` intends (the WinForms `Pull` button also has `DialogResult = OK`); the remote and URL are validated on every change, not when leaving the box; the empty remote branch is listed once (`FormPull` inserts another at every drop down); the window sizes to its content and is not resizable (the groups only stretched horizontally). Not ported yet: the auto-completion (`SuggestAppend`) and `ResizeDropDownWidth` of the remotes list, the dark-theme `AdaptLightness` of the help images, the Question icon of the "conflicts solved" and "initialize submodules" questions (`IMessageBoxService.Confirm`). |
+
+## Phase 8: WinForms removed
+
+The application runs on `Microsoft.NETCore.App` only: no project sets `UseWindowsForms`, and `DisableTransitiveFrameworkReferences`
+drops the WPF framework reference of Microsoft.VisualStudio.Threading. Deleted: the WinForms forms, controls and helpers of GitUI,
+ResourceManager and GitExtUtils, `ICSharpCode.TextEditor`, `ConEmuWinForms` and WindowsAPICodePack. What replaced the WinForms
+pieces that code outside the forms used, with the names and values of the WinForms API so that the callers did not change:
+
+| WinForms | Replacement |
+|---|---|
+| `MessageBox`, `TaskDialog` | `GitExtensions.Extensibility/Dialogs/NativeMessageBox.cs`, `TaskDialog.cs` (`MessageBoxW`, `TaskDialogIndirect` with comctl32 v6 through an activation context) |
+| `OpenFileDialog`, `SaveFileDialog`, `FolderBrowserDialog`, `ColorDialog`, `FontDialog` | `GitExtensions.Extensibility/Dialogs/CommonDialogs.cs` (the Common Item Dialog, `ChooseColorW`, `ChooseFontW`) |
+| `Clipboard` | `GitExtUtils/ClipboardUtil.cs` (user32, text and "HTML Format") |
+| `Application.UserAppDataPath` and the other paths | `GitExtUtils/ApplicationInfo.cs` (the same algorithm, from the entry assembly) |
+| `Keys` | `ResourceManager/Hotkey/Keys.cs` (a copy of the enum) |
+| `Timer` | `GitExtUtils/GitUI/UiTimer.cs` (a thread-pool timer posting its ticks to the synchronization context) |
+| `Screen`, `TextRenderer` | `GitExtUtils/GitUI/Screens.cs`, `TextMeasurement.cs` |
+| WindowsAPICodePack (taskbar, jump list) | `GitUI/Taskbar/NativeTaskbar.cs` (`ITaskbarList3`, `ICustomDestinationList`; the thumbnail buttons through the window procedure of the Avalonia window) |
+| `ConEmuControl` | `externals/ConEmuInside` (the session of conemu-inside `769053b` without WinForms, and `ConEmuHost`), in a `NativeHostWindow` child window (`GitUI/ConsoleEmulation/NativeHostWindow.cs`) |
+| The WinForms bug report | `BugReporter/BugReportDialog.cs` with `GitUI.Avalonia/BugReporter/BugReportWindow.axaml` |
+
+After an upstream merge, also compare `externals/ConEmuInside` with the upstream conemu-inside sources it was taken from (its
+README). The tests pump their messages with `MessageWindowSynchronizationContext` (`CommonTestUtils/MessagePump.cs`); NUnit runs a message loop for
+an async STA test only for the WinForms and WPF contexts, recognized by name, so `CommonTestUtils/NUnitMessagePump.cs` declares a
+context with the WinForms name. `UI.IntegrationTests/AvaloniaHosting/AvaloniaHostingTests.NativeDialogs.cs` drives the native
+dialogs.
+
+Not yet: the environment information of the bug report still lists the `Microsoft.WindowsDesktop.App` runtimes (the check for
+updates needs them, since the upstream releases it offers are WinForms builds); the MSI was not built on the development machine
+(no Visual Studio msbuild and WiX there), but the publish, `Check-BundlesConsistent.ps1` and the portable archive pass.
 
 ## Layout
 
