@@ -16,6 +16,7 @@ public sealed class CommitStrings : ViewStrings
         ResetSoft = Add("ResetSoft", "Text", "Reset so&ft");
         ResetSoftToolTip = Add("ResetSoft", "fileTooltip", "Perform a soft reset to the previous commit; leaves working directory and index untouched");
         ShowOnlyMyMessages = Add("ShowOnlyMyMessagesToolStripMenuItem", "Text", "Show only my messages");
+        GenerateListOfChangesInSubmodules = Add("generateListOfChangesInSubmodulesChangesToolStripMenuItem", "Text", "Generate a list of changes in submodules");
         SolveMergeConflicts = Add("SolveMergeconflicts", "Text", "There are unresolved merge conflicts\n");
         StageInSuperproject = Add("StageInSuperproject", "Text", "Stage &in Superproject");
         StageInSuperprojectToolTip = Add("StageInSuperproject", "fileTooltip", "Stage current submodule in superproject after commit");
@@ -107,6 +108,8 @@ public sealed class CommitStrings : ViewStrings
     public TranslatedText ResetSoftToolTip { get; }
 
     public TranslatedText ShowOnlyMyMessages { get; }
+
+    public TranslatedText GenerateListOfChangesInSubmodules { get; }
 
     public TranslatedText SolveMergeConflicts { get; }
 

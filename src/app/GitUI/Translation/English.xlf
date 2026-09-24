@@ -3939,6 +3939,10 @@ You can unset the template:
         <source>Create branch</source>
         <target />
       </trans-unit>
+      <trans-unit id="generateListOfChangesInSubmodulesChangesToolStripMenuItem.Text">
+        <source>Generate a list of changes in submodules</source>
+        <target />
+      </trans-unit>
       <trans-unit id="modifyCommitMessageButton.Text">
         <source>Modify the commit m&amp;essage</source>
         <target />

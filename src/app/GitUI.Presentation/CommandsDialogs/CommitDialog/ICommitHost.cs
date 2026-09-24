@@ -162,6 +162,15 @@ public interface ICommitHost
     /// <summary>The templates of the plugins (<c>RegisteredTemplates</c>) and of the settings (<c>LoadFromSettings</c>).</summary>
     (IReadOnlyList<CommitTemplateItem> Registered, IReadOnlyList<CommitTemplateItem> FromSettings) GetCommitTemplates();
 
+    /// <summary>The icon of a template (the <c>Icon</c> of a template of a plugin) as PNG, if it has one.</summary>
+    byte[]? GetTemplateIcon(CommitTemplateItem template);
+
+    /// <summary>
+    ///  As <c>generateListOfChangesInSubmodulesChangesToolStripMenuItem_Click</c>: a message with the commits of the staged
+    ///  submodules, <see langword="null"/> if none changed (or the configuration of the submodules is invalid, which is shown).
+    /// </summary>
+    string? GetListOfChangesInSubmodules(IReadOnlyList<GitItemStatus> stagedFiles);
+
     /// <summary>The checked out branch, which the regular expressions of templates match (<c>GetSelectedBranch</c>).</summary>
     string GetCurrentBranch();
 

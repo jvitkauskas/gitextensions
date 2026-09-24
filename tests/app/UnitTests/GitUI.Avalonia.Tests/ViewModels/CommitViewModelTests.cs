@@ -478,6 +478,20 @@ public sealed class CommitViewModelTests
 
         public (IReadOnlyList<GitCommands.CommitTemplateItem> Registered, IReadOnlyList<GitCommands.CommitTemplateItem> FromSettings) GetCommitTemplates() => Templates;
 
+        /// <summary>The icons of the templates, by name.</summary>
+        public Dictionary<string, byte[]> TemplateIcons { get; } = [];
+
+        public byte[]? GetTemplateIcon(GitCommands.CommitTemplateItem template) => TemplateIcons.GetValueOrDefault(template.Name);
+
+        /// <summary>The message of the changes in the submodules, which the staged files are logged for.</summary>
+        public string? SubmodulesChangesMessage { get; set; }
+
+        public string? GetListOfChangesInSubmodules(IReadOnlyList<GitItemStatus> stagedFiles)
+        {
+            Shown.Add($"submodules of {string.Join(", ", stagedFiles.Select(f => f.Name))}");
+            return SubmodulesChangesMessage;
+        }
+
         public string GetCurrentBranch() => Branch;
 
         public void EditCommitTemplateSettings() => Shown.Add("template settings");

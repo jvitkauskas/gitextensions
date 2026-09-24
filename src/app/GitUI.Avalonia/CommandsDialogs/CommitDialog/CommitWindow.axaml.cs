@@ -462,6 +462,14 @@ public partial class CommitWindow : DialogWindow
             foreach (GitCommands.CommitTemplateItem template in templates)
             {
                 MenuItem item = new() { Header = template.Name.Replace("_", "__") };
+
+                // As CreateToolStripItem: the icon of the template (of a plugin), if any.
+                if (viewModel.GetTemplateIcon(template) is { } png)
+                {
+                    using MemoryStream stream = new(png);
+                    item.Icon = new Image { Width = 16, Height = 16, Source = new Bitmap(stream) };
+                }
+
                 item.Click += (_, _) => viewModel.ApplyTemplate(template);
                 flyout.Items.Add(item);
             }
@@ -548,6 +556,11 @@ public partial class CommitWindow : DialogWindow
         }
 
         flyout.Items.Add(new Separator());
+        flyout.Items.Add(new MenuItem
+        {
+            Header = _viewModel.Strings.GenerateListOfChangesInSubmodules.AccessKeyText,
+            Command = _viewModel.GenerateListOfChangesInSubmodulesCommand,
+        });
         MenuItem onlyMine = new()
         {
             Header = TranslatedText.ToAccessKeyText(_viewModel.Strings.ShowOnlyMyMessages.Text),

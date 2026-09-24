@@ -1112,6 +1112,19 @@ public sealed partial class CommitViewModel : DialogViewModel
         return ([.. registered.Where(t => !string.IsNullOrEmpty(t.Name))], [.. fromSettings.Where(t => !string.IsNullOrEmpty(t.Name))]);
     }
 
+    /// <summary>The icon of a template as PNG, if it has one (the <c>Icon</c> of the menu item).</summary>
+    public byte[]? GetTemplateIcon(CommitTemplateItem template) => _host.GetTemplateIcon(template);
+
+    /// <summary>As <c>generateListOfChangesInSubmodulesChangesToolStripMenuItem_Click</c>: the message lists the commits of the staged submodules.</summary>
+    [RelayCommand]
+    private void GenerateListOfChangesInSubmodules()
+    {
+        if (_host.GetListOfChangesInSubmodules([.. Staged.AllItems]) is { } message)
+        {
+            Message.Text = message;
+        }
+    }
+
     /// <summary>As the click on a template: its text replaces the message (with the matches of the branch, if a regex).</summary>
     public void ApplyTemplate(CommitTemplateItem template)
     {

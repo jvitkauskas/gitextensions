@@ -1,8 +1,10 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 using GitCommands;
 using GitCommands.Config;
 using GitCommands.Git;
 using GitExtensions.Extensibility;
+using GitExtensions.Extensibility.Configurations;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs.CommitDialog;
@@ -292,6 +294,80 @@ internal static partial class AvaloniaDialogs
 
         public (IReadOnlyList<CommitTemplateItem> Registered, IReadOnlyList<CommitTemplateItem> FromSettings) GetCommitTemplates()
             => ([.. _commitTemplateManager.RegisteredTemplates], CommitTemplateItem.LoadFromSettings() ?? []);
+
+        public byte[]? GetTemplateIcon(CommitTemplateItem template)
+        {
+            if (template.Icon is not { } icon)
+            {
+                return null;
+            }
+
+            using MemoryStream stream = new();
+            icon.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            return stream.ToArray();
+        }
+
+        public string? GetListOfChangesInSubmodules(IReadOnlyList<GitItemStatus> stagedFiles)
+        {
+            ISubmodulesConfigFile configFile;
+            try
+            {
+                configFile = Module.GetSubmodulesConfigFile();
+            }
+            catch (GitConfigurationException ex)
+            {
+                MessageBoxes.ShowGitConfigurationExceptionMessage(this, ex);
+                return null;
+            }
+
+            // As generateListOfChangesInSubmodulesChangesToolStripMenuItem_Click: the path and name of each staged submodule.
+            FullPathResolver fullPathResolver = new(() => Module.WorkingDir);
+            Dictionary<string, string> modules = stagedFiles
+                .Where(item => item.IsSubmodule
+                               && Directory.Exists(fullPathResolver.Resolve(item.Name))
+                               && configFile.ConfigSections.FirstOrDefault(section => section.GetValue("path").Trim() == item.Name)?.SubSection is not null)
+                .Select(item => item.Name)
+                .ToDictionary(localPath => configFile.ConfigSections.First(section => section.GetValue("path").Trim() == localPath).SubSection!.Trim());
+            if (modules.Count == 0)
+            {
+                return null;
+            }
+
+            StringBuilder sb = new();
+            sb.AppendLine("Submodule" + (modules.Count == 1 ? " " : "s ") + string.Join(", ", modules.Keys) + " updated");
+            sb.AppendLine();
+            foreach ((string path, string name) in modules)
+            {
+                GitArgumentBuilder args = new("diff")
+                {
+                    "--no-ext-diff",
+                    "--cached",
+                    "-z",
+                    "--",
+                    name.QuoteNE()
+                };
+                string[] lines = Module.GitExecutable.GetOutput(args).Split(Delimiters.LineFeed, StringSplitOptions.RemoveEmptyEntries);
+                const string subprojectCommit = "Subproject commit ";
+                string from = lines.Single(s => s.StartsWith("-" + subprojectCommit))[(subprojectCommit.Length + 1)..];
+                string to = lines.Single(s => s.StartsWith("+" + subprojectCommit))[(subprojectCommit.Length + 1)..];
+                if (!string.IsNullOrEmpty(from) && !string.IsNullOrEmpty(to))
+                {
+                    sb.AppendLine("Submodule " + path + ":");
+                    GitModule module = new(_commands.GetRequiredService<IGitExecutorProvider>(), fullPathResolver.Resolve(name.EnsureTrailingPathSeparator()));
+                    args = new GitArgumentBuilder("log")
+                    {
+                        "--pretty=format:\"    %m %h - %s\"",
+                        "--no-merges",
+                        $"{from}...{to}".Quote()
+                    };
+                    string log = module.GitExecutable.GetOutput(args);
+                    sb.AppendLine(log.Length != 0 ? log : "    * Revision changed to " + to[..7]);
+                    sb.AppendLine();
+                }
+            }
+
+            return sb.ToString().TrimEnd();
+        }
 
         public string GetCurrentBranch() => Module.GetSelectedBranch();
 
