@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Styling;
@@ -218,6 +219,30 @@ public sealed class FileStatusListViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         return (window, view, viewModel);
     }
+
+    [Test]
+    public Task The_items_of_the_toolbar_menus_accept_their_parameters() => OnUiThreadAsync(() =>
+    {
+        (Window window, FileStatusListView view, FileStatusListViewModel viewModel) = Show();
+        viewModel.GitGrep = (_, _, _, _) => Task.FromResult<FileStatusGroup?>(null);
+        Dispatcher.UIThread.RunJobs();
+
+        foreach (Control button in view.Toolbar.Children.Where(child => child is SplitButton or DropDownButton))
+        {
+            FlyoutBase flyout = button is SplitButton split ? split.Flyout! : ((DropDownButton)button).Flyout!;
+            flyout.ShowAt(button);
+            Dispatcher.UIThread.RunJobs();
+            foreach (MenuItem item in ((MenuFlyout)flyout).Items.OfType<MenuItem>().SelectMany(item => item.Items.OfType<MenuItem>().Prepend(item)))
+            {
+                // A command bound to an item of the wrong parameter type throws here, as when the item is shown.
+                ((Action)(() => item.Command?.CanExecute(item.CommandParameter))).Should().NotThrow($"{button.Name}: {item.Header}");
+            }
+
+            flyout.Hide();
+        }
+
+        window.Close();
+    });
 
     private static IEnumerable<string> SelectedNames(FileStatusListView view)
         => view.FlatTree!.SelectedNodes.Cast<FileStatusNode>().Select(n => n.Entry!.Item.Name);

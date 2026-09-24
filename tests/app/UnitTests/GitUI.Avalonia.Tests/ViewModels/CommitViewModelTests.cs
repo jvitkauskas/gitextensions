@@ -408,7 +408,7 @@ public sealed class CommitViewModelTests
 
         public bool CanResetSoft() => true;
 
-        public Task<IReadOnlyList<GitItemStatus>> GetAllChangedFilesAsync(CancellationToken cancellationToken)
+        public Task<IReadOnlyList<GitItemStatus>> GetAllChangedFilesAsync(FileStatusFileOptions options, CancellationToken cancellationToken)
             => Task.FromResult<IReadOnlyList<GitItemStatus>>([.. WorkTree, .. Index]);
 
         public IReadOnlyList<GitItemStatus> GetIndexFiles() => [.. Index];

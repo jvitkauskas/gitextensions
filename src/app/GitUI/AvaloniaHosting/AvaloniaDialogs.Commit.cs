@@ -143,15 +143,15 @@ internal static partial class AvaloniaDialogs
 
         public bool CanResetSoft() => !Module.RevParse("HEAD~1").IsZero;
 
-        /// <summary>As <c>ComputeUnstagedFiles</c> with the default options of the unstaged list.</summary>
-        public async Task<IReadOnlyList<GitItemStatus>> GetAllChangedFilesAsync(CancellationToken cancellationToken)
+        /// <summary>As <c>ComputeUnstagedFiles</c> with the settings of the unstaged list.</summary>
+        public async Task<IReadOnlyList<GitItemStatus>> GetAllChangedFilesAsync(FileStatusFileOptions options, CancellationToken cancellationToken)
         {
             await TaskScheduler.Default;
             IReadOnlyList<GitItemStatus> files = Module.GetAllChangedFilesWithSubmodulesStatus(
-                excludeIgnoredFiles: true,
-                excludeAssumeUnchangedFiles: true,
-                excludeSkipWorktreeFiles: true,
-                UntrackedFilesMode.Default,
+                excludeIgnoredFiles: !options.ShowIgnoredFiles,
+                excludeAssumeUnchangedFiles: !options.ShowAssumeUnchangedFiles,
+                excludeSkipWorktreeFiles: !options.ShowSkipWorktreeFiles,
+                options.ShowUntrackedFiles ? UntrackedFilesMode.Default : UntrackedFilesMode.No,
                 cancellationToken);
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             return files;

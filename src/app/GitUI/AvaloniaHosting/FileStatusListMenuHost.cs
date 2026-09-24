@@ -519,6 +519,13 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
         });
     }
 
+    /// <summary>As <c>EditGitIgnore_Click</c> and <c>EditLocallyIgnoredFiles_Click</c>.</summary>
+    public bool EditGitIgnore(bool localExcludes)
+    {
+        AvaloniaUi.RunInHostContext(() => commands.StartEditGitIgnoreDialog(Owner, localExcludes));
+        return true;
+    }
+
     /// <summary>As <c>AddFileToIgnoreFile</c>.</summary>
     public bool AddToIgnoreFile(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, bool localExclude)
     {

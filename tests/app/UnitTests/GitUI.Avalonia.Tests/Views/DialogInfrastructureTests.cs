@@ -79,6 +79,32 @@ public sealed class DialogInfrastructureTests : HeadlessTest
     });
 
     [Test]
+    public Task A_key_typing_text_is_no_hotkey_in_a_text_box() => OnUiThreadAsync(() =>
+    {
+        // E.g. R, the hotkey that resets the selected files of a list, typed in its filter.
+        HotkeyViewModel viewModel = new();
+        GitUI.Avalonia.CommandsDialogs.AddFilesWindow window = new()
+        {
+            DataContext = viewModel,
+            Hotkeys =
+            [
+                new HotkeyBinding(CommandCode: 1, KeyData: 0x52 /* R */),
+                new HotkeyBinding(CommandCode: 2, KeyData: 0x74 /* F5 */ | HotkeyBinding.Control),
+            ],
+        };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        TextBox filter = window.FindControl<TextBox>("filterTextBox")!;
+        filter.Focus();
+
+        window.KeyPressQwerty(PhysicalKey.R, RawInputModifiers.None);
+        window.KeyPressQwerty(PhysicalKey.F5, RawInputModifiers.Control);
+
+        viewModel.ExecutedCommands.Should().Equal([2], "R is typed in the text box, Ctrl+F5 is still a hotkey");
+        window.Close();
+    });
+
+    [Test]
     public Task Configured_hotkey_reaches_the_view_model() => OnUiThreadAsync(() =>
     {
         HotkeyViewModel viewModel = new();

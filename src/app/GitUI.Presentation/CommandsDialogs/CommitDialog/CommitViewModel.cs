@@ -51,7 +51,17 @@ public sealed partial class CommitViewModel : DialogViewModel
         _editedCommit = editedCommit;
         _initialKind = kind;
         Options = host.Options;
-        Unstaged = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { NoFilesText = strings.NoUnstagedChanges.Text, SelectFirstItemOnSetItems = false };
+        Unstaged = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions)
+        {
+            NoFilesText = strings.NoUnstagedChanges.Text,
+            SelectFirstItemOnSetItems = false,
+
+            // As BindContextMenu with canAutoRefresh: the settings of the files shown and the refresh.
+            HasFileSettings = true,
+            HasIgnoredFileSettings = true,
+            HasRefreshButton = true,
+            CanAutoRefresh = true,
+        };
         Staged = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { NoFilesText = strings.NoStagedChanges.Text, SelectFirstItemOnSetItems = false };
         Diff = new FileViewerViewModel(fileViewerHost) { LinePatchingBlocksUntilReload = true };
 
@@ -355,7 +365,7 @@ public sealed partial class CommitViewModel : DialogViewModel
         IReadOnlyList<GitItemStatus> files;
         try
         {
-            files = await _host.GetAllChangedFilesAsync(loading.Token);
+            files = await _host.GetAllChangedFilesAsync(Unstaged.FileOptions, loading.Token);
         }
         catch (OperationCanceledException)
         {

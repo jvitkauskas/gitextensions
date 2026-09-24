@@ -69,6 +69,7 @@ public sealed partial class FileStatusListViewModel : ObservableObject
         _noItemStatus = new GitItemStatus(name: $"- {strings.NoFiles.Text} -") { IsStatusOnly = true, ErrorMessage = string.Empty };
         SelectedNodes.CollectionChanged += (_, _) =>
         {
+            OnPropertyChanged(nameof(HasSelectedNodesWithChildren));
             if (!_updatingSelection)
             {
                 OnSelectionChanged();
@@ -161,7 +162,14 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     {
         _groups = groups;
         IsLoading = false;
+
+        // As SetDiffsAsync with git grep: the search runs again for the new revision.
+        _gitGrepGroup = null;
         Update(updateCausedByFilter: false);
+        if (IsGitGrepActive)
+        {
+            StartGitGrep(GitGrepText, delayMilliseconds: 0);
+        }
     }
 
     /// <summary>Shows the files of a diff between two revisions.</summary>
@@ -297,6 +305,7 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     /// <summary>As <c>ItemContextMenu_Opening</c> / <c>UpdateStatusOfMenuItems</c>.</summary>
     public void UpdateMenuState()
     {
+        OnPropertyChanged(nameof(CanCollapseRootFolders));
         if (MenuHost is not { } host)
         {
             MenuState = FileStatusMenuState.None;
@@ -587,23 +596,28 @@ public sealed partial class FileStatusListViewModel : ObservableObject
         }
     }
 
+    /// <summary>As <c>ExpandAll_Click</c>: the selected nodes with nodes below them, else all the nodes.</summary>
     [RelayCommand]
     private void ExpandAll()
     {
-        foreach (FileStatusNode node in Nodes)
+        foreach (FileStatusNode node in NodesOfTreeItems())
         {
             node.ExpandAll();
         }
     }
 
+    /// <summary>As <c>CollapseAll_Click</c>: the selected nodes with nodes below them, else all the nodes.</summary>
     [RelayCommand]
     private void CollapseAll()
     {
-        foreach (FileStatusNode node in Nodes.SelectMany(n => n.DescendantsAndSelf()))
+        foreach (FileStatusNode node in NodesOfTreeItems().SelectMany(n => n.DescendantsAndSelf()))
         {
             node.IsExpanded = false;
         }
     }
+
+    private IReadOnlyList<FileStatusNode> NodesOfTreeItems()
+        => HasSelectedNodesWithChildren ? [.. SelectedNodes.Where(node => node.Children.Count > 0)] : Nodes;
 
     [RelayCommand]
     private void ClearFilter() => Filter = "";
@@ -650,8 +664,9 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     {
         HashSet<GitItemStatus>? previouslySelectedItems = updateCausedByFilter ? [.. SelectedEntries.Select(e => e.Item)] : null;
 
-        (List<FileStatusNode> nodes, _, bool filesPresent) = FileStatusTreeBuilder.Build(_groups, Options, IsFilterMatch, _noItemStatus, expandIfFewFiles: !IsFileTreeMode || IsFilterActive);
-        ShowNoFiles = !filesPresent && _groups.Count <= 1 && !IsFileTreeMode;
+        IReadOnlyList<FileStatusGroup> groups = ShownGroups;
+        (List<FileStatusNode> nodes, _, bool filesPresent) = FileStatusTreeBuilder.Build(groups, Options, IsFilterMatch, _noItemStatus, expandIfFewFiles: !IsFileTreeMode || IsFilterActive || IsGitGrepActive);
+        ShowNoFiles = !filesPresent && groups.Count <= 1 && !IsFileTreeMode && !IsGitGrepActive;
 
         Nodes.Clear();
         foreach (FileStatusNode node in nodes)
@@ -689,13 +704,27 @@ public sealed partial class FileStatusListViewModel : ObservableObject
             SetSelection([]);
         }
 
+        OnPropertyChanged(nameof(HasGroups));
+        OnPropertyChanged(nameof(HasDiffABGroups));
+        OnPropertyChanged(nameof(HasArtificialCommits));
+        OnPropertyChanged(nameof(HasWorkTree));
         DataSourceChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>As <c>FileStatusList.IsFilterMatch</c> (without the A/B diff status buttons).</summary>
+    /// <summary>As <c>FileStatusList.IsFilterMatch</c>: the A/B diff status buttons and the filter.</summary>
     private bool IsFilterMatch(GitItemStatus item)
     {
-        if (item.IsRangeDiff || _filterRegex is null)
+        if (item.IsRangeDiff)
+        {
+            return true;
+        }
+
+        if (!IsDiffStatusMatch(item.DiffStatus))
+        {
+            return false;
+        }
+
+        if (_filterRegex is null)
         {
             return true;
         }

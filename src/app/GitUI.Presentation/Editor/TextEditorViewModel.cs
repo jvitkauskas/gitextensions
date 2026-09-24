@@ -30,6 +30,12 @@ public sealed partial class TextEditorViewModel : ObservableObject
     [ObservableProperty]
     public partial string? FileName { get; set; }
 
+    /// <summary>Reads the selected text of the view (the view sets it).</summary>
+    public Func<string>? SelectedTextProvider { get; set; }
+
+    /// <summary>The selected text of the editor, if a view shows it.</summary>
+    public string SelectedText => SelectedTextProvider?.Invoke() ?? "";
+
     /// <summary>The line (1-based) to show and put the caret on when the text is loaded.</summary>
     [ObservableProperty]
     public partial int? LineToShow { get; set; }

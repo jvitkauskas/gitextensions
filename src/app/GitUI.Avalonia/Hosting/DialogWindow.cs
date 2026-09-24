@@ -201,8 +201,16 @@ public class DialogWindow : Window
             return;
         }
 
+        // As IsTextEditKey in the hotkeys of the WinForms controls: a key typing or editing text is not a hotkey in an editable
+        // text box (e.g. R in the filter of a file list, which would reset the selected files).
+        object? focused = FocusManager?.GetFocusedElement();
+        if (focused is TextBox { IsReadOnly: false } textBox && KeyMapping.IsTextEditKey(keyData, multiLine: textBox.AcceptsReturn))
+        {
+            return;
+        }
+
         // As ProcessCmdKey from the focused control up: the controls with their own hotkeys come first.
-        for (Visual? visual = FocusManager?.GetFocusedElement() as Visual; visual is not null && visual != this; visual = visual.GetVisualParent())
+        for (Visual? visual = focused as Visual; visual is not null && visual != this; visual = visual.GetVisualParent())
         {
             if (visual is IHotkeyControl control && control.ProcessHotkey(keyData))
             {

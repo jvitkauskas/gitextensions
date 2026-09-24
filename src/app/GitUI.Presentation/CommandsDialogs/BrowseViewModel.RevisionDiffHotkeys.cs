@@ -76,6 +76,12 @@ public sealed partial class BrowseViewModel
             case RevisionDiffHotkeyCommand.SelectFirstGroupChanges:
                 files.SelectFirstGroup();
                 return true;
+
+            // As tsmiOpenFindInCommitFilesGitGrepDialog: the prompt, each hotkey for its tab.
+            case RevisionDiffHotkeyCommand.FindInCommitFilesUsingGitGrep_DiffTab when !fileTree && files.CanUseGitGrep:
+            case RevisionDiffHotkeyCommand.FindInCommitFilesUsingGitGrep_FileTreeTab when fileTree && files.CanUseGitGrep:
+                files.OpenGitGrepDialogCommand.Execute(null);
+                return true;
         }
 
         files.UpdateMenuState();

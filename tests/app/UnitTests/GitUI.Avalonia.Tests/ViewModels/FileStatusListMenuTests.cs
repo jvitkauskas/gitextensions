@@ -361,6 +361,12 @@ public sealed class FileStatusListMenuTests
             return FoundFile;
         }
 
+        public bool EditGitIgnore(bool localExcludes)
+        {
+            Log.Add($"edit {(localExcludes ? "exclude" : "gitignore")}");
+            return true;
+        }
+
         public bool AddToIgnoreFile(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, bool localExclude)
         {
             Log.Add($"{(localExclude ? "exclude" : "ignore")}: {Names(selected)} folder: {selectedFolder}");

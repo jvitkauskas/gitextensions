@@ -18,7 +18,11 @@
     <Style Selector="TextBox.invalid">
       <Setter Property="Background" Value="#40FF0000" />
     </Style>
-    <Style Selector="Button.toolbar, ToggleButton.toolbar">
+    <Style Selector="ToggleButton.filter">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="MinWidth" Value="20" />
+    </Style>
+    <Style Selector="Button.toolbar, ToggleButton.toolbar, SplitButton.toolbar, DropDownButton.toolbar">
       <Setter Property="Padding" Value="3" />
       <Setter Property="MinWidth" Value="0" />
       <Setter Property="Background" Value="Transparent" />
@@ -26,8 +30,136 @@
     </Style>
   </UserControl.Styles>
   <DockPanel>
-    <!-- Equivalent of the toolbar and the filter box of FileStatusList. -->
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="2" Margin="0,0,0,2">
+    <!-- Equivalent of the toolbar of FileStatusList (FileStatusList.Toolbar.cs): each item can be hidden (Settings, Toolbar). -->
+    <StackPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="1" Margin="0,0,0,2">
+      <Button Name="btnCollapseGroups" Classes="toolbar" IsVisible="{Binding HasGroups}" ToolTip.Tip="{Binding ToolbarStrings.CollapseGroups.Text}"
+              Command="{Binding CollapseGroupsCommand}">
+        <Image Source="avares://GitUI.Avalonia/Assets/CollapseAll.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="btnRefresh" Classes="toolbar" IsVisible="{Binding HasRefreshButton}" IsEnabled="{Binding HasArtificialCommits}"
+              ToolTip.Tip="{Binding ToolbarStrings.Refresh.Text}" Command="{Binding RefreshCommand}">
+        <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
+      </Button>
+      <SplitButton Name="btnAsTree" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.AsTreeToolTip.Text}"
+                   Command="{Binding ToggleFlatListCommand}" Padding="3,1">
+        <Panel>
+          <Image Source="avares://GitUI.Avalonia/Assets/FileTree.png" Width="16" Height="16" IsVisible="{Binding !IsFlatList}" />
+          <Image Source="avares://GitUI.Avalonia/Assets/DocumentTree.png" Width="16" Height="16" IsVisible="{Binding IsFlatList}" />
+        </Panel>
+        <SplitButton.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedLeft">
+            <MenuItem Header="{Binding MenuStrings.GroupByFilePathTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFilePathFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePathFlat}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtensionFlat}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFileStatusFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatusFlat}" />
+            <Separator />
+            <MenuItem Name="denseTreeMenuItem" Header="{Binding ToolbarStrings.DenseTree.AccessKeyText}" ToggleType="CheckBox"
+                      IsChecked="{Binding Options.MergeSingleItemsWithFolder, Mode=OneWay}" IsEnabled="{Binding !IsFlatList}" Command="{Binding ToggleDenseTreeCommand}" />
+            <MenuItem Name="showGroupNodesInFlatListMenuItem" Header="{Binding ToolbarStrings.ShowGroupNodesInFlatList.AccessKeyText}" ToggleType="CheckBox"
+                      IsChecked="{Binding Options.ShowGroupNodesInFlatList, Mode=OneWay}" IsEnabled="{Binding IsFlatList}" Command="{Binding ToggleShowGroupNodesInFlatListCommand}" />
+          </MenuFlyout>
+        </SplitButton.Flyout>
+      </SplitButton>
+      <Button Name="byPathButton" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
+              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
+        <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="byExtensionButton" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
+              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
+        <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
+      </Button>
+      <Button Name="byStatusButton" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
+              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
+        <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
+      </Button>
+      <!-- The A/B filter buttons, for the diffs with a common BASE (IsDiffStatusMatch). -->
+      <ToggleButton Name="btnUnequalChange" Classes="toolbar filter" Content="!" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowUnequalChange}" ToolTip.Tip="{Binding ToolbarStrings.UnequalChange.Text}" />
+      <ToggleButton Name="btnOnlyB" Classes="toolbar filter" Content="B" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowOnlyB}" ToolTip.Tip="{Binding ToolbarStrings.OnlyB.Text}" />
+      <ToggleButton Name="btnOnlyA" Classes="toolbar filter" Content="A" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowOnlyA}" ToolTip.Tip="{Binding ToolbarStrings.OnlyA.Text}" />
+      <ToggleButton Name="btnSameChange" Classes="toolbar filter" Content="=" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowSameChange}" ToolTip.Tip="{Binding ToolbarStrings.SameChange.Text}" />
+      <SplitButton Name="btnFindInFilesGitGrep" Classes="toolbar" IsVisible="{Binding CanUseGitGrep}" ToolTip.Tip="{Binding ToolbarStrings.FindInFilesGitGrep.Text}"
+                   Command="{Binding ToggleGitGrepCommand}" Padding="3,1">
+        <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
+        <SplitButton.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedLeft">
+            <MenuItem Name="findUsingMatchCaseMenuItem" Header="{Binding ToolbarStrings.FindUsingMatchCase.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding GitGrepMatchCase}" />
+            <MenuItem Name="findUsingWholeWordMenuItem" Header="{Binding ToolbarStrings.FindUsingWholeWord.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding GitGrepWholeWord}" />
+            <!-- The regular expression options of git grep (_NO_TRANSLATE_tsmiFindUsingBasic, ...). -->
+            <MenuItem Name="findUsingOptionsMenuItem" Header="{Binding GitGrepOptionsText}">
+              <MenuItem Header="--basic-regexp" Command="{Binding SetGitGrepOptionCommand}" CommandParameter="--basic-regexp" />
+              <MenuItem Header="--extended-regexp" Command="{Binding SetGitGrepOptionCommand}" CommandParameter="--extended-regexp" />
+              <MenuItem Header="--fixed-strings" Command="{Binding SetGitGrepOptionCommand}" CommandParameter="--fixed-strings" />
+              <MenuItem Header="--perl-regexp" Command="{Binding SetGitGrepOptionCommand}" CommandParameter="--perl-regexp" />
+            </MenuItem>
+            <Separator />
+            <MenuItem Name="findUsingDialogMenuItem" Header="{Binding ToolbarStrings.FindUsingDialog.AccessKeyText}" ToggleType="Radio"
+                      IsChecked="{Binding GitGrepUsing, Mode=OneWay, Converter={x:Static local:FileStatusListConverters.IsGitGrepUsing}, ConverterParameter={x:Static fs:GitGrepUsing.Dialog}}"
+                      Command="{Binding ToggleGitGrepCommand}" CommandParameter="{x:Static fs:GitGrepUsing.Dialog}" />
+            <MenuItem Name="findUsingInputBoxMenuItem" Header="{Binding ToolbarStrings.FindUsingInputBox.AccessKeyText}" ToggleType="Radio"
+                      IsChecked="{Binding GitGrepUsing, Mode=OneWay, Converter={x:Static local:FileStatusListConverters.IsGitGrepUsing}, ConverterParameter={x:Static fs:GitGrepUsing.InputBox}}"
+                      Command="{Binding ToggleGitGrepCommand}" CommandParameter="{x:Static fs:GitGrepUsing.InputBox}" />
+            <MenuItem Name="findUsingBothMenuItem" Header="{Binding ToolbarStrings.FindUsingBoth.AccessKeyText}" ToggleType="Radio"
+                      IsChecked="{Binding GitGrepUsing, Mode=OneWay, Converter={x:Static local:FileStatusListConverters.IsGitGrepUsing}, ConverterParameter={x:Static fs:GitGrepUsing.Both}}"
+                      Command="{Binding ToggleGitGrepCommand}" CommandParameter="{x:Static fs:GitGrepUsing.Both}" />
+          </MenuFlyout>
+        </SplitButton.Flyout>
+      </SplitButton>
+      <DropDownButton Name="btnSettings" Classes="toolbar" ToolTip.Tip="{Binding ToolbarStrings.Settings.Text}" Padding="3,1">
+        <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" Width="16" Height="16" />
+        <DropDownButton.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedLeft">
+            <MenuItem Name="showIgnoredFilesMenuItem" Header="{Binding ToolbarStrings.ShowIgnoredFiles.AccessKeyText}" ToggleType="CheckBox"
+                      IsVisible="{Binding HasIgnoredFileSettings}" IsChecked="{Binding ShowIgnoredFiles}" />
+            <MenuItem Name="showSkipWorktreeFilesMenuItem" Header="{Binding ToolbarStrings.ShowSkipWorktreeFiles.AccessKeyText}" ToggleType="CheckBox"
+                      IsVisible="{Binding HasFileSettings}" IsEnabled="{Binding HasWorkTree}" IsChecked="{Binding ShowSkipWorktreeFiles}" />
+            <MenuItem Name="showAssumeUnchangedFilesMenuItem" Header="{Binding ToolbarStrings.ShowAssumeUnchangedFiles.AccessKeyText}" ToggleType="CheckBox"
+                      IsVisible="{Binding HasIgnoredFileSettings}" IsChecked="{Binding ShowAssumeUnchangedFiles}" />
+            <MenuItem Name="showUntrackedFilesMenuItem" Header="{Binding ToolbarStrings.ShowUntrackedFiles.AccessKeyText}" ToggleType="CheckBox"
+                      IsVisible="{Binding HasFileSettings}" IsEnabled="{Binding HasWorkTree}" IsChecked="{Binding ShowUntrackedFiles}" />
+            <Separator IsVisible="{Binding HasFileSettings}" />
+            <MenuItem Name="editGitIgnoreMenuItem" Header="{Binding ToolbarStrings.EditGitIgnore.AccessKeyText}" IsVisible="{Binding HasMenuHost}"
+                      Command="{Binding EditGitIgnoreCommand}" CommandParameter="{x:False}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditGitIgnore.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="editLocallyIgnoredFilesMenuItem" Header="{Binding ToolbarStrings.EditLocallyIgnoredFiles.AccessKeyText}" IsVisible="{Binding HasMenuHost}"
+                      Command="{Binding EditGitIgnoreCommand}" CommandParameter="{x:True}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditGitIgnore.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <Separator IsVisible="{Binding HasMenuHost}" />
+            <MenuItem Name="refreshOnFormFocusMenuItem" Header="{Binding ToolbarStrings.RefreshOnFormFocus.AccessKeyText}" ToggleType="CheckBox"
+                      IsVisible="{Binding CanAutoRefresh}" IsChecked="{Binding RefreshOnFormFocus}" />
+            <MenuItem Name="showDiffForAllParentsMenuItem" Header="{Binding ToolbarStrings.ShowDiffForAllParents.AccessKeyText}" ToggleType="CheckBox"
+                      IsVisible="{Binding HasShowDiffForAllParents}" IsChecked="{Binding ShowDiffForAllParents}" ToolTip.Tip="{Binding ShowDiffForAllParentsToolTip}" />
+            <Separator IsVisible="{Binding CanAutoRefresh}" />
+            <MenuItem Name="toolbarMenuItem" Header="{Binding ToolbarStrings.Toolbar.AccessKeyText}" />
+          </MenuFlyout>
+        </DropDownButton.Flyout>
+      </DropDownButton>
+    </StackPanel>
+    <!-- Equivalent of cboFindInCommitFilesGitGrep: the files are searched as it is typed. -->
+    <TextBox Name="gitGrepBox" DockPanel.Dock="Top" Margin="0,0,0,2" IsVisible="{Binding IsGitGrepBoxVisible}"
+             Text="{Binding GitGrepText}" PlaceholderText="{Binding ToolbarStrings.GitGrepWatermark.Text}"
+             Classes.active="{Binding IsGitGrepActive}" FontWeight="Bold">
+      <TextBox.InnerRightContent>
+        <StackPanel Orientation="Horizontal">
+          <Button Name="clearGitGrepButton" Classes="toolbar" Content="✕" Command="{Binding ClearGitGrepCommand}" IsVisible="{Binding IsGitGrepActive}" />
+          <!-- The expressions searched before (the items of cboFindInCommitFilesGitGrep). -->
+          <DropDownButton Name="gitGrepHistoryButton" Classes="toolbar" Padding="2,0" MinHeight="0" Height="22" VerticalAlignment="Center" IsVisible="{Binding HasGitGrepHistory}">
+            <DropDownButton.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedRight" />
+            </DropDownButton.Flyout>
+          </DropDownButton>
+        </StackPanel>
+      </TextBox.InnerRightContent>
+    </TextBox>
+    <!-- Equivalent of the filter box of FileStatusList. -->
+    <Grid DockPanel.Dock="Top" Margin="0,0,0,2">
       <TextBox Name="filterTextBox" Text="{Binding Filter}" PlaceholderText="{Binding Strings.FilterWatermark.Text}"
                ToolTip.Tip="{Binding FilterError}" Classes.active="{Binding IsFilterActive}" Classes.invalid="{Binding FilterError, Converter={x:Static ObjectConverters.IsNotNull}}">
         <TextBox.InnerRightContent>
@@ -35,22 +167,6 @@
                   IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         </TextBox.InnerRightContent>
       </TextBox>
-      <Button Name="byPathButton" Grid.Column="1" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
-              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
-        <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
-      </Button>
-      <Button Name="byExtensionButton" Grid.Column="2" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
-              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
-        <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
-      </Button>
-      <Button Name="byStatusButton" Grid.Column="3" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
-              Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
-        <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
-      </Button>
-      <ToggleButton Name="flatListButton" Grid.Column="4" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.AsTreeToolTip.Text}"
-                    IsChecked="{Binding IsFlatList, Mode=OneWay}" Command="{Binding ToggleFlatListCommand}">
-        <Image Source="avares://GitUI.Avalonia/Assets/DocumentTree.png" Width="16" Height="16" />
-      </ToggleButton>
     </Grid>
     <Panel>
       <!-- The tree as a virtualizing list of its visible nodes (FlatTreeList), for the thousands of files of a large commit. -->
@@ -58,6 +174,23 @@
         <ListBox.ContextMenu>
           <!-- Equivalent of FileStatusList.ItemContextMenu. -->
           <ContextMenu Name="treeMenu">
+            <!-- As InsertTreeContextMenuItems: for the selected nodes with nodes below them. -->
+            <MenuItem Name="selectAllMenuItem" Header="{Binding ToolbarStrings.SelectAll.AccessKeyText}" IsVisible="{Binding HasSelectedNodesWithChildren}" Command="{Binding SelectAllCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FileTree.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="collapseAllMenuItem" Header="{Binding Strings.CollapseAll.AccessKeyText}" IsVisible="{Binding HasSelectedNodesWithChildren}" Command="{Binding CollapseAllCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/CollapseAll.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="expandAllMenuItem" Header="{Binding Strings.ExpandAll.AccessKeyText}" IsVisible="{Binding HasSelectedNodesWithChildren}" Command="{Binding ExpandAllCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ExpandAll.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <Separator IsVisible="{Binding HasSelectedNodesWithChildren}" />
             <!-- As ItemContextMenu (UpdateStatusOfMenuItems): the items shown for the selection, in the order of the WinForms menu. -->
             <MenuItem Name="updateSubmoduleMenuItem" Header="{Binding MenuStrings.UpdateSubmodule.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowSubmoduleItems}"
@@ -168,6 +301,15 @@
                       Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:True}" />
             <MenuItem Name="findFileMenuItem" Header="{Binding MenuStrings.FindFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowFindFile}" Command="{Binding FindFileCommand}" />
+            <!-- As tsmiOpenFindInCommitFilesGitGrepDialog and tsmiShowFindInCommitFilesGitGrep (CanUseFindInCommitFilesGitGrep). -->
+            <MenuItem Name="openGitGrepDialogMenuItem" Header="{Binding ToolbarStrings.OpenGitGrepDialog.AccessKeyText}" IsVisible="{Binding CanUseGitGrep}"
+                      Command="{Binding OpenGitGrepDialogCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Name="showGitGrepBoxMenuItem" Header="{Binding ToolbarStrings.ShowGitGrepBox.AccessKeyText}" IsVisible="{Binding CanUseGitGrep}"
+                      ToggleType="CheckBox" IsChecked="{Binding IsGitGrepBoxVisible, Mode=OneWay}" Command="{Binding ToggleGitGrepBoxCommand}" />
             <Separator IsVisible="{Binding MenuState.ShowIgnoreSeparator}" />
             <MenuItem Name="addFileToGitIgnoreMenuItem" Header="{Binding MenuStrings.AddFileToGitIgnore.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowIgnore}" Command="{Binding AddToIgnoreFileCommand}" CommandParameter="{x:False}" />
@@ -194,8 +336,11 @@
               <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}" />
               <MenuItem Header="{Binding MenuStrings.GroupByFileStatusFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatusFlat}" />
             </MenuItem>
-            <MenuItem Name="expandAllMenuItem" Header="{Binding Strings.ExpandAll.AccessKeyText}" Command="{Binding ExpandAllCommand}" />
-            <MenuItem Name="collapseAllMenuItem" Header="{Binding Strings.CollapseAll.AccessKeyText}" Command="{Binding CollapseAllCommand}" />
+            <MenuItem Name="collapseRootFoldersMenuItem" Header="{Binding ToolbarStrings.CollapseRootFolders.AccessKeyText}" IsVisible="{Binding CanCollapseRootFolders}" Command="{Binding CollapseRootFoldersCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/TreeCollapseAll.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
           </ContextMenu>
         </ListBox.ContextMenu>
         <ListBox.ItemTemplate>

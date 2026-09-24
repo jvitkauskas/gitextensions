@@ -164,10 +164,20 @@ internal static partial class AvaloniaDialogs
             };
             browseViewModel = viewModel;
             UseFileStatusListMenu(viewModel.Files, commands, window);
+            host.DiffFiles = viewModel.Files;
+
+            // As RevisionDiffControl: git grep in the files of the diff and of the file tree (CanUseFindInCommitFilesGitGrep),
+            // the prompt starting with the text selected in the viewer.
+            viewModel.Files.GitGrep = CreateGitGrep(commands);
+            viewModel.Files.GetSelectedText = () => viewModel.Viewer.Editor.SelectedText;
+            UseFindInCommitFilesGitGrep(viewModel.Files, window);
             if (viewModel.FileTree is { } fileTree)
             {
                 // Not UseFileStatusListMenu: the sorting of the file tree is not the one of the diff lists.
                 fileTree.MenuHost = new FileStatusListMenuHost(commands, window);
+                fileTree.GitGrep = CreateGitGrep(commands);
+                fileTree.GetSelectedText = () => viewModel.TreeViewer?.Editor.SelectedText;
+                UseFindInCommitFilesGitGrep(fileTree, window);
             }
 
             // The left panel, whose "filter for selected" sets the branch filter of the toolbar; none on the dashboard.
@@ -328,8 +338,18 @@ internal static partial class AvaloniaDialogs
 
         public string GetCurrentBranch() => Module.IsValidGitWorkingDir() ? Module.GetSelectedBranch() : TranslatedStrings.NoBranch;
 
+        /// <summary>The files of the diff tab, whose settings choose the files shown (<c>tsmiShowUntrackedFiles</c>, ...).</summary>
+        public FileStatusListViewModel? DiffFiles { get; set; }
+
         public Task<IReadOnlyList<FileStatusGroup>> GetDiffsAsync(IReadOnlyList<GitRevision> revisions, CancellationToken cancellationToken)
-            => CalculateDiffsAsync(_commands, revisions, Module.GetCurrentCheckout(), allowMultiDiff: true, cancellationToken);
+            => CalculateDiffsAsync(
+                _commands,
+                revisions,
+                Module.GetCurrentCheckout(),
+                allowMultiDiff: true,
+                cancellationToken,
+                showSkipWorktreeFiles: DiffFiles?.ShowSkipWorktreeFiles ?? false,
+                showUntrackedFiles: DiffFiles?.ShowUntrackedFiles ?? true);
 
         public void Run(BrowseCommand command, BrowseSelection selection) => AvaloniaUi.RunInHostContext(() =>
         {

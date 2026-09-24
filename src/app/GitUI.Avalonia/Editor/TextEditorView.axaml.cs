@@ -245,6 +245,7 @@ public partial class TextEditorView : UserControl
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.TextLoaded += OnTextLoaded;
         _viewModel?.FocusRequested += OnFocusRequested;
+        _viewModel?.SelectedTextProvider = () => editor.SelectedText;
 
         if (_viewModel is not null)
         {

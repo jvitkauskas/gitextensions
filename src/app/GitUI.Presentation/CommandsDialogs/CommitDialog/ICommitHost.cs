@@ -1,5 +1,6 @@
 using GitCommands;
 using GitExtensions.Extensibility.Git;
+using GitUI.Presentation.UserControls.FileStatusList;
 using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.CommandsDialogs.CommitDialog;
@@ -117,7 +118,8 @@ public interface ICommitHost
     bool CanResetSoft();
 
     /// <summary>The changed files of the working directory and the index (<c>GetAllChangedFilesWithSubmodulesStatus</c>).</summary>
-    Task<IReadOnlyList<GitItemStatus>> GetAllChangedFilesAsync(CancellationToken cancellationToken);
+    /// <param name="options">The files the settings of the unstaged list show (as the items of <c>Unstaged</c> in <c>ComputeUnstagedFiles</c>).</param>
+    Task<IReadOnlyList<GitItemStatus>> GetAllChangedFilesAsync(FileStatusFileOptions options, CancellationToken cancellationToken);
 
     /// <summary>The files of the index (<c>GetIndexFilesWithSubmodulesStatus</c>).</summary>
     IReadOnlyList<GitItemStatus> GetIndexFiles();

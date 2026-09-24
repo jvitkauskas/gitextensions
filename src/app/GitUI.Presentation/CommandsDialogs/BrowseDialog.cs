@@ -513,7 +513,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         Dashboard = dashboard;
         Grid = grid;
         CommitInfo = new CommitInfoViewModel(commitInfoHost);
-        Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
+        Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { HasFileSettings = true, HasShowDiffForAllParents = true, HasRefreshButton = true, CanAutoRefresh = true };
         Viewer = new FileViewerViewModel(fileViewerHost);
         Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();

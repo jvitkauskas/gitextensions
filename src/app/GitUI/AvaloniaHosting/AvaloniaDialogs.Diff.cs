@@ -51,18 +51,43 @@ internal static partial class AvaloniaDialogs
             ShowGroupNodesInFlatList: AppSettings.FileStatusShowGroupNodesInFlatList.Value);
 
     /// <summary>The files of the diffs of the first revision to the others, with <c>FileStatusDiffCalculator</c> (as <c>FileStatusList.SetDiffs</c>).</summary>
-    internal static async Task<IReadOnlyList<FileStatusGroup>> CalculateDiffsAsync(IGitUICommands commands, IReadOnlyList<GitRevision> revisions, ObjectId headId, bool allowMultiDiff, CancellationToken cancellationToken)
+    internal static async Task<IReadOnlyList<FileStatusGroup>> CalculateDiffsAsync(
+        IGitUICommands commands,
+        IReadOnlyList<GitRevision> revisions,
+        ObjectId headId,
+        bool allowMultiDiff,
+        CancellationToken cancellationToken,
+        bool showSkipWorktreeFiles = false,
+        bool showUntrackedFiles = true)
     {
         await TaskScheduler.Default;
         cancellationToken.ThrowIfCancellationRequested();
 
         FileStatusDiffCalculator calculator = new(() => commands.Module);
-        calculator.SetDiff(revisions, headId, allowMultiDiff);
+        calculator.SetDiff(revisions, headId, allowMultiDiff, showSkipWorktreeFiles, showUntrackedFiles);
         IReadOnlyList<FileStatusWithDescription> diffs = calculator.Calculate(prevList: [], refreshDiff: true, refreshGrep: false, cancellationToken);
 
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
         return [.. diffs.Select(diff => new FileStatusGroup(diff.FirstRev, diff.SecondRev, diff.Summary, diff.Statuses, diff.BaseA, diff.BaseB, diff.IconName))];
     }
+
+    /// <summary>
+    ///  The git grep of a file status list (as <c>FileStatusList.FindInCommitFilesGitGrep</c>): the calculator of the list for
+    ///  the revision, with the git grep arguments (<c>SetGrep</c>).
+    /// </summary>
+    internal static FileStatusGitGrep CreateGitGrep(IGitUICommands commands) => async (revision, grepArguments, fileTreeMode, cancellationToken) =>
+    {
+        await TaskScheduler.Default;
+        cancellationToken.ThrowIfCancellationRequested();
+
+        FileStatusDiffCalculator calculator = new(() => commands.Module);
+        calculator.SetDiff([revision], headId: default, allowMultiDiff: false);
+        calculator.SetGrep(grepArguments, fileTreeMode);
+        FileStatusWithDescription? grep = calculator.Calculate(prevList: [], refreshDiff: false, refreshGrep: true, cancellationToken).SingleOrDefault();
+
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        return grep is null ? null : new FileStatusGroup(grep.FirstRev, grep.SecondRev, grep.Summary, grep.Statuses, IconName: FileStatusIcons.GitGrepIconName);
+    };
 
     /// <summary>As the constructor of <c>FormDiff</c>: artificial commits are compared with the current checkout.</summary>
     private static GitRevision? GetMergeBase(IGitModule module, ObjectId firstId, ObjectId secondId)

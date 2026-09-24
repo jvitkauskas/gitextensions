@@ -1,4 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
+using GitCommands;
 using GitUI.Avalonia.Controls.FlatTree;
 using GitUI.Presentation.UserControls.FileStatusList;
 
@@ -20,6 +23,9 @@ public partial class FileStatusListView : UserControl
 
     private FlatTreeList? _tree;
 
+    // The items of the toolbar hidden by the user (Settings > Toolbar), over the visibility they have otherwise.
+    private readonly Dictionary<Control, IDisposable?> _hiddenToolbarItems = [];
+
     public FileStatusListView()
     {
         InitializeComponent();
@@ -31,6 +37,44 @@ public partial class FileStatusListView : UserControl
             {
                 viewModel.UpdateMenuState();
                 InsertDirectScripts(viewModel);
+            }
+        };
+
+        CreateToolbarMenu();
+
+        // As AddToSearchFilter: the expression in the history once the box is left or Enter pressed.
+        gitGrepBox.LostFocus += (_, _) => (DataContext as FileStatusListViewModel)?.AddGitGrepHistory(gitGrepBox.Text ?? "");
+        gitGrepBox.AddHandler(
+            KeyDownEvent,
+            (_, e) =>
+            {
+                if (e.Key == global::Avalonia.Input.Key.Enter)
+                {
+                    (DataContext as FileStatusListViewModel)?.AddGitGrepHistory(gitGrepBox.Text ?? "");
+                }
+            },
+            global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
+        // The expressions searched before, searched again when chosen.
+        ((MenuFlyout)gitGrepHistoryButton.Flyout!).Opening += (sender, _) =>
+        {
+            MenuFlyout flyout = (MenuFlyout)sender!;
+            flyout.Items.Clear();
+            if (DataContext is FileStatusListViewModel viewModel)
+            {
+                foreach (string expression in viewModel.GitGrepHistory)
+                {
+                    flyout.Items.Add(new MenuItem { Header = expression, Command = viewModel.SearchGitGrepCommand, CommandParameter = expression });
+                }
+            }
+        };
+
+        // As SetFindInCommitFilesGitGrepVisibilityImpl: the box has the focus when it is shown.
+        gitGrepBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty && e.NewValue is true)
+            {
+                global::Avalonia.Threading.Dispatcher.UIThread.Post(() => gitGrepBox.Focus(), global::Avalonia.Threading.DispatcherPriority.Input);
             }
         };
 
@@ -47,6 +91,62 @@ public partial class FileStatusListView : UserControl
 
     /// <summary>The context menu, e.g. for tests.</summary>
     public ContextMenu Menu => treeMenu;
+
+    /// <summary>The toolbar, e.g. for tests.</summary>
+    public StackPanel Toolbar => toolbar;
+
+    /// <summary>
+    ///  As the Toolbar item of the settings (<c>UpdateToolbar</c>): an item for each item of the toolbar, which hides or shows it,
+    ///  saved as <c>FileStatusList.Toolbar.Visibility.&lt;name&gt;</c>. The settings button itself stays.
+    /// </summary>
+    private void CreateToolbarMenu()
+    {
+        foreach (Control item in toolbar.Children)
+        {
+            string settingsKey = $"FileStatusList.Toolbar.Visibility.{item.Name}";
+            bool visible = AppSettings.GetBool(settingsKey, defaultValue: true);
+            MenuItem menuItem = new()
+            {
+                Header = ToolTip.GetTip(item) is { } tip ? tip : item.Name,
+                ToggleType = MenuItemToggleType.CheckBox,
+                IsChecked = visible,
+                IsEnabled = item != btnSettings,
+                Icon = (item as ContentControl)?.Content is Image { Source: { } source } ? new Image { Source = source, Width = 16, Height = 16 }
+                    : (item as ContentControl)?.Content is Panel panel && panel.Children.OfType<Image>().FirstOrDefault() is { Source: { } first } ? new Image { Source = first, Width = 16, Height = 16 }
+                    : null,
+            };
+
+            // The tooltips are bound: the header follows them.
+            item.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == ToolTip.TipProperty && e.NewValue is { } tip)
+                {
+                    menuItem.Header = tip;
+                }
+            };
+            menuItem.Click += (_, _) =>
+            {
+                bool show = menuItem.IsChecked;
+                AppSettings.SetBool(settingsKey, show ? null : false);
+                SetToolbarItemHidden(item, !show);
+            };
+            toolbarMenuItem.Items.Add(menuItem);
+            SetToolbarItemHidden(item, !visible);
+        }
+    }
+
+    private void SetToolbarItemHidden(Control item, bool hidden)
+    {
+        if (_hiddenToolbarItems.Remove(item, out IDisposable? hiding))
+        {
+            hiding?.Dispose();
+        }
+
+        if (hidden)
+        {
+            _hiddenToolbarItems[item] = item.SetValue(Visual.IsVisibleProperty, false, BindingPriority.Animation);
+        }
+    }
 
     /// <summary>The list of the visible nodes of the tree, e.g. for tests.</summary>
     public ListBox Tree => filesTree;

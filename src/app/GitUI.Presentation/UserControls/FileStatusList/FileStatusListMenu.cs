@@ -437,6 +437,9 @@ public interface IFileStatusListMenuHost
     /// <summary>As <c>FindFile_Click</c>: the file chosen in the search window among the files of the list.</summary>
     GitItemStatus? FindFile(IReadOnlyList<GitItemStatus> candidates);
 
+    /// <summary>As <c>EditGitIgnore_Click</c> and <c>EditLocallyIgnoredFiles_Click</c>; returns whether the list should be refreshed.</summary>
+    bool EditGitIgnore(bool localExcludes);
+
     /// <summary>As <c>AddFileToIgnoreFile</c>; returns whether the list should be refreshed.</summary>
     bool AddToIgnoreFile(IReadOnlyList<FileStatusEntry> selected, RelativePath? selectedFolder, bool localExclude);
 

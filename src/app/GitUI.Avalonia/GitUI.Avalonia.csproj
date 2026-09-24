@@ -259,6 +259,7 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateDirtySubmodules.png" Link="Assets\RepoStateDirtySubmodules.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CollapseAll.png" Link="Assets\CollapseAll.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ExpandAll.png" Link="Assets\ExpandAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\TreeCollapseAll.png" Link="Assets\TreeCollapseAll.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\LayoutSidebarLeft.png" Link="Assets\LayoutSidebarLeft.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Author.png" Link="Assets\Author.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Date.png" Link="Assets\Date.png" />
