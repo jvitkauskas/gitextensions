@@ -180,7 +180,7 @@ public partial class CommitWindow : DialogWindow
     private static bool FocusFiles(FileStatusListView list)
     {
         // The selected file has the focus, as the focused node of the WinForms tree.
-        TreeView tree = list.Tree;
+        ListBox tree = list.Tree;
         Control? item = tree.SelectedItem is { } selected ? tree.ContainerFromItem(selected) : null;
         (item ?? tree).Focus(NavigationMethod.Tab);
         return true;

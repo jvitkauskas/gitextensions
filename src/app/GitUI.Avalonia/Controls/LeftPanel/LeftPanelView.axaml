@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lp="using:GitUI.Presentation.UserControls.LeftPanel"
              xmlns:local="using:GitUI.Avalonia.Controls.LeftPanel"
+             xmlns:ft="using:GitUI.Avalonia.Controls.FlatTree"
              x:Class="GitUI.Avalonia.Controls.LeftPanel.LeftPanelView"
              x:DataType="lp:LeftPanelViewModel">
   <UserControl.Styles>
-    <Style Selector="TreeViewItem" x:DataType="lp:LeftPanelNode">
-      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+    <Style Selector="ListBox#tree ListBoxItem">
       <Setter Property="MinHeight" Value="20" />
-      <Setter Property="Padding" Value="0" />
+      <Setter Property="Padding" Value="2,1" />
     </Style>
     <Style Selector="TextBlock.grayed">
       <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
@@ -56,13 +56,25 @@
         <Image Source="avares://GitUI.Avalonia/Assets/Preview.png" Width="16" Height="16" />
       </Button>
     </Grid>
-    <TreeView Name="tree" ItemsSource="{Binding Trees}" SelectedItem="{Binding SelectedNode, Mode=TwoWay}">
-      <TreeView.ContextMenu>
+    <!-- The trees as a virtualizing list of their visible nodes (FlatTreeList), for the thousands of references of a large repository. -->
+    <ListBox Name="tree">
+      <ListBox.ContextMenu>
         <!-- Equivalent of menuMain: filled for the selection when it opens (contextMenu_Opening). -->
         <ContextMenu Name="treeMenu" />
-      </TreeView.ContextMenu>
-      <TreeView.ItemTemplate>
-        <TreeDataTemplate DataType="lp:LeftPanelNode" ItemsSource="{Binding Children}">
+      </ListBox.ContextMenu>
+      <ListBox.ItemTemplate>
+        <DataTemplate DataType="ft:FlatTreeRow">
+          <StackPanel Orientation="Horizontal" Margin="{Binding Indent}">
+            <Panel Width="16">
+              <ToggleButton Theme="{StaticResource FluentTreeViewExpandCollapseChevron}" Focusable="False"
+                            IsVisible="{Binding HasChildren}" IsChecked="{Binding IsExpanded}" />
+            </Panel>
+            <ContentControl Content="{Binding Node}" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+      <ListBox.DataTemplates>
+        <DataTemplate DataType="lp:LeftPanelNode">
           <Border Classes.match="{Binding IsSearchMatch}" Background="Transparent" ToolTip.Tip="{Binding ToolTip}">
             <StackPanel Orientation="Horizontal" Spacing="4">
               <Image Width="16" Height="16" Source="{Binding IconKey, Converter={x:Static local:LeftPanelConverters.Icon}}" />
@@ -72,8 +84,8 @@
                          TextDecorations="{Binding IsMultiSelected, Converter={x:Static local:LeftPanelConverters.Underline}}" />
             </StackPanel>
           </Border>
-        </TreeDataTemplate>
-      </TreeView.ItemTemplate>
-    </TreeView>
+        </DataTemplate>
+      </ListBox.DataTemplates>
+    </ListBox>
   </DockPanel>
 </UserControl>

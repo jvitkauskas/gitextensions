@@ -585,7 +585,7 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.Files.SelectedEntry!.Item.Name.Should().Be("src/file.cs");
 
         // As RevisionDiffControl.ProcessCmdKey: the keys in the diff tab run the item of the context menu.
-        window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<TreeViewItem>().Last().Focus().Should().BeTrue();
+        window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<ListBoxItem>().Last().Focus().Should().BeTrue();
         window.KeyPressQwerty(PhysicalKey.D, RawInputModifiers.Control);
         menu.Log.Should().Contain("difftool FirstToSelected: src/file.cs");
 
@@ -651,7 +651,7 @@ public sealed class BrowseViewTests : HeadlessTest
 
         // As StageFile_Click and RequestRefresh: the status and the working directory are refreshed, the next file selected.
         host.DiffFiles = ["a.txt", "c.txt", "src/d.cs"];
-        window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<TreeViewItem>().Last().Focus().Should().BeTrue();
+        window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<ListBoxItem>().Last().Focus().Should().BeTrue();
         window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Control);
         Dispatcher.UIThread.RunJobs();
         menu.Log.Should().Contain("stage: b.txt");

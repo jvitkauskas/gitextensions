@@ -10,6 +10,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using GitUI.Avalonia.Controls.FileStatusList;
+using GitUI.Avalonia.Controls.FlatTree;
 using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.UserControls.LeftPanel;
 
@@ -35,8 +36,17 @@ public static class LeftPanelConverters
 /// </summary>
 public partial class LeftPanelView : UserControl, IHotkeyControl
 {
+    /// <summary>How the list reads the nodes of the trees.</summary>
+    private static readonly FlatTreeAdapter NodeAdapter = new(
+        GetChildren: node => ((LeftPanelNode)node).Children,
+        ChildrenPropertyName: nameof(LeftPanelNode.Children),
+        IsExpandedPropertyName: nameof(LeftPanelNode.IsExpanded),
+        IsExpanded: node => ((LeftPanelNode)node).IsExpanded,
+        SetExpanded: (node, isExpanded) => ((LeftPanelNode)node).IsExpanded = isExpanded);
+
     private LeftPanelViewModel? _viewModel;
-    private bool? _expandedBeforeDoubleClick;
+    private FlatTreeList? _tree;
+    private bool _selectingFromViewModel;
 
     public LeftPanelView()
     {
@@ -45,9 +55,18 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
         // As contextMenu_Opening: the items for the selection; the menu does not open without any.
         treeMenu.Opening += (_, e) => e.Cancel = FillContextMenu().Count == 0;
 
-        // As OnNodeClick and OnNodeDoubleClick (tunneling, since the tree handles the clicks itself).
+        // As OnNodeClick and OnNodeDoubleClick (tunneling, since the list handles the clicks itself).
         tree.AddHandler(PointerPressedEvent, OnTreePointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         tree.AddHandler(DoubleTappedEvent, OnTreeDoubleTapped, RoutingStrategies.Bubble, handledEventsToo: true);
+
+        // The selected row is the selected node of the view model.
+        tree.SelectionChanged += (_, _) =>
+        {
+            if (!_selectingFromViewModel && _viewModel is not null && tree.SelectedItem is FlatTreeRow { Node: LeftPanelNode node })
+            {
+                _viewModel.SelectedNode = node;
+            }
+        };
 
         // As NativeTreeViewExplorerNavigationDecorator: the arrow keys do not select the revisions, Space and Enter do.
         tree.AddHandler(KeyDownEvent, OnTreeKeyDown, RoutingStrategies.Tunnel);
@@ -67,8 +86,11 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
             handledEventsToo: true);
     }
 
-    /// <summary>The tree, e.g. for tests.</summary>
-    public TreeView Tree => tree;
+    /// <summary>The list of the visible nodes of the trees, e.g. for tests.</summary>
+    public ListBox Tree => tree;
+
+    /// <summary>The visible nodes of the trees, e.g. for tests.</summary>
+    public FlatTreeList? FlatTree => _tree;
 
     /// <summary>The context menu, e.g. for tests.</summary>
     public ContextMenu Menu => treeMenu;
@@ -112,6 +134,34 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
         _viewModel = DataContext as LeftPanelViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.FocusRequested += OnFocusRequested;
+
+        // A node with an operation on double click (e.g. checking out a branch) does not expand or collapse (as
+        // BeforeDoubleClickExpandCollapse).
+        _tree?.Dispose();
+        _tree = _viewModel is null ? null : new FlatTreeList(tree, _viewModel.Trees, NodeAdapter, toggleOnDoubleTap: node => !((LeftPanelNode)node).HasDoubleClickAction);
+        SelectRowOfSelectedNode();
+    }
+
+    /// <summary>The node shown by the element of a row (its content has the node, its expander the row).</summary>
+    private static LeftPanelNode? NodeOf(object? source)
+        => (source as StyledElement)?.DataContext switch
+        {
+            LeftPanelNode node => node,
+            FlatTreeRow { Node: LeftPanelNode node } => node,
+            _ => null,
+        };
+
+    private void SelectRowOfSelectedNode()
+    {
+        _selectingFromViewModel = true;
+        try
+        {
+            _tree?.Select(_viewModel?.SelectedNode);
+        }
+        finally
+        {
+            _selectingFromViewModel = false;
+        }
     }
 
     private void OnFocusRequested(object? sender, EventArgs e) => Dispatcher.UIThread.Post(() => tree.Focus(), DispatcherPriority.Background);
@@ -154,14 +204,8 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
 
     private void OnTreePointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (_viewModel is null || (e.Source as StyledElement)?.DataContext is not LeftPanelNode node)
+        if (_viewModel is null || NodeOf(e.Source) is not { } node || e.ClickCount == 2)
         {
-            return;
-        }
-
-        if (e.ClickCount == 2)
-        {
-            _expandedBeforeDoubleClick = node.IsExpanded;
             return;
         }
 
@@ -195,9 +239,7 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
 
     private void OnTreeDoubleTapped(object? sender, TappedEventArgs e)
     {
-        bool? expandedBefore = _expandedBeforeDoubleClick;
-        _expandedBeforeDoubleClick = null;
-        if (_viewModel is null || (e.Source as StyledElement)?.DataContext is not LeftPanelNode node || !node.HasDoubleClickAction)
+        if (_viewModel is null || NodeOf(e.Source) is not { HasDoubleClickAction: true } node)
         {
             return;
         }
@@ -208,21 +250,15 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
             return;
         }
 
-        // A node with an operation does not expand or collapse (as BeforeDoubleClickExpandCollapse).
-        if (node.HasChildren && expandedBefore is bool expanded)
-        {
-            node.IsExpanded = expanded;
-        }
-
         _viewModel.DoubleClickNode(node);
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // As EnsureVerticallyVisible: the selected node is scrolled into view.
-        if (e.PropertyName == nameof(LeftPanelViewModel.SelectedNode) && _viewModel?.SelectedNode is { } node)
+        // As EnsureVerticallyVisible: the selected node is selected in the list and scrolled into view.
+        if (e.PropertyName == nameof(LeftPanelViewModel.SelectedNode))
         {
-            Dispatcher.UIThread.Post(() => tree.TreeContainerFromItem(node)?.BringIntoView(), DispatcherPriority.Background);
+            SelectRowOfSelectedNode();
         }
     }
 }

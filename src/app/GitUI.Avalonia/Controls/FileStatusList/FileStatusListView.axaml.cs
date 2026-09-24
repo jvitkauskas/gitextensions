@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using GitUI.Avalonia.Controls.FlatTree;
 using GitUI.Presentation.UserControls.FileStatusList;
 
 namespace GitUI.Avalonia.Controls.FileStatusList;
@@ -9,6 +10,16 @@ namespace GitUI.Avalonia.Controls.FileStatusList;
 /// </summary>
 public partial class FileStatusListView : UserControl
 {
+    /// <summary>How the list reads the nodes of the tree.</summary>
+    private static readonly FlatTreeAdapter NodeAdapter = new(
+        GetChildren: node => ((FileStatusNode)node).Children,
+        ChildrenPropertyName: nameof(FileStatusNode.Children),
+        IsExpandedPropertyName: nameof(FileStatusNode.IsExpanded),
+        IsExpanded: node => ((FileStatusNode)node).IsExpanded,
+        SetExpanded: (node, isExpanded) => ((FileStatusNode)node).IsExpanded = isExpanded);
+
+    private FlatTreeList? _tree;
+
     public FileStatusListView()
     {
         InitializeComponent();
@@ -23,11 +34,11 @@ public partial class FileStatusListView : UserControl
             }
         };
 
-        // A double click on a file activates the selection (a folder expands instead).
+        // A double click on a file activates the selection (a folder expands instead, by the FlatTreeList).
         filesTree.DoubleTapped += (_, e) =>
         {
             if (DataContext is FileStatusListViewModel viewModel
-                && (e.Source as global::Avalonia.StyledElement)?.DataContext is FileStatusNode { Entry: not null })
+                && (e.Source as global::Avalonia.StyledElement)?.DataContext is FileStatusNode { Entry: not null } or FlatTreeRow { Node: FileStatusNode { Entry: not null } })
             {
                 viewModel.ActivateSelection();
             }
@@ -37,8 +48,11 @@ public partial class FileStatusListView : UserControl
     /// <summary>The context menu, e.g. for tests.</summary>
     public ContextMenu Menu => treeMenu;
 
-    /// <summary>The tree, e.g. for tests.</summary>
-    public TreeView Tree => filesTree;
+    /// <summary>The list of the visible nodes of the tree, e.g. for tests.</summary>
+    public ListBox Tree => filesTree;
+
+    /// <summary>The visible nodes of the tree and the selection, e.g. for tests.</summary>
+    public FlatTreeList? FlatTree => _tree;
 
     // As AddUserScripts: the scripts of ScriptEvent.ShowInFileList follow "Run script" in the menu itself, the others are under it.
     private void InsertDirectScripts(FileStatusListViewModel viewModel)
@@ -74,10 +88,13 @@ public partial class FileStatusListView : UserControl
     {
         base.OnDataContextChanged(e);
 
-        // The tree adds and removes the nodes the user selects, and follows the selection of the view model.
+        // The list adds and removes the nodes the user selects, and follows the selection of the view model.
+        _tree?.Dispose();
+        _tree = null;
         if (DataContext is FileStatusListViewModel viewModel)
         {
-            filesTree.SelectedItems = viewModel.SelectedNodes;
+            _tree = new FlatTreeList(filesTree, viewModel.Nodes, NodeAdapter);
+            _tree.SyncSelection(viewModel.SelectedNodes);
         }
     }
 }

@@ -41,7 +41,7 @@ public sealed class LeftPanelViewTests : HeadlessTest
         panel.Search();
         Dispatcher.UIThread.RunJobs();
 
-        view.Tree.GetVisualDescendants().OfType<TreeViewItem>().Should().HaveCountGreaterThan(15);
+        view.Tree.GetVisualDescendants().OfType<ListBoxItem>().Should().HaveCountGreaterThan(15);
         TextBlock current = TextOf(view, "main (1↑ 2↓)");
         current.FontWeight.Should().Be(global::Avalonia.Media.FontWeight.Bold);
         TextOf(view, "v1.0").TextDecorations.Should().NotBeNull("the multi-selected node is underlined");
@@ -92,7 +92,7 @@ public sealed class LeftPanelViewTests : HeadlessTest
         Click(window, TextOf(view, "v1.0"), RawInputModifiers.Control);
         panel.SelectedNode.Should().BeSameAs(tag);
         panel.GetMultiSelectedNodes().Should().Equal(experiment, tag);
-        view.Tree.SelectedItem.Should().BeSameAs(tag);
+        view.Tree.SelectedItem.Should().BeSameAs(view.FlatTree!.RowOf(tag));
 
         // A click on the selected node selects its revision again (e.g. after selecting another one in the grid).
         panel.Grid.SelectedRow = panel.Grid.Rows[0];

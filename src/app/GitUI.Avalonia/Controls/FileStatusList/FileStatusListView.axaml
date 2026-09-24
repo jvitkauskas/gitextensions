@@ -3,13 +3,13 @@
              xmlns:fs="using:GitUI.Presentation.UserControls.FileStatusList"
              xmlns:local="using:GitUI.Avalonia.Controls.FileStatusList"
              xmlns:gc="using:GitCommands"
+             xmlns:ft="using:GitUI.Avalonia.Controls.FlatTree"
              x:Class="GitUI.Avalonia.Controls.FileStatusList.FileStatusListView"
              x:DataType="fs:FileStatusListViewModel">
   <UserControl.Styles>
-    <Style Selector="TreeViewItem" x:DataType="fs:FileStatusNode">
-      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+    <Style Selector="ListBox#filesTree ListBoxItem">
       <Setter Property="MinHeight" Value="20" />
-      <Setter Property="Padding" Value="0" />
+      <Setter Property="Padding" Value="2,1" />
     </Style>
     <!-- As FileStatusList._activeInputColor / _invalidInputColor, translucent to suit both themes. -->
     <Style Selector="TextBox.active">
@@ -53,9 +53,9 @@
       </ToggleButton>
     </Grid>
     <Panel>
-      <TreeView Name="filesTree" ItemsSource="{Binding Nodes}" SelectionMode="Multiple"
-                IsVisible="{Binding !ShowNoFiles}">
-        <TreeView.ContextMenu>
+      <!-- The tree as a virtualizing list of its visible nodes (FlatTreeList), for the thousands of files of a large commit. -->
+      <ListBox Name="filesTree" SelectionMode="Multiple" IsVisible="{Binding !ShowNoFiles}">
+        <ListBox.ContextMenu>
           <!-- Equivalent of FileStatusList.ItemContextMenu. -->
           <ContextMenu Name="treeMenu">
             <!-- As ItemContextMenu (UpdateStatusOfMenuItems): the items shown for the selection, in the order of the WinForms menu. -->
@@ -197,18 +197,29 @@
             <MenuItem Name="expandAllMenuItem" Header="{Binding Strings.ExpandAll.AccessKeyText}" Command="{Binding ExpandAllCommand}" />
             <MenuItem Name="collapseAllMenuItem" Header="{Binding Strings.CollapseAll.AccessKeyText}" Command="{Binding CollapseAllCommand}" />
           </ContextMenu>
-        </TreeView.ContextMenu>
-        <TreeView.ItemTemplate>
-          <TreeDataTemplate DataType="fs:FileStatusNode" ItemsSource="{Binding Children}">
+        </ListBox.ContextMenu>
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="ft:FlatTreeRow">
+            <StackPanel Orientation="Horizontal" Margin="{Binding Indent}">
+              <Panel Width="16">
+                <ToggleButton Theme="{StaticResource FluentTreeViewExpandCollapseChevron}" Focusable="False"
+                              IsVisible="{Binding HasChildren}" IsChecked="{Binding IsExpanded}" />
+              </Panel>
+              <ContentControl Content="{Binding Node}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+        <ListBox.DataTemplates>
+          <DataTemplate DataType="fs:FileStatusNode">
             <StackPanel Orientation="Horizontal" Spacing="4">
               <Image Width="16" Height="16" Source="{Binding IconKey, Converter={x:Static local:FileStatusIconConverter.Instance}}" />
               <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
               <TextBlock Text="{Binding OldName}" VerticalAlignment="Center" IsVisible="{Binding OldName, Converter={x:Static ObjectConverters.IsNotNull}}"
                          Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
             </StackPanel>
-          </TreeDataTemplate>
-        </TreeView.ItemTemplate>
-      </TreeView>
+          </DataTemplate>
+        </ListBox.DataTemplates>
+      </ListBox>
       <TextBlock Name="noFilesText" Text="{Binding NoFilesText}" IsVisible="{Binding ShowNoFiles}" Margin="6"
                  Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
       <TextBlock Name="loadingText" Text="{Binding Strings.LoadingFiles.Text}" IsVisible="{Binding IsLoading}" Margin="6"

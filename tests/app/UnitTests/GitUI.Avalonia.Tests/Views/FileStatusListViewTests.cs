@@ -4,7 +4,9 @@ using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.Controls.FileStatusList;
+using GitUI.Avalonia.Controls.FlatTree;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.UserControls.FileStatusList;
 using static GitUI.AvaloniaTests.ViewModels.FileStatusListViewModelTests;
@@ -39,23 +41,63 @@ public sealed class FileStatusListViewTests : HeadlessTest
     {
         (Window window, FileStatusListView view, FileStatusListViewModel viewModel) = Show();
 
-        view.Tree.SelectedItems.Cast<FileStatusNode>().Select(n => n.Entry!.Item.Name).Should().Equal("docs/readme.md");
-        view.Tree.GetVisualDescendants().OfType<TreeViewItem>().Should().Contain(item => item.IsExpanded, "the folders are expanded");
+        SelectedNames(view).Should().Equal("docs/readme.md");
+        view.FlatTree!.Rows.Rows.Should().Contain(row => row.IsExpanded, "the folders are expanded");
 
         FileStatusNode program = viewModel.Nodes[1].Children[1];
-        view.Tree.SelectedItems.Clear();
-        view.Tree.SelectedItems.Add(program);
+        view.Tree.SelectedItems!.Clear();
+        view.Tree.SelectedItems.Add(view.FlatTree.RowOf(program));
         Dispatcher.UIThread.RunJobs();
         viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
 
         viewModel.SelectNextItem(backwards: false);
         Dispatcher.UIThread.RunJobs();
-        view.Tree.SelectedItem.Should().BeSameAs(viewModel.Nodes[2]);
+        view.Tree.SelectedItem.Should().BeSameAs(view.FlatTree.RowOf(viewModel.Nodes[2]));
         viewModel.SelectedEntry.Should().BeSameAs(viewModel.Nodes[2].Entry, "the tree keeps the selection of the view model");
         viewModel.Select(entry => entry.Item.Name == "src/Program.cs");
         Dispatcher.UIThread.RunJobs();
         viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
-        view.Tree.SelectedItems.Cast<FileStatusNode>().Select(n => n.Entry!.Item.Name).Should().Equal("src/Program.cs");
+        SelectedNames(view).Should().Equal("src/Program.cs");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_tree_is_a_virtualizing_list_of_its_visible_nodes() => OnUiThreadAsync(() =>
+    {
+        (Window window, FileStatusListView view, FileStatusListViewModel viewModel) = Show();
+        FileStatusNode folder = viewModel.Nodes[1];
+        FileStatusNode program = folder.Children[1];
+        int rows = view.FlatTree!.Rows.Rows.Count;
+        view.FlatTree.RowOf(program).Should().NotBeNull();
+
+        // Collapsing the folder hides its files; its selected file stays selected, and is selected again when shown.
+        viewModel.Select(entry => entry.Item.Name == "src/Program.cs");
+        Dispatcher.UIThread.RunJobs();
+        folder.IsExpanded = false;
+        Dispatcher.UIThread.RunJobs();
+        view.FlatTree.RowOf(program).Should().BeNull();
+        view.FlatTree.Rows.Rows.Count.Should().BeLessThan(rows);
+        viewModel.SelectedEntry!.Item.Name.Should().Be("src/Program.cs");
+        folder.IsExpanded = true;
+        Dispatcher.UIThread.RunJobs();
+        SelectedNames(view).Should().Equal("src/Program.cs");
+        view.FlatTree.RowOf(program)!.Level.Should().Be(1);
+
+        // Left goes to the folder and collapses it, Right expands it.
+        view.Tree.ContainerFromItem(view.FlatTree.RowOf(program)!)!.Focus();
+        window.KeyPressQwerty(PhysicalKey.ArrowLeft, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        view.Tree.SelectedItem.Should().BeSameAs(view.FlatTree.RowOf(folder));
+        window.KeyPressQwerty(PhysicalKey.ArrowLeft, RawInputModifiers.None);
+        folder.IsExpanded.Should().BeFalse();
+        window.KeyPressQwerty(PhysicalKey.ArrowRight, RawInputModifiers.None);
+        folder.IsExpanded.Should().BeTrue();
+
+        // A thousand files: the list creates the controls of the rows on screen only.
+        viewModel.SetGroups([new FileStatusGroup(First, Second, "", [.. Enumerable.Range(0, 1000).Select(i => new GitItemStatus($"file{i:D4}.txt") { IsChanged = true })])]);
+        Dispatcher.UIThread.RunJobs();
+        view.FlatTree.Rows.Rows.Should().HaveCount(1000);
+        view.Tree.GetRealizedContainers().Count().Should().BeLessThan(100);
         window.Close();
     });
 
@@ -176,4 +218,7 @@ public sealed class FileStatusListViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         return (window, view, viewModel);
     }
+
+    private static IEnumerable<string> SelectedNames(FileStatusListView view)
+        => view.FlatTree!.SelectedNodes.Cast<FileStatusNode>().Select(n => n.Entry!.Item.Name);
 }

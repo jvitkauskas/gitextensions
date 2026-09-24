@@ -50,7 +50,7 @@ public sealed partial class AvaloniaHostingTests
                     panel.SelectedNode = feature;
                     Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                     selectedRevision = viewModel.Grid.SelectedRow?.ObjectId;
-                    selectedInTree = ((BrowseWindow)window).LeftPanel.Tree.SelectedItem;
+                    selectedInTree = (((BrowseWindow)window).LeftPanel.Tree.SelectedItem as GitUI.Avalonia.Controls.FlatTree.FlatTreeRow)?.Node;
                     Capture(window, "browse-left-panel");
                     window.Close();
                 });
