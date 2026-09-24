@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.FormBrowseRepoSettingsPageView"
+             x:DataType="vm:FormBrowseRepoSettingsPageViewModel">
+  <!--
+    Equivalent of FormBrowseRepoSettingsPage: groupBox1, then gbTabs. The info icon of a SettingsCheckBox with a tooltip
+    opens its section of the manual (ManualSectionAnchorName).
+  -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.General.PlainText}">
+      <StackPanel Spacing="4">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Label VerticalAlignment="Center" Content="{Binding Strings.DefaultShell.AccessKeyText}" Target="terminal" />
+          <ComboBox Name="terminal" MinWidth="200" ItemsSource="{Binding Shells}" SelectedItem="{Binding Shell}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="useBrowseForFileHistory" Content="{Binding Strings.UseBrowseForFileHistory.AccessKeyText}" IsChecked="{Binding UseBrowseForFileHistory}"
+                    ToolTip.Tip="{Binding Strings.UseBrowseForFileHistoryTooltip.Text}" />
+          <Button Name="useBrowseForFileHistoryHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.UseBrowseForFileHistoryTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.UseBrowseForFileHistory.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="general-show-file-history-in-the-main-window">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="useDiffViewerForBlame" Content="{Binding Strings.UseDiffViewerForBlame.AccessKeyText}" IsChecked="{Binding UseDiffViewerForBlame}"
+                    ToolTip.Tip="{Binding Strings.UseDiffViewerForBlameTooltip.Text}" />
+          <Button Name="useDiffViewerForBlameHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.UseDiffViewerForBlameTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.UseDiffViewerForBlame.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="general-show-blame-in-diff-view">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <CheckBox Name="showFindInCommitFilesGitGrep" Content="{Binding Strings.ShowFindInCommitFilesGitGrep.AccessKeyText}" IsChecked="{Binding ShowFindInCommitFilesGitGrep}" />
+        <CheckBox Name="showRevisionGridTooltip" Content="{Binding Strings.ShowRevisionGridTooltip.AccessKeyText}" IsChecked="{Binding ShowRevisionGridTooltip}" />
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Tabs.PlainText}">
+      <StackPanel Spacing="4">
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="showConsoleTab" Content="{Binding Strings.ShowConsoleTab.AccessKeyText}" IsChecked="{Binding ShowConsoleTab}"
+                    ToolTip.Tip="{Binding Strings.ShowConsoleTabTooltip.Text}" />
+          <Button Name="showConsoleTabHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.ShowConsoleTabTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.ShowConsoleTab.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="general-show-blame-in-diff-view">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="showGpgInformation" Content="{Binding Strings.ShowGpgInformation.AccessKeyText}" IsChecked="{Binding ShowGpgInformation}"
+                    ToolTip.Tip="{Binding Strings.ShowGpgInformationTooltip.Text}" />
+          <Button Name="showGpgInformationHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.ShowGpgInformationTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.ShowGpgInformation.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="tabs-show-gpg-information">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="showOutputHistoryAsTab" Content="{Binding Strings.ShowOutputHistoryAsTab.AccessKeyText}" IsChecked="{Binding ShowOutputHistoryAsTab}"
+                    ToolTip.Tip="{Binding OutputHistoryTooltip}" />
+          <Button Name="showOutputHistoryAsTabHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding OutputHistoryTooltip}"
+                  AutomationProperties.Name="{Binding Strings.ShowOutputHistoryAsTab.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="show-output-history-as-tab-otherwise-as-panel">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Label VerticalAlignment="Center" Content="{Binding Strings.OutputHistoryDepth.AccessKeyText}" Target="outputHistoryDepth" />
+          <NumericUpDown Name="outputHistoryDepth" Width="120" Minimum="0" Maximum="1000" Increment="1" FormatString="0" Value="{Binding OutputHistoryDepth}" />
+        </StackPanel>
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

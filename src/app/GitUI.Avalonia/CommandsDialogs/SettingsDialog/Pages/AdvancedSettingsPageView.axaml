@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.AdvancedSettingsPageView"
+             x:DataType="vm:AdvancedSettingsPageViewModel">
+  <!--
+    Equivalent of AdvancedSettingsPage: CheckoutGB, GeneralGB, grpCommit, then grpUpdates. The info icon of a SettingsCheckBox
+    with a tooltip opens its section of the manual (ManualSectionAnchorName).
+  -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Checkout.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="alwaysShowCheckoutDlg" Content="{Binding Strings.AlwaysShowCheckoutDlg.AccessKeyText}" IsChecked="{Binding AlwaysShowCheckoutDlg}" />
+        <CheckBox Name="useLocalChangesAction" IsChecked="{Binding UseLocalChangesAction}">
+          <TextBlock Text="{Binding Strings.UseLocalChangesAction.PlainText}" TextWrapping="Wrap" />
+        </CheckBox>
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.General.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="dontShowHelpImages" Content="{Binding Strings.DontShowHelpImages.AccessKeyText}" IsChecked="{Binding DontShowHelpImages}" />
+        <CheckBox Name="alwaysShowAdvOpt" Content="{Binding Strings.AlwaysShowAdvOpt.AccessKeyText}" IsChecked="{Binding AlwaysShowAdvOpt}" />
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="consoleEmulator" Content="{Binding Strings.ConsoleEmulator.AccessKeyText}" IsChecked="{Binding UseConsoleEmulator}"
+                    ToolTip.Tip="{Binding Strings.ConsoleEmulatorTooltip.Text}" />
+          <Button Name="consoleEmulatorHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.ConsoleEmulatorTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.ConsoleEmulator.PlainText}" Command="{Binding OpenSettingsManualCommand}"
+                  CommandParameter="general-use-console-emulator-for-console-output-in-command-dialogs">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="autoNormaliseBranchName" Content="{Binding Strings.AutoNormaliseBranchName.AccessKeyText}" IsChecked="{Binding AutoNormaliseBranchName}"
+                    ToolTip.Tip="{Binding Strings.AutoNormaliseBranchNameTooltip.Text}" />
+          <Button Name="autoNormaliseBranchNameHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.AutoNormaliseBranchNameTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.AutoNormaliseBranchName.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="general-auto-normalise-branch-name">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Label VerticalAlignment="Center" Content="{Binding Strings.SymbolToUse.AccessKeyText}" Target="autoNormaliseSymbol" />
+          <ComboBox Name="autoNormaliseSymbol" MinWidth="100" ItemsSource="{Binding AutoNormaliseSymbols}" SelectedItem="{Binding AutoNormaliseSymbol}"
+                    IsEnabled="{Binding AutoNormaliseBranchName}" />
+        </StackPanel>
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Commit.PlainText}">
+      <CheckBox Name="commitAndPushForcedWhenAmend" Content="{Binding Strings.CommitAndPushForcedWhenAmend.AccessKeyText}" IsChecked="{Binding CommitAndPushForcedWhenAmend}" />
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Updates.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="checkForUpdates" Content="{Binding Strings.CheckForUpdates.AccessKeyText}" IsChecked="{Binding CheckForUpdates}" />
+        <CheckBox Name="checkForRCVersions" Content="{Binding Strings.CheckForRCVersions.AccessKeyText}" IsChecked="{Binding CheckForRCVersions}" />
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.SortingSettingsPageView"
+             x:DataType="vm:SortingSettingsPageViewModel">
+  <!-- Equivalent of SortingSettingsPage: gbGeneral with the sort orders and the prioritized names, each with its help icon. -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Sorting.PlainText}">
+      <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+        <Label VerticalAlignment="Center" Content="{Binding Strings.RevisionsSortBy.AccessKeyText}" Target="revisionsSortBy" />
+        <ComboBox Name="revisionsSortBy" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding RevisionSortOrders}" SelectedIndex="{Binding RevisionSortOrderIndex}" />
+        <Button Name="revisionSortOrderHelp" AutomationProperties.Name="{Binding Strings.RevisionsSortBy.PlainText}" Grid.Column="2" Classes="link" VerticalAlignment="Center"
+                ToolTip.Tip="{Binding Strings.RevisionSortWarningTooltip.Text}" Command="{Binding OpenRevisionSortOrderHelpCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+        </Button>
+        <Label Grid.Row="1" VerticalAlignment="Center" Content="{Binding Strings.BranchesSortBy.AccessKeyText}" Target="branchesSortBy" />
+        <ComboBox Name="branchesSortBy" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding BranchesSortBys}" SelectedIndex="{Binding BranchesSortByIndex}" />
+        <Label Grid.Row="2" VerticalAlignment="Center" Content="{Binding Strings.BranchesOrder.AccessKeyText}" Target="branchesOrder" />
+        <ComboBox Name="branchesOrder" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding BranchesOrders}" SelectedIndex="{Binding BranchesOrderIndex}" />
+        <Label Grid.Row="3" VerticalAlignment="Center" Content="{Binding Strings.PrioBranchNames.AccessKeyText}" Target="prioBranchNames" />
+        <TextBox Name="prioBranchNames" Grid.Row="3" Grid.Column="1" Text="{Binding PrioritizedBranchNames}" />
+        <Button Name="prioBranchNamesHelp" AutomationProperties.Name="{Binding Strings.PrioBranchNames.PlainText}" Grid.Row="3" Grid.Column="2" Classes="link" VerticalAlignment="Center"
+                ToolTip.Tip="{Binding Strings.PrioBranchNamesTooltip.Text}" Command="{Binding OpenPrioBranchNamesHelpCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+        </Button>
+        <Label Grid.Row="4" VerticalAlignment="Center" Content="{Binding Strings.PrioRemoteNames.AccessKeyText}" Target="prioRemoteNames" />
+        <TextBox Name="prioRemoteNames" Grid.Row="4" Grid.Column="1" Text="{Binding PrioritizedRemoteNames}" />
+        <Button Name="prioRemoteNamesHelp" AutomationProperties.Name="{Binding Strings.PrioRemoteNames.PlainText}" Grid.Row="4" Grid.Column="2" Classes="link" VerticalAlignment="Center"
+                ToolTip.Tip="{Binding Strings.PrioRemoteNamesTooltip.Text}" Command="{Binding OpenPrioRemoteNamesHelpCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+        </Button>
+      </Grid>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

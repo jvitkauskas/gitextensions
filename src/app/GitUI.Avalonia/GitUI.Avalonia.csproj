@@ -146,6 +146,14 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Plugin.png" Link="Assets\Plugin.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Hotkey.png" Link="Assets\Hotkey.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Console.png" Link="Assets\Console.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GeneralSettings.png" Link="Assets\GeneralSettings.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Appearance.png" Link="Assets\Appearance.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SortBy.png" Link="Assets\SortBy.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Colors.png" Link="Assets\Colors.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Font.png" Link="Assets\Font.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\AdvancedSettings.png" Link="Assets\AdvancedSettings.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BisectGood.png" Link="Assets\BisectGood.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchFolder.png" Link="Assets\BranchFolder.png" />
     <AvaloniaResource Include="..\..\..\setup\assets\Logo\git-extensions-logo-16px.png" Link="Assets\GitExtensionsLogo16.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ArrowUp.png" Link="Assets\ArrowUp.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetCurrentBranchToHere.png" Link="Assets\ResetCurrentBranchToHere.png" />

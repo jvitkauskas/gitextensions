@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.GeneralSettingsPageView"
+             x:DataType="vm:GeneralSettingsPageViewModel">
+  <!-- Equivalent of GeneralSettingsPage: groupBoxPerformance, groupBoxBehaviour, then groupBoxTelemetry. -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Performance.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="showGitStatusInToolbar" Content="{Binding Strings.ShowGitStatusInToolbar.AccessKeyText}" IsChecked="{Binding ShowGitStatusInToolbar}" />
+        <CheckBox Name="showGitStatusForArtificialCommits" Content="{Binding Strings.ShowGitStatusForArtificialCommits.AccessKeyText}" IsChecked="{Binding ShowGitStatusForArtificialCommits}" />
+        <CheckBox Name="showSubmoduleStatusInBrowse" Content="{Binding Strings.ShowSubmoduleStatusInBrowse.AccessKeyText}" IsChecked="{Binding ShowSubmoduleStatusInBrowse}"
+                  IsEnabled="{Binding IsShowSubmoduleStatusInBrowseEnabled}" />
+        <CheckBox Name="showStashCountInBrowseWindow" Content="{Binding Strings.ShowStashCountInBrowseWindow.AccessKeyText}" IsChecked="{Binding ShowStashCountInBrowseWindow}" />
+        <CheckBox Name="showAheadBehindDataInBrowseWindow" Content="{Binding Strings.ShowAheadBehindDataInBrowseWindow.AccessKeyText}" IsChecked="{Binding ShowAheadBehindDataInBrowseWindow}" />
+        <CheckBox Name="checkForUncommittedChangesInCheckoutBranch" Content="{Binding Strings.CheckForUncommittedChangesInCheckoutBranch.AccessKeyText}" IsChecked="{Binding CheckForUncommittedChangesInCheckoutBranch}" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <CheckBox Name="commitsLimit" Content="{Binding Strings.CommitsLimit.AccessKeyText}" IsChecked="{Binding IsCommitsLimited}" />
+          <NumericUpDown Name="maxCommits" Width="140" Minimum="0" Maximum="1000000" Increment="10000" FormatString="N0" HorizontalContentAlignment="Right"
+                         Value="{Binding MaxCommits}" IsEnabled="{Binding IsCommitsLimited}" />
+        </StackPanel>
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Behaviour.PlainText}">
+      <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+        <CheckBox Name="closeProcessDialog" Grid.ColumnSpan="3" Content="{Binding Strings.CloseProcessDialog.AccessKeyText}" IsChecked="{Binding CloseProcessDialog}" />
+        <CheckBox Name="showGitCommandLine" Grid.Row="1" Grid.ColumnSpan="3" Content="{Binding Strings.ShowGitCommandLine.AccessKeyText}" IsChecked="{Binding ShowGitCommandLine}" />
+        <CheckBox Name="useHistogramDiffAlgorithm" Grid.Row="2" Grid.ColumnSpan="3" Content="{Binding Strings.UseHistogramDiffAlgorithm.AccessKeyText}" IsChecked="{Binding UseHistogramDiffAlgorithm}" />
+        <CheckBox Name="stashUntrackedFiles" Grid.Row="3" Grid.ColumnSpan="3" Content="{Binding Strings.StashUntrackedFiles.AccessKeyText}" IsChecked="{Binding StashUntrackedFiles}" />
+        <CheckBox Name="updateModules" Grid.Row="4" Grid.ColumnSpan="3" Content="{Binding Strings.UpdateModules.AccessKeyText}" IsThreeState="True" IsChecked="{Binding UpdateModules}" />
+        <CheckBox Name="followRenamesInFileHistory" Grid.Row="5" Content="{Binding Strings.FollowRenamesInFileHistory.AccessKeyText}" IsChecked="{Binding FollowRenamesInFileHistory}" />
+        <CheckBox Name="followRenamesInFileHistoryExact" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Content="{Binding Strings.FollowRenamesInFileHistoryExact.AccessKeyText}" IsChecked="{Binding FollowRenamesInFileHistoryExact}" />
+        <CheckBox Name="startWithRecentWorkingDir" Grid.Row="6" Grid.ColumnSpan="3" Content="{Binding Strings.StartWithRecentWorkingDir.AccessKeyText}" IsChecked="{Binding StartWithRecentWorkingDir}" />
+        <Label Grid.Row="7" VerticalAlignment="Center" Content="{Binding Strings.DefaultCloneDestination.AccessKeyText}" Target="defaultCloneDestination" />
+        <ComboBox Name="defaultCloneDestination" Grid.Row="7" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+                  ItemsSource="{Binding CloneDestinations}" Text="{Binding DefaultCloneDestination}" />
+        <Button Name="defaultDestinationBrowse" Grid.Row="7" Grid.Column="2" Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseDefaultCloneDestinationCommand}" />
+        <Label Grid.Row="8" VerticalAlignment="Center" Content="{Binding Strings.DefaultPullAction.AccessKeyText}" Target="defaultPullAction" />
+        <ComboBox Name="defaultPullAction" Grid.Row="8" Grid.Column="1" MinWidth="160" ItemsSource="{Binding PullActions}" SelectedItem="{Binding DefaultPullAction}" />
+        <Label Grid.Row="9" VerticalAlignment="Center" Content="{Binding Strings.QuickSearchTimeout.AccessKeyText}" Target="quickSearchTimeout" />
+        <NumericUpDown Name="quickSearchTimeout" Grid.Row="9" Grid.Column="1" Width="140" HorizontalAlignment="Left" Minimum="100" Maximum="1000000" Increment="100"
+                       FormatString="N0" HorizontalContentAlignment="Right" Value="{Binding QuickSearchTimeout}" />
+      </Grid>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Telemetry.PlainText}">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <CheckBox Name="telemetry" Content="{Binding Strings.TelemetryEnabled.AccessKeyText}" IsChecked="{Binding TelemetryEnabled}" />
+        <Button Name="telemetryPrivacyLink" Classes="link" VerticalAlignment="Center" Command="{Binding OpenTelemetryPrivacyCommand}">
+          <TextBlock Text="{Binding Strings.TelemetryPrivacyLink.PlainText}" />
+        </Button>
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>
