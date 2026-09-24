@@ -172,5 +172,12 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnoreEol.png" Link="Assets\WhitespaceIgnoreEol.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnore.png" Link="Assets\WhitespaceIgnore.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnoreAll.png" Link="Assets\WhitespaceIgnoreAll.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GeneralSettings.png" Link="Assets\GeneralSettings.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\AdvancedSettings.png" Link="Assets\AdvancedSettings.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Integration.png" Link="Assets\Integration.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Link.png" Link="Assets\Link.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ShellExtensions.png" Link="Assets\ShellExtensions.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\github.png" Link="Assets\GitHub.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\VisualStudioTeamServices.png" Link="Assets\VisualStudioTeamServices.png" />
   </ItemGroup>
 </Project>

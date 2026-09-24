@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             xmlns:local="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.ShellExtensionSettingsPageView"
+             x:DataType="vm:ShellExtensionSettingsPageViewModel">
+  <!-- Equivalent of ShellExtensionSettingsPage: gbExplorerIntegration, then gbCascadingMenu (tlpnlCascadingMenu). -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.ExplorerIntegration.PlainText}" IsEnabled="{Binding IsExplorerIntegrationEnabled}">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Name="register" Content="{Binding Strings.Register.AccessKeyText}" Command="{Binding RegisterCommand}" />
+        <Button Name="unregister" Content="{Binding Strings.Unregister.AccessKeyText}" Command="{Binding UnregisterCommand}" />
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.CascadingMenu.PlainText}">
+      <Grid ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,20,Auto,Auto" ColumnSpacing="4">
+        <CheckBox Name="alwaysShowAllCommands" Grid.ColumnSpan="3" Content="{Binding Strings.AlwaysShowAllCommands.AccessKeyText}"
+                  IsChecked="{Binding AlwaysShowAllCommands}" />
+        <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding Strings.MenuEntries.Text}" />
+        <!-- Equivalent of menuHelp: the tooltip explains the states, a click opens the manual. -->
+        <Button Name="menuHelp" Grid.Row="2" Grid.Column="1" Classes="link" Padding="0" VerticalAlignment="Center"
+                ToolTip.Tip="{Binding Strings.MenuHelp.Text}" Command="{Binding OpenHelpCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+        </Button>
+        <TextBlock Grid.Row="2" Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Strings.Preview.Text}" />
+        <!-- Equivalent of _NO_TRANSLATE_chlMenuEntries: a click cycles checked, unchecked, indeterminate. -->
+        <Border Grid.Row="3" Grid.ColumnSpan="2" Margin="0,4,0,0" BorderThickness="1" Padding="4,2"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <ItemsControl Name="menuEntries" ItemsSource="{Binding MenuEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ShellMenuEntry">
+                <local:ShellMenuEntryCheckBox IsThreeState="True" MinHeight="0" Padding="4,0" Content="{Binding Text}" IsChecked="{Binding State}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+        <!-- Equivalent of labelPreview. -->
+        <TextBlock Name="preview" Grid.Row="3" Grid.Column="2" Margin="8,7,0,0" Text="{Binding Preview}" />
+      </Grid>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

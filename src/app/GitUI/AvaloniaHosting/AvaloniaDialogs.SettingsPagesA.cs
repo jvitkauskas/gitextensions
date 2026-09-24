@@ -37,7 +37,7 @@ internal static partial class AvaloniaDialogs
     ///  Diff viewer) need from the application: the services of GitUI, the WinForms dialogs (fonts, messages) and the pickers
     ///  of the settings window.
     /// </summary>
-    private sealed class SettingsPagesHost(IGitUICommands commands, IWin32Window? owner)
+    private sealed class GeneralSettingsPagesHost(IGitUICommands commands, IWin32Window? owner)
         : IAppearanceSettingsPageHost, IColorsSettingsPageHost, IConsoleStyleSettingsPageHost, IDiffViewerSettingsPageHost, IFormBrowseRepoSettingsPageHost, IFileDialogService
     {
         /// <summary>The settings window, set when it is created.</summary>

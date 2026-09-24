@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.RevisionLinksSettingsPageView"
+             x:DataType="vm:RevisionLinksSettingsPageViewModel">
+  <!--
+    Equivalent of RevisionLinksSettingsPage (splitContainer1): the categories with their tool strip on the left; the category
+    selected on the right (detailPanel), with its links below (LinksGrid).
+  -->
+  <Grid ColumnDefinitions="192,8,*" MinHeight="520">
+    <DockPanel>
+      <TextBlock DockPanel.Dock="Top" Margin="0,0,0,4" Text="{Binding Strings.Categories.Text}" />
+      <!-- Equivalent of toolStripManageCategories: Add (with the templates in its drop-down) and Remove. -->
+      <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+        <SplitButton Name="addCategory" Command="{Binding AddCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/FileStatusAdded.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.AddCategory.AccessKeyText}" VerticalAlignment="Center" />
+          </StackPanel>
+          <SplitButton.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedLeft" />
+          </SplitButton.Flyout>
+        </SplitButton>
+        <Button Name="removeCategory" Command="{Binding RemoveCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <Image Source="avares://GitUI.Avalonia/Assets/FileStatusRemoved.png" Width="16" Height="16" />
+            <AccessText Text="{Binding Strings.RemoveCategory.AccessKeyText}" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+      <ListBox Name="categories" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+               BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:RevisionLinkCategory">
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+
+    <DockPanel Grid.Column="2" IsEnabled="{Binding IsCategorySelected}">
+      <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,6">
+        <!-- Equivalent of label1 and flowLayoutPanel2. -->
+        <Grid Classes="form" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="6">
+          <Label Content="{Binding Strings.Name.AccessKeyText}" Target="name" />
+          <TextBox Name="name" Grid.Column="1" Width="272" Text="{Binding Name}" />
+          <CheckBox Name="enabled" Grid.Column="2" Content="{Binding Strings.Enabled.AccessKeyText}" IsChecked="{Binding IsEnabled}" />
+          <!-- Equivalent of gotoUserManualControl1. -->
+          <Button Name="helpLink" Grid.Column="4" Classes="link" VerticalAlignment="Center" Click="OnHelpClick">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/GotoManual.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding Strings.Help.PlainText}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </Grid>
+        <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.RemoteData.PlainText}">
+          <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+            <Label Content="{Binding Strings.UseRemotes.AccessKeyText}" Target="useRemotes" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+              <TextBox Name="useRemotes" Width="218" Text="{Binding UseRemotes}" />
+              <CheckBox Name="onlyFirstRemote" Content="{Binding Strings.OnlyFirstRemote.AccessKeyText}" IsChecked="{Binding OnlyFirstRemote}" />
+            </StackPanel>
+            <Label Grid.Row="1" Content="{Binding Strings.RemoteSearchIn.AccessKeyText}" Target="searchInUrl" />
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+              <CheckBox Name="searchInUrl" Content="{Binding Strings.Url.AccessKeyText}" IsChecked="{Binding SearchInUrl}" />
+              <CheckBox Name="searchInPushUrl" Content="{Binding Strings.PushUrl.AccessKeyText}" IsChecked="{Binding SearchInPushUrl}" />
+            </StackPanel>
+            <Label Grid.Row="2" Content="{Binding Strings.RemoteSearchPattern.AccessKeyText}" Target="remotePattern" />
+            <TextBox Name="remotePattern" Grid.Row="2" Grid.Column="1" Text="{Binding RemotePattern}" />
+          </Grid>
+        </HeaderedContentControl>
+        <HeaderedContentControl Classes="groupBox" Margin="0" Header="{Binding Strings.RevisionData.PlainText}">
+          <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+            <Label Content="{Binding Strings.SearchIn.AccessKeyText}" Target="searchInMessage" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+              <CheckBox Name="searchInMessage" Content="{Binding Strings.Message.AccessKeyText}" IsChecked="{Binding SearchInMessage}" />
+              <CheckBox Name="searchInLocalBranch" Content="{Binding Strings.LocalBranch.AccessKeyText}" IsChecked="{Binding SearchInLocalBranch}" />
+              <CheckBox Name="searchInRemoteBranch" Content="{Binding Strings.RemoteBranch.AccessKeyText}" IsChecked="{Binding SearchInRemoteBranch}" />
+            </StackPanel>
+            <Label Grid.Row="1" Content="{Binding Strings.SearchPattern.AccessKeyText}" Target="searchPattern" />
+            <TextBox Name="searchPattern" Grid.Row="1" Grid.Column="1" Text="{Binding SearchPattern}" />
+            <Label Grid.Row="2" Content="{Binding Strings.NestedPattern.AccessKeyText}" Target="nestedPattern" />
+            <TextBox Name="nestedPattern" Grid.Row="2" Grid.Column="1" Text="{Binding NestedPattern}" />
+          </Grid>
+        </HeaderedContentControl>
+        <TextBlock Margin="0,6,0,0" Text="{Binding Strings.Links.Text}" />
+      </StackPanel>
+      <!-- Equivalent of LinksGrid: the last row adds a link, Delete removes the selected one. -->
+      <DataGrid Name="linksGrid" ItemsSource="{Binding LinkFormats}" AutoGenerateColumns="False" HeadersVisibility="Column"
+                CanUserSortColumns="False" GridLinesVisibility="All" SelectionMode="Single" MinHeight="120"
+                BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DataGrid.Columns>
+          <DataGridTextColumn Binding="{Binding Caption}" Width="150" x:DataType="vm:RevisionLinkFormatRow" />
+          <DataGridTextColumn Binding="{Binding Uri}" Width="*" x:DataType="vm:RevisionLinkFormatRow" />
+        </DataGrid.Columns>
+      </DataGrid>
+    </DockPanel>
+  </Grid>
+</UserControl>

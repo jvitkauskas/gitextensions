@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.GitSettingsPageView"
+             x:DataType="vm:GitSettingsPageViewModel">
+  <!-- Equivalent of GitSettingsPage: gbPaths (tlpnlGitPaths), then gbEnvironment (tlpnlEnvironment). -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Paths.PlainText}">
+      <Grid Classes="form" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+        <TextBlock Grid.ColumnSpan="3" Text="{Binding Strings.PathsInfo.Text}" TextWrapping="Wrap" />
+        <Label Grid.Row="1" Content="{Binding Strings.GitCommand.AccessKeyText}" Target="gitPath" />
+        <TextBox Name="gitPath" Grid.Row="1" Grid.Column="1" MaxLength="300" Text="{Binding GitPath}" />
+        <Button Name="browseGitPath" Grid.Row="1" Grid.Column="2" Content="{Binding Strings.BrowseGitPath.AccessKeyText}" Command="{Binding BrowseGitPathCommand}" />
+        <Label Grid.Row="2" Content="{Binding Strings.ShPath.AccessKeyText}" Target="linuxToolsDir" />
+        <TextBox Name="linuxToolsDir" Grid.Row="2" Grid.Column="1" MaxLength="300" Text="{Binding LinuxToolsDir}" />
+        <Button Name="browseLinuxToolsDir" Grid.Row="2" Grid.Column="2" Content="{Binding Strings.BrowseLinuxToolsDir.AccessKeyText}" Command="{Binding BrowseLinuxToolsDirCommand}" />
+        <!-- Equivalent of downloadGitForWindows, right-aligned below the labels. -->
+        <Button Name="downloadGit" Grid.Row="3" Classes="link" HorizontalAlignment="Right"
+                Content="{Binding Strings.DownloadGit.PlainText}" Command="{Binding DownloadGitCommand}" />
+      </Grid>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Environment.PlainText}">
+      <StackPanel Spacing="4">
+        <TextBlock Name="globalConfigPath" Text="{Binding Strings.GlobalConfigPath.Text}" TextWrapping="Wrap" Margin="0,0,0,16" />
+        <TextBlock Name="homeIsSetTo" Text="{Binding HomeIsSetTo}" TextWrapping="Wrap" Margin="0,0,0,4" />
+        <Button Name="changeHome" HorizontalAlignment="Left" Content="{Binding Strings.ChangeHome.AccessKeyText}" Command="{Binding ChangeHomeCommand}" />
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

@@ -1,4 +1,5 @@
 using GitCommands;
+using GitCommands.Git;
 using GitCommands.Settings;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Settings;
@@ -36,8 +37,16 @@ internal static partial class AvaloniaDialogs
         CommonLogic commonLogic = new(commands.Module);
         SettingsDialogViewModel viewModel = new(ViewStrings.Load<SettingsDialogStrings>(), new SettingsDialogHost(commonLogic, owner));
         SettingsWindow? settingsWindow = null;
-        SettingsPagesHost pagesHost = new(commands, owner);
-        AddSettingsPages(viewModel, commonLogic, commands, commands.Module.IsValidGitWorkingDir(), () => settingsWindow is null ? owner : new NativeWindowOwner(settingsWindow), pagesHost);
+        GeneralSettingsPagesHost generalHost = new(commands, owner);
+        GitSettingsPagesHost gitHost = new(commands, commonLogic);
+        AddSettingsPages(
+            viewModel,
+            commonLogic,
+            commands,
+            commands.Module.IsValidGitWorkingDir(),
+            () => settingsWindow is null ? owner : new NativeWindowOwner(settingsWindow),
+            generalHost,
+            gitHost);
 
         // As ShowSettingsDialog: the pages read and write AppSettings in the global settings of the dialog until saved.
         AppSettings.UsingContainer(commonLogic.DistributedSettingsSet.GlobalSettings, () =>
@@ -47,13 +56,20 @@ internal static partial class AvaloniaDialogs
                 {
                     SettingsWindow window = new() { DataContext = viewModel };
                     settingsWindow = window;
-                    pagesHost.Window = window;
+                    generalHost.Window = window;
+                    gitHost.Window = window;
                     window.Opened += (_, _) => viewModel.Open(initialPage is SettingsPageReferenceByType byType ? byType.SettingsPageType.Name : null);
                     return window;
                 },
                 owner,
                 positionName: nameof(FormSettings));
         });
+
+        // The pages holding controls (the settings controls of the build server plugins) release them.
+        foreach (IDisposable page in viewModel.Pages.OfType<IDisposable>())
+        {
+            page.Dispose();
+        }
 
         saved = viewModel.IsSaved;
         return true;
@@ -65,7 +81,16 @@ internal static partial class AvaloniaDialogs
     ///  levels of the repository too, in a repository). The pages not ported yet are left out.
     /// </summary>
     /// <param name="getOwner">The owner of the message boxes and dialogs of the pages: the settings window once shown.</param>
-    private static void AddSettingsPages(SettingsDialogViewModel viewModel, CommonLogic commonLogic, IGitUICommands commands, bool canSaveInsideRepo, Func<IWin32Window?> getOwner, SettingsPagesHost pagesHost)
+    /// <param name="generalHost">The host of the pages of the Git Extensions settings (General, Appearance, Advanced, Detailed).</param>
+    /// <param name="gitHost">The host of the Git pages and of SSH, the build server integration, the revision links and the shell extension.</param>
+    private static void AddSettingsPages(
+        SettingsDialogViewModel viewModel,
+        CommonLogic commonLogic,
+        IGitUICommands commands,
+        bool canSaveInsideRepo,
+        Func<IWin32Window?> getOwner,
+        GeneralSettingsPagesHost generalHost,
+        GitSettingsPagesHost gitHost)
     {
         DistributedSettingsSet distributed = commonLogic.DistributedSettingsSet;
         GitConfigSettingsSet gitConfig = commonLogic.GitConfigSettingsSet;
@@ -89,7 +114,6 @@ internal static partial class AvaloniaDialogs
                 [SettingsLevel.System] = gitConfig.SystemSettings,
             }
             : new() { [SettingsLevel.Global] = gitConfig.GlobalSettings };
-        _ = gitConfigLevels;
 
         SettingsDialogStrings strings = viewModel.Strings;
 
@@ -100,35 +124,50 @@ internal static partial class AvaloniaDialogs
         ChecklistSettingsPageViewModel checklist = new(checklistStrings, new ChecklistSettingsHost(checklistStrings, commonLogic, commands, getOwner));
         Add(checklist, gitExtensions, null, global, asRoot: true);
 
-        Add(new GeneralSettingsPageViewModel(ViewStrings.Load<GeneralSettingsPageStrings>(), LoadRecentCloneDestinations(), pagesHost, pagesHost), gitExtensions, "GeneralSettings", global);
+        Add(new GeneralSettingsPageViewModel(ViewStrings.Load<GeneralSettingsPageStrings>(), LoadRecentCloneDestinations(), generalHost, generalHost), gitExtensions, "GeneralSettings", global);
 
         // >> Appearance
-        Add(new AppearanceSettingsPageViewModel(ViewStrings.Load<AppearanceSettingsPageStrings>(), pagesHost), gitExtensions, "Appearance", global);
+        Add(new AppearanceSettingsPageViewModel(ViewStrings.Load<AppearanceSettingsPageStrings>(), generalHost), gitExtensions, "Appearance", global);
         const string appearance = nameof(AppearanceSettingsPage);
-        Add(new SortingSettingsPageViewModel(ViewStrings.Load<SortingSettingsPageStrings>(), pagesHost), appearance, "SortBy", global);
-        Add(new ColorsSettingsPageViewModel(ViewStrings.Load<ColorsSettingsPageStrings>(), pagesHost), appearance, "Colors", global);
-        Add(new AppearanceFontsSettingsPageViewModel(ViewStrings.Load<AppearanceFontsSettingsPageStrings>(), pagesHost), appearance, "Font", global);
-        Add(new ConsoleStyleSettingsPageViewModel(ViewStrings.Load<ConsoleStyleSettingsPageStrings>(), pagesHost), appearance, "Console", global);
+        Add(new SortingSettingsPageViewModel(ViewStrings.Load<SortingSettingsPageStrings>(), generalHost), appearance, "SortBy", global);
+        Add(new ColorsSettingsPageViewModel(ViewStrings.Load<ColorsSettingsPageStrings>(), generalHost), appearance, "Colors", global);
+        Add(new AppearanceFontsSettingsPageViewModel(ViewStrings.Load<AppearanceFontsSettingsPageStrings>(), generalHost), appearance, "Font", global);
+        Add(new ConsoleStyleSettingsPageViewModel(ViewStrings.Load<ConsoleStyleSettingsPageStrings>(), generalHost), appearance, "Console", global);
+        Add(new RevisionLinksSettingsPageViewModel(ViewStrings.Load<RevisionLinksSettingsPageStrings>(), gitHost), gitExtensions, "Link", distributedLevels);
+
+        Add(new BuildServerIntegrationSettingsPageViewModel(ViewStrings.Load<BuildServerIntegrationSettingsPageStrings>(), gitHost), gitExtensions, "Integration", distributedLevels);
+        Add(new ScriptsSettingsPageViewModel(ViewStrings.Load<ScriptsSettingsPageStrings>(), new ScriptsSettingsHost(commands.GetRequiredService<IScriptsManager>())), gitExtensions, "Console", global);
+        Add(new HotkeysSettingsPageViewModel(ViewStrings.Load<HotkeysSettingsPageStrings>(), new HotkeysSettingsHost(commands.GetRequiredService<IHotkeySettingsManager>())), gitExtensions, "Hotkey", global);
+
+        if (OperatingSystem.IsWindows())
+        {
+            Add(new ShellExtensionSettingsPageViewModel(ViewStrings.Load<ShellExtensionSettingsPageStrings>(), gitHost), gitExtensions, "ShellExtensions", global);
+        }
 
         // >> Advanced
-        Add(new AdvancedSettingsPageViewModel(ViewStrings.Load<AdvancedSettingsPageStrings>(), pagesHost), gitExtensions, "AdvancedSettings", global);
+        Add(new AdvancedSettingsPageViewModel(ViewStrings.Load<AdvancedSettingsPageStrings>(), generalHost), gitExtensions, "AdvancedSettings", global);
         const string advanced = nameof(AdvancedSettingsPage);
         Add(new ConfirmationsSettingsPageViewModel(ViewStrings.Load<ConfirmationsSettingsPageStrings>()), advanced, "BisectGood", global);
 
         // >> Detailed
         Add(new DetailedSettingsPageViewModel(ViewStrings.Load<DetailedSettingsPageStrings>()), gitExtensions, "Settings", distributedLevels);
         const string detailed = nameof(DetailedSettingsPage);
-        Add(new FormBrowseRepoSettingsPageViewModel(ViewStrings.Load<FormBrowseRepoSettingsPageStrings>(), pagesHost), detailed, "BranchFolder", global);
+        Add(new FormBrowseRepoSettingsPageViewModel(ViewStrings.Load<FormBrowseRepoSettingsPageStrings>(), generalHost), detailed, "BranchFolder", global);
         Add(new CommitDialogSettingsPageViewModel(ViewStrings.Load<CommitDialogSettingsPageStrings>()), detailed, "CommitSummary", global);
-        Add(new DiffViewerSettingsPageViewModel(ViewStrings.Load<DiffViewerSettingsPageStrings>(), pagesHost), detailed, "Diff", global);
+        Add(new DiffViewerSettingsPageViewModel(ViewStrings.Load<DiffViewerSettingsPageStrings>(), generalHost), detailed, "Diff", global);
         Add(new BlameViewerSettingsPageViewModel(ViewStrings.Load<BlameViewerSettingsPageStrings>()), detailed, "Blame", global);
 
-        Add(new ScriptsSettingsPageViewModel(ViewStrings.Load<ScriptsSettingsPageStrings>(), new ScriptsSettingsHost(commands.GetRequiredService<IScriptsManager>())), gitExtensions, "Console", global);
-        Add(new HotkeysSettingsPageViewModel(ViewStrings.Load<HotkeysSettingsPageStrings>(), new HotkeysSettingsHost(commands.GetRequiredService<IHotkeySettingsManager>())), gitExtensions, "Hotkey", global);
+        // As checklistSettingsPage.SshSettingsPage: the checklist finds the paths of PuTTY with the SSH page.
+        SshSettingsPageViewModel ssh = new(ViewStrings.Load<SshSettingsPageStrings>(), gitHost, gitHost);
+        Add(ssh, gitExtensions, "Key", global);
+        checklist.PuttyPathsFinder = ssh.AutoFindPuttyPaths;
 
         // Git settings
         const string git = nameof(GitSettingsGroup);
         viewModel.AddPage(new GroupSettingsPageViewModel(strings.GitGroup.Text, git), null, "GitLogo16", none);
+        Add(new GitSettingsPageViewModel(ViewStrings.Load<GitSettingsPageStrings>(), gitHost, gitHost), git, "FolderOpen", global);
+        Add(new GitConfigSettingsPageViewModel(ViewStrings.Load<GitConfigSettingsPageStrings>(), gitHost, gitHost, commands.Module.WorkingDir), git, "GeneralSettings", gitConfigLevels);
+        Add(new GitConfigAdvancedSettingsPageViewModel(ViewStrings.Load<GitConfigAdvancedSettingsPageStrings>(), gitHost, GitVersion.Current.SupportUpdateRefs), git, "AdvancedSettings", gitConfigLevels);
         Add(IntroductionSettingsPageViewModel.CreateGitRoot(), git, null, none, asRoot: true);
 
         // Plugins settings
