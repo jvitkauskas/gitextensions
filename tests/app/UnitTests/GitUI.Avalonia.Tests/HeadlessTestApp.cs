@@ -31,6 +31,9 @@ public abstract class HeadlessTest
     /// <summary>Runs <paramref name="test"/> on the Avalonia UI thread.</summary>
     protected static Task OnUiThreadAsync(Action test) => Session.Dispatch(test, CancellationToken.None);
 
+    /// <summary>Runs the asynchronous <paramref name="test"/> on the Avalonia UI thread (e.g. with the clipboard).</summary>
+    protected static Task OnUiThreadAsync(Func<Task> test) => Session.Dispatch(test, CancellationToken.None);
+
     /// <summary>Sets the theme variant for the rest of the current test (reset by <see cref="ResetThemeAsync"/>).</summary>
     protected static void UseTheme(ThemeVariant theme) => Application.Current!.RequestedThemeVariant = theme;
 

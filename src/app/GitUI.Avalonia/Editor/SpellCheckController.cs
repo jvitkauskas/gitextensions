@@ -67,6 +67,7 @@ public sealed class SpellCheckController
 
         editor.TextChanged += (_, _) => OnTextChanged();
         editor.TextArea.TextEntering += OnTextEntering;
+        editor.TextArea.TextPasted += (_, e) => ReplaceVerticalTabs(e.Text);
         editor.TextArea.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         editor.TextArea.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
         editor.TextArea.LostFocus += (_, _) =>
@@ -213,9 +214,55 @@ public sealed class SpellCheckController
         }
     }
 
-    /// <summary>As <c>TextBox_KeyDown</c>: Ctrl+Space completes the word; Backspace after a separator closes the list.</summary>
+    /// <summary>
+    ///  As <c>PasteTextFromClipboard</c>: the vertical tabs of a pasted text (the line breaks of a <c>RichTextBox</c>) are line
+    ///  feeds.
+    /// </summary>
+    private void ReplaceVerticalTabs(string pastedText)
+    {
+        if (!pastedText.Contains('\v'))
+        {
+            return;
+        }
+
+        TextDocument document = _editor.Document;
+        document.BeginUpdate();
+        try
+        {
+            for (int offset = document.Text.IndexOf('\v'); offset >= 0; offset = document.Text.IndexOf('\v', offset + 1))
+            {
+                document.Replace(offset, 1, "\n");
+            }
+        }
+        finally
+        {
+            document.EndUpdate();
+        }
+    }
+
+    /// <summary>
+    ///  As <c>TextBox_KeyDown</c>: Ctrl+Space completes the word; Backspace after a separator closes the list; Up on the first
+    ///  word of the list goes to the last, Down on the last to the first.
+    /// </summary>
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
+        if (_completionWindow is { } window && e.KeyModifiers == KeyModifiers.None && e.Key is Key.Up or Key.Down)
+        {
+            CompletionList list = window.CompletionList;
+            List<ICompletionData> items = list.CurrentList ?? [.. list.CompletionData];
+            int index = list.SelectedItem is { } selected ? items.IndexOf(selected) : -1;
+            int wrapped = e.Key == Key.Up && index == 0 ? items.Count - 1
+                : e.Key == Key.Down && index == items.Count - 1 ? 0
+                : -1;
+            if (wrapped >= 0 && items.Count > 1)
+            {
+                list.SelectedItem = items[wrapped];
+                list.ScrollIntoView(items[wrapped]);
+                e.Handled = true;
+                return;
+            }
+        }
+
         if (e.Key == Key.Space && e.KeyModifiers == KeyModifiers.Control && _viewModel.ProvideAutoCompletion)
         {
             UpdateOrShowAutoComplete(calledByUser: true);
@@ -231,10 +278,26 @@ public sealed class SpellCheckController
         }
     }
 
-    /// <summary>As <c>TextBox_MouseDown</c>: the right button moves the cursor, where the menu applies.</summary>
+    /// <summary>
+    ///  As <c>TextBox_MouseDown</c>: the right button moves the cursor, where the menu applies. As <c>TextBox_DoubleClick</c>:
+    ///  a double click selects the word of <c>WordAtCursorExtractor</c> (with a leading dot, and <c>_+-</c>).
+    /// </summary>
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (!e.GetCurrentPoint(_editor.TextArea).Properties.IsRightButtonPressed)
+        PointerPointProperties properties = e.GetCurrentPoint(_editor.TextArea).Properties;
+        if (properties.IsLeftButtonPressed && e.ClickCount == 2)
+        {
+            if (_editor.GetPositionFromPoint(e.GetPosition(_editor)) is { } clicked)
+            {
+                (int start, int length) = WordAtCursor.GetWordBounds(_editor.Text, _editor.Document.GetOffset(clicked.Location));
+                _editor.Select(start, Math.Min(length, _editor.Document.TextLength - start));
+                e.Handled = true;
+            }
+
+            return;
+        }
+
+        if (!properties.IsRightButtonPressed)
         {
             return;
         }
