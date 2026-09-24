@@ -523,6 +523,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         InitializeWorkingDirectoryStatus();
         InitializeToolbar();
         InitializeOutputHistory();
+        InitializeLayout();
         InitializeBuildReport();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.

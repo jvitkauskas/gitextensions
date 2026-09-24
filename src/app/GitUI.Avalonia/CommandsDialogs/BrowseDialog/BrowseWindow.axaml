@@ -37,6 +37,13 @@
                     IsVisible="{Binding LeftPanel, Converter={x:Static ObjectConverters.IsNotNull}}">
         <Image Source="avares://GitUI.Avalonia/Assets/LayoutSidebarLeft.png" Width="16" Height="16" />
       </ToggleButton>
+      <ToggleButton Name="toggleSplitViewLayout" Classes="toolbar" IsChecked="{Binding ShowSplitViewLayout, Mode=OneWay}" Command="{Binding ToggleSplitViewLayoutCommand}"
+                    ToolTip.Tip="{Binding LayoutStrings.ToggleSplitViewLayout.Text}" IsVisible="{Binding !IsDashboard}">
+        <Image Source="avares://GitUI.Avalonia/Assets/LayoutFooter.png" Width="16" Height="16" />
+      </ToggleButton>
+      <DropDownButton Name="commitInfoPositionButton" Classes="toolbar" ToolTip.Tip="{Binding LayoutStrings.CommitInfoPosition.Text}" IsVisible="{Binding !IsDashboard}">
+        <Image Source="{Binding CommitInfoPositionIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+      </DropDownButton>
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding LeftPanel, Converter={x:Static ObjectConverters.IsNotNull}}" />
       <SplitButton Name="submodulesButton" Classes="toolbar" IsEnabled="{Binding CanShowSubmodules}" ToolTip.Tip="{Binding SubmodulesToolTip}"
                    IsVisible="{Binding !IsDashboard}">
@@ -101,20 +108,27 @@
     <Grid Name="mainSplit" ColumnDefinitions="260,Auto,*" Margin="4,0,4,4">
     <lp:LeftPanelView Name="leftPanel" DataContext="{Binding LeftPanel}" />
     <GridSplitter Name="leftPanelSplitter" Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
-    <Grid Grid.Column="2" RowDefinitions="*,Auto,320">
-      <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding !IsDashboard}">
-        <rg:RevisionGridView Name="revisionGrid" DataContext="{Binding Grid}" />
-      </Border>
-      <GridSplitter Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" IsVisible="{Binding !IsDashboard}" />
-      <TabControl Name="tabs" Grid.Row="2" Padding="0,4,0,0" IsVisible="{Binding !IsDashboard}">
-        <TabItem Name="commitTab">
+    <Grid Name="contentGrid" Grid.Column="2" RowDefinitions="*,Auto,320">
+      <!-- The commit info beside the grid (CommitInfoPosition LeftwardFromList / RightwardFromList), else in its tab. -->
+      <Grid Name="gridArea" ColumnDefinitions="0,Auto,*,Auto,0" IsVisible="{Binding !IsDashboard}">
+        <ContentControl Name="leftCommitInfoHost" IsVisible="False" />
+        <GridSplitter Name="leftCommitInfoSplitter" Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" IsVisible="False" />
+        <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <rg:RevisionGridView Name="revisionGrid" DataContext="{Binding Grid}" />
+        </Border>
+        <GridSplitter Name="rightCommitInfoSplitter" Grid.Column="3" Width="5" ResizeDirection="Columns" Background="Transparent" IsVisible="False" />
+        <ContentControl Name="rightCommitInfoHost" Grid.Column="4" IsVisible="False" />
+      </Grid>
+      <GridSplitter Name="tabsSplitter" Grid.Row="1" Height="5" ResizeDirection="Rows" Background="Transparent" IsVisible="{Binding ShowTabs}" />
+      <TabControl Name="tabs" Grid.Row="2" Padding="0,4,0,0" IsVisible="{Binding ShowTabs}">
+        <TabItem Name="commitTab" IsVisible="{Binding IsCommitInfoInTab}">
           <TabItem.Header>
             <StackPanel Orientation="Horizontal" Spacing="4">
               <Image Source="avares://GitUI.Avalonia/Assets/CommitSummary.png" Width="16" Height="16" />
               <TextBlock Text="{Binding Strings.CommitTab.PlainText}" />
             </StackPanel>
           </TabItem.Header>
-          <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <Border Name="commitInfoBorder" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <c:CommitInfoView Name="commitInfo" DataContext="{Binding CommitInfo}" />
           </Border>
         </TabItem>

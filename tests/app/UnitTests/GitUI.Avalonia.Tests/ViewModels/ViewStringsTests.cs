@@ -48,6 +48,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new FilterToolBarStrings()).SetArgDisplayNames(nameof(FilterToolBarStrings));
         yield return new TestCaseData(new GpgInfoStrings()).SetArgDisplayNames(nameof(GpgInfoStrings));
         yield return new TestCaseData(new BrowseToolbarStrings()).SetArgDisplayNames(nameof(BrowseToolbarStrings));
+        yield return new TestCaseData(new BrowseLayoutStrings()).SetArgDisplayNames(nameof(BrowseLayoutStrings));
         yield return new TestCaseData(new OutputHistoryStrings()).SetArgDisplayNames(nameof(OutputHistoryStrings));
         yield return new TestCaseData(new BrowsePluginStrings()).SetArgDisplayNames(nameof(BrowsePluginStrings));
         yield return new TestCaseData(new BuildReportStrings()).SetArgDisplayNames(nameof(BuildReportStrings));

@@ -404,6 +404,44 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_split_view_layout_and_the_commit_info_position_are_applied_and_saved() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        Border commitInfo = window.FindControl<Border>("commitInfoBorder")!;
+        TabItem commitTab = window.FindControl<TabItem>("commitTab")!;
+        commitInfo.Parent.Should().BeSameAs(commitTab);
+        viewModel.ShowTabs.Should().BeTrue();
+        viewModel.CommitInfoPositionIcon.Should().Be("LayoutFooterTab");
+
+        // As toggleSplitViewLayout: the tabs are hidden, and the setting is saved.
+        viewModel.ToggleSplitViewLayoutCommand.Execute(null);
+        viewModel.ShowTabs.Should().BeFalse();
+        host.ShowSplitViewLayout.Should().BeFalse();
+        window.Tabs.IsVisible.Should().BeFalse();
+        viewModel.ToggleSplitViewLayoutCommand.Execute(null);
+        window.Tabs.IsVisible.Should().BeTrue();
+
+        // As SetCommitInfoPosition: beside the grid, the commit tab is hidden and another tab is selected.
+        viewModel.SelectedTab = BrowseTab.Commit;
+        viewModel.CommitInfoPositionItems[2].Invoke!();
+        host.CommitInfoPosition.Should().Be(GitCommands.CommitInfoPosition.RightwardFromList);
+        viewModel.CommitInfoPositionIcon.Should().Be("LayoutSidebarTopRight");
+        viewModel.SelectedTab.Should().Be(BrowseTab.Diff);
+        commitInfo.Parent.Should().BeSameAs(window.FindControl<ContentControl>("rightCommitInfoHost"));
+        commitTab.IsVisible.Should().BeFalse();
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusCommitInfo).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-commit-info-right");
+
+        viewModel.CommitInfoPositionItems[1].Invoke!();
+        commitInfo.Parent.Should().BeSameAs(window.FindControl<ContentControl>("leftCommitInfoHost"));
+        viewModel.CommitInfoPositionItems[0].Invoke!();
+        commitInfo.Parent.Should().BeSameAs(commitTab);
+        commitTab.IsVisible.Should().BeTrue();
+        window.Close();
+    });
+
+    [Test]
     public Task The_submodules_button_lists_the_submodules_or_goes_to_the_superproject() => OnUiThreadAsync(() =>
     {
         (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
@@ -495,8 +533,12 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost, IBrowseLayoutHost
     {
+        public bool ShowSplitViewLayout { get; set; } = true;
+
+        public GitCommands.CommitInfoPosition CommitInfoPosition { get; set; }
+
         public event EventHandler? OutputHistoryChanged;
 
         public bool IsOutputHistoryEnabled => true;

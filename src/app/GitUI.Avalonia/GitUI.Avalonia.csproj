@@ -181,6 +181,10 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\TagError.png" Link="Assets\TagError.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\TagMany.png" Link="Assets\TagMany.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\TagWarning.png" Link="Assets\TagWarning.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\LayoutFooter.png" Link="Assets\LayoutFooter.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\LayoutFooterTab.png" Link="Assets\LayoutFooterTab.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\LayoutSidebarTopLeft.png" Link="Assets\LayoutSidebarTopLeft.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\LayoutSidebarTopRight.png" Link="Assets\LayoutSidebarTopRight.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GitForWindows.png" Link="Assets\GitForWindows.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Changelog.png" Link="Assets\Changelog.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Translate.png" Link="Assets\Translate.png" />

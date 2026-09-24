@@ -17,6 +17,8 @@ public partial class BrowseWindow : DialogWindow
     private readonly HashSet<MenuItem> _submenuOwners = [];
     private readonly List<(MenuItem Item, BrowseSubmenu Submenu)> _modelSubmenus = [];
     private BrowseViewModel? _viewModel;
+    private double _tabsHeight = 320;
+    private double _commitInfoWidth = 490;
     private bool _isOpened;
 
     public BrowseWindow()
@@ -143,6 +145,8 @@ public partial class BrowseWindow : DialogWindow
         workingDirButton.Flyout = CreateFlyout(_viewModel.GetWorkingDirectoryItems());
         worktreesButton.Flyout = CreateFlyout(_viewModel.WorktreeItems);
         submodulesButton.Flyout = CreateFlyout(_viewModel.SubmoduleItems);
+        commitInfoPositionButton.Flyout = CreateFlyout(_viewModel.CommitInfoPositionItems);
+        ApplyLayout();
         userShellButton.Flyout = CreateFlyout(_viewModel.ShellItems);
         FillScriptsToolBar(_viewModel.ScriptItems);
         pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
@@ -182,10 +186,93 @@ public partial class BrowseWindow : DialogWindow
             submodulesButton.Flyout = CreateFlyout(_viewModel.SubmoduleItems);
         }
 
+        if (e.PropertyName is nameof(BrowseViewModel.ShowSplitViewLayout) or nameof(BrowseViewModel.CommitInfoPosition) or nameof(BrowseViewModel.ShowTabs))
+        {
+            ApplyLayout();
+        }
+
         // E.g. the hotkeys that show a tab (FocusDiff, FocusNextTab).
         if (e.PropertyName == nameof(BrowseViewModel.SelectedTab) && _viewModel is not null && tabs.SelectedIndex != (int)_viewModel.SelectedTab)
         {
             tabs.SelectedIndex = (int)_viewModel.SelectedTab;
+        }
+    }
+
+    // As RefreshSplitViewLayout and LayoutRevisionInfo: the tabs below the grid, and the commit info in its tab or beside the grid.
+    private void ApplyLayout()
+    {
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        RowDefinition tabsRow = contentGrid.RowDefinitions[2];
+        if (_viewModel.ShowTabs)
+        {
+            if (tabsRow.Height.Value == 0)
+            {
+                tabsRow.Height = new GridLength(_tabsHeight);
+            }
+        }
+        else
+        {
+            if (tabsRow.Height.Value > 0)
+            {
+                _tabsHeight = tabsRow.Height.Value;
+            }
+
+            tabsRow.Height = new GridLength(0);
+        }
+
+        ContentControl? side = _viewModel.CommitInfoPosition switch
+        {
+            GitCommands.CommitInfoPosition.LeftwardFromList => leftCommitInfoHost,
+            GitCommands.CommitInfoPosition.RightwardFromList => rightCommitInfoHost,
+            _ => null,
+        };
+        Control? target = side ?? commitTab;
+        if (commitInfoBorder.Parent != target)
+        {
+            // Moved from its tab or side to the other place.
+            switch (commitInfoBorder.Parent)
+            {
+                case ContentControl contentControl:
+                    contentControl.Content = null;
+                    break;
+            }
+
+            if (side is null)
+            {
+                commitTab.Content = commitInfoBorder;
+            }
+            else
+            {
+                side.Content = commitInfoBorder;
+            }
+        }
+
+        leftCommitInfoHost.IsVisible = leftCommitInfoSplitter.IsVisible = side == leftCommitInfoHost;
+        rightCommitInfoHost.IsVisible = rightCommitInfoSplitter.IsVisible = side == rightCommitInfoHost;
+
+        // The hidden side first: its width is kept for the shown one.
+        (ColumnDefinition shownColumn, ColumnDefinition hiddenColumn) = side == leftCommitInfoHost
+            ? (gridArea.ColumnDefinitions[0], gridArea.ColumnDefinitions[4])
+            : (gridArea.ColumnDefinitions[4], gridArea.ColumnDefinitions[0]);
+        SetSideWidth(hiddenColumn, shown: false);
+        SetSideWidth(shownColumn, shown: side is not null);
+    }
+
+    // The width of the commit info beside the grid, kept when it moves to the other side or to its tab.
+    private void SetSideWidth(ColumnDefinition column, bool shown)
+    {
+        if (shown)
+        {
+            column.Width = new GridLength(_commitInfoWidth);
+        }
+        else if (column.Width.Value > 0)
+        {
+            _commitInfoWidth = column.Width.Value;
+            column.Width = new GridLength(0);
         }
     }
 
@@ -204,6 +291,9 @@ public partial class BrowseWindow : DialogWindow
                 break;
             case BrowseFocusTarget.Filter:
                 filterToolBar.FocusFilter();
+                break;
+            case BrowseFocusTarget.CommitInfo:
+                commitInfo.Focus();
                 break;
         }
     }

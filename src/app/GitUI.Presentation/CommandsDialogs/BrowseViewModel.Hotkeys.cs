@@ -50,6 +50,7 @@ public enum BrowseFocusTarget
     LeftPanel,
     RevisionGrid,
     Filter,
+    CommitInfo,
 }
 
 /// <summary>What the script hotkeys need from the application.</summary>
@@ -96,7 +97,7 @@ public sealed partial class BrowseViewModel
             case BrowseHotkeyCommand.FocusLeftPanel: return Focus(BrowseFocusTarget.LeftPanel);
             case BrowseHotkeyCommand.FocusRevisionGrid: return Focus(BrowseFocusTarget.RevisionGrid);
             case BrowseHotkeyCommand.FocusFilter: return Focus(BrowseFocusTarget.Filter);
-            case BrowseHotkeyCommand.FocusCommitInfo: return SelectTab(BrowseTab.Commit);
+            case BrowseHotkeyCommand.FocusCommitInfo: return IsCommitInfoInTab ? SelectTab(BrowseTab.Commit) : Focus(BrowseFocusTarget.CommitInfo);
             case BrowseHotkeyCommand.FocusDiff: return SelectTab(BrowseTab.Diff);
             case BrowseHotkeyCommand.FocusFileTree: return FileTree is not null && SelectTab(BrowseTab.FileTree);
             case BrowseHotkeyCommand.FocusGpgInfo: return HasGpgInfo && SelectTab(BrowseTab.Gpg);
@@ -178,6 +179,7 @@ public sealed partial class BrowseViewModel
 
     private bool IsTabShown(BrowseTab tab) => tab switch
     {
+        BrowseTab.Commit => IsCommitInfoInTab,
         BrowseTab.FileTree => FileTree is not null,
         BrowseTab.Gpg => HasGpgInfo,
         BrowseTab.Console => HasConsole,
