@@ -2,6 +2,7 @@ using GitCommands;
 using GitCommands.Git;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
+using GitExtUtils.GitUI;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.BrowseDialog;
@@ -10,6 +11,7 @@ using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid;
+using GitUI.UserControls.RevisionGrid.Columns;
 using GitUI.UserControls.RevisionGrid.Graph;
 using GitUIPluginInterfaces;
 using Microsoft.VisualStudio.Threading;
@@ -133,10 +135,60 @@ internal static partial class AvaloniaDialogs
     private sealed class RevisionGridHost(IGitUICommands commands, Func<ObjectId, ArgumentString> getRevisionFilter, bool showArtificial, Func<CancellationToken, string>? getPathFilter = null) : IRevisionGridHost
     {
         private readonly GitRevisionTester _revisionTester = new(new FullPathResolver(() => commands.Module.WorkingDir));
+        private HoverHighlightCalculator? _hoverHighlight;
+        private RevisionGraph? _hoverGraph;
+        private VisibleRowRange _visibleRange;
 
         public bool MatchesQuickSearch(GitRevision revision, string criteria) => _revisionTester.Matches(revision, criteria);
 
         public string CurrentBranch => commands.Module.GetSelectedBranch(emptyIfDetached: true);
+
+        // As AuthorRevisionHighlighting.ProcessRevisionSelectionChange without a selected revision.
+        public string UserEmail => commands.Module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.UserEmail);
+
+        public string GetAuthorToolTip(GitRevision revision) => AuthorNameColumnProvider.GetAuthorAndCommiterToolTip(revision);
+
+        public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
+
+        // As AvatarColumnProvider.GetAvatar: the image of the provider, or the placeholder (Images.User80).
+        public async Task<byte[]?> GetAvatarAsync(string email, string? name, int size)
+        {
+            Image? image = null;
+            try
+            {
+                image = await GitUI.Avatars.AvatarService.DefaultProvider.GetAvatarAsync(email, name, DpiUtil.Scale(size)).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // The placeholder, as the WinForms column when the avatar cannot be loaded.
+            }
+
+            image ??= Properties.Images.User80;
+            using MemoryStream stream = new();
+            image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            return stream.ToArray();
+        }
+
+        // As RevisionGraphColumnProvider.SetHoverHighlightAsync (HoverHighlightCalculator, in the visible rows).
+        public async Task<IReadOnlySet<ObjectId>?> GetHoverHighlightAsync(RevisionGraph graph, IGitRef? gitRef, int rowIndex, int firstVisibleRow, int visibleRowCount)
+        {
+            if (_hoverHighlight is null || _hoverGraph != graph)
+            {
+                _hoverHighlight?.Dispose();
+                _hoverHighlight = new HoverHighlightCalculator(graph, () => _visibleRange);
+                _hoverGraph = graph;
+            }
+
+            _visibleRange = new VisibleRowRange(Math.Max(0, firstVisibleRow), Math.Max(0, visibleRowCount));
+            HoverHighlightCalculator calculator = _hoverHighlight;
+            await calculator.SetAsync(gitRef, rowIndex);
+            if (!calculator.ConsumeIsDirty())
+            {
+                throw new OperationCanceledException();
+            }
+
+            return calculator.HighlightedIds;
+        }
 
         public void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken)
         {
@@ -150,10 +202,12 @@ internal static partial class AvaloniaDialogs
                     ObjectId currentCheckout = module.GetCurrentCheckout();
                     graph.HeadId = currentCheckout;
 
-                    // The stash ref is shown as the stash revisions, which git log does not list here.
+                    // As PerformRefreshRevisions: the 'stash' ref is excluded when the stashes are shown as rows.
+                    bool showStashes = AppSettings.ShowStashes;
                     ILookup<ObjectId, IGitRef> refsByObjectId = module.GetRefs(RefsFilter.NoFilter)
-                        .Where(gitRef => !gitRef.ObjectId.IsZero && gitRef.CompleteName != GitRefName.RefsStashPrefix)
+                        .Where(gitRef => !gitRef.ObjectId.IsZero && (!showStashes || gitRef.CompleteName != GitRefName.RefsStashPrefix))
                         .ToLookup(gitRef => gitRef.ObjectId);
+                    StashRows? stashes = showStashes && !module.IsBareRepository() ? StashRows.Read(module, cancellationToken) : null;
 
                     // As RevisionGridControl.ShowArtificialRevisions: the artificial commits are inserted before HEAD.
                     bool addArtificial = showArtificial && AppSettings.RevisionGraphShowArtificialCommits && !module.IsBareRepository();
@@ -162,6 +216,19 @@ internal static partial class AvaloniaDialogs
                     {
                         foreach (GitRevision revision in batch)
                         {
+                            List<GitRevision>? stashRows = null;
+                            if (stashes is not null && !stashes.Handle(revision, out stashRows))
+                            {
+                                // A helper commit of a stash (index, or untracked without changes).
+                                continue;
+                            }
+
+                            foreach (GitRevision stashRow in stashRows ?? [])
+                            {
+                                stashRow.Refs = [.. refsByObjectId[stashRow.ObjectId]];
+                                graph.Add(stashRow);
+                            }
+
                             revision.Refs = [.. refsByObjectId[revision.ObjectId]];
                             if (addArtificial && !headIsHandled && (revision.ObjectId == currentCheckout || currentCheckout.IsZero))
                             {
@@ -181,7 +248,7 @@ internal static partial class AvaloniaDialogs
                         observer,
                         getRevisionFilter(currentCheckout),
                         pathFilter: getPathFilter?.Invoke(cancellationToken) ?? "",
-                        hasNotes: false,
+                        hasNotes: AppSettings.ShowGitNotesColumn.Value || AppSettings.ShowGitNotes,
                         ResourceManager.TranslatedStrings.Autostash,
                         cancellationToken);
                     observer.Failure?.Throw();
@@ -223,6 +290,132 @@ internal static partial class AvaloniaDialogs
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 then();
             });
+    }
+
+    /// <summary>
+    ///  The stashes shown as rows, as <c>PerformRefreshRevisions</c> reads them (<c>GetStashRevs</c>) and inserts them in
+    ///  <c>OnRevisionRead</c>: each stash (with its reflog selector as name) before its base commit, the untracked files
+    ///  commit after it if it has changes, and not the index commit.
+    /// </summary>
+    /// <remarks>
+    ///  git log lists the most recent stash (refs/stash) with its index and untracked commits; unlike the WinForms grid, these
+    ///  helper commits are not shown either, and that stash gets the parents of the others.
+    /// </remarks>
+    private sealed class StashRows
+    {
+        private readonly Dictionary<ObjectId, GitRevision> _stashesById;
+        private readonly ILookup<ObjectId, GitRevision>? _stashesByParentId;
+        private readonly Dictionary<ObjectId, GitRevision> _untrackedByStashId = [];
+        private readonly HashSet<ObjectId> _helperIds = [];
+
+        private StashRows(IReadOnlyCollection<GitRevision> stashes, ILookup<ObjectId, GitRevision>? stashesByParentId)
+        {
+            _stashesById = stashes.ToDictionary(r => r.ObjectId);
+            _stashesByParentId = stashesByParentId;
+        }
+
+        public static StashRows? Read(IGitModule module, CancellationToken cancellationToken)
+        {
+            // Get the "main" stash commit, including the reflog selector.
+            IReadOnlyCollection<GitRevision> stashes = new RevisionReader(module).GetStashes(cancellationToken);
+            if (stashes.Count == 0)
+            {
+                return null;
+            }
+
+            // Git stores stashes in 2 or 3 commits. The (first) "stash" commit is listed by git-stash-list,
+            // does not include untracked files, may be stored in the third "untracked" commit.
+            // The second "index" commit are ignored (can be seen with reflog).
+            if (AppSettings.ShowReflogReferences)
+            {
+                // The "untracked" commits are already shown in the grid.
+                return new StashRows(stashes, stashesByParentId: null);
+            }
+
+            StashRows rows = new(stashes, stashes.Where(r => !r.FirstParentId.IsZero).ToLookup(r => r.FirstParentId));
+
+            // "untracked" commits to insert (parent to "stash" commits); the command listing them is quite slow, hence the
+            // limited number of stashes evaluated for untracked files.
+            Dictionary<ObjectId, ObjectId> untrackedIdByStashId = stashes
+                .Where(stash => stash.ParentIds!.Count >= 3)
+                .Take(AppSettings.MaxStashesWithUntrackedFiles)
+                .ToDictionary(stash => stash.ObjectId, stash => stash.ParentIds![2]);
+            Dictionary<ObjectId, GitRevision> untrackedRevs = new RevisionReader(module)
+                .GetRevisionsFromList([.. untrackedIdByStashId.Values.Distinct()], cancellationToken)
+                .ToDictionary(r => r.ObjectId);
+            foreach ((ObjectId stashId, ObjectId untrackedId) in untrackedIdByStashId)
+            {
+                if (untrackedRevs.TryGetValue(untrackedId, out GitRevision? untracked))
+                {
+                    rows._untrackedByStashId[stashId] = untracked;
+                }
+            }
+
+            // Remove parents not included ("index" and empty "untracked" commits).
+            foreach (GitRevision stash in stashes)
+            {
+                rows._helperIds.UnionWith(stash.ParentIds!.Skip(1));
+                stash.ParentIds = rows._untrackedByStashId.ContainsKey(stash.ObjectId)
+                    ? [stash.FirstParentId, stash.ParentIds![2]]
+                    : [stash.FirstParentId];
+            }
+
+            rows._helperIds.ExceptWith(rows._untrackedByStashId.Values.Select(r => r.ObjectId));
+            return rows;
+        }
+
+        /// <summary>
+        ///  As <c>OnRevisionRead</c>: <paramref name="stashRows"/> are the stashes to add before <paramref name="revision"/>
+        ///  (it is their base commit), with their untracked commits; <see langword="false"/> if the revision is not shown.
+        /// </summary>
+        public bool Handle(GitRevision revision, out List<GitRevision>? stashRows)
+        {
+            stashRows = null;
+            if (_stashesById.Count == 0)
+            {
+                return !IsHelper(revision);
+            }
+
+            if (_stashesById.Remove(revision.ObjectId, out GitRevision? gridStash))
+            {
+                // The most recent stash, listed by git log: its name, and the parents of the listed stashes.
+                revision.ReflogSelector = gridStash.ReflogSelector;
+                if (_stashesByParentId is not null)
+                {
+                    revision.ParentIds = gridStash.ParentIds;
+                }
+
+                return true;
+            }
+
+            if (IsHelper(revision))
+            {
+                return false;
+            }
+
+            if (_stashesByParentId?.Contains(revision.ObjectId) is true)
+            {
+                foreach (GitRevision stash in _stashesByParentId[revision.ObjectId])
+                {
+                    // Add if not already added (reflogs etc list before parent commit).
+                    if (_stashesById.Remove(stash.ObjectId))
+                    {
+                        stashRows ??= [];
+                        stashRows.Add(stash);
+                        if (_untrackedByStashId.TryGetValue(stash.ObjectId, out GitRevision? untracked))
+                        {
+                            stashRows.Add(untracked);
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // The index commit of a stash, or its untracked commit without changes.
+        private bool IsHelper(GitRevision revision)
+            => _helperIds.Contains(revision.ObjectId);
     }
 
     /// <summary>The working directory and index commits, as <c>RevisionGridControl.AddArtificialRevisions</c> creates them.</summary>

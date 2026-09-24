@@ -107,6 +107,7 @@ internal static partial class AvaloniaDialogs
         private BrowseHost? _host;
         private RevisionGridViewModel? _grid;
         private BrowseViewModel? _viewModel;
+        private GridBuildServerWatcher? _buildServerWatcher;
 
         // The filters of the command line apply to the first repository only.
         private BrowseArguments? _arguments = args;
@@ -139,6 +140,11 @@ internal static partial class AvaloniaDialogs
                 Filter = gridFilter,
             };
             grid.ContextMenuProvider = gridMenu.Build;
+
+            // As RevisionGridControl: the "RevisionGrid" hotkeys, and the build statuses of the build server (ShowBuildServerInfo).
+            grid.Hotkeys = LoadHotkeys(commands, RevisionGridControl.HotkeySettingsName);
+            grid.CommandHandler = gridMenu.ExecuteCommand;
+            GridBuildServerWatcher buildServerWatcher = new(commands, grid, () => new NativeWindowOwner(window));
 
             // As ShowDashboard: the dashboard without a valid repository.
             bool isValid = commands.Module.IsValidGitWorkingDir();
@@ -186,6 +192,7 @@ internal static partial class AvaloniaDialogs
             _host = host;
             _grid = grid;
             _viewModel = viewModel;
+            _buildServerWatcher = buildServerWatcher;
 
             if (isValid)
             {
@@ -231,9 +238,11 @@ internal static partial class AvaloniaDialogs
                 commands.BrowseRepo = null;
             }
 
+            _buildServerWatcher?.Dispose();
             _viewModel?.Dispose();
             _host?.Dispose();
             _grid?.Dispose();
+            _buildServerWatcher = null;
             _viewModel = null;
             _host = null;
             _grid = null;

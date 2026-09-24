@@ -15,6 +15,7 @@ using GitUI.ScriptsEngine;
 using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 using ResourceManager;
+using ResourceManager.Hotkey;
 
 namespace GitUI.AvaloniaHosting;
 
@@ -39,6 +40,16 @@ internal static partial class AvaloniaDialogs
 
         public IReadOnlyList<MenuModelItem> Build()
         {
+            // As ContextMenuOpening: the menu of a right-clicked reference label is focused on it: its actions only, the
+            // advanced items under "Other actions" (unless Shift or AlwaysShowAdvOpt; Ctrl overrides them).
+            RevisionGridRefMenuRequest? request = grid.RefMenuRequest;
+            grid.RefMenuRequest = null;
+            IGitRef? clickedRef = request?.GitRef;
+            bool focused = request is not null && (request.Control || !(request.Shift || AppSettings.AlwaysShowAdvOpt));
+            Func<IEnumerable<IGitRef>, IEnumerable<IGitRef>> filterRefs = clickedRef is null
+                ? refs => refs
+                : refs => refs.Where(r => r == clickedRef);
+
             IReadOnlyList<GitRevision> selected = grid.GetSelectedRevisionsLatestSelectedFirst();
             if (selected.Count == 0)
             {
@@ -63,7 +74,7 @@ internal static partial class AvaloniaDialogs
             List<string> selectInLeftPanel = [];
             string? rebaseOnTopOf = null;
 
-            foreach (IGitRef tag in refs.AllTags)
+            foreach (IGitRef tag in filterRefs(refs.AllTags))
             {
                 deleteTags.Add(RefItem(tag, () => commands.StartDeleteTagDialog(owner(), tag.Name)));
                 selectInLeftPanel.Add(tag.Name);
@@ -72,7 +83,7 @@ internal static partial class AvaloniaDialogs
             }
 
             bool currentBranchPointsToRevision = false;
-            foreach (IGitRef head in refs.BranchesWithNoIdenticalRemotes)
+            foreach (IGitRef head in filterRefs(refs.BranchesWithNoIdenticalRemotes))
             {
                 if (head.CompleteName == currentBranchRef)
                 {
@@ -99,7 +110,7 @@ internal static partial class AvaloniaDialogs
 
             bool isHeadOfCurrentBranch = false;
             bool separatorBeforeRemotes = false;
-            IReadOnlyList<IGitRef> allBranches = refs.AllBranches;
+            IReadOnlyList<IGitRef> allBranches = [.. filterRefs(refs.AllBranches)];
             foreach (IGitRef head in allBranches)
             {
                 selectInLeftPanel.Add(head.Name);
@@ -157,52 +168,71 @@ internal static partial class AvaloniaDialogs
             }
 
             bool isStash = !bareOrArtificial && revision.IsStash;
-            List<MenuModelItem?> items =
+            const bool top = false;
+            const bool advanced = true;
+
+            // The items with whether they are advanced (_contextMenuItems).
+            List<(MenuModelItem? Item, bool Advanced)> items =
             [
-                If(revision.IsArtificial, Item(_s.ResetChanges, "ResetWorkingDirChanges", ResetChanges)),
-                If(revision.IsArtificial, Item(_s.Commit, "RepoStateDirty", () => commands.StartCommitDialog(owner()))),
-                If(bisect, Item(_s.MarkRevisionAsBad, null, () => ContinueBisect(GitBisectOption.Bad, revision))),
-                If(bisect, Item(_s.MarkRevisionAsGood, null, () => ContinueBisect(GitBisectOption.Good, revision))),
-                If(bisect, Item(_s.BisectSkipRevision, null, () => ContinueBisect(GitBisectOption.Skip, revision))),
-                If(bisect, Item(_s.StopBisect, null, StopBisect)),
-                MenuModelItem.Separator,
-                If(!revision.IsArtificial, new MenuModelItem(_s.CopyToClipboard.AccessKeyText, Icon: "CopyToClipboard", Children: CreateCopyItems(selected))),
-                MenuModelItem.Separator,
-                If(isStash || (!bareOrArtificial && revision.IsAutostash), Item(_s.ApplyStash, "Stash", () => StashApply(revision))),
-                If(isStash, Item(_s.PopStash, "Stash", () => StashPop(revision))),
-                If(isStash, Item(_s.DropStash, "Stash", () => StashDrop(revision))),
-                MenuModelItem.Separator,
-                If(!bareOrArtificial && checkoutBranches.Any(i => !i.IsSeparator), SubMenu(_s.CheckoutBranch, "BranchCheckout", checkoutBranches)),
-                If(!bareOrArtificial && pushBranches.Count > 0, SubMenu(_s.TsmiPushBranch, "Push", pushBranches)),
-                If(!bareOrArtificial && mergeBranches.Count > 0, SubMenu(_s.MergeBranch, "Merge", mergeBranches)),
-                If(!bareOrArtificial, SubMenu(_s.RebaseOn, "Rebase", CreateRebaseItems(rebaseOnTopOf, grid.GetSelectedRevisionsLatestSelectedFirst()))),
-                If(!bareOrArtificial, Item(_s.ResetCurrentBranchToHere, "ResetCurrentBranchToHere", () => ResetCurrentBranch(revision))),
-                MenuModelItem.Separator,
-                If(SelectInLeftPanel is not null && selectInLeftPanel.Count > 0, SelectInLeftPanelItem(selectInLeftPanel)),
-                If(!bareOrArtificial, Item(_s.CreateNewBranch, "BranchCreate", () => CreateBranch(revision))),
-                If(!bareOrArtificial, Item(_s.ResetAnotherBranchToHere, "ResetAnotherBranchToHere", () => ResetAnotherBranch(revision))),
-                If(renameBranches.Count > 0, SubMenu(_s.RenameBranch, "Renamed", renameBranches)),
-                If((deleteBranches.Count > 0 && !bare) || isHeadOfCurrentBranch, SubMenu(_s.DeleteBranch, "BranchDelete", deleteBranches, enabled: deleteBranches.Count > 0 && !bare)),
-                MenuModelItem.Separator,
-                If(!revision.IsArtificial, Item(_s.CreateTag, "TagCreate", () => CreateTag(revision))),
-                If(deleteTags.Count > 0, SubMenu(_s.DeleteTag, "TagDelete", deleteTags)),
-                MenuModelItem.Separator,
-                If(!bareOrArtificial, Item(_s.CheckoutRevision, "Checkout", () => commands.StartCheckoutRevisionDialog(owner(), revision.Guid))),
-                If(!bareOrArtificial, Item(_s.RevertCommit, "RevertCommit", RevertCommits)),
-                If(!bareOrArtificial, Item(_s.CherryPickCommit, "CherryPick", () => commands.StartCherryPickDialog(owner(), grid.GetSelectedRevisions(descending: true)))),
-                If(!revision.IsArtificial, Item(_s.ArchiveRevision, "ArchiveRevision", Archive)),
-                If(!bareOrArtificial, SubMenu(_s.ManipulateCommit, "Advanced", CreateManipulateItems(revision))),
-                MenuModelItem.Separator,
-                SubMenu(_s.Compare, "Diff", CreateCompareItems()),
-                MenuModelItem.Separator,
-                SubMenu(_s.Navigate, "GotoCommit", CreateNavigateItems()),
-                SubMenu(_s.View, "AdvancedSettings", CreateViewItems()),
-                .. CreateScriptItems(),
-                If(!string.IsNullOrWhiteSpace(revision.BuildStatus?.Url), Item(_s.OpenBuildReport, "Integration", () => OsShellUtil.OpenUrlInDefaultBrowser(revision.BuildStatus!.Url!))),
-                If(!string.IsNullOrWhiteSpace(revision.BuildStatus?.PullRequestUrl), Item(_s.OpenPullRequestPage, "PullRequest", () => OsShellUtil.OpenUrlInDefaultBrowser(revision.BuildStatus!.PullRequestUrl!))),
+                (If(revision.IsArtificial, Item(_s.ResetChanges, "ResetWorkingDirChanges", ResetChanges)), top),
+                (If(revision.IsArtificial, Item(_s.Commit, "RepoStateDirty", () => commands.StartCommitDialog(owner()))), top),
+                (If(bisect, Item(_s.MarkRevisionAsBad, null, () => ContinueBisect(GitBisectOption.Bad, revision))), top),
+                (If(bisect, Item(_s.MarkRevisionAsGood, null, () => ContinueBisect(GitBisectOption.Good, revision))), top),
+                (If(bisect, Item(_s.BisectSkipRevision, null, () => ContinueBisect(GitBisectOption.Skip, revision))), top),
+                (If(bisect, Item(_s.StopBisect, null, StopBisect)), top),
+                (MenuModelItem.Separator, top),
+                (If(!revision.IsArtificial, new MenuModelItem(_s.CopyToClipboard.AccessKeyText, Icon: "CopyToClipboard", Children: CreateCopyItems(selected, clickedRef?.Name))), top),
+                (MenuModelItem.Separator, top),
+                (If(isStash || (!bareOrArtificial && revision.IsAutostash), Item(_s.ApplyStash, "Stash", () => StashApply(revision))), top),
+                (If(isStash, Item(_s.PopStash, "Stash", () => StashPop(revision))), top),
+                (If(isStash, Item(_s.DropStash, "Stash", () => StashDrop(revision))), top),
+                (MenuModelItem.Separator, top),
+                (If(!bareOrArtificial && checkoutBranches.Any(i => !i.IsSeparator), SubMenu(_s.CheckoutBranch, "BranchCheckout", checkoutBranches)), top),
+                (If(!bareOrArtificial && pushBranches.Count > 0, SubMenu(_s.TsmiPushBranch, "Push", pushBranches)), top),
+                (If(!bareOrArtificial && mergeBranches.Count > 0, SubMenu(_s.MergeBranch, "Merge", mergeBranches)), top),
+                (If(!bareOrArtificial, SubMenu(_s.RebaseOn, "Rebase", CreateRebaseItems(rebaseOnTopOf, grid.GetSelectedRevisionsLatestSelectedFirst()))), top),
+                (If(!bareOrArtificial, Item(_s.ResetCurrentBranchToHere, "ResetCurrentBranchToHere", () => ResetCurrentBranch(revision))), top),
+                (MenuModelItem.Separator, top),
+                (If(SelectInLeftPanel is not null && selectInLeftPanel.Count > 0, SelectInLeftPanelItem(selectInLeftPanel)), top),
+                (If(!bareOrArtificial, Item(_s.CreateNewBranch, "BranchCreate", () => CreateBranch(revision))), top),
+                (If(!bareOrArtificial, Item(_s.ResetAnotherBranchToHere, "ResetAnotherBranchToHere", () => ResetAnotherBranch(revision))), advanced),
+                (If(renameBranches.Count > 0, SubMenu(_s.RenameBranch, "Renamed", renameBranches)), top),
+                (If((deleteBranches.Count > 0 && !bare) || isHeadOfCurrentBranch, SubMenu(_s.DeleteBranch, "BranchDelete", deleteBranches, enabled: deleteBranches.Count > 0 && !bare)), top),
+                (MenuModelItem.Separator, top),
+                (If(!revision.IsArtificial, Item(_s.CreateTag, "TagCreate", () => CreateTag(revision))), advanced),
+                (If(deleteTags.Count > 0, SubMenu(_s.DeleteTag, "TagDelete", deleteTags)), top),
+                (MenuModelItem.Separator, advanced),
+                (If(!bareOrArtificial, Item(_s.CheckoutRevision, "Checkout", () => commands.StartCheckoutRevisionDialog(owner(), revision.Guid))), advanced),
+                (If(!bareOrArtificial, Item(_s.RevertCommit, "RevertCommit", RevertCommits)), advanced),
+                (If(!bareOrArtificial, Item(_s.CherryPickCommit, "CherryPick", () => commands.StartCherryPickDialog(owner(), grid.GetSelectedRevisions(descending: true)))), advanced),
+                (If(!revision.IsArtificial, Item(_s.ArchiveRevision, "ArchiveRevision", Archive)), advanced),
+                (If(!bareOrArtificial, SubMenu(_s.ManipulateCommit, "Advanced", CreateManipulateItems(revision))), advanced),
+                (MenuModelItem.Separator, top),
+                (SubMenu(_s.Compare, "Diff", CreateCompareItems()), top),
+                (MenuModelItem.Separator, advanced),
+                (SubMenu(_s.Navigate, "GotoCommit", CreateNavigateItems()), advanced),
+                (SubMenu(_s.View, "AdvancedSettings", CreateViewItems()), advanced),
+                .. CreateScriptItems().Select(item => ((MenuModelItem?)item, top)),
+                (If(!string.IsNullOrWhiteSpace(revision.BuildStatus?.Url), Item(_s.OpenBuildReport, "Integration", () => OsShellUtil.OpenUrlInDefaultBrowser(revision.BuildStatus!.Url!))), advanced),
+                (If(!string.IsNullOrWhiteSpace(revision.BuildStatus?.PullRequestUrl), Item(_s.OpenPullRequestPage, "PullRequest", () => OsShellUtil.OpenUrlInDefaultBrowser(revision.BuildStatus!.PullRequestUrl!))), advanced),
             ];
 
-            return MenuModelItem.TrimSeparators(items.OfType<MenuModelItem>());
+            List<MenuModelItem> main = [];
+            List<MenuModelItem> otherActions = [];
+            foreach ((MenuModelItem? item, bool isAdvanced) in items)
+            {
+                if (item is not null)
+                {
+                    (focused && isAdvanced ? otherActions : main).Add(item);
+                }
+            }
+
+            if (focused && MenuModelItem.TrimSeparators(otherActions) is { Count: > 0 } other)
+            {
+                main.Add(new MenuModelItem(_s.TsmiOtherActions.AccessKeyText, Children: other));
+            }
+
+            return MenuModelItem.TrimSeparators(main);
 
             string UnambiguousName(IGitRef gitRef) => ambiguousRefs.Contains(gitRef.Name) ? gitRef.CompleteName : gitRef.Name;
         }
@@ -231,8 +261,8 @@ internal static partial class AvaloniaDialogs
                 ? new MenuModelItem(_s.TsmiSelectInLeftPanel.AccessKeyText, () => SelectInLeftPanel!(refNames[0]), "FileTree")
                 : new MenuModelItem(_s.TsmiSelectInLeftPanel.AccessKeyText, Icon: "FileTree", Children: [.. refNames.Select(name => new MenuModelItem(Escape(name), () => SelectInLeftPanel!(name)))]);
 
-        // As CopyContextMenuItem.OnDropDownOpening.
-        private static IReadOnlyList<MenuModelItem> CreateCopyItems(IReadOnlyList<GitRevision> revisions)
+        // As CopyContextMenuItem.OnDropDownOpening; only the name of the clicked reference label, if any (SetFilterRefsFunc).
+        private static IReadOnlyList<MenuModelItem> CreateCopyItems(IReadOnlyList<GitRevision> revisions, string? clickedRefName = null)
         {
             List<MenuModelItem> items = [];
             List<string> branchNames = [];
@@ -240,8 +270,8 @@ internal static partial class AvaloniaDialogs
             foreach (GitRevision revision in revisions)
             {
                 GitRefListsForRevision refLists = new(revision);
-                branchNames.AddRange(refLists.GetAllBranchNames());
-                tagNames.AddRange(refLists.GetAllTagNames());
+                branchNames.AddRange(refLists.GetAllBranchNames().Where(name => clickedRefName is null || name == clickedRefName));
+                tagNames.AddRange(refLists.GetAllTagNames().Where(name => clickedRefName is null || name == clickedRefName));
             }
 
             int number = 0;
@@ -358,23 +388,23 @@ internal static partial class AvaloniaDialogs
         public IReadOnlyList<MenuModelItem> CreateNavigateItems()
             =>
             [
-                new(_s.ToggleBetweenArtificialAndHeadCommits.AccessKeyText, ToggleBetweenArtificialAndHead, "WorkingDirChanges"),
-                new(_s.GotoCurrentRevision.AccessKeyText, () => grid.SelectRevision(Module.GetCurrentCheckout()), "GotoCurrentRevision"),
-                new(_s.GotoCommit.AccessKeyText, GotoCommit, "GotoCommit"),
+                new(_s.ToggleBetweenArtificialAndHeadCommits.AccessKeyText, ToggleBetweenArtificialAndHead, "WorkingDirChanges", Gesture: GetGesture(RevisionGridCommand.ToggleBetweenArtificialAndHeadCommits)),
+                new(_s.GotoCurrentRevision.AccessKeyText, SelectCurrentRevision, "GotoCurrentRevision", Gesture: GetGesture(RevisionGridCommand.SelectCurrentRevision)),
+                new(_s.GotoCommit.AccessKeyText, GotoCommit, "GotoCommit", Gesture: GetGesture(RevisionGridCommand.GoToCommit)),
                 MenuModelItem.Separator,
-                new(_s.GotoChildCommit.AccessKeyText, grid.GoToChild, "GoToChildCommit"),
-                new(_s.GotoParentCommit.AccessKeyText, grid.GoToParent, "GoToParentCommit"),
-                new(_s.GotoFirstParentCommit.AccessKeyText, grid.GoToFirstParent, "GoToFirstParentCommit"),
-                new(_s.GotoLastParentCommit.AccessKeyText, grid.GoToLastParent, "GoToLastParentCommit"),
+                new(_s.GotoChildCommit.AccessKeyText, grid.GoToChild, "GoToChildCommit", Gesture: GetGesture(RevisionGridCommand.GoToChild)),
+                new(_s.GotoParentCommit.AccessKeyText, grid.GoToParent, "GoToParentCommit", Gesture: GetGesture(RevisionGridCommand.GoToParent)),
+                new(_s.GotoFirstParentCommit.AccessKeyText, grid.GoToFirstParent, "GoToFirstParentCommit", Gesture: GetGesture(RevisionGridCommand.GoToFirstParent)),
+                new(_s.GotoLastParentCommit.AccessKeyText, grid.GoToLastParent, "GoToLastParentCommit", Gesture: GetGesture(RevisionGridCommand.GoToLastParent)),
                 MenuModelItem.Separator,
-                new(_s.GotoMergeBaseCommit.AccessKeyText, () => AvaloniaUi.RunInHostContext(GoToMergeBase), "GoToMergeBaseCommit", ToolTip: _s.GotoMergeBaseCommitToolTip.Text),
+                new(_s.GotoMergeBaseCommit.AccessKeyText, () => AvaloniaUi.RunInHostContext(GoToMergeBase), "GoToMergeBaseCommit", Gesture: GetGesture(RevisionGridCommand.GoToMergeBase), ToolTip: _s.GotoMergeBaseCommitToolTip.Text),
                 MenuModelItem.Separator,
-                new(_s.NavigateBackward.AccessKeyText, grid.NavigateBackward, "NavigateBackward", IsEnabled: grid.CanNavigateBackward),
-                new(_s.NavigateForward.AccessKeyText, grid.NavigateForward, "NavigateForward", IsEnabled: grid.CanNavigateForward),
+                new(_s.NavigateBackward.AccessKeyText, grid.NavigateBackward, "NavigateBackward", IsEnabled: grid.CanNavigateBackward, Gesture: GetGesture(RevisionGridCommand.NavigateBackward)),
+                new(_s.NavigateForward.AccessKeyText, grid.NavigateForward, "NavigateForward", IsEnabled: grid.CanNavigateForward, Gesture: GetGesture(RevisionGridCommand.NavigateForward)),
                 MenuModelItem.Separator,
                 new(_s.QuickSearch.AccessKeyText, () => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(owner(), _s.QuickSearchQuickHelp.Text, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)), ToolTip: _s.QuickSearchToolTip.Text),
-                new(_s.PrevQuickSearch.AccessKeyText, () => grid.QuickSearchNext(down: false)),
-                new(_s.NextQuickSearch.AccessKeyText, () => grid.QuickSearchNext(down: true)),
+                new(_s.PrevQuickSearch.AccessKeyText, () => grid.QuickSearchNext(down: false), Gesture: GetGesture(RevisionGridCommand.PrevQuickSearch)),
+                new(_s.NextQuickSearch.AccessKeyText, () => grid.QuickSearchNext(down: true), Gesture: GetGesture(RevisionGridCommand.NextQuickSearch)),
             ];
 
         // As RevisionGridMenuCommands.CreateViewMenuCommands, for the settings the Avalonia grid shows.
@@ -384,43 +414,36 @@ internal static partial class AvaloniaDialogs
         {
             FilterInfo filter = new();
             RevisionGridFilterState? state = Filter?.State;
+            string? highlightGesture = GetGesture(RevisionGridCommand.ToggleHighlightSelectedBranch);
             return
             [
-                new(_s.ShowAllBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: false), IsChecked: state?.ShowAllBranches ?? filter.IsShowAllBranchesChecked),
-                new(_s.ShowCurrentBranchOnly.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: true), IsChecked: state?.ShowCurrentBranchOnly ?? filter.IsShowCurrentBranchOnlyChecked),
-                new(_s.ShowFilteredBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: true, currentOnly: false), IsChecked: state?.ShowFilteredBranches ?? filter.IsShowFilteredBranchesChecked),
+                new(_s.ShowAllBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: false), "BranchLocal", IsChecked: state?.ShowAllBranches ?? filter.IsShowAllBranchesChecked, Gesture: GetGesture(RevisionGridCommand.ShowAllBranches)),
+                new(_s.ShowCurrentBranchOnly.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: true), "BranchFilter", IsChecked: state?.ShowCurrentBranchOnly ?? filter.IsShowCurrentBranchOnlyChecked, Gesture: GetGesture(RevisionGridCommand.ShowCurrentBranchOnly)),
+                new(_s.ShowFilteredBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: true, currentOnly: false), "BranchFilter", IsChecked: state?.ShowFilteredBranches ?? filter.IsShowFilteredBranchesChecked, Gesture: GetGesture(RevisionGridCommand.ShowFilteredBranches)),
+                new(_s.ShowReflogReferences.AccessKeyText, ToggleShowReflogReferences, "Book", IsChecked: state?.ShowReflogReferences ?? AppSettings.ShowReflogReferences, Gesture: GetGesture(RevisionGridCommand.ShowReflogReferences)),
                 MenuModelItem.Separator,
-                new(_s.ShowReflogReferences.AccessKeyText, ToggleReflog, IsChecked: state?.ShowReflogReferences ?? AppSettings.ShowReflogReferences),
-                new(_s.ShowArtificialCommits.AccessKeyText, () => Toggle(() => AppSettings.RevisionGraphShowArtificialCommits = !AppSettings.RevisionGraphShowArtificialCommits), IsChecked: AppSettings.RevisionGraphShowArtificialCommits),
+                new(_s.DrawNonrelativesGray.AccessKeyText, ToggleDrawNonRelativesGray, IsChecked: AppSettings.RevisionGraphDrawNonRelativesGray, Gesture: GetGesture(RevisionGridCommand.ToggleDrawNonRelativesGray)),
+                new(_s.HighlightSelectedBranch.AccessKeyText, grid.HighlightSelectedBranch, Gesture: highlightGesture is null ? "Alt+Click" : $"{highlightGesture}, Alt+Click"),
                 MenuModelItem.Separator,
-                new(_s.ShowRemoteBranches.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowRemoteBranches = !AppSettings.ShowRemoteBranches), IsChecked: AppSettings.ShowRemoteBranches),
-                new(_s.ShowTags.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowTags = !AppSettings.ShowTags), IsChecked: AppSettings.ShowTags),
+                new(_s.ShowArtificialCommits.AccessKeyText, () => ToggleAndReload(() => AppSettings.RevisionGraphShowArtificialCommits = !AppSettings.RevisionGraphShowArtificialCommits), IsChecked: AppSettings.RevisionGraphShowArtificialCommits),
+                new(_s.ShowStashes.AccessKeyText, ToggleShowStashes, IsChecked: AppSettings.ShowStashes, Gesture: GetGesture(RevisionGridCommand.ShowStashes)),
+                new(_s.ShowGitNotes.AccessKeyText, () => ToggleAndReload(() => AppSettings.ShowGitNotes = !AppSettings.ShowGitNotes), IsChecked: AppSettings.ShowGitNotes, Gesture: GetGesture(RevisionGridCommand.ToggleShowGitNotes)),
                 MenuModelItem.Separator,
-                new(_s.ShowAuthorDate.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowAuthorDate = !AppSettings.ShowAuthorDate), IsChecked: AppSettings.ShowAuthorDate),
-                new(_s.ShowRelativeDate.AccessKeyText, () => ToggleDisplay(() => AppSettings.RelativeDate = !AppSettings.RelativeDate), IsChecked: AppSettings.RelativeDate),
+                new(_s.ShowRemoteBranches.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowRemoteBranches = !AppSettings.ShowRemoteBranches), IsChecked: AppSettings.ShowRemoteBranches, Gesture: GetGesture(RevisionGridCommand.ShowRemoteBranches)),
+                new(_s.ShowTags.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowTags = !AppSettings.ShowTags), IsChecked: AppSettings.ShowTags, Gesture: GetGesture(RevisionGridCommand.ToggleShowTags)),
                 MenuModelItem.Separator,
-                new(_s.ShowRevisionGraphColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowRevisionGridGraphColumn = !AppSettings.ShowRevisionGridGraphColumn), IsChecked: AppSettings.ShowRevisionGridGraphColumn),
+                new(_s.ShowBuildStatusIcon.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowBuildStatusIconColumn = !AppSettings.ShowBuildStatusIconColumn), IsChecked: AppSettings.ShowBuildStatusIconColumn),
+                new(_s.ShowBuildStatusText.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowBuildStatusTextColumn = !AppSettings.ShowBuildStatusTextColumn), IsChecked: AppSettings.ShowBuildStatusTextColumn),
+                new(_s.ShowAuthorDate.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowAuthorDate = !AppSettings.ShowAuthorDate), IsChecked: AppSettings.ShowAuthorDate, Gesture: GetGesture(RevisionGridCommand.ToggleAuthorDateCommitDate)),
+                new(_s.ShowRelativeDate.AccessKeyText, () => ToggleDisplay(() => AppSettings.RelativeDate = !AppSettings.RelativeDate), IsChecked: AppSettings.RelativeDate, Gesture: GetGesture(RevisionGridCommand.ToggleShowRelativeDate)),
+                MenuModelItem.Separator,
+                new(_s.ShowRevisionGraphColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowRevisionGridGraphColumn = !AppSettings.ShowRevisionGridGraphColumn), IsChecked: AppSettings.ShowRevisionGridGraphColumn, Gesture: GetGesture(RevisionGridCommand.ToggleRevisionGraph)),
+                new(_s.ShowGitNotesColumn.AccessKeyText, ToggleShowGitNotesColumn, IsChecked: AppSettings.ShowGitNotesColumn.Value, Gesture: GetGesture(RevisionGridCommand.ToggleShowGitNotesColumn)),
+                new(_s.ShowAuthorAvatarColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowAuthorAvatarColumn = !AppSettings.ShowAuthorAvatarColumn), IsChecked: AppSettings.ShowAuthorAvatarColumn),
                 new(_s.ShowAuthorNameColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowAuthorNameColumn = !AppSettings.ShowAuthorNameColumn), IsChecked: AppSettings.ShowAuthorNameColumn),
                 new(_s.ShowDateColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowDateColumn = !AppSettings.ShowDateColumn), IsChecked: AppSettings.ShowDateColumn),
                 new(_s.ShowIdColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowObjectIdColumn = !AppSettings.ShowObjectIdColumn), IsChecked: AppSettings.ShowObjectIdColumn),
             ];
-
-            void Toggle(Action change)
-            {
-                change();
-                grid.Load(grid.SelectedRow?.ObjectId);
-            }
-
-            void ToggleReflog()
-            {
-                if (Filter is not null)
-                {
-                    Filter.ToggleShowReflogReferences();
-                    return;
-                }
-
-                Toggle(() => AppSettings.ShowReflogReferences.Value = !AppSettings.ShowReflogReferences);
-            }
 
             void SetBranchFilter(bool byBranchFilter, bool currentOnly)
             {
@@ -437,17 +460,198 @@ internal static partial class AvaloniaDialogs
                 current.ShowCurrentBranchOnly = currentOnly;
                 grid.Load(grid.SelectedRow?.ObjectId);
             }
+        }
 
-            void ToggleDisplay(Action change)
+        // The handlers of the View menu and of the hotkeys (the Toggle* methods of RevisionGridControl).
+
+        // As PerformRefreshRevisions after a change of a setting of the revisions shown.
+        private void ToggleAndReload(Action change)
+        {
+            change();
+            grid.Load(grid.SelectedRow?.ObjectId);
+        }
+
+        // As ToggleShowReflogReferences.
+        private void ToggleShowReflogReferences()
+        {
+            if (Filter is not null)
             {
-                change();
-                grid.DisplayOptions = GetDisplayOptions();
+                Filter.ToggleShowReflogReferences();
+                return;
             }
 
-            void ToggleColumns(Action change)
+            ToggleAndReload(() => AppSettings.ShowReflogReferences.Value = !AppSettings.ShowReflogReferences);
+        }
+
+        // As ToggleShowStashes.
+        private void ToggleShowStashes() => ToggleAndReload(() => AppSettings.ShowStashes = !AppSettings.ShowStashes);
+
+        // As ToggleShowGitNotesColumn: the notes are read with the revisions.
+        private void ToggleShowGitNotesColumn()
+        {
+            AppSettings.ShowGitNotesColumn.Value = !AppSettings.ShowGitNotesColumn.Value;
+            ApplyColumns(grid);
+            grid.Load(grid.SelectedRow?.ObjectId);
+        }
+
+        // As ToggleDrawNonRelativesGray.
+        private void ToggleDrawNonRelativesGray() => ToggleColumns(() => AppSettings.RevisionGraphDrawNonRelativesGray = !AppSettings.RevisionGraphDrawNonRelativesGray);
+
+        private void ToggleDisplay(Action change)
+        {
+            change();
+            grid.DisplayOptions = GetDisplayOptions();
+        }
+
+        private void ToggleColumns(Action change)
+        {
+            change();
+            ApplyColumns(grid);
+        }
+
+        /// <summary>The text of the hotkey of a command of the grid (the <c>ShortcutKeyDisplayString</c> of its menu item).</summary>
+        private string? GetGesture(RevisionGridCommand command)
+            => grid.GetHotkey(command) is { KeyData: not 0 } hotkey ? ((Keys)hotkey.KeyData).ToShortcutKeyDisplayString() : null;
+
+        /// <summary>
+        ///  As <c>RevisionGridControl.ExecuteCommand</c>: the hotkeys of the grid that it does not execute itself (the
+        ///  navigation), with the handlers of the menus.
+        /// </summary>
+        public bool ExecuteCommand(RevisionGridCommand command)
+        {
+            switch (command)
             {
-                change();
-                ApplyColumns(grid);
+                case RevisionGridCommand.ToggleRevisionGraph: ToggleColumns(() => AppSettings.ShowRevisionGridGraphColumn = !AppSettings.ShowRevisionGridGraphColumn); break;
+                case RevisionGridCommand.RevisionFilter when Filter is not null: Filter.ShowRevisionFilterDialog(); break;
+                case RevisionGridCommand.ResetRevisionFilter when Filter is not null: Filter.ResetAllFiltersAndRefresh(); break;
+                case RevisionGridCommand.ResetRevisionPathFilter when Filter is not null: Filter.SetAndApplyPathFilter(""); break;
+                case RevisionGridCommand.ToggleAuthorDateCommitDate: ToggleDisplay(() => AppSettings.ShowAuthorDate = !AppSettings.ShowAuthorDate); break;
+                case RevisionGridCommand.ToggleShowRelativeDate: ToggleDisplay(() => AppSettings.RelativeDate = !AppSettings.RelativeDate); break;
+                case RevisionGridCommand.ToggleDrawNonRelativesGray: ToggleDrawNonRelativesGray(); break;
+                case RevisionGridCommand.ToggleShowGitNotes: ToggleAndReload(() => AppSettings.ShowGitNotes = !AppSettings.ShowGitNotes); break;
+                case RevisionGridCommand.ToggleShowGitNotesColumn: ToggleShowGitNotesColumn(); break;
+                case RevisionGridCommand.ToggleHideMergeCommits: ToggleAndReload(() => AppSettings.HideMergeCommits = !AppSettings.HideMergeCommits); break;
+                case RevisionGridCommand.ToggleShowTags: ToggleDisplay(() => AppSettings.ShowTags = !AppSettings.ShowTags); break;
+                case RevisionGridCommand.ShowAllBranches when Filter is not null: Filter.ShowAllBranches(); break;
+                case RevisionGridCommand.ShowCurrentBranchOnly when Filter is not null: Filter.ShowCurrentBranchOnly(); break;
+                case RevisionGridCommand.ShowFilteredBranches when Filter is not null: Filter.ShowFilteredBranches(); break;
+                case RevisionGridCommand.ShowReflogReferences: ToggleShowReflogReferences(); break;
+                case RevisionGridCommand.ShowRemoteBranches: ToggleDisplay(() => AppSettings.ShowRemoteBranches = !AppSettings.ShowRemoteBranches); break;
+                case RevisionGridCommand.ShowFirstParent when Filter is not null: Filter.ToggleShowOnlyFirstParent(); break;
+                case RevisionGridCommand.ShowStashes: ToggleShowStashes(); break;
+                case RevisionGridCommand.ToggleBetweenArtificialAndHeadCommits: ToggleBetweenArtificialAndHead(); break;
+                case RevisionGridCommand.SelectCurrentRevision: SelectCurrentRevision(); break;
+                case RevisionGridCommand.GoToCommit: GotoCommit(); break;
+                case RevisionGridCommand.GoToMergeBase: AvaloniaUi.RunInHostContext(GoToMergeBase); break;
+                case RevisionGridCommand.SelectAsBaseToCompare: _baseCommitToCompare = grid.GetSelectedRevisionsLatestSelectedFirst().FirstOrDefault(); break;
+                case RevisionGridCommand.CompareToBase: Run(CompareToBase); break;
+                case RevisionGridCommand.CreateFixupCommit: RunOnLatest(r => commands.StartFixupCommitDialog(owner(), r)); break;
+                case RevisionGridCommand.CreateSquashCommit: RunOnLatest(r => commands.StartSquashCommitDialog(owner(), r)); break;
+                case RevisionGridCommand.CreateAmendCommit: RunOnLatest(r => commands.StartAmendCommitDialog(owner(), r)); break;
+                case RevisionGridCommand.OpenCommitsWithDifftool: Run(DiffSelectedCommitsWithDifftool); break;
+                case RevisionGridCommand.CompareToWorkingDirectory: Run(CompareToWorkingDirectory); break;
+                case RevisionGridCommand.CompareToCurrentBranch: Run(CompareWithCurrentBranch); break;
+                case RevisionGridCommand.CompareToBranch: Run(CompareToBranch); break;
+                case RevisionGridCommand.CompareSelectedCommits: Run(CompareSelectedCommits); break;
+                case RevisionGridCommand.DeleteRef: Run(DeleteRef); break;
+                case RevisionGridCommand.RenameRef: Run(RenameRef); break;
+                default: return false;
+            }
+
+            return true;
+        }
+
+        private void RunOnLatest(Action<GitRevision> action)
+        {
+            if (grid.GetSelectedRevisionsLatestSelectedFirst().FirstOrDefault() is { } revision)
+            {
+                Run(() => action(revision));
+            }
+        }
+
+        // As the SelectCurrentRevision command.
+        private void SelectCurrentRevision()
+        {
+            ObjectId currentCheckout = Module.GetCurrentCheckout();
+            if (!grid.SelectRevision(currentCheckout))
+            {
+                AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(owner(), currentCheckout));
+            }
+        }
+
+        // As RenameRef.
+        private void RenameRef()
+        {
+            if (grid.GetSelectedRevisionsLatestSelectedFirst().FirstOrDefault() is { } revision)
+            {
+                InitiateRefAction(
+                    new GitRefListsForRevision(revision).GetRenameableLocalBranches(),
+                    gitRef => commands.StartRenameDialog(owner(), gitRef.Name),
+                    FormQuickGitRefSelector.QuickAction.Rename);
+            }
+        }
+
+        // As DeleteRef.
+        private void DeleteRef()
+        {
+            if (grid.GetSelectedRevisionsLatestSelectedFirst().FirstOrDefault() is not { } revision)
+            {
+                return;
+            }
+
+            InitiateRefAction(
+                new GitRefListsForRevision(revision).GetDeletableRefs(Module.GetSelectedBranch(emptyIfDetached: true)),
+                gitRef =>
+                {
+                    if (gitRef.IsTag)
+                    {
+                        commands.StartDeleteTagDialog(owner(), gitRef.Name);
+                    }
+                    else if (gitRef.IsRemote)
+                    {
+                        commands.StartDeleteRemoteBranchDialog(owner(), gitRef.Name);
+                    }
+                    else
+                    {
+                        commands.StartDeleteBranchDialog(owner(), gitRef.Name);
+                    }
+                },
+                FormQuickGitRefSelector.QuickAction.Delete);
+        }
+
+        // As InitiateRefAction: the action on the only reference, else on the one chosen in the quick selector.
+        private void InitiateRefAction(IReadOnlyList<IGitRef>? gitRefs, Action<IGitRef> action, FormQuickGitRefSelector.QuickAction actionLabel)
+        {
+            if (gitRefs?.Count is not > 0)
+            {
+                return;
+            }
+
+            if (gitRefs.Count == 1)
+            {
+                action(gitRefs[0]);
+                return;
+            }
+
+            // At the mouse pointer (the WinForms grid shows it at the selected row).
+            IWin32Window window = owner();
+            Point location = Cursor.Position;
+            if (TryShowQuickRefSelector(window, actionLabel, gitRefs, location, out IGitRef? selectedRef))
+            {
+                if (selectedRef is not null)
+                {
+                    action(selectedRef);
+                }
+
+                return;
+            }
+
+            using FormQuickGitRefSelector dlg = new();
+            dlg.Init(actionLabel, gitRefs);
+            dlg.Location = location;
+            if (dlg.ShowDialog(window) == DialogResult.OK && dlg.SelectedRef is not null)
+            {
+                action(dlg.SelectedRef);
             }
         }
 
@@ -807,8 +1011,17 @@ internal static partial class AvaloniaDialogs
     internal static void ApplyColumns(RevisionGridViewModel grid)
     {
         grid.ShowGraphColumn = AppSettings.ShowRevisionGridGraphColumn;
+        grid.ShowNotesColumn = AppSettings.ShowGitNotesColumn.Value;
+        grid.ShowAvatarColumn = AppSettings.ShowAuthorAvatarColumn;
         grid.ShowAuthorColumn = AppSettings.ShowAuthorNameColumn;
         grid.ShowDateColumn = AppSettings.ShowDateColumn;
         grid.ShowIdColumn = AppSettings.ShowObjectIdColumn;
+        grid.ShowBuildStatusIcon = AppSettings.ShowBuildStatusIconColumn;
+        grid.ShowBuildStatusText = AppSettings.ShowBuildStatusTextColumn;
+
+        // As RevisionDataGridView.ApplySettings and PerformRefreshRevisions (RevisionGraphDrawStyle).
+        grid.DrawNonRelativesGray = AppSettings.RevisionGraphDrawNonRelativesGray;
+        grid.DrawNonRelativesTextGray = AppSettings.RevisionGraphDrawNonRelativesTextGray;
+        grid.HighlightAuthoredRevisions = AppSettings.HighlightAuthoredRevisions;
     }
 }

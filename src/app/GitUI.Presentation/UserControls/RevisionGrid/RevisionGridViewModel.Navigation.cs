@@ -128,6 +128,7 @@ public sealed partial class RevisionGridViewModel
 
     partial void OnSelectedRowChanged(RevisionGridRow? value)
     {
+        UpdateAuthorHighlight();
         if (_navigating || value is null)
         {
             return;

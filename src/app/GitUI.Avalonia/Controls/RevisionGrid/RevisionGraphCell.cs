@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid.Graph;
 
@@ -47,6 +48,8 @@ public sealed class RevisionGraphCell : Control
             return;
         }
 
+        // As RevisionGraphColumnProvider: the draw style (non-relatives gray, highlighted branch) and the hover highlight.
+        RevisionGridView? view = this.FindAncestorOfType<RevisionGridView>();
         using (context.PushClip(new Rect(Bounds.Size)))
         {
             renderer.DrawRow(
@@ -56,8 +59,9 @@ public sealed class RevisionGraphCell : Control
                 row.Index,
                 Bounds.Height,
                 graph.GetSegmentsForRow,
-                RevisionGraphDrawStyle.Normal,
-                graph.HeadId);
+                view?.DrawStyle ?? RevisionGraphDrawStyle.Normal,
+                graph.HeadId,
+                view?.ViewModel?.HoverHighlightedIds);
         }
     }
 }

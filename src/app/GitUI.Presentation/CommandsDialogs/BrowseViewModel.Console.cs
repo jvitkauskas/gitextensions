@@ -44,6 +44,7 @@ public sealed partial class BrowseViewModel : IDisposable
         _terminal?.Dispose();
         _terminal = null;
         ConsoleView = null;
+        DisposeBuildReport();
     }
 
     private void InitializeConsole()

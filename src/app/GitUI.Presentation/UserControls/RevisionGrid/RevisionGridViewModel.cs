@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GitExtensions.Extensibility;
+using GitExtensions.Extensibility.BuildServerIntegration;
 using GitExtensions.Extensibility.Git;
 using GitUI.UserControls.RevisionGrid.Graph;
 using GitUIPluginInterfaces;
@@ -16,13 +17,26 @@ public enum RevisionRefKind
     RemoteBranch,
     Tag,
     Other,
+
+    /// <summary>The label of a stash (its reflog selector) or of the autostash (as <c>MessageColumnProvider</c>).</summary>
+    Stash,
 }
 
 /// <summary>A reference shown before the subject (as the WinForms revision grid's ref "capsules").</summary>
 /// <param name="Name">The name as shown, e.g. <c>main</c>, <c>origin/main</c> or <c>v1.0</c>.</param>
 /// <param name="Kind">The kind of the reference.</param>
 /// <param name="IsCurrentBranch">Whether it is the checked out branch (shown in bold).</param>
-public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsCurrentBranch);
+public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsCurrentBranch)
+{
+    /// <summary>The reference (none for a stash label), for its menu and the hover highlighting of its ancestry.</summary>
+    public IGitRef? GitRef { get; init; }
+
+    // Compared as shown, not by the reference object.
+    public bool Equals(RevisionRefItem? other)
+        => other is not null && Name == other.Name && Kind == other.Kind && IsCurrentBranch == other.IsCurrentBranch;
+
+    public override int GetHashCode() => HashCode.Combine(Name, Kind, IsCurrentBranch);
+}
 
 /// <summary>How the revisions are shown (the <c>AppSettings</c> of the WinForms columns).</summary>
 /// <param name="RelativeDate">Whether dates are relative (<c>AppSettings.RelativeDate</c>).</param>
@@ -34,7 +48,7 @@ public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsC
 public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000, bool ShowRemoteBranches = true, bool ShowTags = true);
 
 /// <summary>A row of the revision grid: a revision and its row in the <see cref="RevisionGraph"/>.</summary>
-public sealed class RevisionGridRow
+public sealed partial class RevisionGridRow : ObservableObject
 {
     public RevisionGridRow(int index, GitRevision revision, RevisionGridDisplayOptions options, string? currentBranch)
     {
@@ -42,13 +56,40 @@ public sealed class RevisionGridRow
         Revision = revision;
         ShortId = revision.IsArtificial ? "" : revision.ObjectId.ToShortString();
         Date = FormatDate(options.ShowAuthorDate ? revision.AuthorDate : revision.CommitDate, options.RelativeDate);
-        Refs = [.. revision.Refs
+        List<RevisionRefItem> refs = [.. revision.Refs
             .Where(r => (options.ShowRemoteBranches || !r.IsRemote) && (options.ShowTags || !r.IsTag))
             .OrderBy(r => r.IsTag ? 2 : r.IsRemote ? 1 : 0)
             .Select(r => new RevisionRefItem(
                 r.Name,
                 r.IsHead ? RevisionRefKind.Branch : r.IsRemote ? RevisionRefKind.RemoteBranch : r.IsTag ? RevisionRefKind.Tag : RevisionRefKind.Other,
-                r.IsHead && r.Name == currentBranch))];
+                r.IsHead && r.Name == currentBranch)
+            {
+                GitRef = r,
+            })];
+
+        // As MessageColumnProvider.OnCellPainting: after the references, the label of a stash (its reflog selector without
+        // "refs/"), or the autostash with its subject as label (and no message).
+        if (revision.IsAutostash)
+        {
+            refs.Add(new RevisionRefItem(revision.Subject, RevisionRefKind.Stash, IsCurrentBranch: false));
+        }
+        else if (revision.ReflogSelector is { Length: > 5 } reflogSelector)
+        {
+            refs.Add(new RevisionRefItem(reflogSelector[5..], RevisionRefKind.Stash, IsCurrentBranch: false));
+        }
+
+        Refs = refs;
+
+        // As NotesColumnProvider: the first line of the notes, all of them as tooltip.
+        Notes = revision.Notes?.IndexOf('\n') is int eolIndex and >= 0 ? revision.Notes[..eolIndex] : revision.Notes ?? "";
+        UpdateBuildStatus();
+        revision.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(GitRevision.BuildStatus))
+            {
+                UpdateBuildStatus();
+            }
+        };
     }
 
     public int Index { get; }
@@ -57,7 +98,8 @@ public sealed class RevisionGridRow
 
     public ObjectId ObjectId => Revision.ObjectId;
 
-    public string Subject => Revision.Subject;
+    /// <summary>The subject; none for the autostash, whose subject is its label.</summary>
+    public string Subject => Revision.IsAutostash ? "" : Revision.Subject;
 
     public string AuthorName => Revision.Author ?? "";
 
@@ -66,6 +108,50 @@ public sealed class RevisionGridRow
     public string ShortId { get; }
 
     public IReadOnlyList<RevisionRefItem> Refs { get; }
+
+    /// <summary>The first line of the git notes (the notes column).</summary>
+    public string Notes { get; }
+
+    /// <summary>The git notes, as the tooltip of the notes column; none without notes.</summary>
+    public string? NotesToolTip => string.IsNullOrEmpty(Revision.Notes) ? null : Revision.Notes;
+
+    /// <summary>The tooltip of the author and the avatar (the author and the committer); none for the artificial commits.</summary>
+    public string? AuthorToolTip => AuthorToolTipProvider?.Invoke(this);
+
+    internal Func<RevisionGridRow, string?>? AuthorToolTipProvider { get; init; }
+
+    /// <summary>The author's avatar (PNG data), once loaded for the avatar column.</summary>
+    [ObservableProperty]
+    public partial byte[]? Avatar { get; set; }
+
+    /// <summary>Whether the author is the one of the selected revision (in bold, as <c>AuthorRevisionHighlighting</c>).</summary>
+    [ObservableProperty]
+    public partial bool IsAuthorHighlighted { get; set; }
+
+    /// <summary>The build status (<c>GitRevision.BuildStatus</c>) of the build server integration, if any.</summary>
+    [ObservableProperty]
+    public partial BuildInfo? BuildStatus { get; private set; }
+
+    /// <summary>The symbol of the build status (as <c>BuildInfo.StatusSymbol</c>); empty without one.</summary>
+    public string BuildStatusSymbol => BuildStatus?.StatusSymbol ?? "";
+
+    /// <summary>The description of the build status (the text of <c>BuildStatusColumnProvider</c>).</summary>
+    public string BuildStatusDescription => BuildStatus?.Description ?? "";
+
+    /// <summary>As <c>BuildStatusColumnProvider.TryGetToolTip</c>.</summary>
+    public string? BuildStatusToolTip => BuildStatus is { } status ? status.Tooltip ?? status.Description : null;
+
+    /// <summary>Whether the build status has a report to open (the hand cursor of the WinForms column).</summary>
+    public bool HasBuildReport => !string.IsNullOrWhiteSpace(BuildStatus?.Url);
+
+    private void UpdateBuildStatus()
+    {
+        BuildStatus = Revision.BuildStatus;
+        OnPropertyChanged(nameof(BuildStatusSymbol));
+        OnPropertyChanged(nameof(BuildStatusDescription));
+        OnPropertyChanged(nameof(BuildStatusToolTip));
+        OnPropertyChanged(nameof(HasBuildReport));
+    }
 
     /// <summary>As <c>DateColumnProvider.FormatDate</c>.</summary>
     public static string FormatDate(DateTime date, bool relative)
@@ -117,6 +203,31 @@ public interface IRevisionGridHost
 
     /// <summary>Runs <paramref name="work"/> in the background, then <paramref name="then"/> on the UI thread.</summary>
     void RunInBackground(Action work, Action then);
+
+    /// <summary>
+    ///  The email of the user (<c>user.email</c>), whose revisions are highlighted when none is selected
+    ///  (<c>AuthorRevisionHighlighting</c>).
+    /// </summary>
+    string UserEmail => "";
+
+    /// <summary>The avatar of an author (PNG data) for the avatar column (<c>IAvatarProvider.GetAvatarAsync</c>).</summary>
+    Task<byte[]?> GetAvatarAsync(string email, string? name, int size) => Task.FromResult<byte[]?>(null);
+
+    /// <summary>The tooltip of the author and avatar columns (<c>AuthorNameColumnProvider.GetAuthorAndCommiterToolTip</c>).</summary>
+    string GetAuthorToolTip(GitRevision revision) => $"{revision.Author} <{revision.AuthorEmail}>";
+
+    /// <summary>
+    ///  The revisions to highlight in the graph when hovering the label of <paramref name="gitRef"/> in row
+    ///  <paramref name="rowIndex"/> (<c>HoverHighlightCalculator</c>, debounced); none to clear. Cancelled (by a later call,
+    ///  or if the highlight did not change) with an <see cref="OperationCanceledException"/>.
+    /// </summary>
+    Task<IReadOnlySet<ObjectId>?> GetHoverHighlightAsync(RevisionGraph graph, IGitRef? gitRef, int rowIndex, int firstVisibleRow, int visibleRowCount)
+        => Task.FromResult<IReadOnlySet<ObjectId>?>(null);
+
+    /// <summary>Opens a URL in the browser (the build report of a build status).</summary>
+    void OpenUrl(string url)
+    {
+    }
 }
 
 /// <summary>
@@ -171,6 +282,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     public void SetSelectedRows(IEnumerable<RevisionGridRow> rows)
     {
         SelectedRows = [.. rows];
+        UpdateAuthorHighlight();
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -228,6 +340,10 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         _cacheRequestedTo = -1;
         IsLoading = true;
 
+        // As PerformRefreshRevisions: the highlighted branch (until refresh) and the hover highlight are reset.
+        IsBranchHighlighted = false;
+        HoverHighlightedIds = null;
+
         _host.LoadRevisions(
             Graph,
             reportBatch: () =>
@@ -277,7 +393,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         {
             if (Graph.GetNodeForRow(index)?.GitRevision is { } revision)
             {
-                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch));
+                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip });
             }
         }
 
