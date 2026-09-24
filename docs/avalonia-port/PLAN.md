@@ -252,6 +252,8 @@ WinForms `ConEmuControl` are no longer built, and the `GE_AVALONIA` switch with 
 - **Consoles**: the plain text console is shown by the progress dialog itself (`ProcessViewModel.PlainText`); ConEmu and
   mintty run in a native child window (`NativeHostWindow`) that the Avalonia windows embed. The session of ConEmu is the
   WinForms-free code of conemu-inside, vendored in `externals/ConEmuInside` with a `ConEmuHost` instead of `ConEmuControl`.
+  After phase 8, the built-in terminal (Iciclecreek.Avalonia.Terminal, an Avalonia control with a pseudo console) became
+  the default console emulator; see "Third-party controls" in the ledger.
 - **Taskbar**: `ITaskbarList3` and the jump list of the shell (`GitUI/Taskbar/NativeTaskbar.cs`) instead of the
   WindowsAPICodePack, whose taskbar needs WinForms; thumbnail button clicks come from the window procedure hook of the main
   window.
@@ -268,7 +270,7 @@ WinForms `ConEmuControl` are no longer built, and the `GE_AVALONIA` switch with 
 - Retarget the core libraries to `net10.0`, removing `System.Drawing` `Font` / `Color` / `Image` from `AppSettings`, `GitModule` and the plugin API.
 - Put these behind OS services:
   - diff/merge tool and editor discovery (`src/app/GitCommands/DiffMergeTools/`, `EditorHelper.cs`);
-  - console (ConEmu or Mintty, replaced by a cross-platform terminal);
+  - console: the built-in terminal is cross-platform already (XTerm.NET and Porta.Pty, which has the pseudo terminals of Linux and macOS); it needs the shells of those systems (`$SHELL`), and ConEmu and Mintty stay Windows-only;
   - Credential Manager;
   - SSH askpass (`src/native/GitExtSshAskPass`);
   - the registry;

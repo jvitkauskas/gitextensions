@@ -159,6 +159,20 @@ Not yet: the environment information of the bug report still lists the `Microsof
 updates needs them, since the upstream releases it offers are WinForms builds); the MSI was not built on the development machine
 (no Visual Studio msbuild and WiX there), but the publish, `Check-BundlesConsistent.ps1` and the portable archive pass.
 
+## Third-party controls
+
+Adopted after phase 8 to close gaps of the port (all MIT, all built for Avalonia 12; the plugins do not copy them, see
+`src/plugins/Directory.Build.targets`, and `setup/installer/Product.wxs` lists them):
+
+| Package | Used for | Where | Notes |
+|---|---|---|---|
+| AvaloniaEdit.TextMate (TextMateSharp, Onigwrap) | The syntax highlighting of files and diffs, by the grammars and the Light+ / Dark+ themes of Visual Studio Code | `GitUI.Avalonia/Editor/TextMateColorizer.cs`, `TextEditorView` | Replaces the highlighting definitions of AvaloniaEdit (kept for the extensions TextMate does not know). A diff is tokenized as its old file (removed and context lines) and new file (added and context lines), without the prefixes. With git's colors as the background (`ReverseGitColoring`), the changed lines keep the syntax colors (`DiffColorizer.KeepsSyntaxColors`). Not highlighted: lines over 5000 characters, files over 50000 lines, word diffs, git grep. |
+| AvaloniaHex | Binary files in hexadecimal and ASCII (as `FileViewer.DisplayAsHexDump`) | `FileViewKind.Binary`, `FileViewerView` (`hexEditor`), `FileViewerHost.GetItem` | All the bytes, read-only, where WinForms showed a text dump of the first 4 KB. |
+| Iciclecreek.Avalonia.Terminal (XTerm.NET, Porta.Pty, the ConPTY of Microsoft) | The built-in terminal: the console tab and the progress dialog | `GitUI/ConsoleEmulation/BuiltIn/*` (`BuiltInTerminalEmulator`, `BuiltInTerminal`, `TerminalOutputProcessor`) | The default console emulator (`ConsoleEmulatorName` = `terminal`), and the fallback before ConEmu; ConEmu and Mintty can still be chosen. The console views are `IEmbeddedView`: a native window or an Avalonia control. The processes run in a pseudo console spawned by `BuiltInTerminal` and attached to the control (the control would launch a finished command again when it is loaded), in a job object (they end with the application). Themes: Tomorrow / Tomorrow Night (following the application theme), Solarized Light / Dark. For the cross-platform phase: a shell descriptor for `$SHELL`, `cd` without the Git Bash paths, `Path.PathSeparator` in the PATH of the shell, and the Unix native files of Porta.Pty in the packages. |
+
+Not adopted: TreeDataGrid, whose releases for Avalonia 12 are part of the commercial Avalonia Pro (they validate a license);
+only its releases for Avalonia 11 are MIT.
+
 ## Layout
 
 The windows follow the layout of their WinForms forms (checked against each Designer.cs in September 2026: the rows, toolbars,
