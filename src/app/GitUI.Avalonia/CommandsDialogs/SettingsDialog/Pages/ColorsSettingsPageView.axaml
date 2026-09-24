@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.ColorsSettingsPageView"
+             x:DataType="vm:ColorsSettingsPageViewModel">
+  <!-- Equivalent of ColorsSettingsPage: gbRevisionGraph, then gbTheme. -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.RevisionGraph.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="multicolorBranches" Content="{Binding Strings.MulticolorBranches.AccessKeyText}" IsChecked="{Binding MulticolorBranches}" />
+        <CheckBox Name="drawAlternateBackColor" Content="{Binding Strings.DrawAlternateBackColor.AccessKeyText}" IsChecked="{Binding DrawAlternateBackColor}" />
+        <CheckBox Name="drawNonRelativesGray" Content="{Binding Strings.DrawNonRelativesGray.AccessKeyText}" IsChecked="{Binding DrawNonRelativesGray}" />
+        <CheckBox Name="drawNonRelativesTextGray" Content="{Binding Strings.DrawNonRelativesTextGray.AccessKeyText}" IsChecked="{Binding DrawNonRelativesTextGray}" />
+        <CheckBox Name="highlightAuthored" Content="{Binding Strings.HighlightAuthored.AccessKeyText}" IsChecked="{Binding HighlightAuthored}" />
+        <CheckBox Name="fillRefLabels" Content="{Binding Strings.FillRefLabels.AccessKeyText}" IsChecked="{Binding FillRefLabels}" />
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Theme.PlainText}">
+      <StackPanel Spacing="4">
+        <StackPanel Name="restartNeeded" Orientation="Horizontal" Spacing="4" IsVisible="{Binding LabelRestartIsNeededVisible}">
+          <Image Source="avares://GitUI.Avalonia/Assets/Warning.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding Strings.RestartNeeded.PlainText}" VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ComboBox Name="selectTheme" MinWidth="213" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}" />
+          <!-- sbOpenThemeFolder: the whole button drops the menu of the folders down. -->
+          <DropDownButton Name="openThemeFolder">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+              <AccessText Text="{Binding Strings.OpenThemeFolder.AccessKeyText}" />
+            </StackPanel>
+            <DropDownButton.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                <MenuItem Name="applicationFolder" Header="{Binding Strings.ApplicationFolder.AccessKeyText}" Command="{Binding OpenApplicationThemesFolderCommand}" />
+                <MenuItem Name="userFolder" Header="{Binding Strings.UserFolder.AccessKeyText}" Command="{Binding OpenUserThemesFolderCommand}" />
+              </MenuFlyout>
+            </DropDownButton.Flyout>
+          </DropDownButton>
+        </StackPanel>
+        <CheckBox Name="colorblind" Content="{Binding Strings.Colorblind.AccessKeyText}" IsChecked="{Binding IsColorblind}" />
+        <CheckBox Name="useSystemVisualStyle" Content="{Binding Strings.UseSystemVisualStyle.AccessKeyText}" IsChecked="{Binding UseSystemVisualStyle}"
+                  IsEnabled="{Binding IsChoosingVisualStyleEnabled}" />
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

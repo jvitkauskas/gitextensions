@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.DiffViewerSettingsPageView"
+             x:DataType="vm:DiffViewerSettingsPageViewModel">
+  <!--
+    Equivalent of DiffViewerSettingsPage: gbGeneral, then gbDiffColoring. The info icon of a SettingsCheckBox with a tooltip
+    opens its section of the manual (ManualSectionAnchorName).
+  -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.General.PlainText}">
+      <StackPanel Spacing="4">
+        <Button Name="saveCurrentViewSettingsAsDefault" Content="{Binding Strings.SaveCurrentViewSettingsAsDefault.AccessKeyText}"
+                ToolTip.Tip="{Binding Strings.SaveCurrentViewSettingsAsDefaultTooltip.Text}" Command="{Binding SaveCurrentViewSettingsAsDefaultCommand}" />
+        <CheckBox Name="rememberIgnoreWhiteSpacePreference" Content="{Binding Strings.RememberIgnoreWhiteSpacePreference.AccessKeyText}" IsChecked="{Binding RememberIgnoreWhiteSpacePreference}" />
+        <CheckBox Name="rememberShowNonPrintingCharsPreference" Content="{Binding Strings.RememberShowNonPrintingCharsPreference.AccessKeyText}" IsChecked="{Binding RememberShowNonPrintingCharsPreference}" />
+        <CheckBox Name="rememberShowEntireFilePreference" Content="{Binding Strings.RememberShowEntireFilePreference.AccessKeyText}" IsChecked="{Binding RememberShowEntireFilePreference}" />
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="rememberDiffAppearancePreference" Content="{Binding Strings.RememberDiffAppearancePreference.AccessKeyText}" IsChecked="{Binding RememberDiffAppearancePreference}"
+                    ToolTip.Tip="{Binding Strings.RememberDiffAppearancePreferenceTooltip.Text}" />
+          <Button Name="rememberDiffAppearancePreferenceHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.RememberDiffAppearancePreferenceTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.RememberDiffAppearancePreference.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="diff-appearance">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <CheckBox Name="rememberNumberOfContextLines" Content="{Binding Strings.RememberNumberOfContextLines.AccessKeyText}" IsChecked="{Binding RememberNumberOfContextLines}" />
+        <CheckBox Name="rememberShowSyntaxHighlightingInDiff" Content="{Binding Strings.RememberShowSyntaxHighlightingInDiff.AccessKeyText}" IsChecked="{Binding RememberShowSyntaxHighlightingInDiff}" />
+        <CheckBox Name="omitUninterestingDiff" Content="{Binding Strings.OmitUninterestingDiff.AccessKeyText}" IsChecked="{Binding OmitUninterestingDiff}" />
+        <CheckBox Name="contScrollToNextFileOnlyWithAlt" Content="{Binding Strings.ContScrollToNextFileOnlyWithAlt.AccessKeyText}" IsChecked="{Binding ContScrollToNextFileOnlyWithAlt}" />
+        <CheckBox Name="openSubmoduleDiffInSeparateWindow" Content="{Binding Strings.OpenSubmoduleDiffInSeparateWindow.AccessKeyText}" IsChecked="{Binding OpenSubmoduleDiffInSeparateWindow}" />
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="showDiffForAllParents" Content="{Binding Strings.ShowDiffForAllParents.AccessKeyText}" IsChecked="{Binding ShowDiffForAllParents}"
+                    ToolTip.Tip="{Binding Strings.ShowDiffForAllParentsTooltip.Text}" />
+          <Button Name="showDiffForAllParentsHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.ShowDiffForAllParentsTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.ShowDiffForAllParents.PlainText}" Command="{Binding OpenSettingsManualCommand}"
+                  CommandParameter="general-show-file-differences-for-all-parents-in-browse-dialog">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="showAllCustomDiffTools" Content="{Binding Strings.ShowAllCustomDiffTools.AccessKeyText}" IsChecked="{Binding ShowAllCustomDiffTools}"
+                    ToolTip.Tip="{Binding Strings.ShowAllCustomDiffToolsTooltip.Text}" />
+          <Button Name="showAllCustomDiffToolsHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.ShowAllCustomDiffToolsTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.ShowAllCustomDiffTools.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="general-show-all-available-difftools">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Label VerticalAlignment="Center" Content="{Binding Strings.VerticalRulerPosition.AccessKeyText}" Target="verticalRulerPosition" />
+          <NumericUpDown Name="verticalRulerPosition" Width="120" Minimum="0" Maximum="1000" Increment="1" FormatString="0" Value="{Binding VerticalRulerPosition}" />
+        </StackPanel>
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.DiffColoring.PlainText}">
+      <StackPanel Spacing="4">
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <CheckBox Name="useGitColoring" Content="{Binding Strings.UseGitColoring.AccessKeyText}" IsChecked="{Binding UseGitColoring}"
+                    ToolTip.Tip="{Binding Strings.UseGitColoringTooltip.Text}" />
+          <Button Name="useGitColoringHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.UseGitColoringTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.UseGitColoring.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="diff-coloring-git-coloring">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="2" IsEnabled="{Binding UseGitColoring}">
+          <CheckBox Name="useGEThemeGitColoring" Content="{Binding Strings.UseGEThemeGitColoring.AccessKeyText}" IsChecked="{Binding UseGEThemeGitColoring}"
+                    ToolTip.Tip="{Binding Strings.UseGEThemeGitColoringTooltip.Text}" />
+          <Button Name="useGEThemeGitColoringHelp" Classes="link" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.UseGEThemeGitColoringTooltip.Text}"
+                  AutomationProperties.Name="{Binding Strings.UseGEThemeGitColoring.PlainText}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="diff-coloring-reverse-background-color">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

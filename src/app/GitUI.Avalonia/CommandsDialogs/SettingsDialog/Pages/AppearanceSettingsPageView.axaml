@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.AppearanceSettingsPageView"
+             x:DataType="vm:AppearanceSettingsPageViewModel">
+  <!-- Equivalent of AppearanceSettingsPage: gbGeneral, gbAuthorImages, then gbLanguages; the first columns are aligned. -->
+  <StackPanel Grid.IsSharedSizeScope="True">
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.General.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="showRelativeDate" Content="{Binding Strings.ShowRelativeDate.AccessKeyText}" IsChecked="{Binding ShowRelativeDate}" />
+        <CheckBox Name="showRepoCurrentBranch" Content="{Binding Strings.ShowRepoCurrentBranch.AccessKeyText}" IsChecked="{Binding ShowRepoCurrentBranch}" />
+        <CheckBox Name="showCurrentBranchInVisualStudio" Content="{Binding Strings.ShowCurrentBranchInVisualStudio.AccessKeyText}" IsChecked="{Binding ShowCurrentBranchInVisualStudio}" />
+        <CheckBox Name="enableAutoScale" Content="{Binding Strings.EnableAutoScale.AccessKeyText}" IsChecked="{Binding EnableAutoScale}" />
+        <Grid ColumnSpacing="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="value" />
+          </Grid.ColumnDefinitions>
+          <Label VerticalAlignment="Center" Content="{Binding Strings.TruncateLongFilenames.AccessKeyText}" Target="truncatePathMethod" />
+          <ComboBox Name="truncatePathMethod" Grid.Column="1" HorizontalAlignment="Stretch" MinWidth="160"
+                    ItemsSource="{Binding TruncatePathMethods}" SelectedItem="{Binding TruncatePathMethod}" />
+        </Grid>
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.AuthorImages.PlainText}">
+      <StackPanel Spacing="4">
+        <CheckBox Name="showAuthorAvatarInCommitGraph" Content="{Binding Strings.ShowAuthorAvatarInCommitGraph.AccessKeyText}" IsChecked="{Binding ShowAuthorAvatarInCommitGraph}" />
+        <CheckBox Name="showAuthorAvatarInCommitInfo" Content="{Binding Strings.ShowAuthorAvatarInCommitInfo.AccessKeyText}" IsChecked="{Binding ShowAuthorAvatarInCommitInfo}" />
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="value" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Label VerticalAlignment="Center" Content="{Binding Strings.CacheDays.AccessKeyText}" Target="daysToCacheImages" />
+          <NumericUpDown Name="daysToCacheImages" Grid.Column="1" Width="100" HorizontalAlignment="Left" Minimum="0" Maximum="400" Increment="1" FormatString="0"
+                         Value="{Binding DaysToCacheImages}" />
+          <Label Grid.Row="1" VerticalAlignment="Center" Content="{Binding Strings.AvatarProvider.AccessKeyText}" Target="avatarProvider" />
+          <ComboBox Name="avatarProvider" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AvatarProviders}" SelectedItem="{Binding AvatarProvider}" />
+          <Button Name="avatarProviderHelp" AutomationProperties.Name="{Binding Strings.AvatarProvider.PlainText}" Grid.Row="1" Grid.Column="2" Classes="link" VerticalAlignment="Center"
+                  ToolTip.Tip="{Binding Strings.AvatarProviderTooltip.Text}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="author-images-avatar-provider">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+          <Label Grid.Row="2" VerticalAlignment="Center" Content="{Binding Strings.NoImageService.AccessKeyText}" Target="noImageService" />
+          <ComboBox Name="noImageService" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AvatarFallbackTypes}" SelectedItem="{Binding AvatarFallbackType}"
+                    ToolTip.Tip="{Binding Strings.NoImageServiceTooltip.Text}" />
+          <Button Name="pictureAvatarHelp" AutomationProperties.Name="{Binding Strings.NoImageService.PlainText}" Grid.Row="2" Grid.Column="2" Classes="link" VerticalAlignment="Center"
+                  ToolTip.Tip="{Binding Strings.NoImageServiceTooltip.Text}" Command="{Binding OpenSettingsManualCommand}" CommandParameter="author-images-avatar-fallback">
+            <Image Source="avares://GitUI.Avalonia/Assets/Information.png" Width="16" Height="16" />
+          </Button>
+          <Label Grid.Row="3" VerticalAlignment="Center" Content="{Binding Strings.CustomAvatarTemplate.AccessKeyText}" Target="customAvatarTemplate"
+                 IsVisible="{Binding IsCustomAvatarTemplateVisible}" />
+          <TextBox Name="customAvatarTemplate" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding CustomAvatarTemplate}" IsVisible="{Binding IsCustomAvatarTemplateVisible}" />
+          <Button Name="clearImageCache" Grid.Row="4" Grid.Column="1" Content="{Binding Strings.ClearImageCache.AccessKeyText}" Command="{Binding ClearImageCacheCommand}" />
+        </Grid>
+      </StackPanel>
+    </HeaderedContentControl>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Languages.PlainText}">
+      <Grid RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+          <ColumnDefinition Width="Auto" SharedSizeGroup="value" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Label VerticalAlignment="Center" Content="{Binding Strings.Language.AccessKeyText}" Target="language" />
+        <ComboBox Name="language" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}" />
+        <Button Name="helpTranslate" Grid.Column="2" Classes="link" VerticalAlignment="Center" Command="{Binding OpenHelpTranslateCommand}">
+          <TextBlock Text="{Binding Strings.HelpTranslate.PlainText}" />
+        </Button>
+        <Label Grid.Row="1" VerticalAlignment="Center" Content="{Binding Strings.SpellingDictionary.AccessKeyText}" Target="dictionary" />
+        <ComboBox Name="dictionary" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Dictionaries}" SelectedItem="{Binding Dictionary}"
+                  DropDownOpened="Dictionary_DropDownOpened" />
+        <Button Name="downloadDictionary" Grid.Row="1" Grid.Column="2" Classes="link" VerticalAlignment="Center" Command="{Binding OpenDownloadDictionaryCommand}">
+          <TextBlock Text="{Binding Strings.DownloadDictionary.PlainText}" />
+        </Button>
+      </Grid>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

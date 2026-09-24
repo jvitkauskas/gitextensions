@@ -108,6 +108,16 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new CommitDialogSettingsPageStrings()).SetArgDisplayNames(nameof(CommitDialogSettingsPageStrings));
         yield return new TestCaseData(new BlameViewerSettingsPageStrings()).SetArgDisplayNames(nameof(BlameViewerSettingsPageStrings));
         yield return new TestCaseData(new DetailedSettingsPageStrings()).SetArgDisplayNames(nameof(DetailedSettingsPageStrings));
+        yield return new TestCaseData(new GeneralSettingsPageStrings()).SetArgDisplayNames(nameof(GeneralSettingsPageStrings));
+        yield return new TestCaseData(new AppearanceSettingsPageStrings()).SetArgDisplayNames(nameof(AppearanceSettingsPageStrings));
+        yield return new TestCaseData(new SortingSettingsPageStrings()).SetArgDisplayNames(nameof(SortingSettingsPageStrings));
+        yield return new TestCaseData(new ColorsSettingsPageStrings()).SetArgDisplayNames(nameof(ColorsSettingsPageStrings));
+        yield return new TestCaseData(new AppearanceFontsSettingsPageStrings()).SetArgDisplayNames(nameof(AppearanceFontsSettingsPageStrings));
+        yield return new TestCaseData(new ConsoleStyleSettingsPageStrings()).SetArgDisplayNames(nameof(ConsoleStyleSettingsPageStrings));
+        yield return new TestCaseData(new DiffViewerSettingsPageStrings()).SetArgDisplayNames(nameof(DiffViewerSettingsPageStrings));
+        yield return new TestCaseData(new FormBrowseRepoSettingsPageStrings()).SetArgDisplayNames(nameof(FormBrowseRepoSettingsPageStrings));
+        yield return new TestCaseData(new AdvancedSettingsPageStrings()).SetArgDisplayNames(nameof(AdvancedSettingsPageStrings));
+        yield return new TestCaseData(new ConfirmationsSettingsPageStrings()).SetArgDisplayNames(nameof(ConfirmationsSettingsPageStrings));
         yield return new TestCaseData(new SpellCheckStrings()).SetArgDisplayNames(nameof(SpellCheckStrings));
         yield return new TestCaseData(new PullStrings()).SetArgDisplayNames(nameof(PullStrings));
         yield return new TestCaseData(new PatchGridStrings()).SetArgDisplayNames(nameof(PatchGridStrings));

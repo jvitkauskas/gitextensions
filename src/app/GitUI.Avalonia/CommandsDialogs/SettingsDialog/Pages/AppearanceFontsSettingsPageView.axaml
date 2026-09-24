@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             xmlns:local="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.AppearanceFontsSettingsPageView"
+             x:DataType="vm:AppearanceFontsSettingsPageViewModel">
+  <!-- Equivalent of AppearanceFontsSettingsPage: gbFonts, a button showing each font in that font (SetFontButtonText). -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.Fonts.PlainText}">
+      <Grid ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+        <TextBlock VerticalAlignment="Center" Text="{Binding Strings.CodeFont.PlainText}" />
+        <Button Name="diffFontChangeButton" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding ChangeCodeFontCommand}">
+          <TextBlock Text="{Binding CodeFont.Text}" local:SettingsFontView.Font="{Binding CodeFont}" />
+        </Button>
+        <CheckBox Name="showEolMarkerAsGlyph" Grid.Column="2" Content="{Binding Strings.ShowEolMarkerAsGlyph.AccessKeyText}" IsChecked="{Binding ShowEolMarkerAsGlyph}" />
+        <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{Binding Strings.ApplicationFont.PlainText}" />
+        <Button Name="applicationFontChangeButton" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding ChangeApplicationFontCommand}">
+          <TextBlock Text="{Binding ApplicationFont.Text}" local:SettingsFontView.Font="{Binding ApplicationFont}" />
+        </Button>
+        <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding Strings.CommitFont.PlainText}" />
+        <Button Name="commitFontChangeButton" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding ChangeCommitFontCommand}">
+          <TextBlock Text="{Binding CommitFont.Text}" local:SettingsFontView.Font="{Binding CommitFont}" />
+        </Button>
+        <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="{Binding Strings.MonospaceFont.PlainText}" />
+        <Button Name="monospaceFontChangeButton" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding ChangeMonospaceFontCommand}">
+          <TextBlock Text="{Binding MonospaceFont.Text}" local:SettingsFontView.Font="{Binding MonospaceFont}" />
+        </Button>
+      </Grid>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

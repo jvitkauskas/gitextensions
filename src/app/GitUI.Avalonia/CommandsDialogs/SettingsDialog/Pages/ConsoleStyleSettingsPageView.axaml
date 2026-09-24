@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             xmlns:local="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.ConsoleStyleSettingsPageView"
+             x:DataType="vm:ConsoleStyleSettingsPageViewModel">
+  <!-- Equivalent of ConsoleStyleSettingsPage: groupBoxConsoleSettings with the emulator, its style and the font. -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.ConsoleSettings.PlainText}">
+      <Grid ColumnDefinitions="Auto,262,Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+        <Label VerticalAlignment="Center" Content="{Binding Strings.ConsoleEmulator.AccessKeyText}" Target="consoleEmulator" />
+        <ComboBox Name="consoleEmulator" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ConsoleEmulators}" SelectedItem="{Binding ConsoleEmulator}" />
+        <Label Grid.Row="1" VerticalAlignment="Center" Content="{Binding Strings.ConsoleStyle.AccessKeyText}" Target="consoleStyle" />
+        <ComboBox Name="consoleStyle" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Styles}" SelectedIndex="{Binding StyleIndex}"
+                  IsEnabled="{Binding IsStyleEnabled}" />
+        <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding Strings.Font.PlainText}" />
+        <Button Name="consoleFontChangeButton" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding ChangeConsoleFontCommand}">
+          <TextBlock Text="{Binding ConsoleFontText}" local:SettingsFontView.Font="{Binding ConsoleFont}" />
+        </Button>
+        <Button Name="consoleFontResetButton" AutomationProperties.Name="{Binding Strings.ResetFontTooltip.PlainText}" Grid.Row="2" Grid.Column="2" Padding="4" IsVisible="{Binding HasConsoleFont}"
+                ToolTip.Tip="{Binding Strings.ResetFontTooltip.Text}" Command="{Binding ResetConsoleFontCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/ResetWorkingDirChanges.png" Width="16" Height="16" />
+        </Button>
+      </Grid>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>

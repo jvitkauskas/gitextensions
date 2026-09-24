@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.ConfirmationsSettingsPageView"
+             x:DataType="vm:ConfirmationsSettingsPageViewModel">
+  <!-- Equivalent of ConfirmationsSettingsPage: gbConfirmations, the confirmations grouped under labels. -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.ConfirmActions.PlainText}">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="confirmationGroup" Text="{Binding Strings.GroupCommits.PlainText}" />
+        <CheckBox Name="amend" Content="{Binding Strings.Amend.AccessKeyText}" IsChecked="{Binding Amend}" />
+        <CheckBox Name="undoLastCommitConfirmation" Content="{Binding Strings.UndoLastCommit.AccessKeyText}" IsChecked="{Binding UndoLastCommit}" />
+        <CheckBox Name="commitIfNoBranch" Content="{Binding Strings.CommitIfNoBranch.AccessKeyText}" IsChecked="{Binding CommitIfNoBranch}" />
+        <CheckBox Name="rebaseOnTopOfSelectedCommit" Content="{Binding Strings.RebaseOnTopOfSelectedCommit.AccessKeyText}" IsChecked="{Binding RebaseOnTopOfSelectedCommit}" />
+
+        <TextBlock Classes="confirmationGroup" Text="{Binding Strings.GroupBranches.PlainText}" />
+        <CheckBox Name="fetchAndPruneAllConfirmation" Content="{Binding Strings.FetchAndPruneAll.AccessKeyText}" IsChecked="{Binding FetchAndPruneAll}" />
+        <CheckBox Name="pushNewBranch" Content="{Binding Strings.PushNewBranch.AccessKeyText}" IsChecked="{Binding PushNewBranch}" />
+        <CheckBox Name="addTrackingRef" Content="{Binding Strings.AddTrackingRef.AccessKeyText}" IsChecked="{Binding AddTrackingRef}" />
+        <CheckBox Name="branchDeleteUnmerged" Content="{Binding Strings.BranchDeleteUnmerged.AccessKeyText}" IsChecked="{Binding BranchDeleteUnmerged}" />
+        <CheckBox Name="branchCheckoutConfirmation" Content="{Binding Strings.BranchCheckout.AccessKeyText}" IsChecked="{Binding BranchCheckout}" />
+
+        <TextBlock Classes="confirmationGroup" Text="{Binding Strings.GroupStashes.PlainText}" />
+        <CheckBox Name="autoPopStashAfterCheckout" Content="{Binding Strings.AutoPopStashAfterCheckout.AccessKeyText}" IsThreeState="True" IsChecked="{Binding AutoPopStashAfterCheckout}" />
+        <CheckBox Name="autoPopStashAfterPull" Content="{Binding Strings.AutoPopStashAfterPull.AccessKeyText}" IsThreeState="True" IsChecked="{Binding AutoPopStashAfterPull}" />
+        <CheckBox Name="confirmStashDrop" Content="{Binding Strings.ConfirmStashDrop.AccessKeyText}" IsChecked="{Binding ConfirmStashDrop}" />
+
+        <TextBlock Classes="confirmationGroup" Text="{Binding Strings.GroupConflictResolution.PlainText}" />
+        <CheckBox Name="resolveConflicts" Content="{Binding Strings.ResolveConflicts.AccessKeyText}" IsChecked="{Binding ResolveConflicts}" />
+        <CheckBox Name="commitAfterConflictsResolved" Content="{Binding Strings.CommitAfterConflictsResolved.AccessKeyText}" IsChecked="{Binding CommitAfterConflictsResolved}" />
+        <CheckBox Name="secondAbortConfirmation" Content="{Binding Strings.SecondAbortConfirmation.AccessKeyText}" IsChecked="{Binding SecondAbortConfirmation}" />
+
+        <TextBlock Classes="confirmationGroup" Text="{Binding Strings.GroupSubmodules.PlainText}" />
+        <CheckBox Name="updateModules" Content="{Binding Strings.UpdateModules.AccessKeyText}" IsThreeState="True" IsChecked="{Binding UpdateModules}" />
+
+        <TextBlock Classes="confirmationGroup" Text="{Binding Strings.GroupWorktrees.PlainText}" />
+        <CheckBox Name="switchWorktree" Content="{Binding Strings.SwitchWorktree.AccessKeyText}" IsChecked="{Binding SwitchWorktree}" />
+      </StackPanel>
+    </HeaderedContentControl>
+  </StackPanel>
+  <UserControl.Styles>
+    <!-- lblGroupCommits and the other group labels, with the space of the empty rows above all but the first. -->
+    <Style Selector="TextBlock.confirmationGroup">
+      <Setter Property="Margin" Value="0,12,0,0" />
+    </Style>
+    <Style Selector="TextBlock.confirmationGroup:nth-child(1)">
+      <Setter Property="Margin" Value="0" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>
