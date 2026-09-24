@@ -87,22 +87,6 @@
 
   <!--
     ============================================================
-                       _PatchRuntimeConfigJson
-
-    Retain only the reference to Microsoft.WindowsDesktop.App in the packaged *.runtimeconfig.json.
-    See https://github.com/gitextensions/gitextensions/issues/10337 for more details.
-    ============================================================
-    -->
-    <Target Name="_PatchRuntimeConfigJson" AfterTargets="Publish">
-      <ItemGroup>
-        <RuntimeConfigJsonFiles Include="$(AppPublishDir)\*.runtimeconfig.json"/>
-      </ItemGroup>
-  
-      <Exec Command="powershell.exe $(RepoRoot)\eng\Patch-RuntimeConfigJsonFiles.ps1 '@(RuntimeConfigJsonFiles)'" />
-    </Target>
-
-  <!--
-    ============================================================
                        _EnsureBundleContent
 
     Copies all necessary files for the pack step.
@@ -220,7 +204,7 @@
     -->
   <Target Name="CreatePortable"
           AfterTargets="Publish"
-          DependsOnTargets="_RetrieveCurrentBuildVersion;_PatchRuntimeConfigJson;_CheckBundlesConsistent">
+          DependsOnTargets="_RetrieveCurrentBuildVersion;_CheckBundlesConsistent">
     <PropertyGroup>
       <!-- Resolve app.config, so we can set/unset "portable" flag.
            @(AppConfigFileDestination) is only populated by the Build target's _CopyAppConfigFile step, so it is
