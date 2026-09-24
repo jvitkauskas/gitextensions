@@ -1,0 +1,38 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.Gource"
+                x:Class="GitExtensions.Plugins.Gource.GourceStartWindow"
+                x:DataType="vm:GourceStartViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="718" MinWidth="500"
+                SizeToContent="Height">
+  <DockPanel Margin="12,10,12,8">
+    <!-- The links (flowLayoutPanel1) on the left and Start on the right. -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+        <Button Name="gourceProjectLink" Classes="link" Command="{Binding OpenGourceProjectCommand}">
+          <TextBlock Text="{Binding Strings.GourceProject.PlainText}" />
+        </Button>
+        <Button Name="gourceCommandLineLink" Classes="link" Command="{Binding OpenGourceCommandLineCommand}">
+          <TextBlock Text="{Binding Strings.GourceCommandLine.PlainText}" />
+        </Button>
+      </StackPanel>
+      <Button Name="startButton" Grid.Column="1" MinWidth="94" HorizontalContentAlignment="Center" Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Start.AccessKeyText}" Command="{Binding StartCommand}" />
+    </Grid>
+    <!-- Equivalent of tableLayoutPanel1. -->
+    <Grid Classes="form" ColumnDefinitions="125,*,125" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+      <Label Content="{Binding Strings.PathToGource.AccessKeyText}" Target="gourcePath" />
+      <TextBox Name="gourcePath" Grid.Column="1" Text="{Binding GourcePath}" />
+      <Button Name="gourceBrowse" Grid.Column="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.GourceBrowse.AccessKeyText}" Command="{Binding BrowseGourceCommand}" />
+      <Label Grid.Row="1" Content="{Binding Strings.Repository.AccessKeyText}" Target="workingDirectory" />
+      <TextBox Name="workingDirectory" Grid.Row="1" Grid.Column="1" Text="{Binding WorkingDirectory}" />
+      <Button Name="workingDirBrowse" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.WorkingDirBrowse.AccessKeyText}" Command="{Binding BrowseWorkingDirectoryCommand}" />
+      <Label Grid.Row="2" Content="{Binding Strings.Arguments.AccessKeyText}" Target="arguments" />
+      <TextBox Name="arguments" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Arguments}" />
+    </Grid>
+  </DockPanel>
+</h:DialogWindow>

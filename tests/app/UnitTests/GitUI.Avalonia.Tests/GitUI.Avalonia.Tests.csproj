@@ -14,5 +14,16 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\app\GitUI.Avalonia\GitUI.Avalonia.csproj" />
     <ProjectReference Include="..\..\..\..\src\app\GitUI.Presentation\GitUI.Presentation.csproj" />
+    <ProjectReference Include="..\..\..\CommonTestUtils\CommonTestUtils.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The plugins own the Avalonia ports of their forms (docs/avalonia-port/PLAN.md, phase 7). -->
+    <ProjectReference Include="..\..\..\..\src\plugins\CreateLocalBranches\GitExtensions.Plugins.CreateLocalBranches.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\DeleteUnusedBranches\GitExtensions.Plugins.DeleteUnusedBranches.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\FindLargeFiles\GitExtensions.Plugins.FindLargeFiles.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\Gource\GitExtensions.Plugins.Gource.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\ProxySwitcher\GitExtensions.Plugins.ProxySwitcher.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\ReleaseNotesGenerator\GitExtensions.Plugins.ReleaseNotesGenerator.csproj" />
   </ItemGroup>
 </Project>

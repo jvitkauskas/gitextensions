@@ -1,0 +1,49 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.FindLargeFiles"
+                x:Class="GitExtensions.Plugins.FindLargeFiles.FindLargeFilesWindow"
+                x:DataType="vm:FindLargeFilesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="760" Height="421" MinWidth="500" MinHeight="250">
+  <DockPanel>
+    <!-- Equivalent of tableLayoutPanel2: the progress bar, then delete and close. -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="9,4,9,8">
+      <ProgressBar Name="progressBar" VerticalAlignment="Stretch" MinHeight="22" Margin="0,0,69,0"
+                   IsVisible="{Binding IsSearching}" Minimum="0" Maximum="{Binding ProgressMaximum}" Value="{Binding ProgressValue}" />
+      <Button Name="deleteButton" Grid.Column="1" MinWidth="75" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.Delete.AccessKeyText}" Command="{Binding DeleteCommand}" />
+      <Button Name="closeButton" Grid.Column="2" MinWidth="75" Margin="69,0,0,0" HorizontalContentAlignment="Center" IsCancel="True"
+              Content="{Binding Strings.Close.AccessKeyText}" Command="{Binding CancelCommand}" />
+    </Grid>
+    <TextBlock DockPanel.Dock="Top" Margin="9,6" Text="{Binding Strings.Instructions.Text}" TextWrapping="Wrap" />
+    <DataGrid Name="objectsGrid" Margin="9,0,9,0" ItemsSource="{Binding GitObjects}"
+              SelectionMode="Single" CanUserReorderColumns="False" CanUserSortColumns="True"
+              HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DataGrid.Columns>
+        <DataGridTemplateColumn Width="Auto" MinWidth="54" SortMemberPath="Sha">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:GitObjectRow">
+              <TextBlock Text="{Binding Sha}" FontFamily="{DynamicResource MonospaceFontFamily}" MaxWidth="80"
+                         TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTextColumn Binding="{Binding Path}" Width="*" IsReadOnly="True" x:DataType="vm:GitObjectRow" />
+        <DataGridTextColumn Binding="{Binding Size}" Width="Auto" MinWidth="52" SortMemberPath="SizeInBytes" IsReadOnly="True" x:DataType="vm:GitObjectRow" />
+        <DataGridTextColumn Binding="{Binding CompressedSize}" Width="Auto" SortMemberPath="CompressedSizeInBytes" IsReadOnly="True" x:DataType="vm:GitObjectRow" />
+        <DataGridTextColumn Binding="{Binding CommitCount}" Width="Auto" MinWidth="88" IsReadOnly="True" x:DataType="vm:GitObjectRow" />
+        <DataGridTextColumn Binding="{Binding LastCommitDate}" Width="Auto" MinWidth="103" IsReadOnly="True" x:DataType="vm:GitObjectRow" />
+        <DataGridTemplateColumn Width="Auto" SortMemberPath="Delete">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:GitObjectRow">
+              <CheckBox IsChecked="{Binding Delete}" HorizontalAlignment="Center" MinWidth="0" Padding="0"
+                        IsEnabled="{Binding $parent[DataGrid].((vm:FindLargeFilesViewModel)DataContext).IsEditable}" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+</h:DialogWindow>

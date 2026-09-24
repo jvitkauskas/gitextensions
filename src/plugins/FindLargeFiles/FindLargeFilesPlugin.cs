@@ -28,6 +28,11 @@ public class FindLargeFilesPlugin : GitPluginBase, IGitPluginForRepository
 
     public override bool Execute(GitUIEventArgs args)
     {
+        if (FindLargeFilesDialog.TryShow(args, _sizeLargeFile.ValueOrDefault(Settings)))
+        {
+            return true;
+        }
+
         using FindLargeFilesForm frm = new(_sizeLargeFile.ValueOrDefault(Settings), args.GitUICommands);
         frm.ShowDialog(args.OwnerForm);
 

@@ -52,7 +52,7 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>Stores Avalonia window positions next to the WinForms ones (<c>WindowPositions.xml</c>).</summary>
-    private sealed class WindowPositionStore : IWindowPositionStore
+    internal sealed class WindowPositionStore : IWindowPositionStore
     {
         public static WindowPositionStore Instance { get; } = new();
 
@@ -97,7 +97,7 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>Shows the existing WinForms message boxes, owned by an Avalonia dialog.</summary>
-    private sealed class MessageBoxService(DialogWindow window) : IMessageBoxService
+    internal sealed class MessageBoxService(DialogWindow window) : IMessageBoxService
     {
         public void ShowError(string text, string caption)
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.ShowError(new NativeWindowOwner(window), text, caption));

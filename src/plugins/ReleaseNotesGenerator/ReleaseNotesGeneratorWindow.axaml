@@ -1,0 +1,62 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.ReleaseNotesGenerator"
+                x:Class="GitExtensions.Plugins.ReleaseNotesGenerator.ReleaseNotesGeneratorWindow"
+                x:DataType="vm:ReleaseNotesGeneratorViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="640" Height="580" MinWidth="560" MinHeight="480">
+  <DockPanel Margin="12,8,12,12">
+    <!-- The commit expressions and the git log arguments, as positioned in the WinForms form. -->
+    <Grid DockPanel.Dock="Top" Classes="form" ColumnDefinitions="Auto,170,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+      <Label Content="{Binding Strings.From.AccessKeyText}" Target="revisionFrom" />
+      <TextBox Name="revisionFrom" Grid.Column="1" Text="{Binding RevisionFrom}" />
+      <TextBlock Grid.Column="2" Grid.RowSpan="2" Margin="12,0,0,0" VerticalAlignment="Top"
+                 Text="{Binding Strings.ExpressionsHint.Text}" />
+      <Label Grid.Row="1" Content="{Binding Strings.To.AccessKeyText}" Target="revisionTo" />
+      <TextBox Name="revisionTo" Grid.Row="1" Grid.Column="1" Text="{Binding RevisionTo}" />
+      <Grid Grid.Row="2" Grid.ColumnSpan="3" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+        <Label Content="{Binding Strings.GitLogArguments.AccessKeyText}" Target="gitLogArguments" VerticalAlignment="Center" Padding="0" />
+        <TextBox Name="gitLogArguments" Grid.Column="1" Text="{Binding GitLogArguments}" />
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Strings.ArgumentsHint.Text}" />
+      </Grid>
+      <Button Name="generateButton" Grid.Row="3" MinWidth="105" Margin="0,6,0,0" HorizontalContentAlignment="Center"
+              Classes="accent" IsDefault="True"
+              Content="{Binding Strings.Generate.AccessKeyText}" Command="{Binding GenerateCommand}" />
+    </Grid>
+    <!-- Equivalent of groupBox1 (the result). -->
+    <Border Margin="0,10,0,0" BorderThickness="1" CornerRadius="4" Padding="10,6,10,10"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,4" FontWeight="SemiBold" Text="{Binding Strings.Result.PlainText}" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,0,0,6">
+          <TextBlock Text="{Binding Strings.RevisionsCount.Text}" />
+          <TextBlock Name="revisionCount" Text="{Binding RevisionCount}" FontWeight="Bold" />
+          <TextBlock Margin="12,0,0,0" Text="{Binding Strings.Sorting.Text}" />
+        </StackPanel>
+        <!-- Equivalent of groupBoxCopy. -->
+        <Border Name="copyGroup" DockPanel.Dock="Bottom" Margin="0,8,0,0" BorderThickness="1" CornerRadius="4" Padding="10,6,10,10"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" IsEnabled="{Binding CanCopy}">
+          <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" FontWeight="SemiBold" Text="{Binding Strings.CopyToClipboard.PlainText}" />
+            <Button Name="copyOriginalOutput" Grid.Row="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Content="{Binding Strings.CopyOriginalOutput.AccessKeyText}" Command="{Binding CopyOriginalOutputCommand}" />
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Strings.AsIs.Text}" />
+            <Button Name="copyAsTextTableTab" Grid.Row="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Content="{Binding Strings.CopyAsTextTableTab.AccessKeyText}" Command="{Binding CopyAsTextTableTabCommand}" />
+            <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Strings.SeparateWithTabs.Text}" />
+            <Button Name="copyAsTextTableSpace" Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Content="{Binding Strings.CopyAsTextTableSpace.AccessKeyText}" Command="{Binding CopyAsTextTableSpaceCommand}" />
+            <TextBlock Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Strings.SeparateWithSpaces.Text}" />
+            <Button Name="copyAsHtml" Grid.Row="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalAlignment="Top"
+                    Content="{Binding Strings.CopyAsHtml.AccessKeyText}" Command="{Binding CopyAsHtmlCommand}" />
+            <TextBlock Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Strings.HtmlHint.Text}" />
+          </Grid>
+        </Border>
+        <TextBox Name="result" Text="{Binding Result}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                 FontFamily="{DynamicResource MonospaceFontFamily}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+      </DockPanel>
+    </Border>
+  </DockPanel>
+</h:DialogWindow>

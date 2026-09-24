@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(RepoRoot)\src\plugins\AvaloniaPort.props" />
+
   <ItemGroup>
     <Compile Include="..\..\app\GitExtUtils\Validates.cs" Link="Validates.cs" />
   </ItemGroup>

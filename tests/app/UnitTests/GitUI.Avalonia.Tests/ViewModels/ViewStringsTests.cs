@@ -1,5 +1,11 @@
 using System.Xml.Linq;
 using GitExtensions.Extensibility.Translations;
+using GitExtensions.Plugins.CreateLocalBranches;
+using GitExtensions.Plugins.DeleteUnusedBranches;
+using GitExtensions.Plugins.FindLargeFiles;
+using GitExtensions.Plugins.Gource;
+using GitExtensions.Plugins.ProxySwitcher;
+using GitExtensions.Plugins.ReleaseNotesGenerator;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
@@ -24,7 +30,8 @@ namespace GitUI.AvaloniaTests.ViewModels;
 [TestFixture]
 public sealed class ViewStringsTests
 {
-    private static readonly Lazy<Dictionary<(string Category, string Id), string>> _englishXlf = new(LoadEnglishXlf);
+    private static readonly Lazy<Dictionary<(string Category, string Id), string>> _englishXlf = new(() => LoadEnglishXlf("English.xlf"));
+    private static readonly Lazy<Dictionary<(string Category, string Id), string>> _englishPluginsXlf = new(() => LoadEnglishXlf("English.Plugins.xlf"));
 
     private static IEnumerable<TestCaseData> AllViewStrings()
     {
@@ -151,6 +158,14 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new LogStrings()).SetArgDisplayNames(nameof(LogStrings));
         yield return new TestCaseData(new FindAndReplaceStrings()).SetArgDisplayNames(nameof(FindAndReplaceStrings));
         yield return new TestCaseData(new LeftPanelStrings()).SetArgDisplayNames(nameof(LeftPanelStrings));
+
+        // The plugins' forms, whose strings are in English.Plugins.xlf (their assemblies are loaded from the Plugins folder).
+        yield return new TestCaseData(new CreateLocalBranchesStrings()).SetArgDisplayNames(nameof(CreateLocalBranchesStrings));
+        yield return new TestCaseData(new DeleteUnusedBranchesStrings()).SetArgDisplayNames(nameof(DeleteUnusedBranchesStrings));
+        yield return new TestCaseData(new FindLargeFilesStrings()).SetArgDisplayNames(nameof(FindLargeFilesStrings));
+        yield return new TestCaseData(new GourceStartStrings()).SetArgDisplayNames(nameof(GourceStartStrings));
+        yield return new TestCaseData(new ProxySwitcherStrings()).SetArgDisplayNames(nameof(ProxySwitcherStrings));
+        yield return new TestCaseData(new ReleaseNotesGeneratorStrings()).SetArgDisplayNames(nameof(ReleaseNotesGeneratorStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]
@@ -160,12 +175,18 @@ public sealed class ViewStringsTests
 
         ((ITranslate)strings).AddTranslationItems(recorded);
 
+        // As TranslationApp: the strings of the plugins go to English.Plugins.xlf, the others to English.xlf.
+        bool isPlugin = strings.GetType().Assembly.GetName().Name!.StartsWith("GitExtensions.Plugins.", StringComparison.Ordinal);
+        (Dictionary<(string Category, string Id), string> xlf, string fileName) = isPlugin
+            ? (_englishPluginsXlf.Value, "English.Plugins.xlf")
+            : (_englishXlf.Value, "English.xlf");
+
         recorded.Items.Should().NotBeEmpty();
         foreach ((string category, string item, string property, string neutralValue) in recorded.Items)
         {
             string id = $"{item}.{property}";
-            _englishXlf.Value.Should().ContainKey((category, id), $"'{category}/{id}' must exist in English.xlf");
-            Normalize(_englishXlf.Value[(category, id)]).Should().Be(Normalize(neutralValue), $"the source text of '{category}/{id}'");
+            xlf.Should().ContainKey((category, id), $"'{category}/{id}' must exist in {fileName}");
+            Normalize(xlf[(category, id)]).Should().Be(Normalize(neutralValue), $"the source text of '{category}/{id}'");
         }
     }
 
@@ -185,9 +206,9 @@ public sealed class ViewStringsTests
     // English.xlf stores multi-line sources with whatever line endings git checked out.
     private static string Normalize(string text) => text.ReplaceLineEndings("\n");
 
-    private static Dictionary<(string Category, string Id), string> LoadEnglishXlf()
+    private static Dictionary<(string Category, string Id), string> LoadEnglishXlf(string fileName)
     {
-        string path = Path.Combine(FindRepoRoot(), "src", "app", "GitUI", "Translation", "English.xlf");
+        string path = Path.Combine(FindRepoRoot(), "src", "app", "GitUI", "Translation", fileName);
         XDocument document = XDocument.Load(path);
         XNamespace ns = document.Root!.Name.Namespace;
 
