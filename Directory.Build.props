@@ -13,6 +13,13 @@
     <Nullable>enable</Nullable>
 
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!--
+      No WinForms or WPF runtime (docs/avalonia-port/PLAN.md, phase 8): the WPF framework reference that the Windows build
+      of Microsoft.VisualStudio.Threading declares (for its WPF dispatcher extensions, which are not used) does not flow to
+      the projects, so the applications run on Microsoft.NETCore.App only.
+    -->
+    <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
     <TargetFramework>$(SolutionTargetFramework)</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SuppressNETCoreSdkPreviewMessage>false</SuppressNETCoreSdkPreviewMessage>

@@ -227,11 +227,42 @@ Work through the dialogs that don't embed heavy controls, smallest first.
   - `JoinableTaskContext` is created on Avalonia's sync context;
   - `TaskManager` stops using `Application.OnThreadException`.
 
-### Phase 8: Remove WinForms
-- Remove the WinForms forms, `ICSharpCode.TextEditor`, the WinForms parts of `ResourceManager` / `GitExtUtils/GitUI`, and the global `UseWindowsForms=true` in `Directory.Build.props`.
-- Move `UI.IntegrationTests` over to headless Avalonia tests.
-- Replace the IE `WebBrowserControl` (build reports, pull requests) with WebView2 through `NativeControlHost`, or with an external browser.
-  - **Done for the build report tab of the Avalonia main window:** `WebView2BrowseWebView` (`GitUI/AvaloniaHosting/BrowseWebViews.cs`) uses the Core API of `Microsoft.Web.WebView2` only (the package's WinForms and WPF assemblies are removed from the references in `Directory.Build.targets`): it creates a Win32 child window (`CreateWindowEx`, its own window class) when first attached, creates the controller on it with a user data folder in `%LOCALAPPDATA%\GitExtensions\WebView2` (never next to the executable, also for the portable version), keeps the bounds of the controller on the size of the window (`WM_SIZE`) and parks the window under `HWND_MESSAGE` when detached. The navigations requested before the controller is ready are queued (`WebViewNavigationQueue`, the last one wins). Without the WebView2 runtime the WinForms `WebBrowserControl` is still embedded (`BrowseWebViews.Create`). The installer ships `Microsoft.Web.WebView2.Core.dll` and `runtimes\win-x64|win-arm64\native\WebView2Loader.dll`. Still to do: the pull requests dialog, and the WinForms `WebBrowserControl` itself when the WinForms forms are removed.
+### Phase 8: Remove WinForms (done)
+WinForms is gone: no project sets `UseWindowsForms`, the WinForms forms and controls, `ICSharpCode.TextEditor` and the
+WinForms `ConEmuControl` are no longer built, and the `GE_AVALONIA` switch with the WinForms fallbacks of
+`GitUICommands` is removed. What replaced the WinForms services:
+- **System.Drawing** comes from the `System.Drawing.Common` package (`Directory.Build.targets`, with the implicit
+  `using System.Drawing` except in the projects with `UseSystemDrawing=false`: the Avalonia and presentation projects), and
+  the images of the `.resx` files are read with `System.Resources.Extensions`.
+- **Message boxes and task dialogs** are the native ones (`GitExtensions.Extensibility/Dialogs`: `NativeMessageBox`,
+  `TaskDialog` on `TaskDialogIndirect`), with the names and values of the WinForms API (`DialogResult`,
+  `MessageBoxButtons`, `TaskDialogPage`…), in an activation context of the common controls v6 for the test hosts.
+- **File, folder, color and font dialogs**: the Common Item Dialog (`OpenFileDialog`, `SaveFileDialog`,
+  `FolderBrowserDialog`) and `ChooseColor` / `ChooseFont` (`CommonDialogs.cs`).
+- **Owners** are an `IWin32Window` of the extensibility (a native handle); `AvaloniaDialogHost` tracks its open windows
+  (`HasOpenWindows`, as `Application.OpenForms`), closes the owned modeless windows with their owner and all of them for
+  the exit of the application (`CloseAllWindows`).
+- **The UI thread**: Avalonia is set up at startup (`AvaloniaStartupDialogs.InitializeUi`) and its synchronization context
+  is the one of the `JoinableTaskContext`; `ThreadHelper.InvokeAndForget(Action)` replaces the control-based overloads, and
+  `TaskManager.UnhandledExceptionHandler` the `Application.ThreadException` of the background operations.
+- **Clipboard** (`ClipboardUtil`: text and CF_HTML), **screens** (`Screens`), **text measures** (`TextMeasurement`), the
+  **data folder** of the settings (`ApplicationInfo`, the algorithm of `Application.UserAppDataPath`, so that the tests keep
+  the folder of their test host), the **dark mode** (`SystemTheme`, `ColorHelper.IsDarkTheme`) and the **hotkeys**
+  (`ResourceManager.Hotkey.Keys`, a copy of the WinForms `Keys` with the same names and values, as they are stored).
+- **Consoles**: the plain text console is shown by the progress dialog itself (`ProcessViewModel.PlainText`); ConEmu and
+  mintty run in a native child window (`NativeHostWindow`) that the Avalonia windows embed. The session of ConEmu is the
+  WinForms-free code of conemu-inside, vendored in `externals/ConEmuInside` with a `ConEmuHost` instead of `ConEmuControl`.
+- **Taskbar**: `ITaskbarList3` and the jump list of the shell (`GitUI/Taskbar/NativeTaskbar.cs`) instead of the
+  WindowsAPICodePack, whose taskbar needs WinForms; thumbnail button clicks come from the window procedure hook of the main
+  window.
+- **Bug report**: the Avalonia `BugReportWindow` (`BugReportViewModel`), for the application and for BugReporter.exe.
+- **Plugins**: the WinForms parts of the plugin API are gone (`ISettingControlBinding`, `CustomControl` of the settings,
+  `CredentialsControl`, `ConfigureContextMenu`, `ShowModelessForm`, the WinForms settings controls of the build server
+  plugins); the plugins declare settings and menus with the API v2.
+- **Tests**: the STA tests run on a `MessageWindowSynchronizationContext` (a message-only window, as the WinForms context),
+  pump with `MessagePump.DoEvents`, and the Avalonia hosting tests own their dialogs by a native `TestOwnerWindow`.
+- Gaps: the git grep prompt of the file status list is ported (`FindInCommitFilesGitGrepWindow`) but not wired to the
+  Avalonia list yet.
 
 ### Later, out of scope for now: cross-platform
 - Retarget the core libraries to `net10.0`, removing `System.Drawing` `Font` / `Color` / `Image` from `AppSettings`, `GitModule` and the plugin API.
@@ -249,10 +280,10 @@ Work through the dialogs that don't embed heavy controls, smallest first.
 These work unchanged in the Avalonia app on Windows:
 - Diff/merge tool discovery through ProgramFiles and the registry. Tools are launched through `git difftool` / `git mergetool` anyway.
 - Editor detection.
-- ConEmu and Mintty (through `NativeControlHost`).
+- ConEmu and Mintty (in a native child window, `NativeHostWindow`).
 - The Explorer shell extension.
 - SSH askpass.
-- Jump lists and taskbar (WindowsAPICodePack).
+- Jump lists and taskbar (`ITaskbarList3` and the shell's jump list, `NativeTaskbar`).
 - Credential Manager (AdysTech).
 - Visual Studio integration (EnvDTE).
 - `Icon.ExtractAssociatedIcon` file icons.

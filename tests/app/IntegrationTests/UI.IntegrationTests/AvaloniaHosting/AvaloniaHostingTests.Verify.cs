@@ -17,7 +17,7 @@ public sealed partial class AvaloniaHostingTests
         _referenceRepository.Module.GitExecutable.GetOutput("reset --hard HEAD~1");
 
         List<string> shown = [];
-        System.Windows.Forms.Timer acknowledgeTags = new() { Interval = 200 };
+        GitExtUtils.GitUI.UiTimer acknowledgeTags = new() { Interval = 200 };
         acknowledgeTags.Tick += (_, _) => CloseTopLevelWindow("Tags created", except: 0);
         acknowledgeTags.Start();
         try

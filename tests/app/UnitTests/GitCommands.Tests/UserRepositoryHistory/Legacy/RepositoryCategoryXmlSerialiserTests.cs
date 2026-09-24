@@ -28,7 +28,7 @@ public class RepositoryCategorySerialiserTests
         string xml = EmbeddedResourceLoader.Load(Assembly.GetExecutingAssembly(), $"{GetType().Namespace}.MockData.CategorisedRepositories01.xml");
         if (string.IsNullOrWhiteSpace(xml))
         {
-            throw new FileFormatException("Unexpected data");
+            throw new InvalidDataException("Unexpected data");
         }
 
         IReadOnlyList<RepositoryCategory>? categorisedHistory = _repositoryXmlSerialiser.Deserialize(xml);

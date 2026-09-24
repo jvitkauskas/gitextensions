@@ -30,7 +30,7 @@ public class RepositoryHistoryMigratorTests
         string xml = EmbeddedResourceLoader.Load(Assembly.GetExecutingAssembly(), $"{GetType().Namespace}.MockData.CategorisedRepositories02.xml");
         if (string.IsNullOrWhiteSpace(xml))
         {
-            throw new FileFormatException("Unexpected data");
+            throw new InvalidDataException("Unexpected data");
         }
 
         _repositoryStorage.Load().Returns(x => new RepositoryCategoryXmlSerialiser().Deserialize(xml));

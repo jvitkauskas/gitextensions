@@ -55,7 +55,7 @@ public sealed class GitStatusMonitor : IDisposable
 
     private readonly FileSystemWatcher _workTreeWatcher = new();
     private readonly FileSystemWatcher _gitDirWatcher = new();
-    private readonly System.Windows.Forms.Timer _timerRefresh;
+    private readonly GitExtUtils.GitUI.UiTimer _timerRefresh;
     private bool _isFirstPostRepoChanged;
     private string? _gitPath;
     private string? _submodulesPath;
@@ -99,7 +99,7 @@ public sealed class GitStatusMonitor : IDisposable
     public GitStatusMonitor(IGitUICommandsSource commandsSource, Func<bool> isMinimized)
     {
         _isMinimized = isMinimized;
-        _timerRefresh = new System.Windows.Forms.Timer
+        _timerRefresh = new GitExtUtils.GitUI.UiTimer
         {
             Enabled = true,
             Interval = InteractiveUpdateDelay / 2

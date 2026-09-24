@@ -24,8 +24,6 @@
     <PackageReference Include="AppInsights.WindowsDesktop" />
     <PackageReference Include="EnvDTE" />
     <PackageReference Include="ExCSS" />
-    <PackageReference Include="Microsoft-WindowsAPICodePack-Core" />
-    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" />
     <PackageReference Include="Microsoft.Windows.CsWin32">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

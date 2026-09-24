@@ -52,7 +52,7 @@ public static class MessagePump
 ///  <c>WindowsFormsSynchronizationContext</c>): the posted callbacks run on the thread that created it, from any message
 ///  loop (e.g. <see cref="MessagePump.DoEvents"/>, a modal dialog), through a message-only window.
 /// </summary>
-public sealed class MessageWindowSynchronizationContext : SynchronizationContext
+public class MessageWindowSynchronizationContext : SynchronizationContext
 {
     private const uint WM_APP_RUN = 0x8000 + 0x4745;
     private static readonly nint HWND_MESSAGE = -3;

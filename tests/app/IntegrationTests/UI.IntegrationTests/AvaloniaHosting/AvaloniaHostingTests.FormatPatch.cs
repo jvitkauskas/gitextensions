@@ -15,7 +15,7 @@ public sealed partial class AvaloniaHostingTests
         Directory.CreateDirectory(outputPath);
         string lastFormatPatchDir = AppSettings.LastFormatPatchDir;
 
-        System.Windows.Forms.Timer acknowledgeResult = new() { Interval = 100 };
+        GitExtUtils.GitUI.UiTimer acknowledgeResult = new() { Interval = 100 };
         acknowledgeResult.Tick += (_, _) => CloseTopLevelWindow("Patch result", except: 0);
         acknowledgeResult.Start();
         try

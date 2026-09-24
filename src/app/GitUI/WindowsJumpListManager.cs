@@ -7,7 +7,6 @@ using GitCommands.UserRepositoryHistory;
 using GitCommands.Utils;
 using GitExtUtils;
 using Microsoft;
-using Microsoft.WindowsAPICodePack.Taskbar;
 
 namespace GitUI;
 
@@ -19,6 +18,9 @@ public interface IWindowsJumpListManager : IDisposable
     void CreateJumpList(IntPtr windowHandle, WindowsThumbnailToolbarButtons buttons);
     void EnableThumbnailToolbar(bool enable);
     void UpdateCommitIcon(Image image);
+
+    /// <summary>Raises the click of a thumbnail toolbar button for a message of the window procedure of its window.</summary>
+    bool ProcessThumbnailButtonMessage(uint message, nint wordParameter) => NativeTaskbar.ProcessThumbnailButtonMessage(message, wordParameter);
 }
 
 /// <summary>
@@ -40,12 +42,12 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
 
     static WindowsJumpListManager()
     {
-        if (TaskbarManager.IsPlatformSupported)
+        if (NativeTaskbar.IsPlatformSupported)
         {
             string id = AppSettings.ApplicationId;
-            TaskbarManager.Instance.ApplicationId = AppSettings.IsPortable()
+            NativeTaskbar.SetApplicationId(AppSettings.IsPortable()
                 ? $"{id}.{Convert.ToBase64String(SHA1.HashData(Encoding.UTF8.GetBytes(ApplicationInfo.ExecutablePath)))}"
-                : id;
+                : id);
         }
     }
 
@@ -72,8 +74,8 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
         }
     }
 
-    private static bool IsSupported => OperatingSystem.IsWindows() && TaskbarManager.IsPlatformSupported;
-    private static bool IsSupportedAndVisible => EnvUtils.RunningOnWindowsWithMainWindow() && TaskbarManager.IsPlatformSupported;
+    private static bool IsSupported => OperatingSystem.IsWindows() && NativeTaskbar.IsPlatformSupported;
+    private static bool IsSupportedAndVisible => EnvUtils.RunningOnWindowsWithMainWindow() && NativeTaskbar.IsPlatformSupported;
 
     /// <summary>
     /// Adds the given working directory to the list of Recent for future quick access.
@@ -117,7 +119,7 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
 
             string path = Path.Join(baseFolder, $"{sb}.gitext");
             File.WriteAllText(path, workingDir);
-            JumpList.AddToRecent(path);
+            NativeTaskbar.AddToRecent(path);
             UpdateJumpList(); // in order to refresh at once
 
             if (!ToolbarButtonsCreated)
@@ -197,8 +199,7 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
             _closeAllButton = new ThumbnailToolBarButton(MakeIcon(thumbButtons.CloseAll.Image, 48, true), thumbButtons.CloseAll.Text);
             _closeAllButton.Click += thumbButtons.CloseAll.Click;
 
-            // Call this method using reflection.  This is a workaround to *not* reference WPF libraries, because of how the WindowsAPICodePack was implemented.
-            TaskbarManager.Instance.ThumbnailToolBars.AddButtons(handle, _commitButton, _pullButton, _pushButton, _closeAllButton);
+            NativeTaskbar.AddThumbnailButtons(handle, _commitButton, _pullButton, _pushButton, _closeAllButton);
         }
     }
 
@@ -233,10 +234,7 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
     /// </summary>
     private static void UpdateJumpList()
     {
-        JumpList jumpList = JumpList.CreateJumpList();
-        jumpList.ClearAllUserTasks();
-        jumpList.KnownCategoryToDisplay = JumpListKnownCategoryType.Recent;
-        jumpList.Refresh();
+        NativeTaskbar.RefreshJumpList();
     }
 
     /// <summary>
@@ -312,11 +310,8 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
         catch (Exception ex)
             when (
 
-                // reported in https://github.com/gitextensions/gitextensions/issues/6760
-                // reported in https://github.com/gitextensions/gitextensions/issues/8234
-                ex is Microsoft.WindowsAPICodePack.Shell.ShellException ||
-
                 // reported in https://github.com/gitextensions/gitextensions/issues/2269
+                // (and as the ShellException of the WindowsAPICodePack in #6760 and #8234)
                 ex is COMException ||
 
                 // reported in https://github.com/gitextensions/gitextensions/issues/6767

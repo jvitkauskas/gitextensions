@@ -48,10 +48,10 @@ public sealed class ConfigureJoinableTaskFactoryAttribute : Attribute, ITestActi
 
         Thread.CurrentThread.GetApartmentState().Should().Be(ApartmentState.STA);
 
-        // The UI synchronization context of the thread, as WinForms installed it.
+        // The UI synchronization context of the thread, as WinForms installed it (named so that NUnit pumps its messages).
         if (SynchronizationContext.Current is not MessageWindowSynchronizationContext)
         {
-            SynchronizationContext.SetSynchronizationContext(new MessageWindowSynchronizationContext());
+            SynchronizationContext.SetSynchronizationContext(new System.Windows.Forms.WindowsFormsSynchronizationContext());
         }
 
         // Store the shared JoinableTaskContext

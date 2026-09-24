@@ -5,7 +5,6 @@ using GitExtUtils;
 using GitUI.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Properties;
-using Microsoft.WindowsAPICodePack.Taskbar;
 
 namespace GitUI.AvaloniaHosting;
 
@@ -81,6 +80,11 @@ internal static partial class AvaloniaDialogs
             {
                 global::Avalonia.Threading.Dispatcher.UIThread.Post(window.Close);
             }
+            else if (_jumpList?.ProcessThumbnailButtonMessage(message, wordParameter) == true)
+            {
+                // As the WindowsAPICodePack: the click of a button of the thumbnail toolbar.
+                handled = true;
+            }
 
             return 0;
         }
@@ -91,7 +95,7 @@ internal static partial class AvaloniaDialogs
         // As UpdateStatusInTaskbar: a dot of the color of the state over the icon of the taskbar, and the image of the commit button.
         private void UpdateStatusInTaskbar(Image image, Brush? brush)
         {
-            if (!GitCommands.Utils.EnvUtils.RunningOnWindowsWithMainWindow() || !TaskbarManager.IsPlatformSupported || _window.NativeHandle == 0)
+            if (!GitCommands.Utils.EnvUtils.RunningOnWindowsWithMainWindow() || !NativeTaskbar.IsPlatformSupported || _window.NativeHandle == 0)
             {
                 return;
             }
@@ -100,7 +104,7 @@ internal static partial class AvaloniaDialogs
             {
                 if (brush is null)
                 {
-                    TaskbarManager.Instance.SetOverlayIcon(_window.NativeHandle, null, "");
+                    NativeTaskbar.SetOverlayIcon(_window.NativeHandle, null, "");
                     return;
                 }
 
@@ -121,7 +125,7 @@ internal static partial class AvaloniaDialogs
                     _overlayIconByBrush.Add(brush, overlay);
                 }
 
-                TaskbarManager.Instance.SetOverlayIcon(_window.NativeHandle, overlay, "");
+                NativeTaskbar.SetOverlayIcon(_window.NativeHandle, overlay, "");
                 _commands.GetRequiredService<IWindowsJumpListManager>().UpdateCommitIcon(image);
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)

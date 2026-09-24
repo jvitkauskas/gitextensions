@@ -1,19 +1,21 @@
+using System.Diagnostics;
 using GitCommands.Utils;
-using Microsoft.WindowsAPICodePack.Taskbar;
 
 namespace GitUI;
 
 public static class TaskbarProgress
 {
-    private static void Try(Action<TaskbarManager> action)
+    // As the TaskbarManager of the WindowsAPICodePack: the taskbar button of the main window of the process.
+    private static void Try(Action<nint> action)
     {
-        if (EnvUtils.RunningOnWindowsWithMainWindow() && TaskbarManager.IsPlatformSupported)
+        if (EnvUtils.RunningOnWindowsWithMainWindow() && NativeTaskbar.IsPlatformSupported)
         {
             try
             {
-                action(TaskbarManager.Instance);
+                using Process process = Process.GetCurrentProcess();
+                action(process.MainWindowHandle);
             }
-            catch (InvalidOperationException)
+            catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
             {
             }
         }
@@ -21,20 +23,20 @@ public static class TaskbarProgress
 
     public static void Clear()
     {
-        Try(taskbar => taskbar.SetProgressState(TaskbarProgressBarState.NoProgress));
+        Try(window => NativeTaskbar.SetProgressState(window, TaskbarProgressBarState.NoProgress));
     }
 
     public static void SetProgress(TaskbarProgressBarState state, int progressValue, int maximumValue)
     {
-        Try(taskbar =>
+        Try(window =>
         {
-            taskbar.SetProgressState(state);
-            taskbar.SetProgressValue(progressValue, maximumValue);
+            NativeTaskbar.SetProgressState(window, state);
+            NativeTaskbar.SetProgressValue(window, progressValue, maximumValue);
         });
     }
 
     public static void SetState(TaskbarProgressBarState state)
     {
-        Try(taskbar => taskbar.SetProgressState(state));
+        Try(window => NativeTaskbar.SetProgressState(window, state));
     }
 }

@@ -1,17 +1,15 @@
-﻿using Microsoft.WindowsAPICodePack.Taskbar;
-
-namespace GitUI;
+﻿namespace GitUI;
 
 public sealed class WindowsThumbnailToolbarButton
 {
-    public WindowsThumbnailToolbarButton(string text, Image image, EventHandler<ThumbnailButtonClickedEventArgs> click)
+    public WindowsThumbnailToolbarButton(string text, Image image, EventHandler click)
     {
         Text = text;
         Image = image;
         Click = click;
     }
 
-    public EventHandler<ThumbnailButtonClickedEventArgs> Click { get; }
+    public EventHandler Click { get; }
     public Image Image { get; }
     public string Text { get; }
 }

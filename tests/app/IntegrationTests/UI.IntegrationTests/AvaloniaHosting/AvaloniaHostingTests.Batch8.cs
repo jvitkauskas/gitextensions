@@ -105,7 +105,7 @@ public sealed partial class AvaloniaHostingTests
 
         // Opening tells the user where a global config was located, if any (as FormFixHome.LoadSettings);
         // acknowledge it, whether this machine has one or not.
-        System.Windows.Forms.Timer acknowledgeInformation = new() { Interval = 100 };
+        GitExtUtils.GitUI.UiTimer acknowledgeInformation = new() { Interval = 100 };
         acknowledgeInformation.Tick += (_, _) => CloseTopLevelWindow("Information", except: 0);
         acknowledgeInformation.Start();
         try

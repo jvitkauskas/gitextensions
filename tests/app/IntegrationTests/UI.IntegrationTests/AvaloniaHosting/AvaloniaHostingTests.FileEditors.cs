@@ -54,7 +54,7 @@ public sealed partial class AvaloniaHostingTests
     [Test]
     public void File_editor_of_a_missing_file_reports_it_and_is_not_shown()
     {
-        System.Windows.Forms.Timer acknowledgeError = new() { Interval = 100 };
+        GitExtUtils.GitUI.UiTimer acknowledgeError = new() { Interval = 100 };
         acknowledgeError.Tick += (_, _) => CloseTopLevelWindow("Error", except: 0);
         acknowledgeError.Start();
         try

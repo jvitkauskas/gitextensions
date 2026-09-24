@@ -10,7 +10,6 @@ using GitUI.Models;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Theming;
-using Microsoft.WindowsAPICodePack.Taskbar;
 
 namespace GitUI.AvaloniaHosting;
 
