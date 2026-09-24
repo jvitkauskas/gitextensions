@@ -2,7 +2,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace GitExtensions.Plugins.CreateLocalBranches;
 
-/// <summary>Avalonia port of <see cref="CreateLocalBranchesForm"/>; behaviour lives in <see cref="CreateLocalBranchesViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>CreateLocalBranchesForm</c>; behaviour lives in <c>CreateLocalBranchesViewModel</c>.</summary>
 public partial class CreateLocalBranchesWindow : DialogWindow
 {
     public CreateLocalBranchesWindow()

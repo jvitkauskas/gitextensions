@@ -33,11 +33,6 @@ internal static class Program
         // Required for translation
         PluginRegistry.InitializeAll();
 
-        // We will be instantiating a number of forms using their default constructors.
-        // This would lead to InvalidOperationException thrown in GitModuleForm().
-        // Set the flag that will stop this from happening.
-        GitModuleForm.IsUnitTestActive = true;
-
         AppSettings.Font = SystemFonts.MessageBoxFont!;
 
         IDictionary<string, List<TranslationItemWithCategory>> neutralItems = TranslationHelpers.LoadNeutralItems();

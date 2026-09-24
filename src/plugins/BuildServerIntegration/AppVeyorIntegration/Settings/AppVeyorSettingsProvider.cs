@@ -8,7 +8,7 @@ using ResourceManager;
 namespace AppVeyorIntegration.Settings;
 
 /// <summary>
-///  The settings of the AppVeyor integration (plugin API v2), as <see cref="AppVeyorSettingsUserControl"/> (the WinForms
+///  The settings of the AppVeyor integration (plugin API v2), as <c>AppVeyorSettingsUserControl</c> (the WinForms
 ///  control of plugin API v1, which the host no longer uses).
 /// </summary>
 [Export(typeof(IBuildServerSettingsProvider))]

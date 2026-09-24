@@ -11,7 +11,7 @@ using ResourceManager;
 namespace TeamCityIntegration.Settings;
 
 /// <summary>
-///  The settings of the TeamCity integration (plugin API v2), as <see cref="TeamCitySettingsUserControl"/> (the WinForms
+///  The settings of the TeamCity integration (plugin API v2), as <c>TeamCitySettingsUserControl</c> (the WinForms
 ///  control of plugin API v1, which the host no longer uses): its "..." button and its link are links that fill in the
 ///  project and the build filter, and an invalid build filter is not saved.
 /// </summary>
@@ -88,23 +88,10 @@ public sealed partial class TeamCitySettingsProvider : Translate, IBuildServerSe
         string filter = buildIdFilter.ValueOrDefault(action.Values);
         try
         {
-            if (TeamCityBuildChooserDialog.TryShow(action.Owner, url, project, filter, out (string ProjectName, string BuildIdFilter)? chosen))
+            if (TeamCityBuildChooserDialog.TryShow(action.Owner, url, project, filter, out (string ProjectName, string BuildIdFilter)? chosen) && chosen is { } build)
             {
-                if (chosen is { } build)
-                {
-                    projectName[action.Values] = build.ProjectName;
-                    buildIdFilter[action.Values] = build.BuildIdFilter;
-                }
-
-                return;
-            }
-
-            // The WinForms fallback, while the Avalonia port can be disabled (docs/avalonia-port/PLAN.md, phase 8).
-            using TeamCityBuildChooser teamCityBuildChooser = new(url, project, filter);
-            if (teamCityBuildChooser.ShowDialog(action.Owner.ToWin32Window()) == DialogResult.OK)
-            {
-                projectName[action.Values] = teamCityBuildChooser.TeamCityProjectName;
-                buildIdFilter[action.Values] = teamCityBuildChooser.TeamCityBuildIdFilter;
+                projectName[action.Values] = build.ProjectName;
+                buildIdFilter[action.Values] = build.BuildIdFilter;
             }
         }
         catch

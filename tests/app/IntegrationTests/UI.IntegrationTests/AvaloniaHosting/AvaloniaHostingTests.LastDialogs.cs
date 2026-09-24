@@ -1,6 +1,7 @@
 using GitCommands;
 using GitUI;
 using GitUI.Avalonia.Hosting;
+using GitUI.AvaloniaHosting;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
@@ -30,7 +31,7 @@ public sealed partial class AvaloniaHostingTests
         AvaloniaDialogHost.DialogShowingForTests = window => shown = window;
         try
         {
-            FormGitCommandLog.ShowOrActivate(browse);
+            AvaloniaDialogs.TryShowGitCommandLog(browse);
             PumpUntil(() => shown?.IsVisible == true);
 
             shown.Should().NotBeNull();
@@ -43,7 +44,7 @@ public sealed partial class AvaloniaHostingTests
 
             DialogWindow first = shown;
             shown = null;
-            FormGitCommandLog.ShowOrActivate(browse);
+            AvaloniaDialogs.TryShowGitCommandLog(browse);
             shown.Should().BeNull("the open window is activated rather than a new one shown");
 
             bool closed = false;
@@ -55,58 +56,6 @@ public sealed partial class AvaloniaHostingTests
         finally
         {
             AvaloniaDialogHost.DialogShowingForTests = null;
-        }
-    }
-
-    [Test]
-    public void Git_grep_prompt_searches_the_file_status_list_and_is_reused()
-    {
-        string userArguments = AppSettings.GitGrepUserArguments.Value;
-        bool ignoreCase = AppSettings.GitGrepIgnoreCase.Value;
-        bool matchWholeWord = AppSettings.GitGrepMatchWholeWord.Value;
-        bool showSearchBox = AppSettings.ShowFindInCommitFilesGitGrep.Value;
-        IGitUICommandsSource commandsSource = Substitute.For<IGitUICommandsSource>();
-        commandsSource.UICommands.Returns(_ => _commands);
-        using Form form = new() { Text = "Diff", Width = 600, Height = 400 };
-        using FileStatusList fileStatusList = new() { Parent = form, Dock = DockStyle.Fill, UICommandsSource = commandsSource, CanUseFindInCommitFilesGitGrep = true };
-        form.Show(_owner);
-        Application.DoEvents();
-
-        DialogWindow? shown = null;
-        AvaloniaDialogHost.DialogShowingForTests = window => shown = window;
-        try
-        {
-            fileStatusList.ShowFindInCommitFileGitGrepDialog("TODO");
-            PumpUntil(() => shown?.IsVisible == true);
-
-            shown.Should().NotBeNull();
-            FindInCommitFilesGitGrepViewModel viewModel = (FindInCommitFilesGitGrepViewModel)shown!.DataContext!;
-            viewModel.Expression.Should().Be("TODO");
-            viewModel.MatchCase.Should().Be(!AppSettings.GitGrepIgnoreCase.Value);
-            Capture(shown, "find-in-commit-files-git-grep");
-
-            viewModel.SearchCommand.Execute(null);
-            fileStatusList.FindInCommitFilesGitGrepActive.Should().BeTrue("the list searches the expression");
-
-            DialogWindow first = shown;
-            shown = null;
-            fileStatusList.ShowFindInCommitFileGitGrepDialog("FIXME");
-            shown.Should().BeNull("the open prompt is reused");
-            viewModel.Expression.Should().Be("FIXME");
-
-            bool closed = false;
-            first.Closed += (_, _) => closed = true;
-            first.Close();
-            PumpUntil(() => closed);
-            closed.Should().BeTrue();
-        }
-        finally
-        {
-            AvaloniaDialogHost.DialogShowingForTests = null;
-            AppSettings.GitGrepUserArguments.Value = userArguments;
-            AppSettings.GitGrepIgnoreCase.Value = ignoreCase;
-            AppSettings.GitGrepMatchWholeWord.Value = matchWholeWord;
-            AppSettings.ShowFindInCommitFilesGitGrep.Value = showSearchBox;
         }
     }
 

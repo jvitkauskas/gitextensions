@@ -4,7 +4,7 @@ using AvaloniaCheckBox = Avalonia.Controls.CheckBox;
 
 namespace GitExtensions.Plugins.DeleteUnusedBranches;
 
-/// <summary>Avalonia port of <see cref="DeleteUnusedBranchesForm"/>; behaviour lives in <see cref="DeleteUnusedBranchesViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>DeleteUnusedBranchesForm</c>; behaviour lives in <c>DeleteUnusedBranchesViewModel</c>.</summary>
 public partial class DeleteUnusedBranchesWindow : DialogWindow
 {
     /// <summary>The check box of the header of the delete column (<c>DataGridViewCheckBoxHeaderCell</c>).</summary>

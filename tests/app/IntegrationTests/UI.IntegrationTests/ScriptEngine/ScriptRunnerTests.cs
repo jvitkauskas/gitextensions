@@ -154,53 +154,6 @@ public class ScriptRunnerTests
         ex.And.WorkingDirectory.Should().Be(_module.WorkingDir);
     }
 
-    [Test]
-    public void RunScript_with_arguments_with_s_option_with_RevisionGrid_without_selection_shall_display_error_and_return_false()
-    {
-        _exampleScript.Command = "cmd";
-        _exampleScript.Arguments = "/c echo {sHash}";
-
-        RunFormTest(async formBrowse =>
-        {
-            // wait until the revisions are loaded
-            await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
-
-            // check for correct test setup
-            formBrowse.RevisionGridControl.GetTestAccessor().ClearSelection();
-            formBrowse.RevisionGridControl.GetSelectedRevisions().Count.Should().Be(0);
-            formBrowse.RevisionGridControl.LatestSelectedRevision.Should().BeNull();
-
-            ExceptionAssertions<UserExternalOperationException> ex = ((Action)(() => ExecuteRunScript(_exampleScript, formBrowse, formBrowse.UICommands, ScriptOptionsProviderBase.Default))).Should()
-                    .Throw<UserExternalOperationException>();
-            ex.And.Context.Should().Be($"Script: '{_exampleScript.GetDisplayName()}'\r\nA valid revision is required to substitute the argument options");
-            ex.And.Command.Should().Be(_exampleScript.Command);
-            ex.And.Arguments.Should().Be(_exampleScript.Arguments);
-            ex.And.WorkingDirectory.Should().Be(_referenceRepository.Module.WorkingDir);
-        });
-    }
-
-    [Test]
-    public void RunScript_with_arguments_with_s_option_with_RevisionGrid_with_selection_shall_succeed()
-    {
-        _exampleScript.Command = "cmd";
-        _exampleScript.Arguments = "/c echo {sHash}";
-        _referenceRepository.CheckoutRevision();
-
-        RunFormTest(async formBrowse =>
-        {
-            // wait until the revisions are loaded
-            await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
-
-            formBrowse.RevisionGridControl.GetSelectedRevisions().Count.Should().Be(1);
-
-            string? errorMessage = null;
-            bool result = ExecuteRunScript(_exampleScript, formBrowse, formBrowse.UICommands, ScriptOptionsProviderBase.Default);
-
-            errorMessage.Should().BeNull();
-            result.Should().BeTrue();
-        });
-    }
-
     private static bool ExecuteRunScript(ScriptInfo script, IWin32Window owner, IGitUICommands uiCommands, IScriptOptionsProvider scriptOptionsProvider)
     {
         try
@@ -218,13 +171,6 @@ public class ScriptRunnerTests
         {
             throw ex.InnerException!;
         }
-    }
-
-    private void RunFormTest(Func<FormBrowse, Task> testDriverAsync)
-    {
-        UITest.RunForm(
-            showForm: () => _uiCommands.StartBrowseDialog(owner: null).Should().BeTrue(),
-            testDriverAsync);
     }
 
     private class MockForm : IWin32Window, IGitModuleForm

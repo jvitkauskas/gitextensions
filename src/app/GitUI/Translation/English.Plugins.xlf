@@ -28,14 +28,6 @@
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="AppVeyorSettingsUserControl" source-language="en">
-    <body>
-      <trans-unit id="cbLoadTestResults.Text">
-        <source>Display test results in build status summary for each build result (network intensive!)</source>
-        <target />
-      </trans-unit>
-    </body>
-  </file>
   <file datatype="plaintext" original="AutoCompileSubModulesPlugin" source-language="en">
     <body>
       <trans-unit id="Description.Text">
@@ -226,10 +218,6 @@ Are you sure you want to continue?</source>
         <source>Does not match</source>
         <target />
       </trans-unit>
-      <trans-unit id="regexFilter.Text">
-        <source>/(feature|develop)/</source>
-        <target />
-      </trans-unit>
       <trans-unit id="useRegexCaseInsensitive.Text">
         <source>Case insensitive</source>
         <target />
@@ -370,10 +358,6 @@ Are you sure you want to continue?</source>
         <source>Loading...</source>
         <target />
       </trans-unit>
-      <trans-unit id="LoadingLabel.Text">
-        <source>Loading...</source>
-        <target />
-      </trans-unit>
       <trans-unit id="TestCodeText.Text">
         <source>Loading...</source>
         <target />
@@ -470,10 +454,6 @@ Are you sure you want to continue?</source>
         <source>Including submodules</source>
         <target />
       </trans-unit>
-      <trans-unit id="lblAuthor.Text">
-        <source>Author</source>
-        <target />
-      </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="GitHub3Plugin" source-language="en">
@@ -560,62 +540,10 @@ Are you sure you want to continue?</source>
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="GitHubActionsSettingsUserControl" source-language="en">
-    <body>
-      <trans-unit id="lblApiToken.Text">
-        <source>API &amp;Token</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lblApiUrl.Text">
-        <source>&amp;API URL</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lblOwner.Text">
-        <source>&amp;Owner</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lblRepository.Text">
-        <source>&amp;Repository</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lnkTokenManagement.Text">
-        <source>Create a GitHub personal access token</source>
-        <target />
-      </trans-unit>
-    </body>
-  </file>
   <file datatype="plaintext" original="GitImpactPlugin" source-language="en">
     <body>
       <trans-unit id="Description.Text">
         <source>Impact Graph</source>
-        <target />
-      </trans-unit>
-    </body>
-  </file>
-  <file datatype="plaintext" original="GitlabSettingsUserControl" source-language="en">
-    <body>
-      <trans-unit id="GetProjectIdLink.Text">
-        <source>Get Project ID from server</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="GetProjectIdStatusText.Text">
-        <source>Failed to obtain project from server. Try to specify valid API token or check instance URL</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="TokenManagementLink.Text">
-        <source>Go to token management page</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="label1.Text">
-        <source>Instance URL</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="label2.Text">
-        <source>Api Token</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="label3.Text">
-        <source>Project ID</source>
         <target />
       </trans-unit>
     </body>
@@ -756,28 +684,8 @@ Do you want to reset the configured path?</source>
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="JenkinsSettingsUserControl" source-language="en">
-    <body>
-      <trans-unit id="lblIgnoreBuildBranch.Text">
-        <source>Ignore build for branch</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lblJenkinsServerUrl.Text">
-        <source>Jenkins server URL</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lblProjectName.Text">
-        <source>Project name</source>
-        <target />
-      </trans-unit>
-    </body>
-  </file>
   <file datatype="plaintext" original="ProxySwitcherForm" source-language="en">
     <body>
-      <trans-unit id="$this.Text">
-        <source>Proxy Switcher</source>
-        <target />
-      </trans-unit>
       <trans-unit id="ApplyGlobally_CheckBox.Text">
         <source>Apply globally</source>
         <target />
@@ -942,56 +850,6 @@ branch names, tag names)</source>
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="SettingsUserControl" source-language="en">
-    <body>
-      <trans-unit id="ExtractLink.Text">
-        <source>Extract data from a build result url copied in the clipboard</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="TokenManagementLink.Text">
-        <source>Go to token management page</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToExtractDataFromClipboardCaption.Text">
-        <source>Could not extract data</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToExtractDataFromClipboardMessage.Text">
-        <source>The clipboard doesn't contain a valid build url.
-
-Please copy the url of the build into the clipboard before retrying.
-(Should contain at least the "buildId" parameter)</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToLoadBuildDefinitionInfoMessage.Text">
-        <source>Error while trying to retrieve build definition information from url.
-
-Please ensure that the url is valid and that the API token has access to build and project information.</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_infoNoApiTokenMessage.Text">
-        <source>Unable to retrieve build definition information without API token. Field will be left blank.</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="label1.Text">
-        <source>Examples:
- - https://dev.azure.com/yourorganization/projectname/
- - https://yourhost:8080/tfs/collectionname/projectname/
- - https://yourorganization.visualstudio.com/projectname/</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="label4.Text">
-        <source>You need to create a token with the following scopes:
- - 'Build (read)'
- - 'Project and team (read)'</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="labelRegexError.Text">
-        <source>The 'Build definition name' regular expression is not valid and won't be saved!</source>
-        <target />
-      </trans-unit>
-    </body>
-  </file>
   <file datatype="plaintext" original="TeamCitySettingsProvider" source-language="en">
     <body>
       <trans-unit id="_buildIdFilter.Text">
@@ -1052,42 +910,6 @@ Please verify the server url.</source>
       </trans-unit>
       <trans-unit id="_serverUrl.Text">
         <source>TeamCity server URL</source>
-        <target />
-      </trans-unit>
-    </body>
-  </file>
-  <file datatype="plaintext" original="TeamCitySettingsUserControl" source-language="en">
-    <body>
-      <trans-unit id="CheckBoxLogAsGuest.Text">
-        <source>Log as guest to display the build report</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToExtractDataFromClipboardCaption.Text">
-        <source>Build url not valid</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToExtractDataFromClipboardMessage.Text">
-        <source>The clipboard doesn't contain a valid build url.
-
-Please copy in the clipboard the url of the build before retrying.
-(Should contain at least the "buildTypeId" parameter)</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToLoadProjectCaption.Text">
-        <source>Error when loading the projects and build list</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="_failToLoadProjectMessage.Text">
-        <source>Failed to load the projects and build list.
-Please verify the server url.</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="labelRegexError.Text">
-        <source>The "Build Id Filter" regular expression is not valid and won't be saved!</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="lnkExtractDataFromBuildUrlCopiedInTheClipboard.Text">
-        <source>Extract the data from the build url copied in the clipboard</source>
         <target />
       </trans-unit>
     </body>

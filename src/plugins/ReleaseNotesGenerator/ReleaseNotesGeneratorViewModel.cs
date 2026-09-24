@@ -11,7 +11,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.ReleaseNotesGenerator;
 
-/// <summary>Strings of the Avalonia port of <see cref="ReleaseNotesGeneratorForm"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>ReleaseNotesGeneratorForm</c>; ids match the form.</summary>
 public sealed class ReleaseNotesGeneratorStrings : ViewStrings
 {
     public ReleaseNotesGeneratorStrings()
@@ -92,7 +92,7 @@ public sealed class ReleaseNotesGeneratorStrings : ViewStrings
     public TranslatedText InvalidInput { get; }
 }
 
-/// <summary>The clipboard of the Avalonia port of <see cref="ReleaseNotesGeneratorForm"/>.</summary>
+/// <summary>The clipboard of the Avalonia port of <c>ReleaseNotesGeneratorForm</c>.</summary>
 public interface IReleaseNotesClipboard
 {
     void CopyText(string text);
@@ -108,7 +108,7 @@ public enum ReleaseNotesInput
     To,
 }
 
-/// <summary>View model of the Avalonia port of <see cref="ReleaseNotesGeneratorForm"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>ReleaseNotesGeneratorForm</c>.</summary>
 public sealed partial class ReleaseNotesGeneratorViewModel : DialogViewModel
 {
     private const string MostRecentHint = "most recent changes are listed on top";

@@ -7,7 +7,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.DeleteUnusedBranches;
 
-/// <summary>Shows the Avalonia port of <see cref="DeleteUnusedBranchesForm"/> (docs/avalonia-port/PLAN.md, phase 7).</summary>
+/// <summary>Shows the Avalonia port of <c>DeleteUnusedBranchesForm</c> (docs/avalonia-port/PLAN.md, phase 7).</summary>
 internal static class DeleteUnusedBranchesDialog
 {
     /// <summary>

@@ -5,18 +5,6 @@ using GitUI;
 namespace GitUITests;
 public sealed class TranslationTest
 {
-    [SetUp]
-    public void SetUp()
-    {
-        GitModuleForm.IsUnitTestActive = true;
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        GitModuleForm.IsUnitTestActive = false;
-    }
-
     [Test]
     [Apartment(ApartmentState.STA)]
     public void CreateInstanceOfClass()

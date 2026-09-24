@@ -41,7 +41,7 @@ public sealed partial class AvaloniaHostingTests
             viewModel.CancelCommand.Execute(null);
         });
 
-        _commands.StartSettingsDialog(_owner, new GitUI.CommandsDialogs.SettingsDialog.SettingsPageReferenceByType(typeof(HotkeysSettingsPage))).Should().BeFalse("cancelled");
+        _commands.StartSettingsDialog(_owner, new GitUI.CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("HotkeysSettingsPage")).Should().BeFalse("cancelled");
 
         shown.Should().Contain(["ChecklistSettingsPage", "DetailedSettingsPage", "ScriptsSettingsPage", "HotkeysSettingsPage", "GitRootIntroductionPage", "PluginRootIntroductionPage"]);
     }

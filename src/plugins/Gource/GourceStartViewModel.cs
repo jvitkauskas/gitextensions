@@ -6,7 +6,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.Gource;
 
-/// <summary>Strings of the Avalonia port of <see cref="GourceStart"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>GourceStart</c>; ids match the form.</summary>
 public sealed class GourceStartStrings : ViewStrings
 {
     public GourceStartStrings()
@@ -42,7 +42,7 @@ public sealed class GourceStartStrings : ViewStrings
     public TranslatedText GourceCommandLine { get; }
 }
 
-/// <summary>What the Avalonia port of <see cref="GourceStart"/> needs from the application.</summary>
+/// <summary>What the Avalonia port of <c>GourceStart</c> needs from the application.</summary>
 public interface IGourceStartHost
 {
     /// <summary>As <c>GourceStart.LoadAvatarsAsync</c>: saves the avatars of the authors; returns their directory.</summary>
@@ -54,7 +54,7 @@ public interface IGourceStartHost
     void OpenUrl(string url);
 }
 
-/// <summary>View model of the Avalonia port of <see cref="GourceStart"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>GourceStart</c>.</summary>
 public sealed partial class GourceStartViewModel : DialogViewModel
 {
     // Not translated, as in GourceStart.

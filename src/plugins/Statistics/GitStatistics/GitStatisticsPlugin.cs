@@ -43,21 +43,7 @@ public class GitStatisticsPlugin : GitPluginBase, IGitPluginForRepository
 
         bool countSubmodule = !_ignoreSubmodules.ValueOrDefault(Settings);
 
-        if (GitStatisticsDialog.TryShow(args, _codeFiles.ValueOrDefault(Settings), countSubmodule, _ignoreDirectories.ValueOrDefault(Settings).Replace("/", "\\")))
-        {
-            return false;
-        }
-
-        FormGitStatistics formStatistics = new(args.GitUICommands.GetRequiredService<IGitExecutorProvider>(), args.GitModule, _codeFiles.ValueOrDefault(Settings), countSubmodule)
-        {
-            DirectoriesToIgnore = _ignoreDirectories.ValueOrDefault(Settings).Replace("/", "\\")
-        };
-
-        using (formStatistics)
-        {
-            formStatistics.ShowDialog(args.OwnerForm);
-        }
-
+        GitStatisticsDialog.TryShow(args, _codeFiles.ValueOrDefault(Settings), countSubmodule, _ignoreDirectories.ValueOrDefault(Settings).Replace("/", "\\"));
         return false;
     }
 }

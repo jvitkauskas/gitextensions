@@ -10,7 +10,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.ProxySwitcher;
 
-/// <summary>Strings of the Avalonia port of <see cref="ProxySwitcherForm"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>ProxySwitcherForm</c>; ids match the form.</summary>
 public sealed class ProxySwitcherStrings : ViewStrings
 {
     public ProxySwitcherStrings()
@@ -43,7 +43,7 @@ public sealed class ProxySwitcherStrings : ViewStrings
 /// <summary>The settings of the plugin that the proxy is built from.</summary>
 public sealed record ProxySettings(string Username, string Password, string HttpProxy, string HttpProxyPort);
 
-/// <summary>The git configuration that the Avalonia port of <see cref="ProxySwitcherForm"/> reads and writes.</summary>
+/// <summary>The git configuration that the Avalonia port of <c>ProxySwitcherForm</c> reads and writes.</summary>
 public interface IProxySwitcherGit
 {
     /// <summary>The effective <c>http.proxy</c> of the repository (<c>GetEffectiveSetting</c>).</summary>
@@ -56,7 +56,7 @@ public interface IProxySwitcherGit
     void Run(ArgumentString arguments);
 }
 
-/// <summary>View model of the Avalonia port of <see cref="ProxySwitcherForm"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>ProxySwitcherForm</c>.</summary>
 public sealed partial class ProxySwitcherViewModel : DialogViewModel
 {
     private readonly ProxySettings _settings;

@@ -10,7 +10,6 @@ using GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.AvaloniaHosting;
 using GitUI.CommandsDialogs;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
 using GitUI.Presentation.HelperDialogs;
@@ -222,7 +221,7 @@ public sealed partial class AvaloniaHostingTests
                 });
             });
 
-            bool success = FormProcess.ShowDialog(_owner, _commands, arguments: "status", _referenceRepository.Module.WorkingDir, input: null, useDialogSettings: true, out string output);
+            bool success = ProcessDialogs.ShowProcess(_owner, _commands, arguments: "status", _referenceRepository.Module.WorkingDir, input: null, useDialogSettings: true, out string output);
 
             success.Should().BeTrue();
             status.Should().Be(ProcessStatus.Succeeded);
@@ -248,7 +247,7 @@ public sealed partial class AvaloniaHostingTests
             });
         });
 
-        bool success = FormProcess.ShowDialog(_owner, _commands, arguments: "no-such-git-command", _referenceRepository.Module.WorkingDir, input: null, useDialogSettings: true, out string output);
+        bool success = ProcessDialogs.ShowProcess(_owner, _commands, arguments: "no-such-git-command", _referenceRepository.Module.WorkingDir, input: null, useDialogSettings: true, out string output);
 
         success.Should().BeFalse();
         output.Should().Contain("no-such-git-command");
@@ -268,7 +267,7 @@ public sealed partial class AvaloniaHostingTests
             viewModel.AcknowledgeCommand.Execute(null);
         });
 
-        FormStatus.ShowErrorDialog(_owner, _commands, "Something failed", "first line\n", "second line\n");
+        ProcessDialogs.ShowErrorDialog(_owner, _commands, "Something failed", "first line\n", "second line\n");
 
         title.Should().Be("Something failed");
     }
@@ -356,8 +355,8 @@ public sealed partial class AvaloniaHostingTests
             viewModel.ResetCommand.Execute(null);
         });
 
-        FormResetChanges.ShowResetDialog(_owner, hasExistingFiles: true, hasNewFiles: true)
-            .Should().Be(FormResetChanges.ActionEnum.ResetAndDelete);
+        AvaloniaDialogs.ShowResetChanges(_owner, hasExistingFiles: true, hasNewFiles: true)
+            .Should().Be(ResetChangesAction.ResetAndDelete);
     }
 
     [Test]

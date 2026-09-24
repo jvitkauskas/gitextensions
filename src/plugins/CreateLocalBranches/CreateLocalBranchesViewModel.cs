@@ -9,7 +9,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.CreateLocalBranches;
 
-/// <summary>Strings of the Avalonia port of <see cref="CreateLocalBranchesForm"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>CreateLocalBranchesForm</c>; ids match the form.</summary>
 public sealed class CreateLocalBranchesStrings : ViewStrings
 {
     public CreateLocalBranchesStrings()
@@ -27,7 +27,7 @@ public sealed class CreateLocalBranchesStrings : ViewStrings
     public TranslatedText Create { get; }
 }
 
-/// <summary>View model of the Avalonia port of <see cref="CreateLocalBranchesForm"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>CreateLocalBranchesForm</c>.</summary>
 public sealed partial class CreateLocalBranchesViewModel : DialogViewModel
 {
     // Not translated, as in CreateLocalBranchesForm.

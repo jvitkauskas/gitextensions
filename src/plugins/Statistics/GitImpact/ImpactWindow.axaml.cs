@@ -7,7 +7,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace GitExtensions.Plugins.GitImpact;
 
-/// <summary>Avalonia port of <see cref="FormImpact"/>; the data lives in <see cref="ImpactViewModel"/>, the drawing in <see cref="ImpactGraphView"/>.</summary>
+/// <summary>Avalonia port of <c>FormImpact</c>; the data lives in <c>ImpactViewModel</c>, the drawing in <c>ImpactGraphView</c>.</summary>
 public partial class ImpactWindow : DialogWindow
 {
     /// <summary>

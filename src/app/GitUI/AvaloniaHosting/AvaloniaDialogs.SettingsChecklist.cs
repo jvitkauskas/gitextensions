@@ -13,6 +13,13 @@ namespace GitUI.AvaloniaHosting;
 
 internal static partial class AvaloniaDialogs
 {
+    /// <summary>Whether all the checks of the checklist pass, without showing it (<c>ChecklistSettingsPage.CheckSettings</c>).</summary>
+    internal static bool CheckSettings(IGitUICommands commands, CommonLogic commonLogic)
+    {
+        ChecklistSettingsPageStrings strings = GitUI.Presentation.Translations.ViewStrings.Load<ChecklistSettingsPageStrings>();
+        return new ChecklistSettingsPageViewModel(strings, new ChecklistSettingsHost(strings, commonLogic, commands, () => null)).CheckSettings();
+    }
+
     /// <summary>The checks and repairs of <c>ChecklistSettingsPage</c>.</summary>
     private sealed class ChecklistSettingsHost(ChecklistSettingsPageStrings strings, CommonLogic commonLogic, IGitUICommands commands, Func<IWin32Window?> owner)
         : IChecklistSettingsHost

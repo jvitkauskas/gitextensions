@@ -13,7 +13,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.DeleteUnusedBranches;
 
-/// <summary>Strings of the Avalonia port of <see cref="DeleteUnusedBranchesForm"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>DeleteUnusedBranchesForm</c>; ids match the form.</summary>
 public sealed class DeleteUnusedBranchesStrings : ViewStrings
 {
     public DeleteUnusedBranchesStrings()
@@ -107,7 +107,7 @@ public sealed class DeleteUnusedBranchesStrings : ViewStrings
     public TranslatedText BranchesSelected { get; }
 }
 
-/// <summary>What the Avalonia port of <see cref="DeleteUnusedBranchesForm"/> needs from the application.</summary>
+/// <summary>What the Avalonia port of <c>DeleteUnusedBranchesForm</c> needs from the application.</summary>
 public interface IDeleteUnusedBranchesHost
 {
     /// <summary>Notifies the application that the repository changed (<c>RepoChangedNotifier.Notify</c>).</summary>
@@ -151,7 +151,7 @@ public sealed class DeleteUnusedBranchRow : ObservableObject
     }
 }
 
-/// <summary>View model of the Avalonia port of <see cref="DeleteUnusedBranchesForm"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>DeleteUnusedBranchesForm</c>.</summary>
 public sealed partial class DeleteUnusedBranchesViewModel : DialogViewModel
 {
     private readonly IGitModule _module;

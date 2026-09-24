@@ -26,14 +26,7 @@ public class GitImpactPlugin : GitPluginBase, IGitPluginForRepository
             return false;
         }
 
-        if (ImpactDialog.TryShow(args))
-        {
-            return false;
-        }
-
-        using FormImpact form = new(args.GitModule);
-        form.ShowDialog(args.OwnerForm);
-
+        ImpactDialog.TryShow(args);
         return false;
     }
 

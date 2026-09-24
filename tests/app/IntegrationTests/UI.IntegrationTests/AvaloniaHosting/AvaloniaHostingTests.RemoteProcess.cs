@@ -1,8 +1,8 @@
 using GitCommands;
+using GitUI;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.AvaloniaHosting;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.HelperDialogs;
 
 namespace GitExtensions.UITests.AvaloniaHosting;
@@ -56,7 +56,7 @@ public sealed partial class AvaloniaHostingTests
 
             // The entry point of the remote commands of GitUICommands (e.g. the scripts and the plugins).
             AvaloniaDialogHost.DialogShowingForTests = window => window.Should().BeOfType<ProcessWindow>();
-            FormRemoteProcess.ShowDialog(_owner, _commands, "fetch upstream").Should().BeTrue();
+            ProcessDialogs.ShowRemoteProcess(_owner, _commands, "fetch upstream").Should().BeTrue();
             _referenceRepository.Module.RevParse("upstream/master").ToString().Should().Be(upstreamCommit);
         }
         finally

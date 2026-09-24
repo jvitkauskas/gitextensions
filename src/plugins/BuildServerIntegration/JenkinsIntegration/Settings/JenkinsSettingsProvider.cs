@@ -8,7 +8,7 @@ using ResourceManager;
 namespace JenkinsIntegration.Settings;
 
 /// <summary>
-///  The settings of the Jenkins integration (plugin API v2), as <see cref="JenkinsSettingsUserControl"/> (the WinForms
+///  The settings of the Jenkins integration (plugin API v2), as <c>JenkinsSettingsUserControl</c> (the WinForms
 ///  control of plugin API v1, which the host no longer uses).
 /// </summary>
 [Export(typeof(IBuildServerSettingsProvider))]

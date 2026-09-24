@@ -12,26 +12,24 @@ public sealed class BrowseWebViewsTests
     public void The_build_report_is_shown_with_WebView2_when_its_runtime_is_installed()
     {
         FakeWebView webView2 = new();
-        FakeWebView fallback = new();
 
-        IBrowseWebView created = BrowseWebViews.Create(() => "140.0.3485.54", () => webView2, () => fallback);
+        IBrowseWebView? created = BrowseWebViews.Create(() => "140.0.3485.54", () => webView2);
 
         created.Should().BeSameAs(webView2);
     }
 
     [Test]
-    public void The_build_report_falls_back_to_the_WebBrowserControl_without_the_WebView2_runtime()
+    public void The_build_report_has_no_browser_without_the_WebView2_runtime()
     {
         FakeWebView webView2 = new();
-        FakeWebView fallback = new();
 
-        IBrowseWebView created = BrowseWebViews.Create(() => throw new WebView2RuntimeNotFoundException(), () => webView2, () => fallback);
+        IBrowseWebView? created = BrowseWebViews.Create(() => throw new WebView2RuntimeNotFoundException(), () => webView2);
 
-        created.Should().BeSameAs(fallback);
+        created.Should().BeNull();
     }
 
     [Test]
-    public void The_build_report_falls_back_to_the_WebBrowserControl_without_the_WebView2_loader()
+    public void The_build_report_has_no_browser_without_the_WebView2_loader()
     {
         BrowseWebViews.IsWebView2Available(() => throw new DllNotFoundException("WebView2Loader.dll")).Should().BeFalse();
         BrowseWebViews.IsWebView2Available(() => throw new BadImageFormatException()).Should().BeFalse();
@@ -39,7 +37,7 @@ public sealed class BrowseWebViewsTests
 
     [TestCase(null)]
     [TestCase("")]
-    public void The_build_report_falls_back_to_the_WebBrowserControl_without_a_runtime_version(string? version)
+    public void The_build_report_has_no_browser_without_a_runtime_version(string? version)
     {
         BrowseWebViews.IsWebView2Available(() => version).Should().BeFalse();
     }

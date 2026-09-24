@@ -8,7 +8,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.ProxySwitcher;
 
-/// <summary>Shows the Avalonia port of <see cref="ProxySwitcherForm"/> (docs/avalonia-port/PLAN.md, phase 7).</summary>
+/// <summary>Shows the Avalonia port of <c>ProxySwitcherForm</c> (docs/avalonia-port/PLAN.md, phase 7).</summary>
 internal static class ProxySwitcherDialog
 {
     /// <summary>Returns <see langword="false"/> when the port is disabled, in which case the caller shows the WinForms form.</summary>

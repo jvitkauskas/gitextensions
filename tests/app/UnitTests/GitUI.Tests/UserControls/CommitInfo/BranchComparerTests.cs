@@ -89,7 +89,7 @@ public class BranchComparerTests
 
         void SortAndCheckListsForEquality()
         {
-            Array.Sort(branches, new GitUI.CommitInfo.CommitInfo.BranchComparer(branches, currentBranch ?? ""));
+            Array.Sort(branches, new GitUI.CommitInfo.BranchComparer(branches, currentBranch ?? ""));
 
             branches.Should().HaveCount(expectedBranches.Count);
             for (int index = 0; index < branches.Length; ++index)

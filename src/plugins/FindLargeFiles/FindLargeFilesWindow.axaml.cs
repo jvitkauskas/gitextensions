@@ -3,7 +3,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace GitExtensions.Plugins.FindLargeFiles;
 
-/// <summary>Avalonia port of <see cref="FindLargeFilesForm"/>; behaviour lives in <see cref="FindLargeFilesViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>FindLargeFilesForm</c>; behaviour lives in <c>FindLargeFilesViewModel</c>.</summary>
 public partial class FindLargeFilesWindow : DialogWindow
 {
     public FindLargeFilesWindow()

@@ -7,7 +7,7 @@ namespace TeamCityIntegration.Settings;
 
 /// <summary>
 ///  A node of the tree of the build chooser: a project (with its subprojects and, once expanded, its builds), a build, or the
-///  "Loading..." placeholder of a project without subprojects (as the nodes of <see cref="TeamCityBuildChooser"/>).
+///  "Loading..." placeholder of a project without subprojects (as the nodes of <c>TeamCityBuildChooser</c>).
 /// </summary>
 public sealed partial class TeamCityBuildNode : ObservableObject
 {
@@ -86,7 +86,7 @@ public sealed partial class TeamCityBuildNode : ObservableObject
     }
 }
 
-/// <summary>View model of the Avalonia port of <see cref="TeamCityBuildChooser"/> (a form without translations: constant strings).</summary>
+/// <summary>View model of the Avalonia port of <c>TeamCityBuildChooser</c> (a form without translations: constant strings).</summary>
 public sealed partial class TeamCityBuildChooserViewModel : DialogViewModel
 {
     public const string Title = "Choose the TeamCity build...";

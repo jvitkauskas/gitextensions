@@ -3,7 +3,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace GitExtensions.Plugins.GitStatistics;
 
-/// <summary>Avalonia port of <see cref="FormGitStatistics"/>; behaviour lives in <see cref="GitStatisticsViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>FormGitStatistics</c>; behaviour lives in <c>GitStatisticsViewModel</c>.</summary>
 public partial class GitStatisticsWindow : DialogWindow
 {
     public GitStatisticsWindow()

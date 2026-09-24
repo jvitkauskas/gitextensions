@@ -10,6 +10,7 @@ using GitUI;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.AvaloniaHosting;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -36,8 +37,8 @@ public sealed partial class AvaloniaHostingTests
         // The "RevisionGrid" hotkeys of the settings (as HotkeySettingsLoader.LoadHotkeys).
         System.ComponentModel.Design.ServiceContainer services = GlobalServiceContainer.CreateDefaultMockServiceContainer();
         IHotkeySettingsLoader hotkeys = services.GetRequiredService<IHotkeySettingsLoader>();
-        hotkeys.LoadHotkeys(RevisionGridControl.HotkeySettingsName).Returns(
-            [new HotkeyCommand((int)RevisionGridControl.Command.GoToParent, "GoToParent") { KeyData = Keys.Control | Keys.P }]);
+        hotkeys.LoadHotkeys(HotkeyCommands.RevisionGridSettingsName).Returns(
+            [new HotkeyCommand((int)HotkeyCommands.RevisionGrid.GoToParent, "GoToParent") { KeyData = Keys.Control | Keys.P }]);
         GitUICommands commands = new(services, _referenceRepository.Module);
 
         List<GridRowInfo> rows = [];

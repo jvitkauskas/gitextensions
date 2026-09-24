@@ -1,7 +1,6 @@
 using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitUI.AvaloniaHosting;
-using GitUI.HelperDialogs;
 using GitUI.Presentation.CommandsDialogs;
 using GitUIPluginInterfaces;
 
@@ -88,7 +87,7 @@ public sealed partial class AvaloniaHostingTests
             },
             AcknowledgeWhenDone);
 
-        AvaloniaDialogs.TryShowResetCurrentBranch(_owner, _commands, target, FormResetCurrentBranch.ResetType.Soft, out bool reset).Should().BeTrue();
+        AvaloniaDialogs.TryShowResetCurrentBranch(_owner, _commands, target, GitUI.ResetCurrentBranchType.Soft, out bool reset).Should().BeTrue();
 
         reset.Should().BeTrue();
         _referenceRepository.Module.RevParse("HEAD").ToString().Should().Be(first);

@@ -2,7 +2,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace GitExtensions.Plugins.ProxySwitcher;
 
-/// <summary>Avalonia port of <see cref="ProxySwitcherForm"/>; behaviour lives in <see cref="ProxySwitcherViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>ProxySwitcherForm</c>; behaviour lives in <c>ProxySwitcherViewModel</c>.</summary>
 public partial class ProxySwitcherWindow : DialogWindow
 {
     public ProxySwitcherWindow()

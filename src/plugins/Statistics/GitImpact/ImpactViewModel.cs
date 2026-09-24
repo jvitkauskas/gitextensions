@@ -5,7 +5,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.GitImpact;
 
-/// <summary>Strings of the Avalonia port of <see cref="FormImpact"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>FormImpact</c>; ids match the form.</summary>
 public sealed class ImpactStrings : ViewStrings
 {
     public ImpactStrings()
@@ -39,7 +39,7 @@ public sealed record ImpactSnapshot(IReadOnlyList<ImpactWeek> Weeks, IReadOnlyLi
 }
 
 /// <summary>
-///  View model of the Avalonia port of <see cref="FormImpact"/>: the commits of <see cref="ImpactLoader"/> summed up per week
+///  View model of the Avalonia port of <c>FormImpact</c>: the commits of <c>ImpactLoader</c> summed up per week
 ///  and author, as <c>ImpactControl.OnImpactUpdate</c> does; the view (<c>ImpactGraphView</c>) draws them.
 /// </summary>
 public sealed partial class ImpactViewModel : DialogViewModel, IDisposable

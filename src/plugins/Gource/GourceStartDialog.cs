@@ -11,7 +11,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.Gource;
 
-/// <summary>Shows the Avalonia port of <see cref="GourceStart"/> (docs/avalonia-port/PLAN.md, phase 7).</summary>
+/// <summary>Shows the Avalonia port of <c>GourceStart</c> (docs/avalonia-port/PLAN.md, phase 7).</summary>
 internal static class GourceStartDialog
 {
     /// <summary>

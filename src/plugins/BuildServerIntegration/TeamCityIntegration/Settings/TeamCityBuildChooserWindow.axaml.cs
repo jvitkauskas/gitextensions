@@ -3,7 +3,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace TeamCityIntegration.Settings;
 
-/// <summary>Avalonia port of <see cref="TeamCityBuildChooser"/>; behaviour lives in <see cref="TeamCityBuildChooserViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>TeamCityBuildChooser</c>; behaviour lives in <c>TeamCityBuildChooserViewModel</c>.</summary>
 public partial class TeamCityBuildChooserWindow : DialogWindow
 {
     public TeamCityBuildChooserWindow()

@@ -19,14 +19,6 @@ public class CreateLocalBranchesPlugin : GitPluginBase, IGitPluginForRepository
 
     public override bool Execute(GitUIEventArgs args)
     {
-        if (CreateLocalBranchesDialog.TryShow(args))
-        {
-            return true;
-        }
-
-        using CreateLocalBranchesForm frm = new(args);
-        frm.ShowDialog(args.OwnerForm);
-
-        return true;
+        return CreateLocalBranchesDialog.TryShow(args);
     }
 }

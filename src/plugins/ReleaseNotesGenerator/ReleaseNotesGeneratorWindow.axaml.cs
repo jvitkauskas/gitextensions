@@ -2,7 +2,7 @@ using GitUI.Avalonia.Hosting;
 
 namespace GitExtensions.Plugins.ReleaseNotesGenerator;
 
-/// <summary>Avalonia port of <see cref="ReleaseNotesGeneratorForm"/>; behaviour lives in <see cref="ReleaseNotesGeneratorViewModel"/>.</summary>
+/// <summary>Avalonia port of <c>ReleaseNotesGeneratorForm</c>; behaviour lives in <c>ReleaseNotesGeneratorViewModel</c>.</summary>
 public partial class ReleaseNotesGeneratorWindow : DialogWindow
 {
     public ReleaseNotesGeneratorWindow()

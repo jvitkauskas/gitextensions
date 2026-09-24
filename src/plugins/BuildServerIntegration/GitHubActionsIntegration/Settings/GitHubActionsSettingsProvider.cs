@@ -10,7 +10,7 @@ using ResourceManager;
 namespace GitExtensions.Plugins.GitHubActionsIntegration.Settings;
 
 /// <summary>
-///  The settings of the GitHub Actions integration (plugin API v2), as <see cref="GitHubActionsSettingsUserControl"/> (the
+///  The settings of the GitHub Actions integration (plugin API v2), as <c>GitHubActionsSettingsUserControl</c> (the
 ///  WinForms control of plugin API v1, which the host no longer uses): the owner and the repository are suggested from the
 ///  first GitHub remote.
 /// </summary>

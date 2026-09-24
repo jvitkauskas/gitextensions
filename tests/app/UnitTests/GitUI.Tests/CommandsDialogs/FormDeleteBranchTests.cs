@@ -19,8 +19,8 @@ public sealed class FormDeleteBranchTests
             new(LinkedWorktreePath, GitWorktreeHeadType.Branch, "bbb", "feature", IsDeleted: false),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
 
         result.HasDeletedWorktrees.Should().BeFalse();
         result.MainWorktreeBranches.Should().BeEmpty();
@@ -38,8 +38,8 @@ public sealed class FormDeleteBranchTests
             new(LinkedWorktreePath, GitWorktreeHeadType.Branch, "bbb", "feature", IsDeleted: false),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, LinkedWorktreePath);
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, LinkedWorktreePath);
 
         result.MainWorktreeBranches.Should().ContainSingle()
             .Which.Branch.Name.Should().Be("master");
@@ -58,8 +58,8 @@ public sealed class FormDeleteBranchTests
             new(LinkedWorktreePath, GitWorktreeHeadType.Branch, "bbb", "feature", IsDeleted: false),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
 
         result.LinkedWorktreeBranches.Should().ContainSingle()
             .Which.Branch.Name.Should().Be("feature");
@@ -79,8 +79,8 @@ public sealed class FormDeleteBranchTests
         ];
 
         // Current dir matches the linked worktree — should be skipped
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, LinkedWorktreePath);
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, LinkedWorktreePath);
 
         result.LinkedWorktreeBranches.Should().BeEmpty();
         result.MainWorktreeBranches.Should().BeEmpty();
@@ -97,8 +97,8 @@ public sealed class FormDeleteBranchTests
             new(LinkedWorktreePath, GitWorktreeHeadType.Branch, "bbb", "stale-branch", IsDeleted: true),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
 
         result.HasDeletedWorktrees.Should().BeTrue();
         result.LinkedWorktreeBranches.Should().BeEmpty();
@@ -115,8 +115,8 @@ public sealed class FormDeleteBranchTests
             new(LinkedWorktreePath, GitWorktreeHeadType.Branch, "bbb", "stale-branch", IsDeleted: true),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, MainWorktreePath);
 
         result.HasDeletedWorktrees.Should().BeFalse();
     }
@@ -131,8 +131,8 @@ public sealed class FormDeleteBranchTests
             new(LinkedWorktreePath, GitWorktreeHeadType.Detached, "ccc", null, IsDeleted: false),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, @"C:\repos\other");
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, @"C:\repos\other");
 
         result.MainWorktreeBranches.Should().BeEmpty();
         result.LinkedWorktreeBranches.Should().BeEmpty();
@@ -154,8 +154,8 @@ public sealed class FormDeleteBranchTests
             new(SecondLinkedWorktreePath, GitWorktreeHeadType.Branch, "ccc", "hotfix", IsDeleted: false),
         ];
 
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, @"C:\repos\other");
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, @"C:\repos\other");
 
         result.MainWorktreeBranches.Should().ContainSingle()
             .Which.Branch.Name.Should().Be("master");
@@ -177,8 +177,8 @@ public sealed class FormDeleteBranchTests
         ];
 
         // Current dir is lowercase version of the linked worktree path
-        FormDeleteBranch.WorktreeBranchClassification result =
-            FormDeleteBranch.ClassifyWorktreeBranches(branches, worktrees, @"C:\repos\feature");
+        GitUI.AvaloniaHosting.AvaloniaDialogs.WorktreeBranchClassification result =
+            GitUI.AvaloniaHosting.AvaloniaDialogs.ClassifyWorktreeBranches(branches, worktrees, @"C:\repos\feature");
 
         result.LinkedWorktreeBranches.Should().BeEmpty();
     }

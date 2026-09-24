@@ -7,7 +7,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.GitStatistics;
 
-/// <summary>Strings of the Avalonia port of <see cref="FormGitStatistics"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>FormGitStatistics</c>; ids match the form.</summary>
 public sealed class GitStatisticsStrings : ViewStrings
 {
     public GitStatisticsStrings()
@@ -94,7 +94,7 @@ public sealed record PieSlice(decimal Value, string ToolTip);
 /// <summary>The counts of a <see cref="LineCounter"/> at a point of the counting.</summary>
 public sealed record LinesOfCodeCounts(int Code, int Test, int Blank, int Comment, int Designer, int Total, IReadOnlyList<KeyValuePair<string, int>> PerExtension);
 
-/// <summary>View model of the Avalonia port of <see cref="FormGitStatistics"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>FormGitStatistics</c>.</summary>
 public sealed partial class GitStatisticsViewModel : DialogViewModel
 {
     private readonly IGitModule _module;

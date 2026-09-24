@@ -118,14 +118,12 @@ internal static class Program
 
         if (OperatingSystem.IsWindows())
         {
-            WebBrowserEmulationMode.SetBrowserFeatureControl();
-            FormFixHome.CheckHomePath();
+            GitUI.AvaloniaHosting.AvaloniaStartupDialogs.CheckHomePath();
         }
 
-        if (string.IsNullOrEmpty(AppSettings.Translation) && !GitUI.AvaloniaHosting.AvaloniaStartupDialogs.TryShowChooseTranslation())
+        if (string.IsNullOrEmpty(AppSettings.Translation))
         {
-            using FormChooseTranslation formChoose = new();
-            formChoose.ShowDialog();
+            GitUI.AvaloniaHosting.AvaloniaStartupDialogs.TryShowChooseTranslation();
         }
 
         AppSettings.TelemetryEnabled ??= MessageBoxes.Show(
@@ -156,11 +154,9 @@ internal static class Program
                 if (AppSettings.CheckSettings)
                 {
                     CheckSettingsLogic checkSettingsLogic = new(commonLogic);
-                    SettingsPageHostMock fakePageHost = new(checkSettingsLogic);
-                    using ChecklistSettingsPage checklistSettingsPage = SettingsPageBase.Create<ChecklistSettingsPage>(fakePageHost, _serviceContainer);
-                    if (!checklistSettingsPage.CheckSettings())
+                    if (!GitUI.AvaloniaHosting.AvaloniaStartupDialogs.CheckSettings(uiCommands, commonLogic))
                     {
-                        if (!checkSettingsLogic.AutoSolveAllSettings() || !checklistSettingsPage.CheckSettings())
+                        if (!checkSettingsLogic.AutoSolveAllSettings() || !GitUI.AvaloniaHosting.AvaloniaStartupDialogs.CheckSettings(uiCommands, commonLogic))
                         {
                             uiCommands.StartSettingsDialog(owner: null);
                         }
@@ -175,11 +171,6 @@ internal static class Program
         catch
         {
             // TODO: remove catch-all
-        }
-
-        if (OperatingSystem.IsWindows())
-        {
-            MouseWheelRedirector.Active = true;
         }
 
         GitUICommands commands = new(_serviceContainer, new GitModule(_serviceContainer.GetRequiredService<IGitExecutorProvider>(), GetWorkingDir(args)));

@@ -34,7 +34,7 @@ public class FormOpenDirectoryTests
     {
         string path = @"C:\some\directory\that\does\not\exist\at\all";
 
-        FormOpenDirectory.TestAccessor.OpenGitRepository(_executorProvider, path, _localRepositoryManager).Should().BeNull();
+        GitUI.AvaloniaHosting.AvaloniaDialogs.OpenGitRepository(_executorProvider, path, _localRepositoryManager).Should().BeNull();
         _localRepositoryManager.DidNotReceive().AddAsMostRecentAsync(Arg.Any<string>());
     }
 
@@ -45,7 +45,7 @@ public class FormOpenDirectoryTests
         string path = Path.GetTempPath();
         path[^1].Should().Be(Path.DirectorySeparatorChar);
 
-        FormOpenDirectory.TestAccessor.OpenGitRepository(_executorProvider, path, _localRepositoryManager).Should().BeNull();
+        GitUI.AvaloniaHosting.AvaloniaDialogs.OpenGitRepository(_executorProvider, path, _localRepositoryManager).Should().BeNull();
         _localRepositoryManager.DidNotReceive().AddAsMostRecentAsync(Arg.Any<string>());
     }
 
@@ -58,7 +58,7 @@ public class FormOpenDirectoryTests
 
         // ensure absence of the trailing slash isn't a problem
         path = path[..^1];
-        ((Action)(() => FormOpenDirectory.TestAccessor.OpenGitRepository(_executorProvider, path, _localRepositoryManager))).Should().NotThrow();
+        ((Action)(() => GitUI.AvaloniaHosting.AvaloniaDialogs.OpenGitRepository(_executorProvider, path, _localRepositoryManager))).Should().NotThrow();
     }
 
     [Test]
@@ -68,7 +68,7 @@ public class FormOpenDirectoryTests
         string path = Path.GetTempPath();
         path[^1].Should().Be(Path.DirectorySeparatorChar);
 
-        IGitModule? module = FormOpenDirectory.TestAccessor.OpenGitRepository(_executorProvider, _referenceRepository.Module.WorkingDir, _localRepositoryManager);
+        IGitModule? module = GitUI.AvaloniaHosting.AvaloniaDialogs.OpenGitRepository(_executorProvider, _referenceRepository.Module.WorkingDir, _localRepositoryManager);
 
         module.Should().NotBeNull();
         module.WorkingDir.Should().Be(_referenceRepository.Module.WorkingDir);

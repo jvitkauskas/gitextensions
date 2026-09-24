@@ -123,13 +123,7 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
         {
             Settings.SetValue(_gourceArguments.Name, gourceArguments);
             Settings.SetValue(_gourcePath.Name, gourcePath);
-            return false;
         }
-
-        using GourceStart gourceStart = new(pathToGource, args, _gourceArguments.ValueOrDefault(Settings));
-        gourceStart.ShowDialog(args.OwnerForm);
-        Settings.SetValue(_gourceArguments.Name, gourceStart.GourceArguments);
-        Settings.SetValue(_gourcePath.Name, gourceStart.PathToGource);
 
         return false;
     }

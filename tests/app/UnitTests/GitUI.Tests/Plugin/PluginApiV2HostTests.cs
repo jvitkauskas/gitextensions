@@ -4,7 +4,6 @@ using GitExtensions.Extensibility.Plugins;
 using GitExtensions.Extensibility.Settings;
 using GitUI;
 using GitUI.AvaloniaHosting;
-using GitUI.Blame;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
@@ -59,48 +58,6 @@ public sealed class PluginApiV2HostTests
     }
 
     [Test]
-    public void Blame_menu_shows_the_items_of_a_repository_host_plugin_of_API_v2()
-    {
-        IRepositoryHostPlugin plugin = Substitute.For<IRepositoryHostPlugin, IBlameContextMenuProvider>();
-        GitBlameContext? context = null;
-        ((IBlameContextMenuProvider)plugin).GetBlameContextMenuItems(Arg.Do<GitBlameContext>(c => context = c)).Returns([new PluginMenuItem("View in GitHub")]);
-        using BlameControl blame = new();
-        BlameControl.TestAccessor accessor = blame.GetTestAccessor();
-        int ownItems = accessor.ContextMenu.Items.Count;
-        ObjectId blameId = ObjectId.Random();
-
-        blame.ConfigureRepositoryHostPlugin(plugin);
-        accessor.SetBlamed("file.txt", blameId);
-        accessor.OnContextMenuOpening();
-        accessor.OnContextMenuOpening();
-
-#pragma warning disable CS0618 // Type or member is obsolete: plugin API v1
-        plugin.DidNotReceive().ConfigureContextMenu(Arg.Any<ContextMenuStrip>());
-#pragma warning restore CS0618
-        context!.FileName.Should().Be("file.txt");
-        context.BlameId.Should().Be(blameId);
-        accessor.ContextMenu.Items.Count.Should().Be(ownItems + 1, "the items are replaced each time the menu opens");
-        accessor.ContextMenu.Items[ownItems].Text.Should().Be("View in GitHub");
-
-        // Without a repository host plugin, its items go.
-        blame.ConfigureRepositoryHostPlugin(null);
-        accessor.ContextMenu.Items.Count.Should().Be(ownItems);
-    }
-
-    [Test]
-    public void Blame_menu_is_configured_by_a_repository_host_plugin_of_API_v1()
-    {
-        IRepositoryHostPlugin plugin = Substitute.For<IRepositoryHostPlugin>();
-        using BlameControl blame = new();
-
-        blame.ConfigureRepositoryHostPlugin(plugin);
-
-#pragma warning disable CS0618 // Type or member is obsolete: plugin API v1
-        plugin.Received(1).ConfigureContextMenu(blame.GetTestAccessor().ContextMenu);
-#pragma warning restore CS0618
-    }
-
-    [Test]
     public void Action_setting_link_edits_the_values_shown_by_the_other_bindings()
     {
         StringSetting projectName = new("ProjectName", "Project name", defaultValue: "");
@@ -126,46 +83,6 @@ public sealed class PluginApiV2HostTests
         context.Values.SettingLevel.Should().Be(SettingLevel.Local);
         bindings[0].GetControl().Text.Should().Be("project of https://ci.example.org");
         bindings[2].GetControl().Should().BeOfType<LinkLabel>().Which.Text.Should().Be("Choose");
-    }
-
-    [Test]
-    public void Build_server_settings_of_API_v2_are_shown_with_the_suggested_values_and_saved()
-    {
-        FakeBuildServerSettingsProvider provider = new();
-        using BuildServerSettingsProviderControl control = new(provider);
-        control.Initialize("repo", ["https://example.org/repo.git"]);
-        MemorySettingsSource settings = new(SettingLevel.Local);
-
-        control.LoadSettings(settings);
-
-        provider.Context!.RemoteUrls.Should().Equal(["https://example.org/repo.git"]);
-        control.Bindings.Select(b => b.Caption()).Should().Equal(["Project name", "Server URL", "", "Load test results"]);
-        control.Bindings[0].GetControl().Text.Should().Be("repo", "the suggested value is shown while unset");
-        control.Bindings[1].GetControl().Text.Should().BeEmpty();
-
-        control.Bindings[1].GetControl().Text = "https://ci.example.org";
-        control.SaveSettings(settings);
-
-        settings.GetValue("ProjectName").Should().Be("repo", "the suggested value is saved, as the v1 controls did");
-        settings.GetValue("ServerUrl").Should().Be("https://ci.example.org");
-        provider.Validated!.GetValue("ServerUrl").Should().Be("https://ci.example.org");
-    }
-
-    [Test]
-    public void Build_server_settings_of_API_v2_are_not_saved_when_invalid()
-    {
-        FakeBuildServerSettingsProvider provider = new() { Error = "invalid" };
-        using BuildServerSettingsProviderControl control = new(provider);
-        List<string> errors = [];
-        control.ShowError = errors.Add;
-        control.Initialize("repo", []);
-        MemorySettingsSource settings = new(SettingLevel.Local);
-        control.LoadSettings(settings);
-
-        control.SaveSettings(settings);
-
-        errors.Should().Equal(["invalid"]);
-        settings.Names.Should().BeEmpty();
     }
 
     [Test]

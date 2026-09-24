@@ -101,8 +101,8 @@ public sealed partial class AvaloniaHostingTests
             viewModel.OpenCommand.Execute(null);
         });
 
-        IGitModule? module = GitUI.CommandsDialogs.BrowseDialog.FormOpenDirectory.OpenModule(
-            _owner, _commands.GetRequiredService<IGitExecutorProvider>(), _referenceRepository.Module);
+        AvaloniaDialogs.TryShowOpenDirectory(
+            _owner, _commands.GetRequiredService<IGitExecutorProvider>(), _referenceRepository.Module, out IGitModule? module).Should().BeTrue();
 
         module!.WorkingDir.Should().Be(workingDir);
     }
@@ -116,7 +116,8 @@ public sealed partial class AvaloniaHostingTests
             ((PuttyErrorViewModel)window.DataContext!).RetryCommand.Execute(null);
         });
 
-        FormPuttyError.AskForKey(_owner, out string? keyPath).Should().BeTrue();
+        AvaloniaDialogs.TryShowPuttyError(_owner, out bool retry, out string? keyPath);
+        retry.Should().BeTrue();
         keyPath.Should().BeNull();
     }
 

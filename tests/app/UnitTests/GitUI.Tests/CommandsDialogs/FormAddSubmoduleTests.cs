@@ -1,6 +1,5 @@
 ﻿using CommonTestUtils;
 using GitExtUtils;
-using GitUI.CommandsDialogs.SubmodulesDialog;
 
 #pragma warning disable SA1312 // Variable names should begin with lower-case letter (doesn't understand discards)
 
@@ -31,7 +30,7 @@ public class FormAddSubmoduleTests
     [Test]
     public void LoadRemoteRepoBranches_NoUrl([Values(null, "", " ")] string? url)
     {
-        FormAddSubmodule.TestAccessor.LoadRemoteRepoBranches(_gitExecutable, url!)
+        GitUI.AvaloniaHosting.AvaloniaDialogs.LoadRemoteRepoBranches(_gitExecutable, url!)
             .Should().BeEmpty();
     }
 
@@ -41,7 +40,7 @@ public class FormAddSubmoduleTests
     public void LoadRemoteRepoBranches_Url(string? url, string encodedUrl)
     {
         using IDisposable _ = MockupGitOutput(Heads, encodedUrl);
-        FormAddSubmodule.TestAccessor.LoadRemoteRepoBranches(_gitExecutable, url!)
+        GitUI.AvaloniaHosting.AvaloniaDialogs.LoadRemoteRepoBranches(_gitExecutable, url!)
             .Should().BeEquivalentTo(_branches);
     }
 
@@ -49,7 +48,7 @@ public class FormAddSubmoduleTests
     public void LoadRemoteRepoBranches_GitWarnings()
     {
         using IDisposable _ = MockupGitOutput($"warning: this\n{Heads}\nwarning: or that");
-        FormAddSubmodule.TestAccessor.LoadRemoteRepoBranches(_gitExecutable, DummyUrl)
+        GitUI.AvaloniaHosting.AvaloniaDialogs.LoadRemoteRepoBranches(_gitExecutable, DummyUrl)
             .Should().BeEquivalentTo(_branches);
     }
 
@@ -57,7 +56,7 @@ public class FormAddSubmoduleTests
     public void LoadRemoteRepoBranches_GitError()
     {
         using IDisposable _ = MockupGitOutput("error: no such repo");
-        FormAddSubmodule.TestAccessor.LoadRemoteRepoBranches(_gitExecutable, DummyUrl)
+        GitUI.AvaloniaHosting.AvaloniaDialogs.LoadRemoteRepoBranches(_gitExecutable, DummyUrl)
             .Should().BeEmpty();
     }
 

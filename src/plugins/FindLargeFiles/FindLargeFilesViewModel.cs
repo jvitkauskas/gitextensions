@@ -12,7 +12,7 @@ using GitUI.Presentation.Translations;
 
 namespace GitExtensions.Plugins.FindLargeFiles;
 
-/// <summary>Strings of the Avalonia port of <see cref="FindLargeFilesForm"/>; ids match the form.</summary>
+/// <summary>Strings of the Avalonia port of <c>FindLargeFilesForm</c>; ids match the form.</summary>
 public sealed class FindLargeFilesStrings : ViewStrings
 {
     public FindLargeFilesStrings()
@@ -98,7 +98,7 @@ public sealed class GitObjectRow : ObservableObject
     public void Refresh() => OnPropertyChanged(string.Empty);
 }
 
-/// <summary>View model of the Avalonia port of <see cref="FindLargeFilesForm"/>.</summary>
+/// <summary>View model of the Avalonia port of <c>FindLargeFilesForm</c>.</summary>
 public sealed partial class FindLargeFilesViewModel : DialogViewModel
 {
     private readonly float _threshold;
