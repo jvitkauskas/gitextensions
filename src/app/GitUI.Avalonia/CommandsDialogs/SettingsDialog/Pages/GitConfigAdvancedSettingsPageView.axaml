@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.GitConfigAdvancedSettingsPageView"
+             x:DataType="vm:GitConfigAdvancedSettingsPageViewModel">
+  <!-- Equivalent of GitConfigAdvancedSettingsPage: a three-state check box per setting, followed by its key. -->
+  <ItemsControl Name="flags" Margin="12,6,0,0" ItemsSource="{Binding Flags}">
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate>
+        <StackPanel Spacing="2" />
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate x:DataType="vm:GitConfigFlag">
+        <CheckBox IsThreeState="True" Content="{Binding Text}" IsChecked="{Binding Value}" IsVisible="{Binding IsVisible}" />
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             xmlns:text="using:System.Text"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.GitConfigSettingsPageView"
+             x:DataType="vm:GitConfigSettingsPageViewModel">
+  <!--
+    Equivalent of GitConfigSettingsPage (tableLayoutPanelGitConfig): the labels, the fields and their buttons, with
+    InvalidGitPathGlobal at the right of the user fields, then groupBoxLineEndings and the encoding.
+  -->
+  <Grid Classes="form" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+        ColumnSpacing="6" RowSpacing="4">
+    <Label Grid.Row="0" Content="{Binding Strings.UserName.AccessKeyText}" Target="userName" />
+    <TextBox Name="userName" Grid.Row="0" Grid.Column="1" Width="241" HorizontalAlignment="Left" Text="{Binding UserName}" IsEnabled="{Binding CanFindGitCmd}" />
+    <!-- Equivalent of InvalidGitPathGlobal. -->
+    <Border Name="invalidGitPath" Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" Grid.ColumnSpan="2" VerticalAlignment="Top" HorizontalAlignment="Right"
+            Classes="info" IsVisible="{Binding IsInvalidGitPathVisible}">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Image Source="avares://GitUI.Avalonia/Assets/StatusBadgeError.png" Width="16" Height="16" Margin="16,0" />
+        <TextBlock Text="{Binding Strings.InvalidGitPath.Text}" />
+      </StackPanel>
+    </Border>
+    <Label Grid.Row="1" Content="{Binding Strings.UserEmail.AccessKeyText}" Target="userEmail" />
+    <TextBox Name="userEmail" Grid.Row="1" Grid.Column="1" Width="241" HorizontalAlignment="Left" Text="{Binding UserEmail}" IsEnabled="{Binding CanFindGitCmd}" />
+    <Label Grid.Row="2" Content="{Binding Strings.CredentialHelper.AccessKeyText}" Target="credentialHelper"
+           IsVisible="{Binding IsCredentialHelperVisible}" />
+    <ComboBox Name="credentialHelper" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding CredentialHelpers}" Text="{Binding CredentialHelper}"
+              IsVisible="{Binding IsCredentialHelperVisible}" IsEnabled="{Binding IsCredentialHelperEnabled}" />
+    <Label Grid.Row="3" Content="{Binding Strings.Editor.AccessKeyText}" Target="editor" />
+    <ComboBox Name="editor" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+              ItemsSource="{Binding Editors}" Text="{Binding Editor}" IsEnabled="{Binding CanFindGitCmd}" />
+
+    <Label Grid.Row="4" Content="{Binding Strings.MergeTool.AccessKeyText}" Target="mergeTool" />
+    <ComboBox Name="mergeTool" Grid.Row="4" Grid.Column="1" Width="241" HorizontalAlignment="Left" IsEditable="True"
+              ItemsSource="{Binding MergeTools}" Text="{Binding MergeTool}" IsEnabled="{Binding CanFindGitCmd}" />
+    <Label Grid.Row="5" Content="{Binding Strings.MergeToolPath.AccessKeyText}" Target="mergeToolPath" />
+    <TextBox Name="mergeToolPath" Grid.Row="5" Grid.Column="1" Text="{Binding MergeToolPath}" IsEnabled="{Binding IsMergeToolPathEnabled}" />
+    <Button Name="mergeToolBrowse" Grid.Row="5" Grid.Column="2" MinWidth="123" HorizontalContentAlignment="Center"
+            Content="{Binding Strings.MergeToolBrowse.AccessKeyText}" AutomationProperties.Name="{Binding Strings.MergeToolBrowseName.Text}"
+            Command="{Binding BrowseMergeToolCommand}" IsEnabled="{Binding IsMergeToolSet}" />
+    <Label Grid.Row="6" Content="{Binding Strings.MergeToolCommand.AccessKeyText}" Target="mergeToolCommand" />
+    <TextBox Name="mergeToolCommand" Grid.Row="6" Grid.Column="1" Text="{Binding MergeToolCommand}" IsEnabled="{Binding IsMergeToolPathEnabled}" />
+    <Button Name="mergeToolCommandSuggest" Grid.Row="6" Grid.Column="2" MinWidth="123" HorizontalContentAlignment="Center"
+            Content="{Binding Strings.MergeToolCommandSuggest.AccessKeyText}" AutomationProperties.Name="{Binding Strings.MergeToolCommandSuggestName.Text}"
+            Command="{Binding SuggestMergeToolCommandCommand}" IsEnabled="{Binding IsMergeToolSet}" />
+
+    <Label Grid.Row="7" Content="{Binding Strings.DiffTool.AccessKeyText}" Target="diffTool" />
+    <ComboBox Name="diffTool" Grid.Row="7" Grid.Column="1" Width="241" HorizontalAlignment="Left" IsEditable="True"
+              ItemsSource="{Binding DiffTools}" Text="{Binding DiffTool}" />
+    <Label Grid.Row="8" Content="{Binding Strings.DiffToolPath.AccessKeyText}" Target="diffToolPath" />
+    <TextBox Name="diffToolPath" Grid.Row="8" Grid.Column="1" Text="{Binding DiffToolPath}" IsEnabled="{Binding IsDiffToolSet}" />
+    <Button Name="diffToolBrowse" Grid.Row="8" Grid.Column="2" MinWidth="123" HorizontalContentAlignment="Center"
+            Content="{Binding Strings.DiffToolBrowse.AccessKeyText}" AutomationProperties.Name="{Binding Strings.DiffToolBrowseName.Text}"
+            Command="{Binding BrowseDiffToolCommand}" IsEnabled="{Binding IsDiffToolSet}" />
+    <Label Grid.Row="9" Content="{Binding Strings.DiffToolCommand.AccessKeyText}" Target="diffToolCommand" />
+    <TextBox Name="diffToolCommand" Grid.Row="9" Grid.Column="1" Text="{Binding DiffToolCommand}" IsEnabled="{Binding IsDiffToolSet}" />
+    <Button Name="diffToolCommandSuggest" Grid.Row="9" Grid.Column="2" MinWidth="123" HorizontalContentAlignment="Center"
+            Content="{Binding Strings.DiffToolCommandSuggest.AccessKeyText}" AutomationProperties.Name="{Binding Strings.DiffToolCommandSuggestName.Text}"
+            Command="{Binding SuggestDiffToolCommandCommand}" IsEnabled="{Binding IsDiffToolSet}" />
+
+    <Label Grid.Row="10" Content="{Binding Strings.CommitTemplatePath.AccessKeyText}" Target="commitTemplatePath" />
+    <TextBox Name="commitTemplatePath" Grid.Row="10" Grid.Column="1" Text="{Binding CommitTemplatePath}" IsEnabled="{Binding CanFindGitCmd}" />
+    <Button Name="commitTemplateBrowse" Grid.Row="10" Grid.Column="2" MinWidth="123" HorizontalContentAlignment="Center"
+            Content="{Binding Strings.CommitTemplateBrowse.AccessKeyText}" AutomationProperties.Name="{Binding Strings.CommitTemplateBrowseName.Text}"
+            Command="{Binding BrowseCommitTemplateCommand}" />
+
+    <HeaderedContentControl Grid.Row="11" Grid.ColumnSpan="4" Classes="groupBox" Margin="0,4,0,6" Header="{Binding Strings.LineEndings.PlainText}">
+      <StackPanel Spacing="2">
+        <RadioButton Name="autoCrlfTrue" GroupName="autoCrlf" Content="{Binding Strings.AutoCrlfTrue.AccessKeyText}" IsChecked="{Binding AutoCrlfTrue}" />
+        <RadioButton Name="autoCrlfInput" GroupName="autoCrlf" Content="{Binding Strings.AutoCrlfInput.AccessKeyText}" IsChecked="{Binding AutoCrlfInput}" />
+        <RadioButton Name="autoCrlfFalse" GroupName="autoCrlf" Content="{Binding Strings.AutoCrlfFalse.AccessKeyText}" IsChecked="{Binding AutoCrlfFalse}" />
+        <RadioButton Name="autoCrlfNotSet" GroupName="autoCrlf" Content="{Binding Strings.AutoCrlfNotSet.AccessKeyText}" IsChecked="{Binding AutoCrlfNotSet}" />
+      </StackPanel>
+    </HeaderedContentControl>
+
+    <Label Grid.Row="12" Content="{Binding Strings.FilesEncoding.AccessKeyText}" Target="filesEncoding" />
+    <ComboBox Name="filesEncoding" Grid.Row="12" Grid.Column="1" Width="241" HorizontalAlignment="Left"
+              ItemsSource="{Binding Encodings}" SelectedItem="{Binding FilesEncoding}">
+      <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="text:Encoding">
+          <TextBlock Text="{Binding EncodingName}" />
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+    <Button Name="configureEncoding" Grid.Row="12" Grid.Column="2" MinWidth="123" HorizontalContentAlignment="Center"
+            Content="{Binding Strings.ConfigureEncoding.AccessKeyText}" Command="{Binding ConfigureEncodingCommand}" />
+  </Grid>
+</UserControl>

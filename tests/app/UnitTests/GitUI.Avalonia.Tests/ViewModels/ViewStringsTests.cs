@@ -113,6 +113,13 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new PatchGridStrings()).SetArgDisplayNames(nameof(PatchGridStrings));
         yield return new TestCaseData(new RebaseStrings()).SetArgDisplayNames(nameof(RebaseStrings));
         yield return new TestCaseData(new ApplyPatchStrings()).SetArgDisplayNames(nameof(ApplyPatchStrings));
+        yield return new TestCaseData(new GitSettingsPageStrings()).SetArgDisplayNames(nameof(GitSettingsPageStrings));
+        yield return new TestCaseData(new GitConfigSettingsPageStrings()).SetArgDisplayNames(nameof(GitConfigSettingsPageStrings));
+        yield return new TestCaseData(new GitConfigAdvancedSettingsPageStrings()).SetArgDisplayNames(nameof(GitConfigAdvancedSettingsPageStrings));
+        yield return new TestCaseData(new SshSettingsPageStrings()).SetArgDisplayNames(nameof(SshSettingsPageStrings));
+        yield return new TestCaseData(new BuildServerIntegrationSettingsPageStrings()).SetArgDisplayNames(nameof(BuildServerIntegrationSettingsPageStrings));
+        yield return new TestCaseData(new RevisionLinksSettingsPageStrings()).SetArgDisplayNames(nameof(RevisionLinksSettingsPageStrings));
+        yield return new TestCaseData(new ShellExtensionSettingsPageStrings()).SetArgDisplayNames(nameof(ShellExtensionSettingsPageStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

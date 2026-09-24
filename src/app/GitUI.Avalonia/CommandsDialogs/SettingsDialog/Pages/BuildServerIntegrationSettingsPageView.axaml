@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.BuildServerIntegrationSettingsPageView"
+             x:DataType="vm:BuildServerIntegrationSettingsPageViewModel">
+  <!--
+    Equivalent of BuildServerIntegrationSettingsPage (tableLayoutPanel1): the check boxes and the build server type are enabled
+    once the plugins are found; below them, the settings control of the plugin (buildServerSettingsPanel), set by the code.
+  -->
+  <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+    <TextBlock Grid.ColumnSpan="2" Margin="0,0,0,26" Text="{Binding Strings.Info.Text}" TextWrapping="Wrap" />
+    <CheckBox Name="enableIntegration" Grid.Row="1" Grid.ColumnSpan="2" IsThreeState="True" IsEnabled="{Binding IsLoaded}"
+              Content="{Binding Strings.EnableIntegration.AccessKeyText}" IsChecked="{Binding IntegrationEnabled}" />
+    <CheckBox Name="showBuildResultPage" Grid.Row="2" Grid.ColumnSpan="2" IsThreeState="True" IsEnabled="{Binding IsLoaded}"
+              Content="{Binding Strings.ShowBuildResultPage.AccessKeyText}" IsChecked="{Binding ShowBuildResultPage}" />
+    <Label Grid.Row="3" Content="{Binding Strings.BuildServerType.AccessKeyText}" Target="buildServerType" />
+    <ComboBox Name="buildServerType" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsEnabled="{Binding IsLoaded}"
+              ItemsSource="{Binding BuildServerTypes}" SelectedItem="{Binding SelectedBuildServerType}" />
+    <Border Name="buildServerSettingsPanel" Grid.Row="4" Grid.ColumnSpan="2" Margin="0,10,0,0" MinHeight="197" />
+  </Grid>
+</UserControl>

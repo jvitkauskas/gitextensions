@@ -1,4 +1,5 @@
 using GitCommands;
+using GitCommands.Git;
 using GitCommands.Settings;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Settings;
@@ -32,7 +33,8 @@ internal static partial class AvaloniaDialogs
 
         CommonLogic commonLogic = new(commands.Module);
         SettingsDialogViewModel viewModel = new(ViewStrings.Load<SettingsDialogStrings>(), new SettingsDialogHost(commonLogic, owner));
-        AddSettingsPages(viewModel, commonLogic, commands.Module.IsValidGitWorkingDir());
+        SettingsPagesHost pagesHost = new(commands, commonLogic);
+        AddSettingsPages(viewModel, commonLogic, pagesHost, commands.Module.IsValidGitWorkingDir(), commands.Module.WorkingDir);
 
         // As ShowSettingsDialog: the pages read and write AppSettings in the global settings of the dialog until saved.
         AppSettings.UsingContainer(commonLogic.DistributedSettingsSet.GlobalSettings, () =>
@@ -41,12 +43,19 @@ internal static partial class AvaloniaDialogs
                 () =>
                 {
                     SettingsWindow window = new() { DataContext = viewModel };
+                    pagesHost.Window = window;
                     window.Opened += (_, _) => viewModel.Open(initialPage is SettingsPageReferenceByType byType ? byType.SettingsPageType.Name : null);
                     return window;
                 },
                 owner,
                 positionName: nameof(FormSettings));
         });
+
+        // The pages holding controls (the settings controls of the build server plugins) release them.
+        foreach (IDisposable page in viewModel.Pages.OfType<IDisposable>())
+        {
+            page.Dispose();
+        }
 
         saved = viewModel.IsSaved;
         return true;
@@ -57,7 +66,7 @@ internal static partial class AvaloniaDialogs
     ///  (<c>SettingsPageWithHeader</c>: global; <c>DistributedSettingsPage</c> and <c>GitConfigBaseSettingsPage</c>: the
     ///  levels of the repository too, in a repository). The pages not ported yet are left out.
     /// </summary>
-    private static void AddSettingsPages(SettingsDialogViewModel viewModel, CommonLogic commonLogic, bool canSaveInsideRepo)
+    private static void AddSettingsPages(SettingsDialogViewModel viewModel, CommonLogic commonLogic, SettingsPagesHost pagesHost, bool canSaveInsideRepo, string workingDir)
     {
         DistributedSettingsSet distributed = commonLogic.DistributedSettingsSet;
         GitConfigSettingsSet gitConfig = commonLogic.GitConfigSettingsSet;
@@ -81,7 +90,6 @@ internal static partial class AvaloniaDialogs
                 [SettingsLevel.System] = gitConfig.SystemSettings,
             }
             : new() { [SettingsLevel.Global] = gitConfig.GlobalSettings };
-        _ = gitConfigLevels;
 
         SettingsDialogStrings strings = viewModel.Strings;
 
@@ -89,15 +97,28 @@ internal static partial class AvaloniaDialogs
         const string gitExtensions = nameof(GitExtensionsSettingsGroup);
         viewModel.AddPage(new GroupSettingsPageViewModel(strings.GitExtensionsGroup.Text, gitExtensions), null, "GitExtensionsLogo16", none);
 
+        Add(new RevisionLinksSettingsPageViewModel(ViewStrings.Load<RevisionLinksSettingsPageStrings>(), pagesHost), gitExtensions, "Link", distributedLevels);
+        Add(new BuildServerIntegrationSettingsPageViewModel(ViewStrings.Load<BuildServerIntegrationSettingsPageStrings>(), pagesHost), gitExtensions, "Integration", distributedLevels);
+
+        if (OperatingSystem.IsWindows())
+        {
+            Add(new ShellExtensionSettingsPageViewModel(ViewStrings.Load<ShellExtensionSettingsPageStrings>(), pagesHost), gitExtensions, "ShellExtensions", global);
+        }
+
         // >> Detailed
         Add(new DetailedSettingsPageViewModel(ViewStrings.Load<DetailedSettingsPageStrings>()), gitExtensions, "Settings", distributedLevels);
         const string detailed = nameof(DetailedSettingsPage);
         Add(new CommitDialogSettingsPageViewModel(ViewStrings.Load<CommitDialogSettingsPageStrings>()), detailed, "CommitSummary", global);
         Add(new BlameViewerSettingsPageViewModel(ViewStrings.Load<BlameViewerSettingsPageStrings>()), detailed, "Blame", global);
 
+        Add(new SshSettingsPageViewModel(ViewStrings.Load<SshSettingsPageStrings>(), pagesHost, pagesHost), gitExtensions, "Key", global);
+
         // Git settings
         const string git = nameof(GitSettingsGroup);
         viewModel.AddPage(new GroupSettingsPageViewModel(strings.GitGroup.Text, git), null, "GitLogo16", none);
+        Add(new GitSettingsPageViewModel(ViewStrings.Load<GitSettingsPageStrings>(), pagesHost, pagesHost), git, "FolderOpen", global);
+        Add(new GitConfigSettingsPageViewModel(ViewStrings.Load<GitConfigSettingsPageStrings>(), pagesHost, pagesHost, workingDir), git, "GeneralSettings", gitConfigLevels);
+        Add(new GitConfigAdvancedSettingsPageViewModel(ViewStrings.Load<GitConfigAdvancedSettingsPageStrings>(), pagesHost, GitVersion.Current.SupportUpdateRefs), git, "AdvancedSettings", gitConfigLevels);
         Add(IntroductionSettingsPageViewModel.CreateGitRoot(), git, null, none, asRoot: true);
 
         // Plugins settings

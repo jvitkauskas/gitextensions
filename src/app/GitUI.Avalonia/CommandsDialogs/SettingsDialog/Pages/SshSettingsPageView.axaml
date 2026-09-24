@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.SshSettingsPageView"
+             x:DataType="vm:SshSettingsPageViewModel">
+  <!-- Equivalent of SshSettingsPage: groupBox1 (the ssh client), then groupBox2 (PuTTY, shown with it). -->
+  <StackPanel>
+    <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.SshClient.PlainText}">
+      <Grid ColumnDefinitions="140,*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+        <RadioButton Name="putty" GroupName="sshClient" Content="{Binding Strings.Putty.AccessKeyText}" IsChecked="{Binding IsPutty}" />
+        <RadioButton Name="openSsh" Grid.Row="1" GroupName="sshClient" Content="{Binding Strings.OpenSsh.AccessKeyText}" IsChecked="{Binding IsOpenSsh}" />
+        <!-- Equivalent of label18. -->
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Classes="info" VerticalAlignment="Center">
+          <TextBlock Name="sshInfo" Text="{Binding Strings.SshInfo.Text}" TextWrapping="Wrap" />
+        </Border>
+        <RadioButton Name="other" Grid.Row="2" GroupName="sshClient" Content="{Binding Strings.Other.AccessKeyText}" IsChecked="{Binding IsOther}" />
+        <TextBox Name="otherSsh" Grid.Row="2" Grid.Column="1" MinWidth="300" MaxLength="300" VerticalAlignment="Center"
+                 Text="{Binding OtherSsh}" IsEnabled="{Binding IsOther}" />
+        <Button Name="otherSshBrowse" Grid.Row="2" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center"
+                Content="{Binding Strings.OtherSshBrowse.AccessKeyText}" Command="{Binding BrowseOtherSshCommand}" IsEnabled="{Binding IsOther}" />
+      </Grid>
+    </HeaderedContentControl>
+    <HeaderedContentControl Name="configurePutty" Classes="groupBox" Header="{Binding Strings.ConfigurePutty.PlainText}" IsVisible="{Binding IsPutty}">
+      <Grid Classes="form" ColumnDefinitions="140,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
+        <Label Content="{Binding Strings.PlinkPath.AccessKeyText}" Target="plinkPath" />
+        <TextBox Name="plinkPath" Grid.Column="1" MinWidth="300" MaxLength="300" Text="{Binding PlinkPath}" />
+        <Button Name="plinkBrowse" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center"
+                Content="{Binding Strings.PlinkBrowse.AccessKeyText}" Command="{Binding BrowsePlinkCommand}" />
+        <Label Grid.Row="1" Content="{Binding Strings.PuttygenPath.AccessKeyText}" Target="puttygenPath" />
+        <TextBox Name="puttygenPath" Grid.Row="1" Grid.Column="1" MinWidth="300" MaxLength="300" Text="{Binding PuttygenPath}" />
+        <Button Name="puttygenBrowse" Grid.Row="1" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center"
+                Content="{Binding Strings.PuttygenBrowse.AccessKeyText}" Command="{Binding BrowsePuttygenCommand}" />
+        <Label Grid.Row="2" Content="{Binding Strings.PageantPath.AccessKeyText}" Target="pageantPath" />
+        <TextBox Name="pageantPath" Grid.Row="2" Grid.Column="1" MinWidth="300" MaxLength="300" Text="{Binding PageantPath}" />
+        <Button Name="pageantBrowse" Grid.Row="2" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center"
+                Content="{Binding Strings.PageantBrowse.AccessKeyText}" Command="{Binding BrowsePageantCommand}" />
+        <CheckBox Name="autostartPageant" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                  Content="{Binding Strings.AutostartPageant.AccessKeyText}" IsChecked="{Binding AutostartPageant}" />
+      </Grid>
+    </HeaderedContentControl>
+  </StackPanel>
+</UserControl>
