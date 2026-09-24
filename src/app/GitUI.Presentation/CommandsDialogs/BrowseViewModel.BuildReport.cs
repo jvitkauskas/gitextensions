@@ -22,7 +22,7 @@ public sealed class BuildReportStrings : ViewStrings
     public TranslatedText OpenReport { get; }
 }
 
-/// <summary>A web browser shown as a native view (the WinForms <c>WebBrowserControl</c> until the switch to WebView2).</summary>
+/// <summary>A web browser shown as a native view (WebView2, or the WinForms <c>WebBrowserControl</c> without its runtime).</summary>
 public interface IBrowseWebView : IDisposable
 {
     IEmbeddedNativeView View { get; }

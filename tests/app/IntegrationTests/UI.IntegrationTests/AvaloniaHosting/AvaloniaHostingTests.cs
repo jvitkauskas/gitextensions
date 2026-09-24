@@ -52,6 +52,9 @@ public sealed partial class AvaloniaHostingTests
         // The repository history of the main window and its dashboard, instead of the user's.
         _history = new LocalRepositoryManager(new InMemoryRepositoryStorage(), new NoHistoryMigration());
         AvaloniaDialogs.RepositoryHistoryForTests = _history;
+
+        // The browser of the build report tab keeps its data in the temporary folder, instead of the user's.
+        BrowseWebViews.UserDataFolderForTests = TestWebView2UserDataFolder;
         UserEnvironmentInformation.Initialise("0123456789012345678901234567890123456789", isDirty: false);
 
         _referenceRepository = new ReferenceRepository();
@@ -62,6 +65,9 @@ public sealed partial class AvaloniaHostingTests
         Application.DoEvents();
     }
 
+    [OneTimeTearDown]
+    public void OneTimeTearDown() => DeleteTestWebView2UserDataFolder();
+
     [TearDown]
     public void TearDown()
     {
@@ -69,6 +75,7 @@ public sealed partial class AvaloniaHostingTests
         _driveFailure = null;
         AvaloniaDialogHost.DialogShowingForTests = null;
         AvaloniaDialogs.RepositoryHistoryForTests = null;
+        BrowseWebViews.UserDataFolderForTests = null;
         _owner.Dispose();
         _referenceRepository.Dispose();
         Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "none");

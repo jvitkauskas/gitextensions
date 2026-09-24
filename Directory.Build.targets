@@ -32,4 +32,15 @@
       <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(Analyzer.Filename)').StartsWith('Avalonia.'))" />
     </ItemGroup>
   </Target>
+
+  <!--
+    The build report tab of the Avalonia main window (docs/avalonia-port/PLAN.md, phase 8) only uses the Core API of
+    WebView2 (Microsoft.Web.WebView2.Core.dll and the native WebView2Loader.dll): its WinForms and WPF controls, which
+    the package references for every project that reaches it, are neither referenced nor shipped.
+  -->
+  <Target Name="RemoveUnusedWebView2References" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.WinForms' Or '%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
 </Project>

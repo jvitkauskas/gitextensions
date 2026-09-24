@@ -36,7 +36,7 @@
           <Directory Id="DiffScriptsDir" Name="Diff-Scripts" />
           <Directory Id="DirConEmu" Name="ConEmu" />
           <Directory Id="ThemesDir" Name="Themes" />
-          <!-- Avalonia UI native libraries (docs/avalonia-port/PLAN.md), see Component.AvaloniaUI -->
+          <!-- Avalonia UI and WebView2 native libraries (docs/avalonia-port/PLAN.md), see Component.AvaloniaUI -->
           <Directory Id="RuntimesDir" Name="runtimes">
             <Directory Id="RuntimesWinX64Dir" Name="win-x64">
               <Directory Id="RuntimesWinX64NativeDir" Name="native" />
@@ -901,6 +901,10 @@
       <Component Id="MicroCom.Runtime.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\MicroCom.Runtime.dll" />
       </Component>
+      <!-- The build report tab: the WebView2 Core API, with its native loader in runtimes\win-*\native -->
+      <Component Id="Microsoft.Web.WebView2.Core.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Microsoft.Web.WebView2.Core.dll" />
+      </Component>
       <Component Id="SkiaSharp.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\SkiaSharp.dll" />
       </Component>
@@ -915,6 +919,9 @@
       <Component Id="native.win_x64.libSkiaSharp.dll" Guid="*">
         <File Id="native.win_x64.libSkiaSharp.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\libSkiaSharp.dll" />
       </Component>
+      <Component Id="native.win_x64.WebView2Loader.dll" Guid="*">
+        <File Id="native.win_x64.WebView2Loader.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-x64\native\WebView2Loader.dll" />
+      </Component>
     </DirectoryRef>
     <DirectoryRef Id="RuntimesWinArm64NativeDir">
       <Component Id="native.win_arm64.av_libglesv2.dll" Guid="*">
@@ -925,6 +932,9 @@
       </Component>
       <Component Id="native.win_arm64.libSkiaSharp.dll" Guid="*">
         <File Id="native.win_arm64.libSkiaSharp.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\libSkiaSharp.dll" />
+      </Component>
+      <Component Id="native.win_arm64.WebView2Loader.dll" Guid="*">
+        <File Id="native.win_arm64.WebView2Loader.dll" Source="$(var.ArtifactsPublishPath)\runtimes\win-arm64\native\WebView2Loader.dll" />
       </Component>
     </DirectoryRef>
     <ComponentGroup Id="Component.AvaloniaUI">
@@ -953,13 +963,16 @@
       <ComponentRef Id="GitUI.RevisionGraph.dll" />
       <ComponentRef Id="HarfBuzzSharp.dll" />
       <ComponentRef Id="MicroCom.Runtime.dll" />
+      <ComponentRef Id="Microsoft.Web.WebView2.Core.dll" />
       <ComponentRef Id="SkiaSharp.dll" />
       <ComponentRef Id="native.win_x64.av_libglesv2.dll" />
       <ComponentRef Id="native.win_x64.libHarfBuzzSharp.dll" />
       <ComponentRef Id="native.win_x64.libSkiaSharp.dll" />
+      <ComponentRef Id="native.win_x64.WebView2Loader.dll" />
       <ComponentRef Id="native.win_arm64.av_libglesv2.dll" />
       <ComponentRef Id="native.win_arm64.libHarfBuzzSharp.dll" />
       <ComponentRef Id="native.win_arm64.libSkiaSharp.dll" />
+      <ComponentRef Id="native.win_arm64.WebView2Loader.dll" />
     </ComponentGroup>
     <ComponentGroup Id="Component.PluginResources" />
     <DirectoryRef Id="ProgramMenuFolder">

@@ -31,6 +31,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations" />
+    <!-- The build report tab of the Avalonia main window (docs/avalonia-port/PLAN.md, phase 8): only the Core API is used. -->
+    <PackageReference Include="Microsoft.Web.WebView2" />
   </ItemGroup>
 
   <ItemGroup>
