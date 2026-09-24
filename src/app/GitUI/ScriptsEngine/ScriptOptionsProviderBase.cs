@@ -32,8 +32,9 @@ internal partial class ScriptOptionsProviderBase : IScriptOptionsProvider
             .Where(type => type != interfaceType && interfaceType.IsAssignableFrom(type))
             .SelectMany(implementingType =>
                 {
+                    // E.g. the proxies of the tests implement no options.
                     PropertyInfo? property = implementingType.GetProperty(nameof(ImplementedOptions), BindingFlags.Static | BindingFlags.NonPublic);
-                    return (string[])property!.GetValue(obj: null)!;
+                    return property?.GetValue(obj: null) as string[] ?? [];
                 })];
 
         static Type[] GetTypes(Assembly assembly)

@@ -180,7 +180,10 @@ public sealed partial class AvaloniaHostingTests
 
     [Test]
     public void RunCommandBasedOnArgument_fileeditor()
-        => RunVerb<FileEditorWindow>(["ge.exe", "fileeditor", "filename"]);
+    {
+        File.WriteAllText(Path.Join(_referenceRepository.Module.WorkingDir, "filename"), "text");
+        RunVerb<FileEditorWindow>(["ge.exe", "fileeditor", "filename"]);
+    }
 
     [Test]
     public void RunCommandBasedOnArgument_formatpatch()
@@ -284,13 +287,14 @@ public sealed partial class AvaloniaHostingTests
         => RunVerb<CommandlineHelpWindow>(["ge.exe", command]);
 
     /// <summary>
-    ///  Runs the verb of <paramref name="args"/>, which is to show a <typeparamref name="TWindow"/>; the window is closed
-    ///  (after <paramref name="drive"/>, if any).
+    ///  Runs the verb of <paramref name="args"/>, which is to show a <typeparamref name="TWindow"/> (modal or modeless); the
+    ///  window is closed (after <paramref name="drive"/>, if any).
     /// </summary>
     private void RunVerb<TWindow>(string[] args, bool? expectedResult = null, Action<DialogWindow>? drive = null)
         where TWindow : DialogWindow
     {
         Type? shown = null;
+        bool closed = false;
         DriveNextDialog(window =>
         {
             shown = window.GetType();
@@ -301,10 +305,14 @@ public sealed partial class AvaloniaHostingTests
             finally
             {
                 window.Close();
+                closed = true;
             }
         });
 
         bool result = _commands.GetTestAccessor().RunCommandBasedOnArgument(args);
+
+        // A modeless window (e.g. the file history) is still open.
+        PumpUntil(() => closed);
 
         shown.Should().Be(typeof(TWindow));
         if (expectedResult is bool expected)
