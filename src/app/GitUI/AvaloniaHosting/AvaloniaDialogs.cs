@@ -116,7 +116,7 @@ internal static partial class AvaloniaDialogs
     ///  The name under which the WinForms form persisted its position (its type name), if it did
     ///  (<c>enablePositionRestore</c>); the Avalonia dialog shares it.
     /// </param>
-    private static bool ShowDialog(Func<DialogWindow> createWindow, IWin32Window? owner, string? positionName = null)
+    internal static bool ShowDialog(Func<DialogWindow> createWindow, IWin32Window? owner, string? positionName = null)
     {
         AvaloniaUi.EnsureInitialized(GetOptions);
         DialogWindow window = createWindow();
@@ -130,7 +130,7 @@ internal static partial class AvaloniaDialogs
         => [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(hotkeySettingsName)
             .Select(hotkey => new HotkeyBinding(hotkey.CommandCode, (int)hotkey.KeyData))];
 
-    private static AvaloniaUiOptions GetOptions()
+    internal static AvaloniaUiOptions GetOptions()
     {
         // The modeless Avalonia windows get their text input in the WinForms message loop.
         AvaloniaKeyboardMessageFilter.Install();

@@ -86,6 +86,12 @@ public partial class TeamCitySettingsUserControl : GitExtensionsControl, IBuildS
     {
         try
         {
+            if (TeamCityBuildChooserDialog.TryShow(this, TeamCityServerUrl.Text, TeamCityProjectName.Text, TeamCityBuildIdFilter.Text, out (string ProjectName, string BuildIdFilter)? chosen))
+            {
+                (TeamCityProjectName.Text, TeamCityBuildIdFilter.Text) = chosen ?? (TeamCityProjectName.Text, TeamCityBuildIdFilter.Text);
+                return;
+            }
+
             TeamCityBuildChooser teamCityBuildChooser = new(TeamCityServerUrl.Text, TeamCityProjectName.Text, TeamCityBuildIdFilter.Text);
             DialogResult result = teamCityBuildChooser.ShowDialog(this);
 

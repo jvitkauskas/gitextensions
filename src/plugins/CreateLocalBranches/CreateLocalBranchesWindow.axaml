@@ -1,0 +1,19 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.CreateLocalBranches"
+                x:Class="GitExtensions.Plugins.CreateLocalBranches.CreateLocalBranchesWindow"
+                x:DataType="vm:CreateLocalBranchesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="518" MinWidth="400"
+                SizeToContent="Height"
+                CanMaximize="False">
+  <!-- As CreateLocalBranchesForm: the remote on the first row, the button below. -->
+  <Grid Classes="form" ColumnDefinitions="*,176" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6" Margin="12,8">
+    <Label Content="{Binding Strings.Remote.AccessKeyText}" Target="remoteTextBox" />
+    <TextBox Name="remoteTextBox" Grid.Column="1" Text="{Binding Remote}" />
+    <Button Name="createButton" Grid.Row="1" Grid.ColumnSpan="2" Margin="54,0,42,0" HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Center" Classes="accent" IsDefault="True"
+            Content="{Binding Strings.Create.AccessKeyText}" Command="{Binding CreateCommand}" />
+  </Grid>
+</h:DialogWindow>

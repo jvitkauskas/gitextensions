@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(RepoRoot)\src\plugins\AvaloniaPort.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\..\app\GitCommands\GitCommands.csproj">
       <PrivateAssets>build;buildTransitive;compile</PrivateAssets>

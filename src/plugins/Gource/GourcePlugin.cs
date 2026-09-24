@@ -118,6 +118,13 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
             }
         }
 
+        if (GourceStartDialog.TryShow(args, pathToGource, _gourceArguments.ValueOrDefault(Settings), out string gourcePath, out string gourceArguments))
+        {
+            Settings.SetValue(_gourceArguments.Name, gourceArguments);
+            Settings.SetValue(_gourcePath.Name, gourcePath);
+            return false;
+        }
+
         using GourceStart gourceStart = new(pathToGource, args, _gourceArguments.ValueOrDefault(Settings));
         gourceStart.ShowDialog(args.OwnerForm);
         Settings.SetValue(_gourceArguments.Name, gourceStart.GourceArguments);

@@ -1,10 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(RepoRoot)\src\plugins\AvaloniaPort.props" />
+
   <ItemGroup>
     <Compile Include="..\..\..\app\GitExtUtils\Validates.cs" Link="Validates.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\app\GitUI\GitUI.csproj">
+      <PrivateAssets>build;buildTransitive;compile</PrivateAssets>
+      <Private>false</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\app\GitCommands\GitCommands.csproj">
       <PrivateAssets>build;buildTransitive;compile</PrivateAssets>
       <Private>false</Private>

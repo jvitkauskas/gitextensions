@@ -1,0 +1,77 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.DeleteUnusedBranches"
+                x:Class="GitExtensions.Plugins.DeleteUnusedBranches.DeleteUnusedBranchesWindow"
+                x:DataType="vm:DeleteUnusedBranchesViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="760" Height="500" MinWidth="600" MinHeight="400">
+  <DockPanel>
+    <!-- Equivalent of statusStrip1. -->
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter" Padding="9,3">
+      <TextBlock Name="statusText" Text="{Binding StatusText}" />
+    </Border>
+    <!-- Equivalent of tableLayoutPanel2: settings on the left, delete and close on the right. -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6" Margin="9,6" IsEnabled="{Binding IsIdle}">
+      <Button Name="settingsButton" MinWidth="75" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.Settings.AccessKeyText}" Command="{Binding OpenSettingsCommand}" />
+      <Button Name="deleteButton" Grid.Column="2" MinWidth="75" HorizontalContentAlignment="Center"
+              Content="{Binding Strings.Delete.AccessKeyText}" Command="{Binding DeleteCommand}" />
+      <Button Name="closeButton" Grid.Column="3" MinWidth="75" HorizontalContentAlignment="Center" IsCancel="True"
+              Content="{Binding Strings.Close.AccessKeyText}" Command="{Binding CancelCommand}" />
+    </Grid>
+    <TextBlock Name="instructionText" DockPanel.Dock="Top" Margin="9,8,9,4" Text="{Binding InstructionText}" TextWrapping="Wrap" />
+    <!-- Equivalent of tableLayoutPanel3: the options in two columns. -->
+    <Grid DockPanel.Dock="Top" Classes="form" Margin="9,0,9,6" IsEnabled="{Binding IsIdle}"
+          ColumnDefinitions="*,*" RowDefinitions="30,30,30,30,30,30,30,30" ColumnSpacing="6">
+      <Label Content="{Binding Strings.OlderThanDays.AccessKeyText}" Target="olderThanDays" />
+      <NumericUpDown Name="olderThanDays" Grid.Column="1" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center"
+                     Minimum="0" Maximum="100000" Increment="1" FormatString="0"
+                     Value="{Binding OlderThanDays}" />
+      <Label Grid.Row="1" Content="{Binding Strings.MergedInto.AccessKeyText}" Target="mergedIntoBranch" />
+      <TextBox Name="mergedIntoBranch" Grid.Row="1" Grid.Column="1" Width="218" HorizontalAlignment="Left" VerticalAlignment="Center"
+               Text="{Binding MergedIntoBranch}" />
+      <CheckBox Name="includeRemoteBranches" Grid.Row="2" Content="{Binding Strings.IncludeRemoteBranches.AccessKeyText}"
+                IsChecked="{Binding IncludeRemoteBranches}" />
+      <TextBox Name="remote" Grid.Row="2" Grid.Column="1" Width="218" HorizontalAlignment="Left" VerticalAlignment="Center"
+               Text="{Binding Remote}" />
+      <CheckBox Name="useRegexFilter" Grid.Row="3" Content="{Binding Strings.UseRegexFilter.AccessKeyText}"
+                IsChecked="{Binding UseRegexFilter}" />
+      <TextBox Name="regexFilter" Grid.Row="3" Grid.Column="1" Width="218" HorizontalAlignment="Left" VerticalAlignment="Center"
+               Text="{Binding RegexFilter}" />
+      <CheckBox Name="regexCaseInsensitive" Grid.Row="4" Grid.Column="1" Content="{Binding Strings.RegexCaseInsensitive.AccessKeyText}"
+                IsChecked="{Binding RegexCaseInsensitive}" />
+      <CheckBox Name="regexDoesNotMatch" Grid.Row="5" Grid.Column="1" Content="{Binding Strings.RegexDoesNotMatch.AccessKeyText}"
+                IsChecked="{Binding RegexDoesNotMatch}" />
+      <CheckBox Name="includeUnmergedBranches" Grid.Row="6" Content="{Binding Strings.IncludeUnmergedBranches.AccessKeyText}"
+                IsChecked="{Binding IncludeUnmergedBranches}" />
+      <Button Name="searchButton" Grid.Row="7" Grid.Column="1" MinWidth="124" HorizontalContentAlignment="Center" VerticalAlignment="Center"
+              Content="{Binding SearchButtonText}" Command="{Binding RefreshCommand}" />
+    </Grid>
+    <!-- Equivalent of pnlBranchesArea: the grid, with the loading image over it. -->
+    <Panel Margin="9,0,9,3">
+      <DataGrid Name="branchesGrid" ItemsSource="{Binding Branches}"
+                SelectionMode="Single" CanUserReorderColumns="False" CanUserSortColumns="True"
+                HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DataGrid.Columns>
+          <!-- A template column: the check box toggles on the first click (DataGridCheckBoxColumn enters the edit mode first). -->
+          <DataGridTemplateColumn Width="56" CanUserSort="False">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeleteUnusedBranchRow">
+                <CheckBox IsChecked="{Binding Delete}" HorizontalAlignment="Center" MinWidth="0" Padding="0" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Binding="{Binding Name}" Width="Auto" MinWidth="100" IsReadOnly="True" x:DataType="vm:DeleteUnusedBranchRow" />
+          <DataGridTextColumn Binding="{Binding Date}" Width="175" IsReadOnly="True" x:DataType="vm:DeleteUnusedBranchRow" />
+          <DataGridTextColumn Binding="{Binding Author}" Width="Auto" MinWidth="91" IsReadOnly="True" x:DataType="vm:DeleteUnusedBranchRow" />
+          <DataGridTextColumn Binding="{Binding Message}" Width="*" IsReadOnly="True" CanUserSort="False" x:DataType="vm:DeleteUnusedBranchRow" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <Border Name="loadingPanel" IsVisible="{Binding IsBusy}" Background="{DynamicResource SystemControlBackgroundAltMediumBrush}">
+        <ProgressBar IsIndeterminate="True" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" />
+      </Border>
+    </Panel>
+  </DockPanel>
+</h:DialogWindow>

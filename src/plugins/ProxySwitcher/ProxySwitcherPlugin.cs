@@ -33,6 +33,11 @@ public class ProxySwitcherPlugin : GitPluginBase
 
     public override bool Execute(GitUIEventArgs args)
     {
+        if (ProxySwitcherDialog.TryShow(args, this, Settings))
+        {
+            return false;
+        }
+
         using ProxySwitcherForm form = new(this, Settings, args);
         form.ShowDialog(args.OwnerForm);
 

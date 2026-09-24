@@ -19,6 +19,11 @@ public class ReleaseNotesGeneratorPlugin : GitPluginBase
 
     public override bool Execute(GitUIEventArgs args)
     {
+        if (ReleaseNotesGeneratorDialog.TryShow(args))
+        {
+            return false;
+        }
+
         using ReleaseNotesGeneratorForm form = new(args);
         if (form.ShowDialog(args.OwnerForm) == DialogResult.OK)
         {

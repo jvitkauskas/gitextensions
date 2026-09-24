@@ -1,0 +1,29 @@
+<Project>
+  <!--
+    Imported by the plugins that have Avalonia ports of their forms (docs/avalonia-port/PLAN.md, phase 7). The plugins own
+    their view models and views, as they own their WinForms forms, and show them through GitUI's AvaloniaPluginDialogs
+    (so they also reference GitUI).
+
+    Avalonia and CommunityToolkit.Mvvm are referenced for compilation only (the XAML compiler, the named-control and MVVM
+    source generators): the application ships their assemblies, and only the plugin assembly goes to the Plugins folder.
+  -->
+  <PropertyGroup>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="CommunityToolkit.Mvvm" ExcludeAssets="runtime" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)\src\app\GitUI.Avalonia\GitUI.Avalonia.csproj">
+      <PrivateAssets>build;buildTransitive;compile</PrivateAssets>
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)\src\app\GitUI.Presentation\GitUI.Presentation.csproj">
+      <PrivateAssets>build;buildTransitive;compile</PrivateAssets>
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

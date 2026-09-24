@@ -1,0 +1,70 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.GitStatistics"
+                x:Class="GitExtensions.Plugins.GitStatistics.GitStatisticsWindow"
+                x:DataType="vm:GitStatisticsViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="751" Height="465" MinWidth="350" MinHeight="250">
+  <Window.Styles>
+    <!-- The totals above each tab (bold, as TotalLinesOfCode.Font). -->
+    <Style Selector="TextBlock.total">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Margin" Value="6,6,6,8" />
+    </Style>
+    <Style Selector="SelectableTextBlock.details">
+      <Setter Property="Margin" Value="6,0" />
+    </Style>
+  </Window.Styles>
+  <!-- Equivalent of Tabs: each tab has its total, then its text (Panel1MinSize 250) and its pie chart. -->
+  <TabControl Name="tabs" Margin="4">
+    <TabItem Name="commitsTab" Header="{Binding Strings.CommitsPerContributorTab.PlainText}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Classes="total" Text="{Binding TotalCommitsText}" />
+        <Grid ColumnDefinitions="286,4,*">
+          <ScrollViewer MinWidth="250">
+            <SelectableTextBlock Classes="details" Name="commitStatistics" Text="{Binding CommitStatisticsText}" />
+          </ScrollViewer>
+          <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+          <vm:PieChartView Name="commitCountPie" Grid.Column="2" Slices="{Binding CommitSlices}" />
+        </Grid>
+      </DockPanel>
+    </TabItem>
+    <TabItem Name="languagesTab" Header="{Binding Strings.LinesOfCodePerLanguageTab.PlainText}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Classes="total" Text="{Binding TotalLinesOfCodeText}" />
+        <Grid ColumnDefinitions="286,4,*">
+          <ScrollViewer MinWidth="250">
+            <SelectableTextBlock Classes="details" Name="linesOfCodePerLanguage" Text="{Binding LinesOfCodePerLanguageText}" />
+          </ScrollViewer>
+          <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+          <vm:PieChartView Name="linesOfCodeExtensionPie" Grid.Column="2" Slices="{Binding ExtensionSlices}" />
+        </Grid>
+      </DockPanel>
+    </TabItem>
+    <TabItem Name="typesTab" Header="{Binding Strings.LinesOfCodePerTypeTab.PlainText}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Classes="total" Text="{Binding TotalLinesOfCode2Text}" />
+        <Grid ColumnDefinitions="286,4,*">
+          <ScrollViewer MinWidth="250">
+            <SelectableTextBlock Classes="details" Name="linesOfCodePerType" Text="{Binding LinesOfCodePerTypeText}" />
+          </ScrollViewer>
+          <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+          <vm:PieChartView Name="linesOfCodePie" Grid.Column="2" Slices="{Binding TypeSlices}" />
+        </Grid>
+      </DockPanel>
+    </TabItem>
+    <TabItem Name="testCodeTab" Header="{Binding Strings.LinesOfTestCodeTab.PlainText}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Classes="total" Text="{Binding TotalLinesOfTestCodeText}" />
+        <Grid ColumnDefinitions="286,4,*">
+          <ScrollViewer MinWidth="250">
+            <SelectableTextBlock Classes="details" Name="testCode" Text="{Binding TestCodeText}" />
+          </ScrollViewer>
+          <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+          <vm:PieChartView Name="testCodePie" Grid.Column="2" Slices="{Binding TestSlices}" />
+        </Grid>
+      </DockPanel>
+    </TabItem>
+  </TabControl>
+</h:DialogWindow>

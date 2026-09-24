@@ -1,0 +1,109 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.RepoHosting"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RepoHosting.ForkAndCloneWindow"
+                x:DataType="vm:ForkAndCloneViewModel"
+                Title="{Binding Title}"
+                Width="744" Height="600" MinWidth="600" MinHeight="480">
+  <Window.Styles>
+    <Style Selector="DataGrid.repositories">
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="SelectionMode" Value="Single" />
+      <Setter Property="CanUserReorderColumns" Value="False" />
+      <Setter Property="HeadersVisibility" Value="Column" />
+      <Setter Property="GridLinesVisibility" Value="All" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+  </Window.Styles>
+  <DockPanel Margin="4">
+    <!-- Equivalent of flowLayoutPanel1 (right to left: close, then clone). -->
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,6,0,0">
+      <Button Name="cloneButton" MinWidth="120" Height="30" HorizontalContentAlignment="Center" Classes="accent"
+              Content="{Binding Strings.Clone.AccessKeyText}" Command="{Binding CloneCommand}" />
+      <Button Name="closeButton" MinWidth="120" Height="30" HorizontalContentAlignment="Center" IsCancel="True"
+              Content="{Binding Strings.Close.AccessKeyText}" Command="{Binding CloseDialogCommand}" />
+    </StackPanel>
+    <!-- Equivalent of cloneSetupGB. -->
+    <Border DockPanel.Dock="Bottom" Margin="0,6,0,0" BorderThickness="1" CornerRadius="4" Padding="10,6,10,10"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="3">
+        <TextBlock Grid.ColumnSpan="2" FontWeight="SemiBold" Text="{Binding Strings.CloneGroup.PlainText}" Margin="0,0,0,3" />
+        <Label Grid.Row="1" Padding="0" Content="{Binding Strings.DestinationFolder.AccessKeyText}" Target="destination" />
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6">
+          <TextBox Name="destination" Width="294" Text="{Binding Destination}" />
+          <Button Name="browseButton" MinWidth="102" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.Browse.AccessKeyText}" Command="{Binding BrowseCommand}" />
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" IsVisible="{Binding ShowProtocols}">
+            <Label Padding="0" VerticalAlignment="Center" Content="{Binding Strings.Protocol.AccessKeyText}" Target="protocols" />
+            <ComboBox Name="protocols" MinWidth="121" ItemsSource="{Binding Protocols}" SelectedItem="{Binding SelectedProtocol}" />
+          </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="18" Margin="0,4,0,0">
+          <Label Width="183" Padding="0" Content="{Binding Strings.CreateDirectory.AccessKeyText}" Target="createDirectory" />
+          <Label Padding="0" Content="{Binding Strings.AddUpstreamRemoteAs.AccessKeyText}" Target="addUpstreamRemote" />
+        </StackPanel>
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="18">
+          <TextBox Name="createDirectory" Width="183" Text="{Binding CreateDirectory}" />
+          <AutoCompleteBox Name="addUpstreamRemote" Width="200" MinimumPrefixLength="0" FilterMode="None"
+                           ItemsSource="{Binding UpstreamRemoteNames}" Text="{Binding AddUpstreamRemote}"
+                           IsEnabled="{Binding CanChooseUpstreamRemote}" />
+        </StackPanel>
+        <TextBlock Name="cloneInfo" Grid.Row="5" Grid.ColumnSpan="2" Margin="0,6,0,2" MinHeight="35" TextWrapping="Wrap" Text="{Binding CloneInfoText}" />
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Spacing="3">
+          <Label Padding="0" Content="{Binding Strings.Depth.AccessKeyText}" Target="depth" />
+          <NumericUpDown Name="depth" Width="100" HorizontalAlignment="Left" Minimum="0" Maximum="999" Increment="1" FormatString="0"
+                         Value="{Binding Depth}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <!-- Equivalent of tabControl. -->
+    <TabControl Name="tabs" SelectedIndex="{Binding SelectedTabIndex}">
+      <TabItem Name="myRepositoriesTab" Header="{Binding Strings.MyRepositoriesTab.PlainText}">
+        <Grid ColumnDefinitions="7*,3*" ColumnSpacing="6" Margin="0,4,0,0">
+          <DataGrid Name="myRepositories" Classes="repositories" ItemsSource="{Binding MyRepositories}" SelectedItem="{Binding SelectedMyRepository}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Binding="{Binding Name}" Width="*" x:DataType="vm:HostedRepositoryRow" />
+              <DataGridTextColumn Binding="{Binding IsFork}" Width="Auto" x:DataType="vm:HostedRepositoryRow" />
+              <DataGridTextColumn Binding="{Binding Forks}" Width="Auto" x:DataType="vm:HostedRepositoryRow" />
+              <DataGridTextColumn Binding="{Binding IsPrivate}" Width="Auto" x:DataType="vm:HostedRepositoryRow" />
+            </DataGrid.Columns>
+          </DataGrid>
+          <SelectableTextBlock Name="helpText" Grid.Column="1" TextWrapping="Wrap" Text="{Binding HelpText}" />
+        </Grid>
+      </TabItem>
+      <TabItem Name="searchTab" Header="{Binding Strings.SearchRepositoriesTab.PlainText}">
+        <DockPanel Margin="0,4,0,0">
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+            <TextBox Name="searchText" Width="198" Text="{Binding SearchText}" />
+            <Button Name="searchButton" MinWidth="93" HorizontalContentAlignment="Center"
+                    Content="{Binding Strings.Search.AccessKeyText}" Command="{Binding SearchCommand}" />
+            <TextBlock VerticalAlignment="Center" Text="{Binding Strings.Or.Text}" />
+            <Button Name="getFromUserButton" MinWidth="124" HorizontalContentAlignment="Center"
+                    Content="{Binding Strings.GetFromUser.AccessKeyText}" Command="{Binding GetFromUserCommand}" />
+          </StackPanel>
+          <Button Name="forkButton" DockPanel.Dock="Bottom" MinWidth="150" Margin="0,6,0,0" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.Fork.AccessKeyText}" Command="{Binding ForkCommand}" />
+          <Grid ColumnDefinitions="6*,4*" ColumnSpacing="6">
+            <DataGrid Name="searchResults" Classes="repositories" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}">
+              <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Name}" Width="*" x:DataType="vm:HostedRepositoryRow" />
+                <DataGridTextColumn Binding="{Binding Owner}" Width="Auto" x:DataType="vm:HostedRepositoryRow" />
+                <DataGridTextColumn Binding="{Binding IsFork}" Width="Auto" x:DataType="vm:HostedRepositoryRow" />
+                <DataGridTextColumn Binding="{Binding Forks}" Width="Auto" x:DataType="vm:HostedRepositoryRow" />
+              </DataGrid.Columns>
+            </DataGrid>
+            <DockPanel Grid.Column="1">
+              <TextBlock DockPanel.Dock="Top" Margin="0,0,0,3" Text="{Binding Strings.Description.Text}" />
+              <Button Name="openHomepageButton" DockPanel.Dock="Bottom" Margin="0,6,0,0" MinWidth="116" HorizontalContentAlignment="Center"
+                      Content="{Binding Strings.OpenHomepage.AccessKeyText}" Command="{Binding OpenHomepageCommand}" />
+              <TextBox Name="description" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                       Text="{Binding SelectedDescription}" />
+            </DockPanel>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</h:DialogWindow>

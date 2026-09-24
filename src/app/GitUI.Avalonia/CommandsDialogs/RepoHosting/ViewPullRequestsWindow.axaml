@@ -1,0 +1,110 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.RepoHosting"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RepoHosting.ViewPullRequestsWindow"
+                x:DataType="vm:ViewPullRequestsViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                ShowInTaskbar="True"
+                Width="754" Height="560" MinWidth="500" MinHeight="400">
+  <Window.Styles>
+    <!-- The discussion (DiscussionHtmlCreator): the heading of each entry above its text. -->
+    <Style Selector="Border.discussionHeading">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="2,1" />
+    </Style>
+    <Style Selector="TextBlock.author">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+    </Style>
+    <Style Selector="TextBlock.author.commit">
+      <Setter Property="Foreground" Value="Red" />
+    </Style>
+  </Window.Styles>
+  <Panel>
+    <Grid RowDefinitions="146,5,*" Margin="4" IsEnabled="{Binding !IsLoading}">
+      <!-- Equivalent of tableLayoutPanel2: the repository, then the pull requests and their buttons. -->
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+          <Label VerticalAlignment="Center" Padding="0" Content="{Binding Strings.ChooseRepository.AccessKeyText}" Target="hostedRemotes" />
+          <ComboBox Name="hostedRemotes" Width="258" ItemsSource="{Binding HostedRemotes}" SelectedItem="{Binding SelectedHostedRemote}"
+                    IsEnabled="{Binding CanSelectHostedRemote}" />
+        </StackPanel>
+        <Grid DockPanel.Dock="Right" RowDefinitions="Auto,Auto,*,Auto" Width="160" Margin="6,0,0,0" RowSpacing="4">
+          <Button Name="fetchButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.Fetch.AccessKeyText}" Command="{Binding FetchCommand}" />
+          <Button Name="addRemoteAndFetchButton" Grid.Row="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.AddRemoteAndFetch.AccessKeyText}" Command="{Binding AddRemoteAndFetchCommand}" />
+          <Button Name="closePullRequestButton" Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Content="{Binding Strings.ClosePullRequest.AccessKeyText}" Command="{Binding ClosePullRequestCommand}" />
+        </Grid>
+        <DataGrid Name="pullRequests" ItemsSource="{Binding PullRequests}" SelectedItem="{Binding SelectedPullRequest}"
+                  IsReadOnly="True" SelectionMode="Single" CanUserReorderColumns="False" HeadersVisibility="Column"
+                  GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="Auto" x:DataType="vm:PullRequestRow" />
+            <DataGridTextColumn Binding="{Binding Title}" Width="*" x:DataType="vm:PullRequestRow" />
+            <DataGridTextColumn Binding="{Binding Owner}" Width="Auto" x:DataType="vm:PullRequestRow" />
+            <DataGridTextColumn Binding="{Binding Created}" Width="Auto" x:DataType="vm:PullRequestRow" />
+            <DataGridTextColumn Binding="{Binding FetchBranch}" Width="Auto" x:DataType="vm:PullRequestRow" />
+          </DataGrid.Columns>
+        </DataGrid>
+      </DockPanel>
+      <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="Transparent" />
+      <!-- Equivalent of tabControl1: the diffs and the comments. -->
+      <TabControl Name="tabs" Grid.Row="2">
+        <TabItem Name="diffsTab" Header="{Binding Strings.DiffsTab.PlainText}">
+          <Grid RowDefinitions="116,5,*">
+            <fs:FileStatusListView Name="files" DataContext="{Binding Files}" />
+            <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="Transparent" />
+            <Border Grid.Row="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+              <ed:FileViewerView Name="diffViewer" DataContext="{Binding Viewer}" />
+            </Border>
+          </Grid>
+        </TabItem>
+        <TabItem Name="commentsTab" Header="{Binding Strings.CommentsTab.PlainText}">
+          <DockPanel>
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+              <Button Name="refreshButton" MinWidth="100" HorizontalContentAlignment="Center"
+                      Content="{Binding Strings.Refresh.AccessKeyText}" Command="{Binding RefreshDiscussionCommand}" />
+              <Button Name="postCommentButton" Grid.Column="2" MinWidth="131" HorizontalContentAlignment="Center"
+                      Content="{Binding Strings.PostComment.AccessKeyText}" Command="{Binding PostCommentCommand}" />
+            </Grid>
+            <Border DockPanel.Dock="Bottom" Height="76" Margin="0,4,0,0" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+              <ed:TextEditorView Name="comment" DataContext="{Binding Comment}" />
+            </Border>
+            <!-- Equivalent of _discussionWB (DiscussionHtmlCreator), as text. -->
+            <ScrollViewer Name="discussionScroller" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+              <ItemsControl Name="discussion" ItemsSource="{Binding Discussion}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DiscussionEntryItem">
+                    <StackPanel Margin="0,0,0,12">
+                      <Border Classes="discussionHeading">
+                        <StackPanel>
+                          <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="author" Classes.commit="{Binding IsCommit}" Text="{Binding Author}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Created}" />
+                          </Grid>
+                          <TextBlock FontSize="9" IsVisible="{Binding IsCommit}" Text="{Binding CommitText}" />
+                        </StackPanel>
+                      </Border>
+                      <SelectableTextBlock Margin="2,2,2,0" TextWrapping="Wrap" Text="{Binding Body}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </TabItem>
+      </TabControl>
+    </Grid>
+    <!-- As Mask(): a loading panel over the dialog while the repositories are read. -->
+    <Border Name="loadingPanel" IsVisible="{Binding IsLoading}" Background="{DynamicResource SystemControlBackgroundAltMediumBrush}">
+      <ProgressBar IsIndeterminate="True" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" />
+    </Border>
+  </Panel>
+</h:DialogWindow>

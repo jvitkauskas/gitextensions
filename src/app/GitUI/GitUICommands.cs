@@ -1678,6 +1678,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         WrapRepoHostingCall(TranslatedStrings.ForkCloneRepo, gitHoster, gh =>
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowForkAndClone(owner, this, gh, gitModuleChanged))
+            {
+                return;
+            }
+
             using ForkAndCloneForm frm = new(this, gh, gitModuleChanged);
             frm.ShowDialog(owner);
         });
@@ -1688,6 +1693,11 @@ public sealed class GitUICommands : IGitUICommands
         WrapRepoHostingCall(TranslatedStrings.ViewPullRequest, gitHoster,
                             gh =>
                             {
+                                if (AvaloniaHosting.AvaloniaDialogs.TryShowPullRequests(owner, this, gh))
+                                {
+                                    return;
+                                }
+
                                 ViewPullRequestsForm frm = new(this, gh) { ShowInTaskbar = true };
                                 frm.Show(owner);
                             });
@@ -1735,6 +1745,11 @@ public sealed class GitUICommands : IGitUICommands
             gitHoster,
             gh =>
             {
+                if (AvaloniaHosting.AvaloniaDialogs.TryShowCreatePullRequest(owner, this, gh, chooseRemote))
+                {
+                    return;
+                }
+
                 CreatePullRequestForm form = new(this, gh, chooseRemote, chooseBranch)
                 {
                     ShowInTaskbar = true
