@@ -19,8 +19,7 @@ using SettingsPageViewModel = GitUI.Presentation.CommandsDialogs.SettingsDialog.
 namespace GitUI.AvaloniaHosting;
 
 /// <summary>
-///  Routing of the settings dialog (docs/avalonia-port/PLAN.md, phase 6). The port is unfinished (not all the pages are
-///  ported), so it is used only when named in <c>GE_AVALONIA</c> (e.g. <c>GE_AVALONIA=all,FormSettings</c>).
+///  Routing of the settings dialog (docs/avalonia-port/PLAN.md, phase 6), with all its pages and the pages of the plugins.
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
@@ -29,7 +28,7 @@ internal static partial class AvaloniaDialogs
     public static bool TryShowSettings(IWin32Window? owner, IGitUICommands commands, SettingsPageReference? initialPage, out bool saved)
     {
         saved = false;
-        if (!AvaloniaUi.IsExplicitlyEnabledFor(nameof(FormSettings)))
+        if (!AvaloniaUi.IsEnabledFor(nameof(FormSettings)))
         {
             return false;
         }

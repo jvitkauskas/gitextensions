@@ -1,19 +1,17 @@
 using Avalonia.Threading;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog;
-using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
 
 namespace GitExtensions.UITests.AvaloniaHosting;
 
-/// <summary>Phase 6: the settings dialog (named in <c>GE_AVALONIA</c> until all its pages are ported), with its real pages.</summary>
+/// <summary>Phase 6: the settings dialog with its real pages.</summary>
 public sealed partial class AvaloniaHostingTests
 {
     [Test]
     public void StartSettingsDialog_shows_every_page_and_cancels()
     {
-        Environment.SetEnvironmentVariable(AvaloniaUi.EnvironmentVariable, "all,FormSettings");
         List<string> shown = [];
         DriveNextDialog(window =>
         {
