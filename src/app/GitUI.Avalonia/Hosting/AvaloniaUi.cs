@@ -59,6 +59,33 @@ public static class AvaloniaUi
     public static bool IsInitialized => Application.Current is GitExtensionsAvaloniaApp;
 
     /// <summary>
+    ///  Reports the exceptions that escape the jobs of the Avalonia dispatcher (the bug report of the application), instead
+    ///  of ending the process. Set by the host before the first Avalonia window.
+    /// </summary>
+    public static Action<Exception>? UnhandledExceptionHandler { get; set; }
+
+    /// <summary>Whether <see cref="RunMainLoop"/> is running, i.e. Avalonia runs the message loop of the process.</summary>
+    public static bool IsMainLoopRunning { get; private set; }
+
+    /// <summary>
+    ///  Runs the message loop of the process with the Avalonia dispatcher until <paramref name="cancellationToken"/> is
+    ///  cancelled (e.g. the last main window closed): Avalonia owns the lifetime of the application (docs/avalonia-port/PLAN.md,
+    ///  phase 7, "switch the host"). WinForms dialogs shown meanwhile run their own modal loops as before.
+    /// </summary>
+    public static void RunMainLoop(CancellationToken cancellationToken)
+    {
+        IsMainLoopRunning = true;
+        try
+        {
+            Dispatcher.UIThread.MainLoop(cancellationToken);
+        }
+        finally
+        {
+            IsMainLoopRunning = false;
+        }
+    }
+
+    /// <summary>
     ///  Runs host (WinForms) code from Avalonia code, e.g. a view model callback that opens a WinForms dialog.
     /// </summary>
     /// <remarks>
@@ -137,6 +164,14 @@ public static class AvaloniaUi
         }
 
         ((GitExtensionsAvaloniaApp)Application.Current!).ApplyOptions(getOptions());
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            if (UnhandledExceptionHandler is { } report)
+            {
+                report(e.Exception);
+                e.Handled = true;
+            }
+        };
     }
 
     private static HashSet<string>? ParseEnabledDialogs()

@@ -135,6 +135,9 @@ internal static partial class AvaloniaDialogs
         // The modeless Avalonia windows get their text input in the WinForms message loop.
         AvaloniaKeyboardMessageFilter.Install();
 
+        // The exceptions of Avalonia code are reported as those of WinForms code (Application.ThreadException).
+        AvaloniaUi.UnhandledExceptionHandler ??= exception => GitUI.NBugReports.BugReportInvoker.Report(exception, isTerminating: false);
+
         // As GitExtensionsDialog.OnHelpButtonClicked: F1 opens the section of the user manual.
         DialogWindow.OpenManualSection ??= (subfolder, anchor) => OsShellUtil.OpenUrlInDefaultBrowser(UserManual.UserManual.UrlFor(subfolder, anchor));
 

@@ -28,11 +28,12 @@ namespace GitUI.AvaloniaHosting;
 internal static partial class AvaloniaDialogs
 {
     private static readonly List<BrowseSession> _browseSessions = [];
-    private static ApplicationContext? _browseContext;
+    private static CancellationTokenSource? _mainLoop;
 
     /// <summary>
     ///  The Avalonia port of <see cref="GitUICommands.StartBrowseDialog"/>: the main window, shown modeless; without a message
-    ///  loop yet (the start of the application), the loop runs until the last main window closes, as <c>Application.Run</c>.
+    ///  loop yet (the start of the application), Avalonia runs the message loop until the last main window closes (as
+    ///  <c>Application.Run</c> did): Avalonia owns the lifetime of the application.
     /// </summary>
     public static bool TryShowBrowse(IGitUICommands commands, BrowseArguments args)
     {
@@ -43,12 +44,12 @@ internal static partial class AvaloniaDialogs
 
         AvaloniaUi.EnsureInitialized(GetOptions);
         ShowBrowseWindow(commands, args);
-        if (!Application.MessageLoop)
+        if (!Application.MessageLoop && !AvaloniaUi.IsMainLoopRunning)
         {
-            using ApplicationContext context = new();
-            _browseContext = context;
-            Application.Run(context);
-            _browseContext = null;
+            using CancellationTokenSource mainLoop = new();
+            _mainLoop = mainLoop;
+            AvaloniaUi.RunMainLoop(mainLoop.Token);
+            _mainLoop = null;
         }
 
         return true;
@@ -72,7 +73,7 @@ internal static partial class AvaloniaDialogs
             _browseSessions.Remove(session);
             if (_browseSessions.Count == 0)
             {
-                _browseContext?.ExitThread();
+                _mainLoop?.Cancel();
             }
         };
         AvaloniaDialogHost.Show(window, ownerHandle: 0);

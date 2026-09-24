@@ -152,7 +152,14 @@ public class TaskManager
     }
 
     /// <summary>
-    /// Forward the exception <paramref name="ex"/> to <see cref="Application.OnThreadException"/> on the main thread.
+    ///  Reports the exceptions of the background operations on the main thread; <see cref="Application.OnThreadException"/>
+    ///  if not set. The application sets it, so that the report does not depend on the WinForms message loop (e.g. when
+    ///  Avalonia runs the main loop).
+    /// </summary>
+    public static Action<Exception>? UnhandledExceptionHandler { get; set; }
+
+    /// <summary>
+    /// Forward the exception <paramref name="ex"/> to <see cref="UnhandledExceptionHandler"/> on the main thread.
     /// </summary>
     /// The readability of the callstack is improved by calling <c>ExceptionExtensions.Demystify</c>.
     internal async Task ReportExceptionOnMainThreadAsync(Exception ex)
@@ -164,7 +171,7 @@ public class TaskManager
                 await JoinableTaskFactory.SwitchToMainThreadAsync(_switchToMainThreadCancellationToken);
             }
 
-            Application.OnThreadException(ex.Demystify());
+            (UnhandledExceptionHandler ?? Application.OnThreadException)(ex.Demystify());
         }
         catch (Exception exceptionWhileReporting)
         {

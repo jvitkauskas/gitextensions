@@ -36,6 +36,9 @@ internal static class Program
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) => BugReportInvoker.Report((Exception)e.ExceptionObject, e.IsTerminating);
             Application.ThreadException += (s, e) => BugReportInvoker.Report(e.Exception, isTerminating: false);
+
+            // The exceptions of the background operations, also when Avalonia runs the message loop.
+            TaskManager.UnhandledExceptionHandler = exception => BugReportInvoker.Report(exception, isTerminating: false);
             Application.ApplicationExit += (s, e) => BugReportInvoker.IgnoreFailedToLoadAnAssembly = true;
         }
 
