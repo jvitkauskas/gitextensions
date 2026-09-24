@@ -13,6 +13,7 @@ using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
+using GitUI.Presentation.UserControls.LeftPanel;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUI.Shells;
 using GitUI.UserControls.RevisionGrid;
@@ -162,6 +163,20 @@ internal static partial class AvaloniaDialogs
             {
                 // Not UseFileStatusListMenu: the sorting of the file tree is not the one of the diff lists.
                 fileTree.MenuHost = new FileStatusListMenuHost(commands, window);
+            }
+
+            // The left panel, whose "filter for selected" sets the branch filter of the toolbar; none on the dashboard.
+            if (isValid)
+            {
+                FilterToolBarViewModel filters = viewModel.Filters!;
+                LeftPanelViewModel leftPanel = AttachLeftPanel(
+                    commands,
+                    window,
+                    viewModel,
+                    grid,
+                    setBranchFilter: refs => filters.SetBranchFilter(refs ?? ""),
+                    isBranchFilterActive: () => gridFilter.Filter.IsShowFilteredBranchesChecked && !string.IsNullOrWhiteSpace(gridFilter.Filter.BranchFilter));
+                gridMenu.SelectInLeftPanel = leftPanel.SelectInLeftPanel;
             }
 
             // As FormBrowse (IBrowseRepo): the scripts and the plugins see the selection of the grid.

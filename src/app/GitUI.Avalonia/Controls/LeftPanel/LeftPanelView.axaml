@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lp="using:GitUI.Presentation.UserControls.LeftPanel"
+             xmlns:local="using:GitUI.Avalonia.Controls.LeftPanel"
+             x:Class="GitUI.Avalonia.Controls.LeftPanel.LeftPanelView"
+             x:DataType="lp:LeftPanelViewModel">
+  <UserControl.Styles>
+    <Style Selector="TreeViewItem" x:DataType="lp:LeftPanelNode">
+      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+      <Setter Property="MinHeight" Value="20" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="TextBlock.grayed">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+    </Style>
+    <!-- As the search results of RepoObjectsTree (SystemColors.Info), translucent to suit both themes. -->
+    <Style Selector="Border.match">
+      <Setter Property="Background" Value="#60FFD800" />
+    </Style>
+    <Style Selector="Button.toolbar, ToggleButton.toolbar">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </UserControl.Styles>
+  <!-- Equivalent of RepoObjectsTree: the toolbar of the trees (leftPanelToolStrip), the search box (branchSearchPanel) and the tree (treeMain). -->
+  <DockPanel>
+    <StackPanel Name="toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="1" Margin="0,0,0,2">
+      <Button Name="collapseAllButton" Classes="toolbar" Command="{Binding CollapseAllCommand}" ToolTip.Tip="{Binding Strings.CollapseAllToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/CollapseAll.png" Width="16" Height="16" />
+      </Button>
+      <ToggleButton Name="showBranchesButton" Classes="toolbar" IsChecked="{Binding ShowBranches}" ToolTip.Tip="{Binding Strings.ShowBranchesToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/BranchLocalRoot.png" Width="16" Height="16" />
+      </ToggleButton>
+      <ToggleButton Name="showRemotesButton" Classes="toolbar" IsChecked="{Binding ShowRemotes}" ToolTip.Tip="{Binding Strings.ShowRemotesToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/BranchRemoteRoot.png" Width="16" Height="16" />
+      </ToggleButton>
+      <ToggleButton Name="showWorktreesButton" Classes="toolbar" IsChecked="{Binding ShowWorktrees}" ToolTip.Tip="{Binding Strings.ShowWorktreesToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/WorkTree.png" Width="16" Height="16" />
+      </ToggleButton>
+      <ToggleButton Name="showTagsButton" Classes="toolbar" IsChecked="{Binding ShowTags}" ToolTip.Tip="{Binding Strings.ShowTagsToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/TagHorizontal.png" Width="16" Height="16" />
+      </ToggleButton>
+      <ToggleButton Name="showSubmodulesButton" Classes="toolbar" IsChecked="{Binding ShowSubmodules}" ToolTip.Tip="{Binding Strings.ShowSubmodulesToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/FolderSubmodule.png" Width="16" Height="16" />
+      </ToggleButton>
+      <ToggleButton Name="showStashesButton" Classes="toolbar" IsChecked="{Binding ShowStashes}" ToolTip.Tip="{Binding Strings.ShowStashesToolTip.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/Stash.png" Width="16" Height="16" />
+      </ToggleButton>
+    </StackPanel>
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+      <AutoCompleteBox Name="searchBox" Text="{Binding SearchText}" ItemsSource="{Binding SearchCandidates}"
+                       FilterMode="Contains" MinimumPrefixLength="1" MaxDropDownHeight="300" />
+      <Button Name="searchButton" Grid.Column="1" Classes="toolbar" Command="{Binding SearchCommand}" ToolTip.Tip="{Binding Strings.Search.Text}">
+        <Image Source="avares://GitUI.Avalonia/Assets/Preview.png" Width="16" Height="16" />
+      </Button>
+    </Grid>
+    <TreeView Name="tree" ItemsSource="{Binding Trees}" SelectedItem="{Binding SelectedNode, Mode=TwoWay}">
+      <TreeView.ContextMenu>
+        <!-- Equivalent of menuMain: filled for the selection when it opens (contextMenu_Opening). -->
+        <ContextMenu Name="treeMenu" />
+      </TreeView.ContextMenu>
+      <TreeView.ItemTemplate>
+        <TreeDataTemplate DataType="lp:LeftPanelNode" ItemsSource="{Binding Children}">
+          <Border Classes.match="{Binding IsSearchMatch}" Background="Transparent" ToolTip.Tip="{Binding ToolTip}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Width="16" Height="16" Source="{Binding IconKey, Converter={x:Static local:LeftPanelConverters.Icon}}" />
+              <TextBlock Text="{Binding Text}" VerticalAlignment="Center" Classes.grayed="{Binding IsGrayed}"
+                         FontWeight="{Binding IsBold, Converter={x:Static local:LeftPanelConverters.Bold}}"
+                         FontStyle="{Binding IsItalic, Converter={x:Static local:LeftPanelConverters.Italic}}"
+                         TextDecorations="{Binding IsMultiSelected, Converter={x:Static local:LeftPanelConverters.Underline}}" />
+            </StackPanel>
+          </Border>
+        </TreeDataTemplate>
+      </TreeView.ItemTemplate>
+    </TreeView>
+  </DockPanel>
+</UserControl>
