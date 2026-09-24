@@ -171,26 +171,12 @@ public sealed class StringSettingValue(StringSetting setting) : SettingValue
 ///  As <c>NumberSettingTextBoxBinding</c>: a number typed in a text box, which is invalid (shown in red) when it cannot be
 ///  converted; an empty or invalid text is no value (unset).
 /// </summary>
-public sealed class NumberTextSettingValue<T>(NumberSetting<T> setting) : SettingValue
+public sealed class NumberTextSettingValue<T>(NumberSetting<T> setting) : NumberTextSettingValue
 {
-    private string _text = "";
-
     public NumberSetting<T> Setting { get; } = setting;
 
-    public string Text
-    {
-        get => _text;
-        set
-        {
-            if (SetProperty(ref _text, value))
-            {
-                OnPropertyChanged(nameof(IsValid));
-            }
-        }
-    }
-
     /// <summary>As <c>OnTextChanged</c>: an empty text or a number.</summary>
-    public bool IsValid => string.IsNullOrEmpty(Text) || NumberSetting<T>.TryConvertFromString(Text, out _);
+    public override bool IsValid => string.IsNullOrEmpty(Text) || NumberSetting<T>.TryConvertFromString(Text, out _);
 
     public override void Load(SettingsSource settings)
     {
@@ -213,4 +199,123 @@ public sealed class NumberTextSettingValue<T>(NumberSetting<T> setting) : Settin
 
         Setting[settings] = parsedValue;
     }
+}
+
+/// <summary>The number typed in a text box of a <see cref="NumberTextSettingValue{T}"/>, whatever its type.</summary>
+public abstract class NumberTextSettingValue : SettingValue
+{
+    private string _text = "";
+
+    public string Text
+    {
+        get => _text;
+        set
+        {
+            if (SetProperty(ref _text, value))
+            {
+                OnPropertyChanged(nameof(IsValid));
+            }
+        }
+    }
+
+    public abstract bool IsValid { get; }
+}
+
+/// <summary>As <c>PasswordSettingControlBinding</c>: a hidden text, loaded and saved as <see cref="StringSettingValue"/>.</summary>
+public sealed class PasswordSettingValue(PasswordSetting setting) : SettingValue
+{
+    public PasswordSetting Setting { get; } = setting;
+
+    public string? Value
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public override void Load(SettingsSource settings)
+    {
+        string? value = settings.SettingLevel == SettingLevel.Effective ? Setting.ValueOrDefault(settings) : Setting[settings];
+        Value = value is { Length: 0 } ? StringSettingValue.EmptyStringValue : value;
+    }
+
+    public override void Save(SettingsSource settings)
+    {
+        string? value = Value?.Trim();
+        Value = value;
+        if (string.IsNullOrEmpty(value))
+        {
+            value = null;
+        }
+        else if (value == StringSettingValue.EmptyStringValue)
+        {
+            value = "";
+        }
+
+        if (settings.SettingLevel == SettingLevel.Effective && Setting.ValueOrDefault(settings) == value)
+        {
+            return;
+        }
+
+        Setting[settings] = value;
+    }
+}
+
+/// <summary>
+///  As <c>CredentialsSettingControlBinding</c>: a user name and a password kept in the credential manager, for the global and
+///  local levels (and the effective one) only.
+/// </summary>
+public sealed class CredentialsSettingValue(CredentialsSetting setting) : SettingValue
+{
+    private string _userName = "";
+    private string _password = "";
+
+    public CredentialsSetting Setting { get; } = setting;
+
+    public string UserName
+    {
+        get => _userName;
+        set => SetProperty(ref _userName, value);
+    }
+
+    public string Password
+    {
+        get => _password;
+        set => SetProperty(ref _password, value);
+    }
+
+    /// <summary>Whether the level keeps credentials.</summary>
+    public bool IsEnabled
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public override void Load(SettingsSource settings)
+    {
+        IsEnabled = IsSupported(settings.SettingLevel);
+        if (IsEnabled)
+        {
+            System.Net.NetworkCredential credentials = Setting.GetValueOrDefault(settings);
+            UserName = credentials.UserName;
+            Password = credentials.Password;
+        }
+        else
+        {
+            UserName = "";
+            Password = "";
+        }
+    }
+
+    public override void Save(SettingsSource settings)
+    {
+        if (IsSupported(settings.SettingLevel))
+        {
+            Setting.SaveValue(settings, UserName, Password);
+
+            // As the binding: the actual settings are reloaded.
+            Load(settings);
+        }
+    }
+
+    private static bool IsSupported(SettingLevel level) => level is SettingLevel.Global or SettingLevel.Local or SettingLevel.Effective;
 }

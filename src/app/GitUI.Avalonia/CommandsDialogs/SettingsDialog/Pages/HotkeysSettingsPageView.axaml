@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.HotkeysSettingsPageView"
+             x:DataType="vm:HotkeysSettingsPageViewModel">
+  <!-- Equivalent of ControlHotkeys: the windows (cmbSettings), their hotkeys (listMappings), the key of the selected one (txtHotkey). -->
+  <Grid RowDefinitions="Auto,440,Auto,Auto" ColumnDefinitions="240,*">
+    <TextBlock Grid.ColumnSpan="2" Text="{Binding Strings.HotkeyableItems.Text}" Margin="0,0,0,4" />
+    <ListBox Name="settingsList" Grid.Row="1" ItemsSource="{Binding Settings}" SelectedItem="{Binding SelectedSettings}" Margin="0,0,6,0"
+             BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:HotkeySettingsGroup">
+          <TextBlock Text="{Binding Name}" />
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+      <ListBox.Styles>
+        <Style Selector="ListBoxItem">
+          <Setter Property="Padding" Value="6,2" />
+          <Setter Property="MinHeight" Value="0" />
+        </Style>
+      </ListBox.Styles>
+    </ListBox>
+    <DataGrid Name="mappingsGrid" Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}"
+              IsReadOnly="True" SelectionMode="Single" CanUserReorderColumns="False" HeadersVisibility="Column" GridLinesVisibility="None"
+              BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DataGrid.Columns>
+        <DataGridTextColumn Binding="{Binding Name}" Width="Auto" MinWidth="200" x:DataType="vm:HotkeyItem" />
+        <DataGridTextColumn Binding="{Binding KeyText}" Width="*" x:DataType="vm:HotkeyItem" />
+      </DataGrid.Columns>
+    </DataGrid>
+    <DockPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,6,0,0">
+      <TextBlock DockPanel.Dock="Left" Text="{Binding Strings.Hotkey.Text}" MinWidth="120" VerticalAlignment="Center" />
+      <Button Name="clearButton" DockPanel.Dock="Right" MinWidth="100" Margin="6,0,0,0" Content="{Binding Strings.Clear.AccessKeyText}" Command="{Binding ClearCommand}" />
+      <Button Name="applyButton" DockPanel.Dock="Right" MinWidth="100" Margin="6,0,0,0" Content="{Binding Strings.Apply.AccessKeyText}" Command="{Binding ApplyCommand}" />
+      <TextBox Name="hotkeyBox" Text="{Binding KeyText, Mode=OneWay}" IsReadOnly="True" Classes.used="{Binding IsUsedKey}" />
+    </DockPanel>
+    <Button Name="resetToDefaultsButton" Grid.Row="3" Grid.ColumnSpan="2" Margin="0,6,0,0" Content="{Binding Strings.ResetToDefaults.AccessKeyText}" Command="{Binding ResetToDefaultsCommand}" />
+  </Grid>
+  <UserControl.Styles>
+    <!-- As TextboxHotkey: a key assigned already is shown in red. -->
+    <Style Selector="TextBox.used">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

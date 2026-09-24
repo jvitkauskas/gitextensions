@@ -80,6 +80,20 @@ public sealed class SettingsIconConverter : IValueConverter
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
+        if (value is byte[] png)
+        {
+            // The image of a plugin or of a script, not shown if invalid.
+            try
+            {
+                using MemoryStream stream = new(png);
+                return new Bitmap(stream);
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException)
+            {
+                return null;
+            }
+        }
+
         if (value is not string name)
         {
             return null;

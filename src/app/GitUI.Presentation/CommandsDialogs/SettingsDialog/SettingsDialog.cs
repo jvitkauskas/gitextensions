@@ -297,7 +297,7 @@ public sealed class GroupSettingsPageViewModel(string title, string pageName) : 
 /// <summary>A node of the tree of the pages (<c>SettingsTreeViewUserControl</c>).</summary>
 public sealed partial class SettingsTreeNode : ObservableObject
 {
-    public SettingsTreeNode(SettingsPageViewModel page, string? icon)
+    public SettingsTreeNode(SettingsPageViewModel page, object? icon)
     {
         Page = page;
         Icon = icon;
@@ -311,8 +311,8 @@ public sealed partial class SettingsTreeNode : ObservableObject
 
     public string Title => (Group ?? Page).Title;
 
-    /// <summary>The name of the image of the node (an asset of GitUI.Avalonia), if any.</summary>
-    public string? Icon { get; }
+    /// <summary>The image of the node, if any: the name of an asset of GitUI.Avalonia, or the PNG data of an image (of a plugin).</summary>
+    public object? Icon { get; }
 
     public ObservableCollection<SettingsTreeNode> Children { get; } = [];
 
@@ -397,7 +397,7 @@ public sealed partial class SettingsDialogViewModel : DialogViewModel, ISettings
 
     /// <summary>Adds a page (as <c>AddSettingsPage</c>) below the page of <paramref name="parentPageName"/>, or as a root.</summary>
     /// <param name="asRoot">The page is shown for its parent group (the checklist for "Git Extensions").</param>
-    public SettingsTreeNode AddPage(SettingsPageViewModel page, string? parentPageName, string? icon, IReadOnlyDictionary<SettingsLevel, SettingsSource> sources, bool asRoot = false)
+    public SettingsTreeNode AddPage(SettingsPageViewModel page, string? parentPageName, object? icon, IReadOnlyDictionary<SettingsLevel, SettingsSource> sources, bool asRoot = false)
     {
         page.Initialize(this, sources, LevelTexts);
         if (parentPageName is null)
@@ -427,6 +427,12 @@ public sealed partial class SettingsDialogViewModel : DialogViewModel, ISettings
     {
         LoadAll();
         GotoPage(initialPageName ?? _lastSelectedPageName);
+
+        // The page shown last may be missing (e.g. a plugin removed since): the first page is shown instead.
+        if (SelectedNode is null)
+        {
+            GotoPage(null);
+        }
     }
 
     /// <summary>As <c>GotoPage</c>: the first page without a name.</summary>

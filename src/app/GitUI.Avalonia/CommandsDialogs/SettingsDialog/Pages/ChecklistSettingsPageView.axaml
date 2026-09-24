@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.ChecklistSettingsPageView"
+             x:DataType="vm:ChecklistSettingsPageViewModel">
+  <!-- Equivalent of ChecklistSettingsPage: label11, a coloured flat button per check with its Repair button, CheckAtStartup, Rescan. -->
+  <StackPanel Spacing="4">
+    <TextBlock Text="{Binding Strings.Intro.Text}" TextWrapping="Wrap" Margin="0,0,0,4" />
+    <ItemsControl Name="checks" ItemsSource="{Binding Items}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:ChecklistItem">
+          <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4" IsVisible="{Binding IsVisible}">
+            <Button Classes="check" Classes.set="{Binding IsSet}"
+                    Classes.unset="{Binding IsUnset}"
+                    Classes.notRecommended="{Binding IsNotRecommended}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" MinHeight="30"
+                    Command="{Binding $parent[UserControl].((vm:ChecklistSettingsPageViewModel)DataContext).ClickCommand}" CommandParameter="{Binding}">
+              <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+            </Button>
+            <Button Grid.Column="1" Margin="6,0,0,0" MinWidth="100" VerticalAlignment="Stretch" VerticalContentAlignment="Center"
+                    IsVisible="{Binding IsRepairVisible}"
+                    Content="{Binding $parent[UserControl].((vm:ChecklistSettingsPageViewModel)DataContext).Strings.Repair.AccessKeyText}"
+                    Command="{Binding $parent[UserControl].((vm:ChecklistSettingsPageViewModel)DataContext).RepairCommand}" CommandParameter="{Binding}" />
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <CheckBox Name="checkAtStartup" Content="{Binding Strings.CheckAtStartup.AccessKeyText}" IsChecked="{Binding CheckAtStartup}" />
+    <Button Name="rescanButton" Content="{Binding Strings.Rescan.AccessKeyText}" Command="{Binding SaveAndRescanCommand}" MinWidth="120" Margin="0,4,0,0" />
+  </StackPanel>
+  <UserControl.Styles>
+    <!-- As RenderSettingSet, RenderSettingUnset and RenderSettingNotRecommended (OtherColors, dimmed in the dark theme). -->
+    <Style Selector="Button.check">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+    <Style Selector="Button.check.set">
+      <Setter Property="Background" Value="#80FF80" />
+    </Style>
+    <Style Selector="Button.check.unset">
+      <Setter Property="Background" Value="#FF8080" />
+    </Style>
+    <Style Selector="Button.check.notRecommended">
+      <Setter Property="Background" Value="#FFFF80" />
+    </Style>
+    <Style Selector="Button.check /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+    <Style Selector="Button.check.set:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#A0FFA0" />
+    </Style>
+    <Style Selector="Button.check.unset:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#FFA0A0" />
+    </Style>
+    <Style Selector="Button.check.notRecommended:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#FFFFA0" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

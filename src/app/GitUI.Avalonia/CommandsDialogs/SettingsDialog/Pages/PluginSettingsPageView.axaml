@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             xmlns:sv="using:GitUI.Presentation.CommandsDialogs.SettingsDialog"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.PluginSettingsPageView"
+             x:DataType="vm:PluginSettingsPageViewModel">
+  <!-- Equivalent of PluginSettingsPage: labelNoSettings, or the rows of TableSettingsLayout (a caption, the control of the setting). -->
+  <StackPanel Grid.IsSharedSizeScope="True">
+    <TextBlock Name="noSettings" Text="{Binding Strings.NoSettings.Text}" IsVisible="{Binding HasNoSettings}" HorizontalAlignment="Center" Margin="0,8" />
+    <ItemsControl Name="rows" ItemsSource="{Binding Rows}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:PluginSettingRow">
+          <Grid Margin="0,2">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="caption" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <ContentControl Grid.Column="1" Content="{Binding Value}" IsVisible="{Binding !IsText}" />
+            <SelectableTextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" IsVisible="{Binding IsPlainText}" VerticalAlignment="Center" />
+            <HyperlinkButton Grid.Column="1" Content="{Binding Text}" IsVisible="{Binding IsLink}" Click="OnLinkClick" Padding="0" />
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+      <ItemsControl.DataTemplates>
+        <DataTemplate DataType="sv:BoolSettingValue">
+          <CheckBox IsThreeState="{Binding IsThreeState}" IsChecked="{Binding Value}" />
+        </DataTemplate>
+        <DataTemplate DataType="sv:ChoiceSettingValue">
+          <ComboBox ItemsSource="{Binding Values}" SelectedItem="{Binding Value}" MinWidth="200" />
+        </DataTemplate>
+        <DataTemplate DataType="sv:IntSettingValue">
+          <NumericUpDown Value="{Binding Value}" Minimum="0" Maximum="2147483647" Increment="1" FormatString="0" Width="160" HorizontalAlignment="Left"
+                         Watermark="{Binding $parent[UserControl].((vm:PluginSettingsPageViewModel)DataContext).ValueStrings.NumberPlaceholder.Text}" />
+        </DataTemplate>
+        <DataTemplate DataType="sv:NumberTextSettingValue">
+          <TextBox Text="{Binding Text}" Classes.invalid="{Binding !IsValid}"
+                   Watermark="{Binding $parent[UserControl].((vm:PluginSettingsPageViewModel)DataContext).ValueStrings.NumberPlaceholder.Text}" />
+        </DataTemplate>
+        <DataTemplate DataType="sv:StringSettingValue">
+          <TextBox Text="{Binding Value}"
+                   Watermark="{Binding $parent[UserControl].((vm:PluginSettingsPageViewModel)DataContext).ValueStrings.StringPlaceholderText}" />
+        </DataTemplate>
+        <DataTemplate DataType="sv:PasswordSettingValue">
+          <TextBox Text="{Binding Value}" PasswordChar="●"
+                   Watermark="{Binding $parent[UserControl].((vm:PluginSettingsPageViewModel)DataContext).ValueStrings.StringPlaceholderText}" />
+        </DataTemplate>
+        <!-- Equivalent of CredentialsControl. -->
+        <DataTemplate DataType="sv:CredentialsSettingValue">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" IsEnabled="{Binding IsEnabled}">
+            <TextBlock Text="User name" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Column="1" Text="{Binding UserName}" Margin="0,0,0,4" />
+            <TextBlock Grid.Row="1" Text="API token/Password" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Password}" PasswordChar="●" />
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.DataTemplates>
+    </ItemsControl>
+  </StackPanel>
+  <UserControl.Styles>
+    <Style Selector="TextBox.invalid">
+      <Setter Property="Background" Value="#FFFF5050" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

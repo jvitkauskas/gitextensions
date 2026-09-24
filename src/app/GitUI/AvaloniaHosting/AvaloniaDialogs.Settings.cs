@@ -2,14 +2,17 @@ using GitCommands;
 using GitCommands.Settings;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Settings;
+using GitExtUtils;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.SettingsDialog;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.Translations;
+using GitUI.ScriptsEngine;
 using SettingsPageViewModel = GitUI.Presentation.CommandsDialogs.SettingsDialog.SettingsPageViewModel;
 
 namespace GitUI.AvaloniaHosting;
@@ -32,7 +35,8 @@ internal static partial class AvaloniaDialogs
 
         CommonLogic commonLogic = new(commands.Module);
         SettingsDialogViewModel viewModel = new(ViewStrings.Load<SettingsDialogStrings>(), new SettingsDialogHost(commonLogic, owner));
-        AddSettingsPages(viewModel, commonLogic, commands.Module.IsValidGitWorkingDir());
+        SettingsWindow? settingsWindow = null;
+        AddSettingsPages(viewModel, commonLogic, commands, commands.Module.IsValidGitWorkingDir(), () => settingsWindow is null ? owner : new NativeWindowOwner(settingsWindow));
 
         // As ShowSettingsDialog: the pages read and write AppSettings in the global settings of the dialog until saved.
         AppSettings.UsingContainer(commonLogic.DistributedSettingsSet.GlobalSettings, () =>
@@ -41,6 +45,7 @@ internal static partial class AvaloniaDialogs
                 () =>
                 {
                     SettingsWindow window = new() { DataContext = viewModel };
+                    settingsWindow = window;
                     window.Opened += (_, _) => viewModel.Open(initialPage is SettingsPageReferenceByType byType ? byType.SettingsPageType.Name : null);
                     return window;
                 },
@@ -57,7 +62,8 @@ internal static partial class AvaloniaDialogs
     ///  (<c>SettingsPageWithHeader</c>: global; <c>DistributedSettingsPage</c> and <c>GitConfigBaseSettingsPage</c>: the
     ///  levels of the repository too, in a repository). The pages not ported yet are left out.
     /// </summary>
-    private static void AddSettingsPages(SettingsDialogViewModel viewModel, CommonLogic commonLogic, bool canSaveInsideRepo)
+    /// <param name="getOwner">The owner of the message boxes and dialogs of the pages: the settings window once shown.</param>
+    private static void AddSettingsPages(SettingsDialogViewModel viewModel, CommonLogic commonLogic, IGitUICommands commands, bool canSaveInsideRepo, Func<IWin32Window?> getOwner)
     {
         DistributedSettingsSet distributed = commonLogic.DistributedSettingsSet;
         GitConfigSettingsSet gitConfig = commonLogic.GitConfigSettingsSet;
@@ -88,12 +94,18 @@ internal static partial class AvaloniaDialogs
         // Git Extensions settings
         const string gitExtensions = nameof(GitExtensionsSettingsGroup);
         viewModel.AddPage(new GroupSettingsPageViewModel(strings.GitExtensionsGroup.Text, gitExtensions), null, "GitExtensionsLogo16", none);
+        ChecklistSettingsPageStrings checklistStrings = ViewStrings.Load<ChecklistSettingsPageStrings>();
+        ChecklistSettingsPageViewModel checklist = new(checklistStrings, new ChecklistSettingsHost(checklistStrings, commonLogic, commands, getOwner));
+        Add(checklist, gitExtensions, null, global, asRoot: true);
 
         // >> Detailed
         Add(new DetailedSettingsPageViewModel(ViewStrings.Load<DetailedSettingsPageStrings>()), gitExtensions, "Settings", distributedLevels);
         const string detailed = nameof(DetailedSettingsPage);
         Add(new CommitDialogSettingsPageViewModel(ViewStrings.Load<CommitDialogSettingsPageStrings>()), detailed, "CommitSummary", global);
         Add(new BlameViewerSettingsPageViewModel(ViewStrings.Load<BlameViewerSettingsPageStrings>()), detailed, "Blame", global);
+
+        Add(new ScriptsSettingsPageViewModel(ViewStrings.Load<ScriptsSettingsPageStrings>(), new ScriptsSettingsHost(commands.GetRequiredService<IScriptsManager>())), gitExtensions, "Console", global);
+        Add(new HotkeysSettingsPageViewModel(ViewStrings.Load<HotkeysSettingsPageStrings>(), new HotkeysSettingsHost(commands.GetRequiredService<IHotkeySettingsManager>())), gitExtensions, "Hotkey", global);
 
         // Git settings
         const string git = nameof(GitSettingsGroup);
@@ -104,8 +116,12 @@ internal static partial class AvaloniaDialogs
         const string plugins = nameof(PluginsSettingsGroup);
         viewModel.AddPage(new GroupSettingsPageViewModel(strings.PluginsGroup.Text, plugins), null, "Plugin", none);
         Add(IntroductionSettingsPageViewModel.CreatePluginRoot(), plugins, null, none, asRoot: true);
+        foreach ((PluginSettingsPageViewModel page, byte[]? icon) in CreatePluginSettingsPages())
+        {
+            Add(page, plugins, icon, distributedLevels);
+        }
 
-        void Add(SettingsPageViewModel page, string parent, string? icon, Dictionary<SettingsLevel, SettingsSource> sources, bool asRoot = false)
+        void Add(SettingsPageViewModel page, string parent, object? icon, Dictionary<SettingsLevel, SettingsSource> sources, bool asRoot = false)
             => viewModel.AddPage(page, parent, icon, sources, asRoot);
     }
 

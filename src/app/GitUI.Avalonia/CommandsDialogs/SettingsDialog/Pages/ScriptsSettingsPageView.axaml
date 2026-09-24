@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages"
+             xmlns:sd="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog"
+             x:Class="GitUI.Avalonia.CommandsDialogs.SettingsDialog.Pages.ScriptsSettingsPageView"
+             x:DataType="vm:ScriptsSettingsPageViewModel">
+  <!-- Equivalent of ScriptsSettingsPage: the scripts (lvScripts) with the buttons (panelButtons), the properties of the selected one (propertyGrid1). -->
+  <StackPanel Spacing="8" MaxWidth="900" HorizontalAlignment="Left">
+    <DockPanel Height="260">
+      <StackPanel DockPanel.Dock="Right" Spacing="4" Margin="6,0,0,0">
+        <Button Name="addButton" Command="{Binding AddCommand}" ToolTip.Tip="Add" Padding="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/RemoteAdd.png" Width="16" Height="16" />
+        </Button>
+        <Button Name="deleteButton" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete" Padding="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/RemoteDelete.png" Width="16" Height="16" />
+        </Button>
+        <Button Name="moveUpButton" Command="{Binding MoveUpCommand}" ToolTip.Tip="Move up" Padding="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/ArrowUp.png" Width="16" Height="16" />
+        </Button>
+        <Button Name="moveDownButton" Command="{Binding MoveDownCommand}" ToolTip.Tip="Move down" Padding="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/ArrowDown.png" Width="16" Height="16" />
+        </Button>
+        <Button Name="argumentsHelpButton" Content="?" Command="{Binding ShowArgumentsHelpCommand}" ToolTip.Tip="{Binding Strings.ArgumentsHelp.Text}"
+                Width="26" HorizontalContentAlignment="Center" />
+      </StackPanel>
+      <DataGrid Name="scriptsGrid" ItemsSource="{Binding Scripts}" SelectedItem="{Binding SelectedScript}"
+                SelectionMode="Single" CanUserReorderColumns="False" CanUserSortColumns="False" HeadersVisibility="Column" GridLinesVisibility="None"
+                BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Name" Width="200">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:ScriptItem">
+                <StackPanel Orientation="Horizontal" Spacing="4" Margin="4,0" ToolTip.Tip="{Binding CommandLine}" Classes.disabled="{Binding !Enabled}">
+                  <!-- As lvScripts_ItemChecked: the check box shows Enabled, a click selects the script. -->
+                  <CheckBox IsChecked="{Binding Enabled}" MinWidth="0" Padding="0" VerticalAlignment="Center" IsHitTestVisible="False" Focusable="False" />
+                  <Image Width="16" Height="16" Source="{Binding Image, Converter={x:Static sd:SettingsIconConverter.Instance}}" />
+                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Event" Binding="{Binding OnEvent}" Width="120" IsReadOnly="True" x:DataType="vm:ScriptItem" />
+          <DataGridTextColumn Header="Command" Binding="{Binding CommandLine}" Width="*" IsReadOnly="True" x:DataType="vm:ScriptItem" />
+        </DataGrid.Columns>
+      </DataGrid>
+    </DockPanel>
+    <!-- The properties of ScriptInfoProxy, by category, as the property grid. -->
+    <StackPanel Name="properties" Spacing="0" IsEnabled="{Binding $parent[UserControl].((vm:ScriptsSettingsPageViewModel)DataContext).HasSelectedScript}" DataContext="{Binding SelectedScript}" x:DataType="vm:ScriptItem" Grid.IsSharedSizeScope="True">
+      <HeaderedContentControl Classes="groupBox" Header="Script">
+        <StackPanel Spacing="4">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Name" Classes="label" />
+            <TextBox Name="nameBox" Grid.Column="1" Text="{Binding Name}" />
+          </Grid>
+          <CheckBox Name="enabledBox" Content="Enabled" IsChecked="{Binding Enabled}" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Command" Classes="label" />
+            <TextBox Name="commandBox" Grid.Column="1" Text="{Binding Command}" />
+            <Button Name="browseCommandButton" Grid.Column="2" Content="..." Margin="4,0,0,0"
+                    Command="{Binding $parent[UserControl].((vm:ScriptsSettingsPageViewModel)DataContext).BrowseCommandCommand}" />
+          </Grid>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Arguments" Classes="label" VerticalAlignment="Top" Margin="0,6,12,0" />
+            <TextBox Name="argumentsBox" Grid.Column="1" Text="{Binding Arguments}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="160" />
+          </Grid>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Execute on event" Classes="label" />
+            <ComboBox Name="eventBox" Grid.Column="1" MinWidth="200" SelectedItem="{Binding OnEvent}"
+                      ItemsSource="{Binding $parent[UserControl].((vm:ScriptsSettingsPageViewModel)DataContext).EventNames}" />
+          </Grid>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Icon" Classes="label" />
+            <ComboBox Name="iconBox" Grid.Column="1" MinWidth="200" MaxDropDownHeight="400"
+                      ItemsSource="{Binding $parent[UserControl].((vm:ScriptsSettingsPageViewModel)DataContext).Icons}"
+                      SelectedItem="{Binding $parent[UserControl].((vm:ScriptsSettingsPageViewModel)DataContext).SelectedIcon}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ScriptIconChoice">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Image Width="16" Height="16" Source="{Binding Image, Converter={x:Static sd:SettingsIconConverter.Instance}}" />
+                    <TextBlock Text="{Binding Name}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+          <Grid ToolTip.Tip="This can either be a path to an .ico file or to any other file in which case its &quot;associated icon&quot; is used.">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="label" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Icon or associated file path" Classes="label" />
+            <TextBox Name="iconFileBox" Grid.Column="1" Text="{Binding IconFilePath}" />
+            <Button Name="browseIconFileButton" Grid.Column="2" Content="..." Margin="4,0,0,0"
+                    Command="{Binding $parent[UserControl].((vm:ScriptsSettingsPageViewModel)DataContext).BrowseIconFileCommand}" />
+          </Grid>
+        </StackPanel>
+      </HeaderedContentControl>
+      <HeaderedContentControl Classes="groupBox" Header="Script behaviour">
+        <StackPanel Spacing="4">
+          <CheckBox Name="askConfirmationBox" Content="Ask confirmation" IsChecked="{Binding AskConfirmation}" />
+          <CheckBox Name="runInBackgroundBox" Content="Run in background" IsChecked="{Binding RunInBackground}" />
+          <CheckBox Name="isPowerShellBox" Content="Is PowerShell script" IsChecked="{Binding IsPowerShell}" />
+        </StackPanel>
+      </HeaderedContentControl>
+      <HeaderedContentControl Classes="groupBox" Header="Script context">
+        <CheckBox Name="revisionGridBox" Content="Show in RevisionGrid" IsChecked="{Binding AddToRevisionGridContextMenu}" />
+      </HeaderedContentControl>
+    </StackPanel>
+  </StackPanel>
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,12,0" />
+    </Style>
+    <!-- As the gray text of a disabled script. -->
+    <Style Selector="StackPanel.disabled TextBlock">
+      <Setter Property="Opacity" Value="0.55" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>
