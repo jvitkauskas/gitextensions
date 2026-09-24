@@ -1,0 +1,47 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:ed="using:GitUI.Avalonia.Editor"
+                xmlns:vm="using:GitUI.Presentation.CommandsDialogs.RepoHosting"
+                x:Class="GitUI.Avalonia.CommandsDialogs.RepoHosting.CreatePullRequestWindow"
+                x:DataType="vm:CreatePullRequestViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                ShowInTaskbar="True"
+                Width="546" Height="345" MinWidth="552" MinHeight="345">
+  <Panel>
+    <DockPanel Margin="9,12,9,9" IsEnabled="{Binding !IsLoading}">
+      <!-- The remotes and branches, as positioned in the WinForms form. -->
+      <Grid DockPanel.Dock="Top" Classes="form" ColumnDefinitions="132,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
+        <Label Content="{Binding Strings.TargetRepository.AccessKeyText}" Target="targetRemotes" />
+        <ComboBox Name="targetRemotes" Grid.Column="1" HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding TargetRemotes}" SelectedItem="{Binding SelectedTargetRemote}" />
+        <Label Grid.Row="1" Content="{Binding Strings.YourBranch.AccessKeyText}" Target="yourBranches" />
+        <ComboBox Name="yourBranches" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding YourBranches}" SelectedItem="{Binding SelectedYourBranch}" />
+        <Label Grid.Row="2" Content="{Binding Strings.TargetBranch.AccessKeyText}" Target="targetBranches" />
+        <ComboBox Name="targetBranches" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding TargetBranches}" SelectedItem="{Binding SelectedTargetBranch}" />
+      </Grid>
+      <Button Name="createButton" DockPanel.Dock="Bottom" HorizontalAlignment="Right" MinWidth="112" Height="33" Margin="0,6,0,0"
+              HorizontalContentAlignment="Center" Classes="accent"
+              Content="{Binding Strings.Create.AccessKeyText}" Command="{Binding CreateCommand}" />
+      <!-- Equivalent of groupBox1. -->
+      <Border Margin="0,12,0,0" BorderThickness="1" CornerRadius="4" Padding="6,4,6,6"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <Grid Classes="form" ColumnDefinitions="46,*" RowDefinitions="Auto,Auto,*" RowSpacing="4">
+          <TextBlock Grid.ColumnSpan="2" FontWeight="SemiBold" Text="{Binding Strings.PullRequestData.PlainText}" />
+          <Label Grid.Row="1" Content="{Binding Strings.TitleLabel.AccessKeyText}" Target="titleText" />
+          <TextBox Name="titleText" Grid.Row="1" Grid.Column="1" Text="{Binding PullRequestTitle}" />
+          <Label Grid.Row="2" VerticalAlignment="Top" Margin="0,4,0,0" Content="{Binding Strings.Body.AccessKeyText}" Target="body" />
+          <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <ed:TextEditorView Name="body" DataContext="{Binding Body}" />
+          </Border>
+        </Grid>
+      </Border>
+    </DockPanel>
+    <!-- As Mask(): a loading panel over the dialog while the remotes are read. -->
+    <Border Name="loadingPanel" IsVisible="{Binding IsLoading}" Background="{DynamicResource SystemControlBackgroundAltMediumBrush}">
+      <ProgressBar IsIndeterminate="True" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" />
+    </Border>
+  </Panel>
+</h:DialogWindow>

@@ -25,5 +25,8 @@
     <ProjectReference Include="..\..\..\..\src\plugins\Gource\GitExtensions.Plugins.Gource.csproj" />
     <ProjectReference Include="..\..\..\..\src\plugins\ProxySwitcher\GitExtensions.Plugins.ProxySwitcher.csproj" />
     <ProjectReference Include="..\..\..\..\src\plugins\ReleaseNotesGenerator\GitExtensions.Plugins.ReleaseNotesGenerator.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\Statistics\GitStatistics\GitExtensions.Plugins.GitStatistics.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\Statistics\GitImpact\GitExtensions.Plugins.GitImpact.csproj" />
+    <ProjectReference Include="..\..\..\..\src\plugins\BuildServerIntegration\TeamCityIntegration\GitExtensions.Plugins.TeamCityIntegration.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,38 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:TeamCityIntegration.Settings"
+                x:Class="TeamCityIntegration.Settings.TeamCityBuildChooserWindow"
+                x:DataType="vm:TeamCityBuildChooserViewModel"
+                Title="Choose the TeamCity build..."
+                Width="451" Height="379" MinWidth="300" MinHeight="250">
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" Classes="accent" IsDefault="True" Content="OK" Command="{Binding SelectBuildCommand}" />
+        <Button Name="cancelButton" IsCancel="True" Content="Cancel" Command="{Binding CancelDialogCommand}" />
+      </StackPanel>
+    </Border>
+    <!-- Equivalent of treeViewTeamCityProjects: the projects, with their builds in the highlight color. -->
+    <TreeView Name="projectsTree" Margin="9,10,9,6" ItemsSource="{Binding Nodes}" SelectedItem="{Binding SelectedNode}"
+              BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <TreeView.Styles>
+        <Style Selector="TreeViewItem" x:DataType="vm:TeamCityBuildNode">
+          <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+          <Setter Property="MinHeight" Value="22" />
+        </Style>
+      </TreeView.Styles>
+      <TreeView.ItemTemplate>
+        <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="vm:TeamCityBuildNode">
+          <TextBlock Text="{Binding Text}" Classes.build="{Binding IsBuild}">
+            <TextBlock.Styles>
+              <Style Selector="TextBlock.build">
+                <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+              </Style>
+            </TextBlock.Styles>
+          </TextBlock>
+        </TreeDataTemplate>
+      </TreeView.ItemTemplate>
+    </TreeView>
+  </DockPanel>
+</h:DialogWindow>

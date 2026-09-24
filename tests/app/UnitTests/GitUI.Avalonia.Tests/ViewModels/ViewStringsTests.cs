@@ -3,12 +3,15 @@ using GitExtensions.Extensibility.Translations;
 using GitExtensions.Plugins.CreateLocalBranches;
 using GitExtensions.Plugins.DeleteUnusedBranches;
 using GitExtensions.Plugins.FindLargeFiles;
+using GitExtensions.Plugins.GitImpact;
+using GitExtensions.Plugins.GitStatistics;
 using GitExtensions.Plugins.Gource;
 using GitExtensions.Plugins.ProxySwitcher;
 using GitExtensions.Plugins.ReleaseNotesGenerator;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.CommandsDialogs.CommitDialog;
+using GitUI.Presentation.CommandsDialogs.RepoHosting;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Presentation.Editor;
@@ -166,6 +169,13 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new GourceStartStrings()).SetArgDisplayNames(nameof(GourceStartStrings));
         yield return new TestCaseData(new ProxySwitcherStrings()).SetArgDisplayNames(nameof(ProxySwitcherStrings));
         yield return new TestCaseData(new ReleaseNotesGeneratorStrings()).SetArgDisplayNames(nameof(ReleaseNotesGeneratorStrings));
+        yield return new TestCaseData(new GitStatisticsStrings()).SetArgDisplayNames(nameof(GitStatisticsStrings));
+        yield return new TestCaseData(new ImpactStrings()).SetArgDisplayNames(nameof(ImpactStrings));
+
+        // The repository hosting dialogs of GitUI.
+        yield return new TestCaseData(new ForkAndCloneStrings()).SetArgDisplayNames(nameof(ForkAndCloneStrings));
+        yield return new TestCaseData(new CreatePullRequestStrings()).SetArgDisplayNames(nameof(CreatePullRequestStrings));
+        yield return new TestCaseData(new ViewPullRequestsStrings()).SetArgDisplayNames(nameof(ViewPullRequestsStrings));
     }
 
     [TestCaseSource(nameof(AllViewStrings))]

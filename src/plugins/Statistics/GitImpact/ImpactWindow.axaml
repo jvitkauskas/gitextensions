@@ -1,0 +1,24 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitExtensions.Plugins.GitImpact"
+                x:Class="GitExtensions.Plugins.GitImpact.ImpactWindow"
+                x:DataType="vm:ImpactViewModel"
+                Title="{Binding Strings.Title.PlainText}"
+                Width="863" Height="484" MinWidth="400" MinHeight="250">
+  <DockPanel>
+    <!-- Equivalent of pnlTop: the color and the data of the author under the mouse, and the submodules check box. -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Height="32" Margin="6,0,12,0">
+      <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" IsVisible="{Binding HasSelectedAuthor}">
+        <Border Name="authorColor" Width="20" Height="20" />
+        <TextBlock Name="authorText" VerticalAlignment="Center" Text="{Binding SelectedAuthorText}" />
+      </StackPanel>
+      <CheckBox Name="includingSubmodules" Grid.Column="2" Content="{Binding Strings.IncludingSubmodules.AccessKeyText}"
+                IsChecked="{Binding ShowSubmodules}" />
+    </Grid>
+    <ScrollViewer Name="graphScroller" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled"
+                  Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+      <vm:ImpactGraphView Name="graph" HorizontalAlignment="Left" Snapshot="{Binding Snapshot}" SelectedAuthor="{Binding SelectedAuthor}" />
+    </ScrollViewer>
+  </DockPanel>
+</h:DialogWindow>
