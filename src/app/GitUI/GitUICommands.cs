@@ -1040,6 +1040,11 @@ public sealed class GitUICommands : IGitUICommands
     {
         bool Action()
         {
+            if (AvaloniaHosting.AvaloniaDialogs.TryShowResolveConflicts(owner, this, offerCommit))
+            {
+                return true;
+            }
+
             using FormResolveConflicts form = new(this, offerCommit);
             form.ShowDialog(owner);
             return true;
