@@ -8,4 +8,16 @@
   <ItemGroup Condition=" '$(MSBuildProjectName)' != 'GitUIPluginInterfaces'">
     <PluginAssembly Include="$(TargetPath)" />
   </ItemGroup>
+
+  <!--
+      The Avalonia UI packages (with their native libraries for every platform, about 550 MB) are shipped by the
+      application, which loads them for the plugins too: they are not copied to the output folder of each plugin.
+    -->
+  <Target Name="_ExcludeApplicationUIPackagesFromPluginOutput" AfterTargets="ResolveLockFileCopyLocalFiles">
+    <ItemGroup>
+      <_ApplicationUIPackageFile Include="@(ReferenceCopyLocalPaths)"
+                                 Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(ReferenceCopyLocalPaths.NuGetPackageId)', '^(Avalonia|SkiaSharp|HarfBuzzSharp|MicroCom|Tmds\.DBus)'))" />
+      <ReferenceCopyLocalPaths Remove="@(_ApplicationUIPackageFile)" />
+    </ItemGroup>
+  </Target>
 </Project>
