@@ -17,6 +17,11 @@ public sealed partial class AvaloniaHostingTests
         // The file history of the browse window is the default; with other windows open, the file history is modeless.
         bool useBrowse = AppSettings.UseBrowseForFileHistory.Value;
         AppSettings.UseBrowseForFileHistory.Value = false;
+        // Another window of the application, as the main window.
+        GitUI.Avalonia.Hosting.DialogWindow mainWindow = new() { Title = "Main window", Width = 400, Height = 300 };
+        GitUI.Avalonia.Hosting.AvaloniaDialogHost.Show(mainWindow, ownerHandle: 0);
+        PumpUntil(() => mainWindow.IsVisible);
+
         GitUI.Avalonia.Hosting.DialogWindow? shown = null;
         GitUI.Avalonia.Hosting.AvaloniaDialogHost.DialogShowingForTests = window => shown = window;
         try
@@ -42,6 +47,8 @@ public sealed partial class AvaloniaHostingTests
             GitUI.Avalonia.Hosting.AvaloniaDialogHost.DialogShowingForTests = null;
             shown?.Close();
             PumpUntil(() => shown?.IsVisible != true);
+            mainWindow.Close();
+            PumpUntil(() => !mainWindow.IsVisible);
         }
     }
 }
