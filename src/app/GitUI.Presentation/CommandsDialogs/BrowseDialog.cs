@@ -414,10 +414,16 @@ public enum BrowseSubmenu
 {
     RecentRepositories,
     FavouriteRepositories,
+
+    /// <summary>The Navigate menu, built by the application (<see cref="BrowseViewModel.GetModelSubmenuItems"/>).</summary>
+    Navigate,
+
+    /// <summary>The View menu, built by the application (<see cref="BrowseViewModel.GetModelSubmenuItems"/>).</summary>
+    View,
 }
 
 /// <summary>An item of a menu of the main window, or a separator (no command, action, submenu or children).</summary>
-public sealed record BrowseMenuItem(string Header, BrowseCommand? Command, string? Icon = null, IReadOnlyList<BrowseMenuItem>? Children = null)
+public sealed record BrowseMenuItem(string Header, BrowseCommand? Command, object? Icon = null, IReadOnlyList<BrowseMenuItem>? Children = null)
 {
     public static BrowseMenuItem Separator { get; } = new("-", null);
 
@@ -432,7 +438,10 @@ public sealed record BrowseMenuItem(string Header, BrowseCommand? Command, strin
     /// <summary>The submenu whose items are read with <see cref="BrowseViewModel.GetSubmenuItems"/>.</summary>
     public BrowseSubmenu? Submenu { get; init; }
 
-    public bool IsSeparator => Command is null && Children is null && Invoke is null && Submenu is null;
+    /// <summary>Whether the item can be clicked (e.g. not the "Loading..." of the plugins).</summary>
+    public bool IsEnabled { get; init; } = true;
+
+    public bool IsSeparator => Header == "-" && Command is null && Children is null && Invoke is null && Submenu is null;
 }
 
 /// <summary>What the main window needs from the application.</summary>
@@ -478,6 +487,7 @@ public enum BrowseTab
 public sealed partial class BrowseViewModel : DialogViewModel
 {
     private readonly IBrowseHost _host;
+    private readonly IReadOnlyList<BrowseMenuItem> _baseMenus;
     private CancellationTokenSource? _loadingDiffs;
 
     public BrowseViewModel(
@@ -513,7 +523,9 @@ public sealed partial class BrowseViewModel : DialogViewModel
         };
         host.RepositoryChanged += (_, _) => RefreshRevisions();
 
-        Menus = CreateMenus(strings, dashboard);
+        InitializePlugins();
+        _baseMenus = CreateMenus(strings, dashboard);
+        Menus = AddDynamicMenus(_baseMenus);
         Title = host.GetTitle();
         CurrentBranch = host.GetCurrentBranch();
     }
@@ -538,7 +550,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
     public partial LeftPanelViewModel? LeftPanel { get; set; }
 
     /// <summary>The main menu (<c>mainMenuStrip</c>).</summary>
-    public IReadOnlyList<BrowseMenuItem> Menus { get; }
+    public IReadOnlyList<BrowseMenuItem> Menus { get; private set; }
 
     /// <summary>The items of the drop down of the pull button (<c>toolStripButtonPull</c>).</summary>
     public IReadOnlyList<BrowseMenuItem> PullItems =>

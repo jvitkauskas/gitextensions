@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -30,7 +31,7 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.CommitInfo.RevisionInfo.Should().NotBeEmpty("the commit info of the selected revision is shown");
         host.DiffsRequested.Should().ContainSingle().Which.Should().Equal(viewModel.Grid.Rows[0].Subject);
         viewModel.Files.AllEntries.Select(e => e.Item.Name).Should().Equal("src/file.cs");
-        window.MainMenu.Items.Cast<MenuItem>().Select(m => m.Header).Should().Equal("_Start", "_Repository", "_Commands", "_Tools", "_Help");
+        window.MainMenu.Items.Cast<MenuItem>().Where(m => m.IsVisible).Select(m => m.Header).Should().Equal("_Start", "_Repository", "_Commands", "_Plugins", "_Tools", "_Help");
         SaveScreenshot(window.CaptureRenderedFrame(), $"browse-commit-{theme}");
 
         window.Tabs.SelectedIndex = 1;
@@ -204,7 +205,59 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
-    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show()
+    [Test]
+    public Task The_plugins_menu_lists_the_plugins_once_they_are_loaded() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        List<string> Headers() => [.. window.MainMenu.Items.Cast<MenuItem>().Where(m => m.IsVisible).Select(m => (string)m.Header!)];
+        MenuItem Menu(string header) => window.MainMenu.Items.Cast<MenuItem>().Single(m => (string?)m.Header == header);
+
+        // As pluginsLoadingToolStripMenuItem while the plugins load.
+        MenuItem loading = Menu("_Plugins").Items.OfType<MenuItem>().First();
+        loading.Header.Should().Be("Loading...");
+        loading.IsEnabled.Should().BeFalse();
+
+        host.LoadPlugins([new("Statistics", null, true, "statistics"), new("Plugin Manager", null, false, "manager"), new("Delete obsolete branches", null, true, "delete")], "GitHub");
+        Dispatcher.UIThread.RunJobs();
+
+        Headers().Should().Equal("_Start", "_Repository", "_Commands", "GitHub", "_Plugins", "_Tools", "_Help");
+        List<object?> plugins = [.. Menu("_Plugins").Items.Select(i => i is MenuItem m ? m.Header : "-")];
+        plugins.Should().Equal("Delete obsolete branches", "Statistics", "-", "Plugin Manager", "Plugins _settings...");
+        MenuItem statistics = Menu("_Plugins").Items.OfType<MenuItem>().Single(m => (string?)m.Header == "Statistics");
+        statistics.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        host.PluginRuns.Should().Equal("statistics");
+
+        MenuItem viewPullRequests = Menu("GitHub").Items.OfType<MenuItem>().Single(m => (string?)m.Header == "View _pull requests...");
+        viewPullRequests.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        host.HostCommands.Should().Equal(RepositoryHostCommand.ViewPullRequests);
+        viewModel.Menus.Should().Contain(m => m.Header == "_Plugins");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_navigate_and_view_menus_are_the_ones_of_the_grid() => OnUiThreadAsync(() =>
+    {
+        int built = 0;
+        (BrowseWindow window, BrowseViewModel _, FakeBrowseHost _) = Show(navigate: () =>
+        {
+            built++;
+            return [new MenuModelItem("Go to _parent commit", () => { })];
+        });
+
+        List<MenuItem> menus = [.. window.MainMenu.Items.Cast<MenuItem>()];
+        menus.Where(m => m.IsVisible).Select(m => m.Header).Should().StartWith(["_Start", "_Repository", "_Navigate", "_Commands"], "View is hidden without items");
+        MenuItem navigate = menus.Single(m => (string?)m.Header == "_Navigate");
+        navigate.Items.OfType<MenuItem>().Select(m => m.Header).Should().Equal("Go to _parent commit");
+        built.Should().Be(1);
+
+        // Built again when the main menu closes, as the grid's settings may have changed.
+        window.MainMenu.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuBase.ClosedEvent));
+        Dispatcher.UIThread.RunJobs();
+        built.Should().Be(2);
+        window.Close();
+    });
+
+    private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null)
     {
         FakeBrowseHost host = new();
         RevisionGridViewModel grid = new(new RevisionGridViewTests.FakeRevisionGridHost(RevisionGridViewTests.CreateHistory()), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false))
@@ -218,7 +271,10 @@ public sealed class BrowseViewTests : HeadlessTest
             new CommitInfoViewTests.FakeHost(),
             host.ViewerHost,
             new FileStatusListStrings(),
-            new FileStatusTreeOptions());
+            new FileStatusTreeOptions())
+        {
+            NavigateMenuProvider = navigate,
+        };
         BrowseWindow window = new() { Width = 1100, Height = 760, DataContext = viewModel };
         window.Show();
         Dispatcher.UIThread.RunJobs();
@@ -250,8 +306,31 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost
     {
+        public event EventHandler? PluginsChanged;
+
+        public IReadOnlyList<BrowsePlugin>? Plugins { get; private set; }
+
+        public string? RepositoryHostName { get; private set; }
+
+        public List<object> PluginRuns { get; } = [];
+
+        public List<RepositoryHostCommand> HostCommands { get; } = [];
+
+        public void LoadPlugins(IReadOnlyList<BrowsePlugin> plugins, string? hostName)
+        {
+            Plugins = plugins;
+            RepositoryHostName = hostName;
+            PluginsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void RunPlugin(BrowsePlugin plugin) => PluginRuns.Add(plugin.Plugin);
+
+        public void OpenPluginSettings() => PluginRuns.Add("settings");
+
+        public void RunRepositoryHostCommand(RepositoryHostCommand command) => HostCommands.Add(command);
+
         public List<string> GpgRequested { get; } = [];
 
         public Task<GpgInfo?> GpgResult { get; set; } = Task.FromResult<GpgInfo?>(null);

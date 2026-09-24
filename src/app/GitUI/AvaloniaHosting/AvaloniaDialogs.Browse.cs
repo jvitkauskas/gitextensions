@@ -156,6 +156,8 @@ internal static partial class AvaloniaDialogs
                 dashboard)
             {
                 Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
+                NavigateMenuProvider = gridMenu.CreateNavigateItems,
+                ViewMenuProvider = gridMenu.CreateViewItems,
             };
             browseViewModel = viewModel;
             UseFileStatusListMenu(viewModel.Files, commands, window);
@@ -265,6 +267,7 @@ internal static partial class AvaloniaDialogs
         public void Dispose()
         {
             _commands.PostRepositoryChanged -= OnPostRepositoryChanged;
+            UnregisterPlugins();
             RepositoryChanged = null;
             _repositoriesMenu?.Dispose();
             _repositoriesMenu = null;

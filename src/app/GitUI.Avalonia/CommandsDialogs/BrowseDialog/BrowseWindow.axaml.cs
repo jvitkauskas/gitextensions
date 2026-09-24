@@ -15,6 +15,7 @@ public partial class BrowseWindow : DialogWindow
 {
     private readonly List<(MenuItem Item, BrowseSubmenu Submenu)> _submenus = [];
     private readonly HashSet<MenuItem> _submenuOwners = [];
+    private readonly List<(MenuItem Item, BrowseSubmenu Submenu)> _modelSubmenus = [];
     private BrowseViewModel? _viewModel;
     private bool _isOpened;
 
@@ -35,6 +36,9 @@ public partial class BrowseWindow : DialogWindow
                 _viewModel.SelectedTab = (BrowseTab)tabs.SelectedIndex;
             }
         };
+
+        // The Navigate and View menus show the settings of the grid: they are built again once a command ran.
+        mainMenu.Closed += (_, _) => Dispatcher.UIThread.Post(RefreshModelSubmenus);
 
         // As the DropDownOpening of the recent and favourite repositories: their items are read when the Start menu opens.
         mainMenu.AddHandler(MenuItem.SubmenuOpenedEvent, (_, e) =>
@@ -87,9 +91,9 @@ public partial class BrowseWindow : DialogWindow
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
+        _viewModel?.MenusChanged -= OnMenusChanged;
         _viewModel = DataContext as BrowseViewModel;
-        _submenus.Clear();
-        _submenuOwners.Clear();
+        _viewModel?.MenusChanged += OnMenusChanged;
         if (_viewModel is null)
         {
             return;
@@ -101,9 +105,36 @@ public partial class BrowseWindow : DialogWindow
             _viewModel.SelectedTab = (BrowseTab)tabs.SelectedIndex;
         }
 
-        mainMenu.ItemsSource = _viewModel.Menus.Select(CreateItem).ToList();
+        BuildMainMenu();
         pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
         stashButton.Flyout = CreateFlyout(_viewModel.StashItems);
+    }
+
+    // As RegisterPlugins: the menus are built again, e.g. with the plugins once they are loaded.
+    private void OnMenusChanged(object? sender, EventArgs e) => BuildMainMenu();
+
+    private void BuildMainMenu()
+    {
+        _submenus.Clear();
+        _submenuOwners.Clear();
+        _modelSubmenus.Clear();
+        mainMenu.ItemsSource = _viewModel!.Menus.Select(CreateItem).ToList();
+        RefreshModelSubmenus();
+    }
+
+    private void RefreshModelSubmenus()
+    {
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        foreach ((MenuItem item, BrowseSubmenu submenu) in _modelSubmenus)
+        {
+            List<Control> items = MenuModelRenderer.CreateItems(_viewModel.GetModelSubmenuItems(submenu));
+            item.ItemsSource = items;
+            item.IsVisible = items.Count > 0;
+        }
     }
 
     private MenuFlyout CreateFlyout(IReadOnlyList<BrowseMenuItem> items)
@@ -125,7 +156,7 @@ public partial class BrowseWindow : DialogWindow
             return new Separator();
         }
 
-        MenuItem menuItem = new() { Header = CreateHeader(item) };
+        MenuItem menuItem = new() { Header = CreateHeader(item), IsEnabled = item.IsEnabled };
         if (item.Icon is not null && SettingsIconConverter.Instance.Convert(item.Icon, typeof(object), null, System.Globalization.CultureInfo.InvariantCulture) is { } icon)
         {
             menuItem.Icon = new Image { Source = (global::Avalonia.Media.IImage)icon, Width = 16, Height = 16 };
@@ -136,7 +167,11 @@ public partial class BrowseWindow : DialogWindow
             ToolTip.SetTip(menuItem, toolTip);
         }
 
-        if (item.Submenu is BrowseSubmenu submenu)
+        if (item.Submenu is BrowseSubmenu.Navigate or BrowseSubmenu.View)
+        {
+            _modelSubmenus.Add((menuItem, item.Submenu.Value));
+        }
+        else if (item.Submenu is BrowseSubmenu submenu)
         {
             _submenus.Add((menuItem, submenu));
         }

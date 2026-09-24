@@ -353,7 +353,9 @@ internal static partial class AvaloniaDialogs
             ];
 
         // As RevisionGridMenuCommands.CreateNavigateMenuCommands.
-        private IReadOnlyList<MenuModelItem> CreateNavigateItems()
+
+        /// <summary>The Navigate submenu, also the Navigate menu of the main window (<c>NavigateMenuCommands</c>).</summary>
+        public IReadOnlyList<MenuModelItem> CreateNavigateItems()
             =>
             [
                 new(_s.ToggleBetweenArtificialAndHeadCommits.AccessKeyText, ToggleBetweenArtificialAndHead, "WorkingDirChanges"),
@@ -376,7 +378,9 @@ internal static partial class AvaloniaDialogs
             ];
 
         // As RevisionGridMenuCommands.CreateViewMenuCommands, for the settings the Avalonia grid shows.
-        private IReadOnlyList<MenuModelItem> CreateViewItems()
+
+        /// <summary>The View submenu, also the View menu of the main window (<c>ViewMenuCommands</c>).</summary>
+        public IReadOnlyList<MenuModelItem> CreateViewItems()
         {
             FilterInfo filter = new();
             RevisionGridFilterState? state = Filter?.State;
