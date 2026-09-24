@@ -192,22 +192,20 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         }
 
         AvaloniaEdit.TextEditor editor = textView.Editor;
-        AvaloniaEdit.Search.SearchPanel search = textView.Search;
         switch (command)
         {
+            // As Find and FindNextAsync of FileViewerInternal (FindAndReplaceForm).
             case FileViewerHotkeyCommand.Find:
-                search.IsReplaceMode = false;
-                search.Open();
+                textView.OpenSearch(replace: false);
                 return true;
             case FileViewerHotkeyCommand.Replace when !editor.IsReadOnly:
-                search.IsReplaceMode = true;
-                search.Open();
+                textView.OpenSearch(replace: true);
                 return true;
-            case FileViewerHotkeyCommand.FindNextOrOpenWithDifftool when search.IsOpened:
-                search.FindNext();
+            case FileViewerHotkeyCommand.FindNextOrOpenWithDifftool:
+                textView.FindNext(backward: false);
                 return true;
-            case FileViewerHotkeyCommand.FindPrevious when search.IsOpened:
-                search.FindPrevious();
+            case FileViewerHotkeyCommand.FindPrevious:
+                textView.FindNext(backward: true);
                 return true;
             case FileViewerHotkeyCommand.GoToLine:
                 if (AskLineNumber(this, editor.Document.LineCount) is int line)

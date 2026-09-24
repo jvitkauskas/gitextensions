@@ -173,6 +173,11 @@ public sealed partial class ScriptOptionsParser
             return string.Empty;
         }
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowQuickRefSelector(owner, FormQuickGitRefSelector.QuickAction.Select, items, uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point(), out IGitRef? selectedRef))
+        {
+            return selectedRef?.Name ?? "";
+        }
+
         using FormQuickGitRefSelector f = new();
         f.Location = uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point();
         f.Init(FormQuickGitRefSelector.QuickAction.Select, items);
@@ -182,6 +187,11 @@ public sealed partial class ScriptOptionsParser
 
     private static string AskToSpecify(IEnumerable<string> options, IGitUICommands uiCommands, IWin32Window owner)
     {
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowQuickStringSelector(owner, [.. options], uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point(), out string? selectedString))
+        {
+            return selectedString ?? "";
+        }
+
         using FormQuickStringSelector f = new();
         f.Location = uiCommands.BrowseRepo?.GetQuickItemSelectorLocation() ?? new Point();
         f.Init(options.ToList());

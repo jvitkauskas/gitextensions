@@ -1622,6 +1622,21 @@ public sealed partial class FileStatusList : GitModuleControl
             return;
         }
 
+        if (AvaloniaHosting.AvaloniaDialogs.TryShowFindInCommitFilesGitGrep(
+            this,
+            !string.IsNullOrEmpty(text) ? text : FindInCommitFilesGitGrepActive ? cboFindInCommitFilesGitGrep.Text : null,
+            cboFindInCommitFilesGitGrep.Items.Cast<object>().Select(item => item.ToString() ?? ""),
+            cboFindInCommitFilesGitGrep.Visible,
+            search =>
+            {
+                FindInCommitFilesGitGrep(search);
+                cboFindInCommitFilesGitGrep.Text = search;
+            },
+            SetFindInCommitFilesGitGrepVisibility))
+        {
+            return;
+        }
+
         if (_formFindInCommitFilesGitGrep?.IsDisposed is true)
         {
             _formFindInCommitFilesGitGrep = null;

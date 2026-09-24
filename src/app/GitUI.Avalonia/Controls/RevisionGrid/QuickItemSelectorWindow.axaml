@@ -1,0 +1,37 @@
+<h:DialogWindow xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:h="using:GitUI.Avalonia.Hosting"
+                xmlns:vm="using:GitUI.Presentation.UserControls.RevisionGrid"
+                x:Class="GitUI.Avalonia.Controls.RevisionGrid.QuickItemSelectorWindow"
+                x:DataType="vm:QuickItemSelectorViewModel"
+                Title="{Binding ActionText}"
+                WindowDecorations="None" SizeToContent="WidthAndHeight" CanResize="False" CanMaximize="False">
+  <Window.Styles>
+    <Style Selector="ListBox#itemsListBox ListBoxItem">
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </Window.Styles>
+  <!-- Equivalent of the borderless FormQuickItemSelector: the list over the button, which is right aligned. -->
+  <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" Padding="2,2,2,0">
+    <DockPanel>
+      <Button Name="actionButton" DockPanel.Dock="Bottom" HorizontalAlignment="Right" MinWidth="75" Margin="0,4,2,4"
+              Classes="accent" IsDefault="True" Content="{Binding ActionText}" Command="{Binding AcceptCommand}" />
+      <ListBox Name="itemsListBox" MinWidth="150" MaxWidth="700" MaxHeight="170"
+               ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" SelectionMode="Single"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:QuickSelectorItem">
+            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis"
+                       Classes.header="{Binding IsHeader}" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+        <ListBox.Styles>
+          <Style Selector="TextBlock.header">
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+          </Style>
+        </ListBox.Styles>
+      </ListBox>
+    </DockPanel>
+  </Border>
+</h:DialogWindow>
