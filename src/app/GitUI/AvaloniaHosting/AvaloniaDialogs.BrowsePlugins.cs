@@ -79,13 +79,18 @@ internal static partial class AvaloniaDialogs
 
         public string? RepositoryHostName => _pluginsLoaded && PluginRegistry.GitHosters.Count != 0 ? PluginRegistry.GitHosters[0].Name : null;
 
+        // As the click of a plugin item of FormBrowse, with the Avalonia window as the owner (plugin API v2); a plugin of API
+        // v1 gets it as OwnerForm (a wrapper of its handle).
         public void RunPlugin(BrowsePlugin plugin) => AvaloniaUi.RunInHostContext(() =>
         {
-            if (((IGitPlugin)plugin.Plugin).Execute(new GitUIEventArgs(Owner, _commands)))
+            if (((IGitPlugin)plugin.Plugin).Execute(CreatePluginEventArgs()))
             {
                 _commands.RepoChangedNotifier.Notify();
             }
         });
+
+        /// <summary>The arguments of the plugins run from this window.</summary>
+        internal GitUIEventArgs CreatePluginEventArgs() => new(new WindowOwner(_window.NativeHandle), _commands);
 
         public void OpenPluginSettings() => AvaloniaUi.RunInHostContext(() => _commands.StartPluginSettingsDialog(Owner));
 

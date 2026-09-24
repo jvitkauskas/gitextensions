@@ -75,32 +75,32 @@ public class AutoCompileSubModulesPlugin : GitPluginBase, IGitPluginForRepositor
         {
             FileInfo solutionFile = solutionFiles[n];
 
-            DialogResult result =
-                MessageBoxes.Show(args.OwnerForm,
+            PluginMessageBoxResult result =
+                PluginMessageBoxes.Show(args.Owner,
                     string.Format(_doYouWantBuild.Text,
                                   solutionFile.Name,
                                   SolutionFilesToString(solutionFiles)),
                     "Build",
-                    MessageBoxButtons.YesNoCancel,
-                    MessageBoxIcon.Question);
+                    PluginMessageBoxButtons.YesNoCancel,
+                    PluginMessageBoxIcon.Question);
 
-            if (result == DialogResult.Cancel)
+            if (result == PluginMessageBoxResult.Cancel)
             {
                 return false;
             }
 
-            if (result != DialogResult.Yes)
+            if (result != PluginMessageBoxResult.Yes)
             {
                 continue;
             }
 
             if (string.IsNullOrEmpty(msbuildPath) || !File.Exists(msbuildPath))
             {
-                MessageBoxes.ShowError(args.OwnerForm, _enterCorrectMsBuildPath.Text);
+                PluginMessageBoxes.ShowError(args.Owner, _enterCorrectMsBuildPath.Text);
             }
             else
             {
-                args.GitUICommands.StartCommandLineProcessDialog(args.OwnerForm, msbuildPath, solutionFile.FullName + " " + _msBuildArguments.ValueOrDefault(Settings));
+                args.GitUICommands.StartCommandLineProcessDialog(args.Owner, msbuildPath, solutionFile.FullName + " " + _msBuildArguments.ValueOrDefault(Settings));
             }
         }
 

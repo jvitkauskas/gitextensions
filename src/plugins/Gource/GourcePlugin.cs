@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Plugins;
 using GitExtensions.Extensibility.Settings;
@@ -62,7 +63,7 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
     {
         if (!args.GitModule.IsValidGitWorkingDir())
         {
-            MessageBoxes.ShowError(args.OwnerForm, _currentDirectoryIsNotValidGit.Text);
+            PluginMessageBoxes.ShowError(args.Owner, _currentDirectoryIsNotValidGit.Text);
             return false;
         }
 
@@ -70,11 +71,11 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
 
         if (!string.IsNullOrEmpty(pathToGource) && !File.Exists(pathToGource))
         {
-            DialogResult result = MessageBoxes.Show(
-                args.OwnerForm,
-                string.Format(_resetConfigPath.Text, pathToGource), _gource.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            PluginMessageBoxResult result = PluginMessageBoxes.Show(
+                args.Owner,
+                string.Format(_resetConfigPath.Text, pathToGource), _gource.Text, PluginMessageBoxButtons.YesNo, PluginMessageBoxIcon.Warning);
 
-            if (result == DialogResult.Yes)
+            if (result == PluginMessageBoxResult.Yes)
             {
                 Settings.SetValue(_gourcePath.Name, _gourcePath.DefaultValue);
                 pathToGource = _gourcePath.DefaultValue;
@@ -83,37 +84,37 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
 
         if (string.IsNullOrEmpty(pathToGource))
         {
-            if (MessageBoxes.Show(
-                    args.OwnerForm, _doYouWantDownloadGource.Text, _download.Text,
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (PluginMessageBoxes.Show(
+                    args.Owner, _doYouWantDownloadGource.Text, _download.Text,
+                    PluginMessageBoxButtons.YesNo, PluginMessageBoxIcon.Warning) == PluginMessageBoxResult.Yes)
             {
-                string gourceUrl = ThreadHelper.JoinableTaskFactory.Run(() => SearchForGourceUrlAsync(args.OwnerForm));
+                string gourceUrl = ThreadHelper.JoinableTaskFactory.Run(() => SearchForGourceUrlAsync(args.Owner));
 
                 if (string.IsNullOrEmpty(gourceUrl))
                 {
-                    MessageBoxes.ShowError(args.OwnerForm, _cannotFindGource.Text);
+                    PluginMessageBoxes.ShowError(args.Owner, _cannotFindGource.Text);
                     return false;
                 }
 
                 string downloadDir = Path.GetTempPath();
                 string fileName = Path.Join(downloadDir, "gource.zip");
-                int downloadSize = ThreadHelper.JoinableTaskFactory.Run(() => DownloadFileAsync(args.OwnerForm, gourceUrl, fileName));
+                int downloadSize = ThreadHelper.JoinableTaskFactory.Run(() => DownloadFileAsync(args.Owner, gourceUrl, fileName));
                 if (downloadSize > 0)
                 {
-                    MessageBoxes.Show(args.OwnerForm, string.Format(_bytesDownloaded.Text, downloadSize), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    PluginMessageBoxes.ShowInformation(args.Owner, string.Format(_bytesDownloaded.Text, downloadSize), "Information");
                     Directory.CreateDirectory(Path.Join(downloadDir, "gource"));
-                    UnZipFiles(args.OwnerForm, fileName, Path.Join(downloadDir, "gource"), true);
+                    UnZipFiles(args.Owner, fileName, Path.Join(downloadDir, "gource"), true);
 
                     string newGourcePath = Path.Join(downloadDir, "gource\\gource.exe");
                     if (File.Exists(newGourcePath))
                     {
-                        MessageBoxes.Show(args.OwnerForm, _gourceDownloadedAndUnzipped.Text, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        PluginMessageBoxes.ShowInformation(args.Owner, _gourceDownloadedAndUnzipped.Text, "Information");
                         pathToGource = newGourcePath;
                     }
                 }
                 else
                 {
-                    MessageBoxes.ShowError(args.OwnerForm, _downloadingFailed.Text);
+                    PluginMessageBoxes.ShowError(args.Owner, _downloadingFailed.Text);
                 }
             }
         }
@@ -135,7 +136,7 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
 
     #endregion
 
-    private static void UnZipFiles(IWin32Window? owner, string zipPathAndFile, string outputFolder, bool deleteZipFile)
+    private static void UnZipFiles(WindowOwner owner, string zipPathAndFile, string outputFolder, bool deleteZipFile)
     {
         try
         {
@@ -179,11 +180,11 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
         }
         catch (Exception e)
         {
-            MessageBoxes.ShowError(owner, e.Message);
+            PluginMessageBoxes.ShowError(owner, e.Message);
         }
     }
 
-    private static async Task<int> DownloadFileAsync(IWin32Window? owner, string remoteFilename, string localFilename)
+    private static async Task<int> DownloadFileAsync(WindowOwner owner, string remoteFilename, string localFilename)
     {
         try
         {
@@ -196,12 +197,12 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
         catch (Exception e)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            MessageBoxes.ShowError(owner, e.Message);
+            PluginMessageBoxes.ShowError(owner, e.Message);
             return 0;
         }
     }
 
-    private static async Task<string> SearchForGourceUrlAsync(IWin32Window? owner)
+    private static async Task<string> SearchForGourceUrlAsync(WindowOwner owner)
     {
         // All Gource releases do not have binary releases, use a fallback
         const string latestApiUrl = "https://api.github.com/repos/acaudwell/Gource/releases/latest";
@@ -221,7 +222,7 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
         catch (Exception ex)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            MessageBoxes.ShowError(owner, ex.Message);
+            PluginMessageBoxes.ShowError(owner, ex.Message);
             return string.Empty;
         }
 

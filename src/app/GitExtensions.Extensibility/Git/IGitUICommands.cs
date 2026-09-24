@@ -5,6 +5,11 @@ using GitUIPluginInterfaces;
 
 namespace GitExtensions.Extensibility.Git;
 
+/// <summary>The commands of the application, e.g. to show its dialogs.</summary>
+/// <remarks>
+///  Plugin API v2: <see cref="GitUICommandsExtensions"/> has the members the plugins use with an owner window of any UI
+///  framework (<see cref="WindowOwner"/>) instead of <see cref="IWin32Window"/>.
+/// </remarks>
 public interface IGitUICommands : IServiceProvider
 {
     event EventHandler<GitUIEventArgs>? PostBrowseInitialize;

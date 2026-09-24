@@ -28,7 +28,7 @@ internal static class ReleaseNotesGeneratorDialog
                     AvaloniaPluginDialogs.CreateMessageBoxService(window));
                 return window;
             },
-            args.OwnerForm);
+            args.Owner);
         return true;
     }
 

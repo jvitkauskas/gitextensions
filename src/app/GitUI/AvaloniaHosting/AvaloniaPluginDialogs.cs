@@ -1,3 +1,4 @@
+using GitExtensions.Extensibility;
 using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.Services;
 using Microsoft.VisualStudio.Threading;
@@ -31,6 +32,18 @@ public static class AvaloniaPluginDialogs
         => AvaloniaDialogs.ShowDialog(createWindow, owner, positionName);
 
     /// <summary>
+    ///  Shows the window created by <paramref name="createWindow"/> modally over <paramref name="owner"/> (plugin API v2, e.g.
+    ///  <c>GitUIEventArgs.Owner</c>); returns whether it was accepted.
+    /// </summary>
+    /// <param name="createWindow">Creates the window, once Avalonia is set up.</param>
+    /// <param name="owner">The window that owns the dialog (of any UI framework), or <see cref="WindowOwner.None"/>.</param>
+    /// <param name="positionName">
+    ///  The name under which the WinForms form persisted its position (its type name), if it did; the Avalonia window shares it.
+    /// </param>
+    public static bool ShowDialog(Func<DialogWindow> createWindow, WindowOwner owner, string? positionName = null)
+        => ShowDialog(createWindow, owner.ToWin32Window(), positionName);
+
+    /// <summary>
     ///  Shows the window created by <paramref name="createWindow"/> modelessly over <paramref name="owner"/> (as
     ///  <c>Form.Show(owner)</c>); it closes with the WinForms form that owns it.
     /// </summary>
@@ -59,8 +72,15 @@ public static class AvaloniaPluginDialogs
         return window;
     }
 
+    /// <summary>As <see cref="Show(Func{DialogWindow}, IWin32Window?, string?, bool)"/>, owned by a window of plugin API v2.</summary>
+    public static DialogWindow Show(Func<DialogWindow> createWindow, WindowOwner owner, string? positionName = null, bool showInTaskbar = false)
+        => Show(createWindow, owner.ToWin32Window(), positionName, showInTaskbar);
+
     /// <summary>The Avalonia window as the owner of WinForms dialogs and message boxes it opens.</summary>
     public static IWin32Window GetOwner(DialogWindow window) => new AvaloniaDialogs.NativeWindowOwner(window);
+
+    /// <summary>The Avalonia window as the owner of the dialogs and message boxes it opens (plugin API v2).</summary>
+    public static WindowOwner GetWindowOwner(DialogWindow window) => new(window.NativeHandle);
 
     /// <summary>The application's message boxes, owned by the Avalonia window.</summary>
     public static IMessageBoxService CreateMessageBoxService(DialogWindow window) => new AvaloniaDialogs.MessageBoxService(window);

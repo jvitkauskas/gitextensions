@@ -44,7 +44,8 @@ public sealed class GitHubActionsAdapter : IBuildServerAdapter
 
     public void Initialize(IBuildServerWatcher buildServerWatcher, SettingsSource config, Action openSettings, Func<ObjectId, bool>? isCommitInRevisionGrid = null)
     {
-        string apiUrl = config.GetString(SettingApiUrl, null) ?? DefaultApiUrl;
+        // Without the trailing slash, which the settings control of plugin API v1 removed.
+        string apiUrl = (config.GetString(SettingApiUrl, null) ?? DefaultApiUrl).TrimEnd('/');
         string? apiToken = config.GetString(SettingApiToken, null);
         string? owner = config.GetString(SettingOwner, null);
         string? repository = config.GetString(SettingRepository, null);

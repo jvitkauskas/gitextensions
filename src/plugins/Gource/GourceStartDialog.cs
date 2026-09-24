@@ -44,7 +44,7 @@ internal static class GourceStartDialog
                 window.DataContext = viewModel;
                 return window;
             },
-            args.OwnerForm);
+            args.Owner);
 
         if (viewModel is not null)
         {

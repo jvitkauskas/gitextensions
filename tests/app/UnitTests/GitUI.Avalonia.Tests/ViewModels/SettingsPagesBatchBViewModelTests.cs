@@ -5,6 +5,7 @@ using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Settings;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog;
 using GitUI.Presentation.CommandsDialogs.SettingsDialog.Pages;
+using GitUIPluginInterfaces.BuildServerIntegration;
 using static GitUI.AvaloniaTests.ViewModels.SettingsDialogViewModelTests;
 
 namespace GitUI.AvaloniaTests.ViewModels;
@@ -222,6 +223,56 @@ public sealed class SettingsPagesBatchBViewModelTests
 
         page.SelectedBuildServerType = "None";
         page.SettingsControl.Should().BeNull();
+        page.Dispose();
+    }
+
+    [Test]
+    public void The_build_server_page_shows_the_settings_declared_by_a_plugin_of_API_v2()
+    {
+        FakePagesHost host = new();
+        FakeSources sources = new();
+        sources.Local.SetValue("BuildServer.Type", "Mock");
+        sources.Local.SetValue("BuildServer.Mock.ServerUrl", "https://ci.example.org");
+        StringSetting serverUrl = new("ServerUrl", "Server URL", defaultValue: "");
+        StringSetting projectName = new("ProjectName", "Project name", defaultValue: "");
+        string? error = null;
+        List<string> shownErrors = [];
+        host.PluginSettingsFactory = buildServerType =>
+        {
+            PluginSettingsPageViewModel settings = new(new PluginSettingsPageStrings(), new SettingValueStrings(), buildServerType, "BuildServerIntegrationSettingsPage", s => s);
+            settings.AddRow(PluginSettingRow.ForValue(serverUrl.Caption, new StringSettingValue(serverUrl)));
+            settings.AddRow(PluginSettingRow.ForValue(projectName.Caption, new StringSettingValue(projectName)));
+            settings.AddRow(PluginSettingRow.ForAction(null, "Choose", values => projectName[values] = $"chosen on {serverUrl.ValueOrDefault(values)}"));
+            BuildServerSettingsContext context = new("repo", []);
+            context.SuggestValue(projectName, context.DefaultProjectName);
+            return new BuildServerPluginSettings(settings, context.WithSuggestedValues, _ => error, shownErrors.Add);
+        };
+        BuildServerIntegrationSettingsPageViewModel page = new(new BuildServerIntegrationSettingsPageStrings(), host);
+        SettingsDialogViewModel dialog = CreateDialog(page, sources.Distributed);
+        dialog.Open(page.PageName);
+        page.Level = SettingsLevel.Local;
+        host.BuildServerTypes.SetResult(["Mock"]);
+
+        page.SettingsControl.Should().BeNull("the plugin declares its settings");
+        host.Controls.Should().BeEmpty();
+        PluginSettingsPageViewModel shown = page.PluginSettings!.Page;
+        ((StringSettingValue)shown.Rows[0].Value!).Value.Should().Be("https://ci.example.org");
+        ((StringSettingValue)shown.Rows[1].Value!).Value.Should().Be("repo", "the suggested value is shown while unset");
+
+        // Invalid: nothing is saved.
+        error = "invalid";
+        page.Level = SettingsLevel.Global;
+        shownErrors.Should().Equal("invalid");
+        sources.Local.GetValue("BuildServer.Mock.ProjectName").Should().BeNull();
+        page.PluginSettings.Should().BeNull("no build server at the global level");
+
+        error = null;
+        page.Level = SettingsLevel.Local;
+        shown = page.PluginSettings!.Page;
+        shown.Rows[2].Activate();
+        ((StringSettingValue)shown.Rows[1].Value!).Value.Should().Be("chosen on https://ci.example.org", "the link edits the values shown");
+        page.Level = SettingsLevel.Global;
+        sources.Local.GetValue("BuildServer.Mock.ProjectName").Should().Be("chosen on https://ci.example.org");
         page.Dispose();
     }
 
@@ -504,6 +555,11 @@ public sealed class SettingsPagesBatchBViewModelTests
             Controls.Add(control);
             return control;
         }
+
+        /// <summary>Creates the settings of a build server plugin of API v2; none by default (then its control of API v1).</summary>
+        public Func<string, BuildServerPluginSettings?>? PluginSettingsFactory { get; set; }
+
+        public BuildServerPluginSettings? CreatePluginSettings(string buildServerType) => PluginSettingsFactory?.Invoke(buildServerType);
 
         public IReadOnlyList<Remote> GetRemotes() => Remotes;
 

@@ -32,7 +32,7 @@ internal static class FindLargeFilesDialog
                     command => AvaloniaUi.RunInHostContext(() => commands.StartBatchFileProcessDialog(command)));
                 return window;
             },
-            args.OwnerForm);
+            args.Owner);
         return true;
     }
 }

@@ -7,6 +7,8 @@ public class PseudoSetting : ISetting
 {
     private readonly Func<TextBox>? _textBoxCreator;
 
+    /// <summary>Shows <paramref name="control"/>, a WinForms control of the plugin (plugin API v1).</summary>
+    /// <remarks>Plugin API v2: for a link, use <see cref="ActionSetting"/>; for a text, the other constructor.</remarks>
     public PseudoSetting(Control control, string caption = "")
     {
         Caption = caption;

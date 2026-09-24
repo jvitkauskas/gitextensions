@@ -22,8 +22,9 @@ public static class BuildServerSettings
     public static BoolSetting ShowBuildResultPage { get; } = new(_settingsPath.PathFor(nameof(ShowBuildResultPage)), defaultValue: false);
 
     /// <summary>
-    ///  Gets the settings source for the build server configured in <paramref name="settingsSource"/>.
+    ///  Gets the settings source for the build server configured in <paramref name="settingsSource"/>, with its level (which
+    ///  decides how the settings pages show and save the settings of the build server).
     /// </summary>
     public static SettingsSource GetSettingsSource(SettingsSource settingsSource)
-        => new SettingsPath(settingsSource, _settingsPath.PathFor(ServerName.ValueOrDefault(settingsSource)));
+        => new SettingsPath(settingsSource, _settingsPath.PathFor(ServerName.ValueOrDefault(settingsSource))) { SettingLevel = settingsSource.SettingLevel };
 }

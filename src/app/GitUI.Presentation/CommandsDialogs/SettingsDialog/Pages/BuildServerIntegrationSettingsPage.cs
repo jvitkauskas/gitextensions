@@ -48,6 +48,46 @@ public interface IBuildServerSettingsControl : IEmbeddedNativeView, IDisposable
     void SaveSettings(SettingsSource buildServerConfig);
 }
 
+/// <summary>
+///  The settings of a build server declared by its plugin (an <c>IBuildServerSettingsProvider</c>, plugin API v2), shown as the
+///  settings of the plugins (<see cref="Page"/>), rather than by a WinForms control.
+/// </summary>
+public sealed class BuildServerPluginSettings
+{
+    private readonly Func<SettingsSource, SettingsSource> _getSettingsToLoad;
+    private readonly Func<SettingsSource, string?> _validate;
+    private readonly Action<string> _showError;
+
+    /// <param name="page">The rows of the settings.</param>
+    /// <param name="getSettingsToLoad">The settings to load the rows from, for the settings of the build server (with its suggested values).</param>
+    /// <param name="validate">Checks the values being saved: the error to show, in which case nothing is saved.</param>
+    /// <param name="showError">Shows the error of <paramref name="validate"/>.</param>
+    public BuildServerPluginSettings(PluginSettingsPageViewModel page, Func<SettingsSource, SettingsSource> getSettingsToLoad, Func<SettingsSource, string?> validate, Action<string> showError)
+    {
+        Page = page;
+        _getSettingsToLoad = getSettingsToLoad;
+        _validate = validate;
+        _showError = showError;
+    }
+
+    public PluginSettingsPageViewModel Page { get; }
+
+    public void LoadSettings(SettingsSource buildServerConfig) => Page.LoadValues(_getSettingsToLoad(buildServerConfig));
+
+    /// <summary>Saves the settings, unless they are invalid (then the error is shown); returns whether they were saved.</summary>
+    public bool SaveSettings(SettingsSource buildServerConfig)
+    {
+        if (_validate(Page.GetEditedValues()) is { } error)
+        {
+            _showError(error);
+            return false;
+        }
+
+        Page.SaveValues(buildServerConfig);
+        return true;
+    }
+}
+
 /// <summary>What <see cref="BuildServerIntegrationSettingsPageViewModel"/> needs from the application (the build server plugins).</summary>
 public interface IBuildServerIntegrationSettingsPageHost
 {
@@ -59,6 +99,12 @@ public interface IBuildServerIntegrationSettingsPageHost
     ///  repository; <see langword="null"/> without repository or plugin.
     /// </summary>
     IBuildServerSettingsControl? CreateSettingsControl(string buildServerType);
+
+    /// <summary>
+    ///  Plugin API v2: the settings the plugin of the build server type declares, initialized with the repository; used rather
+    ///  than <see cref="CreateSettingsControl"/>. <see langword="null"/> without repository, or when the plugin has none.
+    /// </summary>
+    BuildServerPluginSettings? CreatePluginSettings(string buildServerType) => null;
 }
 
 /// <summary>
@@ -110,6 +156,10 @@ public sealed partial class BuildServerIntegrationSettingsPageViewModel : Settin
     /// <summary>As the control of <c>buildServerSettingsPanel</c>: the settings of the selected build server.</summary>
     [ObservableProperty]
     public partial IBuildServerSettingsControl? SettingsControl { get; private set; }
+
+    /// <summary>Plugin API v2: the settings of the selected build server declared by its plugin, rather than its <see cref="SettingsControl"/>.</summary>
+    [ObservableProperty]
+    public partial BuildServerPluginSettings? PluginSettings { get; private set; }
 
     private async Task LoadBuildServerTypesAsync()
     {
@@ -176,6 +226,7 @@ public sealed partial class BuildServerIntegrationSettingsPageViewModel : Settin
         BuildServerSettings.IntegrationEnabled[settings] = IntegrationEnabled;
         BuildServerSettings.ShowBuildResultPage[settings] = ShowBuildResultPage;
         SettingsControl?.SaveSettings(BuildServerSettings.GetSettingsSource(settings));
+        PluginSettings?.SaveSettings(BuildServerSettings.GetSettingsSource(settings));
 
         base.PageToSettings(settings);
     }
@@ -193,9 +244,20 @@ public sealed partial class BuildServerIntegrationSettingsPageViewModel : Settin
     {
         IBuildServerSettingsControl? previous = SettingsControl;
         SettingsControl = null;
+        PluginSettings = null;
         previous?.Dispose();
 
-        if (GetSelectedBuildServerType() is { } buildServerType && _host.CreateSettingsControl(buildServerType) is { } control)
+        if (GetSelectedBuildServerType() is not { } buildServerType)
+        {
+            return;
+        }
+
+        if (_host.CreatePluginSettings(buildServerType) is { } pluginSettings)
+        {
+            pluginSettings.LoadSettings(BuildServerSettings.GetSettingsSource(settings));
+            PluginSettings = pluginSettings;
+        }
+        else if (_host.CreateSettingsControl(buildServerType) is { } control)
         {
             control.LoadSettings(BuildServerSettings.GetSettingsSource(settings));
             SettingsControl = control;
