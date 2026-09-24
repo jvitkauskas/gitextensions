@@ -121,7 +121,8 @@ public sealed class TextEditorViewTests : HeadlessTest
         AvaloniaEdit.TextEditor editor = window.GetVisualDescendants().OfType<TextEditorView>().Single().Editor;
 
         editor.Text.Should().Be(Code);
-        editor.SyntaxHighlighting!.Name.Should().Be("C#");
+        editor.TextArea.TextView.LineTransformers.OfType<TextMateColorizer>().Should().ContainSingle("TextMate highlights C#");
+        editor.SyntaxHighlighting.Should().BeNull("the highlighting of AvaloniaEdit is for the languages TextMate does not know");
         editor.TextArea.Caret.Line.Should().Be(4, "the requested line is shown");
         editor.ShowLineNumbers.Should().BeTrue();
         window.FindControl<Border>("warningPanel")!.IsVisible.Should().BeFalse();
@@ -133,6 +134,7 @@ public sealed class TextEditorViewTests : HeadlessTest
         viewModel.Editor.Load("reloaded", "notes.txt");
         Dispatcher.UIThread.RunJobs();
         editor.Text.Should().Be("reloaded");
+        editor.TextArea.TextView.LineTransformers.OfType<TextMateColorizer>().Should().BeEmpty();
         editor.SyntaxHighlighting.Should().BeNull();
         viewModel.Editor.HasChanges.Should().BeFalse();
         window.Close();
