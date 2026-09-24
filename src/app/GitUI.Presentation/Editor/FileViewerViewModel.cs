@@ -307,7 +307,8 @@ public sealed partial class FileViewerViewModel : ObservableObject
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
             previous.Cancel();
 #pragma warning restore VSTHRD103
-            previous.Dispose();
+
+            // Not disposed: the work in the background may still use its token (a disposed source throws ObjectDisposedException).
         }
 
         if (getContent is null)

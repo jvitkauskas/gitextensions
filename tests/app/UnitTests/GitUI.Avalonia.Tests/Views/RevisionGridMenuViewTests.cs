@@ -112,6 +112,18 @@ public sealed class RevisionGridMenuViewTests : HeadlessTest
     });
 
     [Test]
+    public Task A_disposed_grid_ignores_later_loads() => OnUiThreadAsync(() =>
+    {
+        // E.g. a repository change (after a rebase) reaching the grid of a closed window.
+        (Window window, RevisionGridView _, RevisionGridViewModel viewModel) = Show();
+        window.Close();
+        viewModel.Dispose();
+
+        viewModel.Invoking(grid => grid.Load()).Should().NotThrow();
+        viewModel.Rows.Should().NotBeEmpty("the rows are not loaded again");
+    });
+
+    [Test]
     public Task The_rows_follow_revisions_inserted_before_them() => OnUiThreadAsync(() =>
     {
         // As the artificial commits when HEAD is filtered out: inserted first, after the rows of the listed revisions.

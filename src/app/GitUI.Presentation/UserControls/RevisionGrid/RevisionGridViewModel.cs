@@ -131,6 +131,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     private ObjectId? _toBeSelected;
     private bool _isCaching;
     private int _cacheRequestedTo = -1;
+    private bool _disposed;
 
     public RevisionGridViewModel(IRevisionGridHost host, RevisionGridDisplayOptions options)
     {
@@ -210,6 +211,12 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     /// <summary>(Re)loads the revisions, selecting <paramref name="toBeSelected"/> once it is loaded.</summary>
     public void Load(ObjectId? toBeSelected = null)
     {
+        // E.g. the repository changed after the window of the grid closed.
+        if (_disposed)
+        {
+            return;
+        }
+
         _loadCancellation?.Cancel();
         _loadCancellation = new CancellationTokenSource();
         CancellationToken cancellationToken = _loadCancellation.Token;
@@ -426,7 +433,8 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
 
     public void Dispose()
     {
+        // Not disposed: the revision reader in the background may still use its token.
+        _disposed = true;
         _loadCancellation?.Cancel();
-        _loadCancellation?.Dispose();
     }
 }
