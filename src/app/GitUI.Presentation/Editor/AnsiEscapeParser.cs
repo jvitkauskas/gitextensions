@@ -58,13 +58,19 @@ public static partial class AnsiEscapeParser
     public static (string Text, IReadOnlyList<ColoredSegment> Segments) Parse(string text, IThemeColors colors, bool themeColors = false)
     {
         StringBuilder sb = new(text.Length);
-        List<Marker> markers = [];
-        Parse(text, sb, markers, colors, themeColors);
-        return (sb.ToString(), [.. markers.Select(m => new ColoredSegment(m.Offset, m.Length, m.BackColor, m.ForeColor))]);
+        List<ColoredSegment> segments = [];
+        Parse(text, sb, segments, colors, themeColors);
+        return (sb.ToString(), segments);
     }
 
-    private static void Parse(string text, StringBuilder sb, List<Marker> markers, IThemeColors colors, bool themeColors)
+    /// <summary>
+    ///  As <c>AnsiEscapeUtilities.ParseEscape</c>: appends the text without the escape sequences to <paramref name="sb"/>, and its
+    ///  colored segments (with the offsets in <paramref name="sb"/>) to <paramref name="segments"/>, merged with the last one if
+    ///  they continue it.
+    /// </summary>
+    public static void Parse(string text, StringBuilder sb, List<ColoredSegment> segments, IThemeColors colors, bool themeColors = false)
     {
+        List<ColoredSegment> markers = segments;
         int defaultForeColorId = colors.IsDarkMode ? _whiteId : _blackId;
         int prevLineOffset = 0;
         int currentColorId = defaultForeColorId; // current color, used when just bold etc is set
@@ -423,7 +429,7 @@ public static partial class AnsiEscapeParser
     }
 
     /// <summary>As <c>AnsiEscapeUtilities.TryGetTextMarker</c>: adds the segment, or merges it with the previous one.</summary>
-    private static void AddMarker(HighlightInfo hl, List<Marker> markers, StringBuilder sb, IThemeColors colors)
+    private static void AddMarker(HighlightInfo hl, List<ColoredSegment> markers, StringBuilder sb, IThemeColors colors)
     {
         // BackColor must always be set
         Color backColor = hl.BackColor ?? colors.GetColor(AppColor.EditorBackground);
@@ -454,12 +460,12 @@ public static partial class AnsiEscapeParser
 
             if (gapLen >= 0)
             {
-                prevMarker.Length += gapLen + hl.Length;
+                markers[^1] = prevMarker with { Length = prevMarker.Length + gapLen + hl.Length };
                 return;
             }
         }
 
-        markers.Add(new Marker { Offset = hl.DocOffset, Length = hl.Length, BackColor = backColor, ForeColor = hl.ForeColor });
+        markers.Add(new ColoredSegment(hl.DocOffset, hl.Length, backColor, hl.ForeColor));
     }
 
     private struct HighlightInfo
@@ -468,13 +474,5 @@ public static partial class AnsiEscapeParser
         public int Length { get; set; }
         public Color? BackColor { get; set; }
         public Color? ForeColor { get; set; }
-    }
-
-    private sealed class Marker
-    {
-        public int Offset { get; init; }
-        public int Length { get; set; }
-        public Color BackColor { get; init; }
-        public Color? ForeColor { get; init; }
     }
 }

@@ -8,8 +8,12 @@ using GitUI.Presentation.Editor;
 
 namespace GitUI.Avalonia.Editor;
 
+/// <summary>The backgrounds of the line numbers of the added, removed and header lines (and of the grep matches).</summary>
+internal sealed record DiffMarginBrushes(IBrush? Added, IBrush? Removed, IBrush? Header);
+
 /// <summary>
-///  The line numbers of a diff in the old and the new file, in two columns (the WinForms <c>DiffViewerLineNumberControl</c>).
+///  The line numbers of a diff in the old and the new file, in two columns (the WinForms <c>DiffViewerLineNumberControl</c>),
+///  on the background of the kind of the line (as its <c>Paint</c>).
 /// </summary>
 internal sealed class DiffLineNumberMargin : AbstractMargin
 {
@@ -17,6 +21,10 @@ internal sealed class DiffLineNumberMargin : AbstractMargin
 
     private IReadOnlyDictionary<int, DiffLine> _linesByNumber = new Dictionary<int, DiffLine>();
     private int _maxDigits = 1;
+    private bool _showLeftColumn = true;
+
+    /// <summary>The backgrounds of the kinds of lines.</summary>
+    public DiffMarginBrushes Brushes { get; set; } = new(null, null, null);
 
     public IReadOnlyList<DiffLine> Lines
     {
@@ -30,8 +38,22 @@ internal sealed class DiffLineNumberMargin : AbstractMargin
         }
     }
 
+    /// <summary>Whether the numbers of the old file are shown (as the <c>showLeftColumn</c> of <c>DisplayLineNum</c>).</summary>
+    public bool ShowLeftColumn
+    {
+        get => _showLeftColumn;
+        set
+        {
+            _showLeftColumn = value;
+            InvalidateMeasure();
+            InvalidateVisual();
+        }
+    }
+
+    private int ColumnCount => _showLeftColumn ? 2 : 1;
+
     protected override Size MeasureOverride(Size availableSize)
-        => new((2 * ColumnWidth) + (3 * Padding), 0);
+        => new((ColumnCount * ColumnWidth) + ((ColumnCount + 1) * Padding), 0);
 
     private double ColumnWidth => _maxDigits * Format("0").Width;
 
@@ -52,6 +74,7 @@ internal sealed class DiffLineNumberMargin : AbstractMargin
         }
 
         double columnWidth = ColumnWidth;
+        double width = Bounds.Width;
         foreach (VisualLine visualLine in textView.VisualLines)
         {
             if (!_linesByNumber.TryGetValue(visualLine.FirstDocumentLine.LineNumber, out DiffLine? line))
@@ -59,9 +82,15 @@ internal sealed class DiffLineNumberMargin : AbstractMargin
                 continue;
             }
 
+            double top = visualLine.VisualTop - textView.VerticalOffset;
+            DrawBackground(line.Kind, top, visualLine.Height);
             double y = visualLine.GetTextLineVisualYPosition(visualLine.TextLines[0], VisualYPosition.TextTop) - textView.VerticalOffset;
-            DrawNumber(line.LeftLineNumber, Padding + columnWidth);
-            DrawNumber(line.RightLineNumber, (2 * Padding) + (2 * columnWidth));
+            if (_showLeftColumn)
+            {
+                DrawNumber(line.LeftLineNumber, Padding + columnWidth);
+            }
+
+            DrawNumber(line.RightLineNumber, (ColumnCount * Padding) + (ColumnCount * columnWidth));
 
             void DrawNumber(int number, double right)
             {
@@ -74,6 +103,41 @@ internal sealed class DiffLineNumberMargin : AbstractMargin
                 context.DrawText(text, new Point(right - text.Width, y));
             }
         }
+
+        return;
+
+        // As DiffViewerLineNumberControl.Paint: the lines of a git word diff and of difftastic color the side they change.
+        void DrawBackground(DiffLineKind kind, double top, double height)
+        {
+            switch (kind)
+            {
+                case DiffLineKind.MinusPlus or DiffLineKind.MinusLeft or DiffLineKind.PlusRight:
+                    if (kind is not DiffLineKind.PlusRight && Brushes.Removed is { } removed)
+                    {
+                        context.FillRectangle(removed, new Rect(0, top, width / 2, height));
+                    }
+
+                    if (kind is not DiffLineKind.MinusLeft && Brushes.Added is { } added)
+                    {
+                        context.FillRectangle(added, new Rect(width / 2, top, width - (width / 2), height));
+                    }
+
+                    break;
+                case DiffLineKind.Plus or DiffLineKind.Minus or DiffLineKind.Header or DiffLineKind.Grep:
+                    IBrush? brush = kind switch
+                    {
+                        DiffLineKind.Plus => Brushes.Added,
+                        DiffLineKind.Header => Brushes.Header,
+                        _ => Brushes.Removed,
+                    };
+                    if (brush is not null)
+                    {
+                        context.FillRectangle(brush, new Rect(0, top, width, height));
+                    }
+
+                    break;
+            }
+        }
     }
 
     private FormattedText Format(string text)
@@ -83,5 +147,5 @@ internal sealed class DiffLineNumberMargin : AbstractMargin
             FlowDirection.LeftToRight,
             new Typeface(GetValue(TextElement.FontFamilyProperty)),
             GetValue(TextElement.FontSizeProperty),
-            GetValue(TextElement.ForegroundProperty) ?? Brushes.Gray);
+            GetValue(TextElement.ForegroundProperty) ?? global::Avalonia.Media.Brushes.Gray);
 }

@@ -42,16 +42,16 @@
           <Image Source="avares://GitUI.Avalonia/Assets/ArrowUp.png" />
         </Button>
         <Separator IsVisible="{Binding IsDiff}" />
-        <Button Name="increaseContextLinesButton" ToolTip.Tip="{Binding Strings.IncreaseContextLines.Text}" IsVisible="{Binding IsDiff}"
+        <Button Name="increaseContextLinesButton" ToolTip.Tip="{Binding Strings.IncreaseContextLines.Text}" IsVisible="{Binding CanChangeContextLines}"
                 Command="{Binding IncreaseContextLinesCommand}" IsEnabled="{Binding !Settings.ShowEntireFile}">
           <Image Source="avares://GitUI.Avalonia/Assets/NumberOfLinesIncrease.png" />
         </Button>
-        <Button Name="decreaseContextLinesButton" ToolTip.Tip="{Binding Strings.DecreaseContextLines.Text}" IsVisible="{Binding IsDiff}"
+        <Button Name="decreaseContextLinesButton" ToolTip.Tip="{Binding Strings.DecreaseContextLines.Text}" IsVisible="{Binding CanChangeContextLines}"
                 Command="{Binding DecreaseContextLinesCommand}" IsEnabled="{Binding !Settings.ShowEntireFile}">
           <Image Source="avares://GitUI.Avalonia/Assets/NumberOfLinesDecrease.png" />
         </Button>
-        <Separator IsVisible="{Binding IsDiff}" />
-        <ToggleButton Name="showEntireFileButton" ToolTip.Tip="{Binding Strings.ShowEntireFile.Text}" IsVisible="{Binding IsDiff}"
+        <Separator IsVisible="{Binding CanChangeContextLines}" />
+        <ToggleButton Name="showEntireFileButton" ToolTip.Tip="{Binding Strings.ShowEntireFile.Text}" IsVisible="{Binding CanChangeContextLines}"
                       IsChecked="{Binding Settings.ShowEntireFile, Mode=OneWay}" Command="{Binding ToggleShowEntireFileCommand}">
           <Image Source="avares://GitUI.Avalonia/Assets/ShowEntireFile.png" />
         </ToggleButton>
@@ -59,17 +59,21 @@
                       IsChecked="{Binding Settings.ShowNonPrintingChars, Mode=OneWay}" Command="{Binding ToggleNonPrintingCharsCommand}">
           <Image Source="avares://GitUI.Avalonia/Assets/ShowWhitespace.png" />
         </ToggleButton>
-        <ToggleButton Name="ignoreWhitespaceAtEolButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceAtEol.Text}" IsVisible="{Binding IsDiff}"
+        <ToggleButton Name="showSyntaxHighlightingButton" ToolTip.Tip="{Binding Strings.ShowSyntaxHighlighting.Text}" IsVisible="{Binding IsDiff}"
+                      IsChecked="{Binding Settings.ShowSyntaxHighlighting, Mode=OneWay}" Command="{Binding ToggleSyntaxHighlightingCommand}">
+          <Image Source="avares://GitUI.Avalonia/Assets/SyntaxHighlighting.png" />
+        </ToggleButton>
+        <ToggleButton Name="ignoreWhitespaceAtEolButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceAtEol.Text}" IsVisible="{Binding CanIgnoreWhitespaceAtEol}"
                       IsChecked="{Binding IgnoresWhitespaceAtEol, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
                       CommandParameter="{x:Static gs:IgnoreWhitespaceKind.Eol}">
           <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreEol.png" />
         </ToggleButton>
-        <ToggleButton Name="ignoreWhitespaceChangesButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceChanges.Text}" IsVisible="{Binding IsDiff}"
+        <ToggleButton Name="ignoreWhitespaceChangesButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceChanges.Text}" IsVisible="{Binding CanIgnoreWhitespaceChanges}"
                       IsChecked="{Binding IgnoresWhitespaceChanges, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
                       CommandParameter="{x:Static gs:IgnoreWhitespaceKind.Change}">
           <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnore.png" />
         </ToggleButton>
-        <ToggleButton Name="ignoreAllWhitespaceButton" ToolTip.Tip="{Binding Strings.IgnoreAllWhitespaceChanges.Text}" IsVisible="{Binding IsDiff}"
+        <ToggleButton Name="ignoreAllWhitespaceButton" ToolTip.Tip="{Binding Strings.IgnoreAllWhitespaceChanges.Text}" IsVisible="{Binding CanIgnoreWhitespaceChanges}"
                       IsChecked="{Binding IgnoresAllWhitespace, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
                       CommandParameter="{x:Static gs:IgnoreWhitespaceKind.AllSpace}">
           <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreAll.png" />
