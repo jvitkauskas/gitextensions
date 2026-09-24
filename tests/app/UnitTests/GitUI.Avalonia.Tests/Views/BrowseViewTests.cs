@@ -257,6 +257,75 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task The_toolbar_shows_the_status_the_working_directory_the_worktrees_and_the_shells() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+
+        // As UpdateCommitButtonAndGetBrush: the number of changes with the image of the state.
+        TextBlock commitText = window.FindControl<TextBlock>("commitButtonText")!;
+        commitText.Text.Should().Be("Commit");
+        host.RaiseStatus(new BrowseWorkingDirectoryStatus(3, "RepoStateDirty"));
+        Dispatcher.UIThread.RunJobs();
+        commitText.Text.Should().Be("Commit (3)");
+        viewModel.CommitButtonIcon.Should().Be("RepoStateDirty");
+        host.RaiseStatus(new BrowseWorkingDirectoryStatus(null, null));
+        viewModel.CommitButtonText.Should().Be("Commit");
+
+        // As WorkingDirectoryToolStripSplitButton.
+        host.RecentRepositoriesMenu = [new("~/other", null) { Invoke = () => { } }];
+        viewModel.WorkingDirectoryText.Should().Be("~/repo");
+        viewModel.GetWorkingDirectoryItems().Select(i => i.Header).Should().Equal(
+            "_Favorite repositories", "-", "~/other", "-", "_Open...", "_Close (go to Dashboard)", "-", "Co_nfigure this menu...");
+
+        // As UpdateWorktreeToolStipVisibility: shown with more than one worktree.
+        window.FindControl<SplitButton>("worktreesButton")!.IsVisible.Should().BeTrue();
+        viewModel.WorktreeItems.Select(i => (i.Header, i.IsChecked)).Should().Equal(("repo", true), ("repo-feature", false));
+
+        // As userShell_Click: the button runs the first shell.
+        viewModel.Shells.Select(s => s.Name).Should().Equal("bash", "pwsh");
+        window.FindControl<SplitButton>("userShellButton")!.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(SplitButton.ClickEvent));
+        viewModel.ShellItems[1].Invoke!();
+        host.ShellRuns.Should().Equal("bash", "pwsh");
+
+        // As LoadUserMenu: a button for each script of the user menu bar.
+        Button script = window.FindControl<StackPanel>("scriptsToolBar")!.Children.OfType<Button>().Single();
+        script.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        host.ShellRuns[^1].Should().Be("script Deploy");
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-toolbar");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_hotkeys_run_the_commands_show_the_tabs_and_run_the_scripts() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.Commit).Should().BeTrue();
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.QuickPush).Should().BeTrue();
+        host.Runs.Select(r => r.Command).Should().Equal(BrowseCommand.Commit, BrowseCommand.QuickPush);
+
+        // As FocusDiff and FocusNextTab / FocusPrevTab (around the shown tabs).
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusDiff);
+        Dispatcher.UIThread.RunJobs();
+        window.Tabs.SelectedIndex.Should().Be((int)BrowseTab.Diff);
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusPrevTab);
+        viewModel.SelectedTab.Should().Be(BrowseTab.Commit);
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusPrevTab);
+        viewModel.SelectedTab.Should().Be(BrowseTab.Console, "the last shown tab");
+
+        BrowseFocusTarget? focused = null;
+        viewModel.FocusRequested += (_, target) => focused = target;
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusFilter);
+        focused.Should().Be(BrowseFocusTarget.Filter);
+
+        // The hotkeys of the scripts.
+        viewModel.ExecuteHotkeyCommand(9001).Should().BeTrue();
+        viewModel.ExecuteHotkeyCommand(9002).Should().BeFalse();
+        host.ShellRuns.Should().Equal("script 9001");
+        window.Close();
+    });
+
     private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null)
     {
         FakeBrowseHost host = new();
@@ -306,8 +375,36 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost
     {
+        public bool RunScriptOfHotkey(int commandCode)
+        {
+            if (commandCode != 9001)
+            {
+                return false;
+            }
+
+            ShellRuns.Add($"script {commandCode}");
+            return true;
+        }
+
+        public event EventHandler<BrowseWorkingDirectoryStatus>? WorkingDirectoryStatusChanged;
+
+        public List<string> ShellRuns { get; } = [];
+
+        public string WorkingDirectoryCaption => "~/repo";
+
+        public void RaiseStatus(BrowseWorkingDirectoryStatus status) => WorkingDirectoryStatusChanged?.Invoke(this, status);
+
+        public Task<BrowseWorktreeMenu> GetWorktreeMenuAsync()
+            => Task.FromResult(new BrowseWorktreeMenu(2, [new("repo", null) { IsChecked = true, Invoke = () => { } }, new("repo-feature", null) { IsChecked = false, Invoke = () => { } }]));
+
+        public IReadOnlyList<BrowseShell> GetShells() => [new("bash", null, "bash"), new("pwsh", null, "pwsh")];
+
+        public void RunShell(BrowseShell shell) => ShellRuns.Add(shell.Name);
+
+        public IReadOnlyList<BrowseMenuItem> GetToolbarScripts() => [new("Deploy", null) { Invoke = () => ShellRuns.Add("script Deploy") }];
+
         public event EventHandler? PluginsChanged;
 
         public IReadOnlyList<BrowsePlugin>? Plugins { get; private set; }

@@ -366,6 +366,9 @@ public enum BrowseCommand
     FetchPruneAll,
     OpenPullDialog,
     Push,
+
+    /// <summary>The push dialog, pushing at once (the QuickPush hotkey).</summary>
+    QuickPush,
     ManageStashes,
     StashChanges,
     StashStaged,
@@ -441,6 +444,9 @@ public sealed record BrowseMenuItem(string Header, BrowseCommand? Command, objec
     /// <summary>Whether the item can be clicked (e.g. not the "Loading..." of the plugins).</summary>
     public bool IsEnabled { get; init; } = true;
 
+    /// <summary>Whether the item is checked (e.g. the current worktree); <see langword="null"/> if it is not a check item.</summary>
+    public bool? IsChecked { get; init; }
+
     public bool IsSeparator => Header == "-" && Command is null && Children is null && Invoke is null && Submenu is null;
 }
 
@@ -512,6 +518,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
         InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);
         InitializeGpg();
         InitializeConsole();
+        InitializeWorkingDirectoryStatus();
+        InitializeToolbar();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
         Grid.Loaded += (_, _) =>

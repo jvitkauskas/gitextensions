@@ -193,6 +193,8 @@ internal static partial class AvaloniaDialogs
                 ThreadHelper.JoinableTaskFactory.Run(() => RepositoryHistory.AddAsMostRecentAsync(commands.Module.WorkingDir));
             }
 
+            // As LoadHotkeys(HotkeySettingsName): the "Browse" hotkeys, with the ones of the scripts.
+            window.Hotkeys = LoadHotkeys(commands, FormBrowse.HotkeySettingsName);
             window.ShowViewModel(viewModel);
         }
 
@@ -268,6 +270,7 @@ internal static partial class AvaloniaDialogs
         {
             _commands.PostRepositoryChanged -= OnPostRepositoryChanged;
             UnregisterPlugins();
+            StopGitStatusMonitor();
             RepositoryChanged = null;
             _repositoriesMenu?.Dispose();
             _repositoriesMenu = null;
@@ -467,6 +470,9 @@ internal static partial class AvaloniaDialogs
                     break;
                 case BrowseCommand.Push:
                     _commands.StartPushDialog(owner, pushOnShow: false);
+                    break;
+                case BrowseCommand.QuickPush:
+                    _commands.StartPushDialog(owner, pushOnShow: true);
                     break;
                 case BrowseCommand.ManageStashes:
                     _commands.StartStashDialog(owner);

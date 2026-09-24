@@ -37,6 +37,19 @@ public partial class BrowseWindow : DialogWindow
             }
         };
 
+        // As userShell_Click: the button runs the default shell, its drop down the others.
+        userShellButton.Click += (_, _) => _viewModel?.RunDefaultShell();
+
+        // As MouseUpHandler of WorkingDirectoryToolStripSplitButton: a right click starts the "Open repository" dialog.
+        workingDirButton.AddHandler(PointerReleasedEvent, (_, e) =>
+        {
+            if (e.InitialPressMouseButton == global::Avalonia.Input.MouseButton.Right)
+            {
+                _viewModel?.RunCommand.Execute(BrowseCommand.Open);
+                e.Handled = true;
+            }
+        }, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
         // The Navigate and View menus show the settings of the grid: they are built again once a command ran.
         mainMenu.Closed += (_, _) => Dispatcher.UIThread.Post(RefreshModelSubmenus);
 
@@ -92,8 +105,12 @@ public partial class BrowseWindow : DialogWindow
     {
         base.OnDataContextChanged(e);
         _viewModel?.MenusChanged -= OnMenusChanged;
+        _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel?.FocusRequested -= OnFocusRequested;
         _viewModel = DataContext as BrowseViewModel;
         _viewModel?.MenusChanged += OnMenusChanged;
+        _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
+        _viewModel?.FocusRequested += OnFocusRequested;
         if (_viewModel is null)
         {
             return;
@@ -106,8 +123,64 @@ public partial class BrowseWindow : DialogWindow
         }
 
         BuildMainMenu();
+        workingDirButton.Flyout = CreateFlyout(_viewModel.GetWorkingDirectoryItems());
+        worktreesButton.Flyout = CreateFlyout(_viewModel.WorktreeItems);
+        userShellButton.Flyout = CreateFlyout(_viewModel.ShellItems);
+        FillScriptsToolBar(_viewModel.ScriptItems);
         pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
         stashButton.Flyout = CreateFlyout(_viewModel.StashItems);
+    }
+
+    // As LoadUserMenu: a button with the icon and the name of each script.
+    private void FillScriptsToolBar(IReadOnlyList<BrowseMenuItem> scripts)
+    {
+        scriptsToolBar.Children.Clear();
+        foreach (BrowseMenuItem script in scripts)
+        {
+            StackPanel content = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+            if (script.Icon is not null && SettingsIconConverter.Instance.Convert(script.Icon, typeof(object), null, System.Globalization.CultureInfo.InvariantCulture) is global::Avalonia.Media.IImage icon)
+            {
+                content.Children.Add(new Image { Source = icon, Width = 16, Height = 16 });
+            }
+
+            content.Children.Add(new TextBlock { Text = script.Header.Replace("__", "_"), VerticalAlignment = VerticalAlignment.Center });
+            Button button = new() { Content = content };
+            button.Classes.Add("toolbar");
+            button.Click += (_, _) => script.Invoke?.Invoke();
+            scriptsToolBar.Children.Add(button);
+        }
+    }
+
+    // The worktrees are read in the background (UpdateWorktreeToolStripVisibility).
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(BrowseViewModel.WorktreeItems) && _viewModel is not null)
+        {
+            worktreesButton.Flyout = CreateFlyout(_viewModel.WorktreeItems);
+        }
+
+        // E.g. the hotkeys that show a tab (FocusDiff, FocusNextTab).
+        if (e.PropertyName == nameof(BrowseViewModel.SelectedTab) && _viewModel is not null && tabs.SelectedIndex != (int)_viewModel.SelectedTab)
+        {
+            tabs.SelectedIndex = (int)_viewModel.SelectedTab;
+        }
+    }
+
+    // As FocusLeftPanel, RevisionGrid.Focus and ToolStripFilters.SetFocus of the hotkeys.
+    private void OnFocusRequested(object? sender, BrowseFocusTarget target)
+    {
+        switch (target)
+        {
+            case BrowseFocusTarget.LeftPanel when leftPanel.IsVisible:
+                leftPanel.Focus();
+                break;
+            case BrowseFocusTarget.RevisionGrid:
+                revisionGrid.Focus();
+                break;
+            case BrowseFocusTarget.Filter:
+                filterToolBar.FocusFilter();
+                break;
+        }
     }
 
     // As RegisterPlugins: the menus are built again, e.g. with the plugins once they are loaded.
@@ -157,6 +230,12 @@ public partial class BrowseWindow : DialogWindow
         }
 
         MenuItem menuItem = new() { Header = CreateHeader(item), IsEnabled = item.IsEnabled };
+        if (item.IsChecked is bool isChecked)
+        {
+            menuItem.ToggleType = MenuItemToggleType.CheckBox;
+            menuItem.IsChecked = isChecked;
+        }
+
         if (item.Icon is not null && SettingsIconConverter.Instance.Convert(item.Icon, typeof(object), null, System.Globalization.CultureInfo.InvariantCulture) is { } icon)
         {
             menuItem.Icon = new Image { Source = (global::Avalonia.Media.IImage)icon, Width = 16, Height = 16 };

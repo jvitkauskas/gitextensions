@@ -37,6 +37,8 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new RevisionGridMenuStrings()).SetArgDisplayNames(nameof(RevisionGridMenuStrings));
         yield return new TestCaseData(new FilterToolBarStrings()).SetArgDisplayNames(nameof(FilterToolBarStrings));
         yield return new TestCaseData(new GpgInfoStrings()).SetArgDisplayNames(nameof(GpgInfoStrings));
+        yield return new TestCaseData(new BrowseToolbarStrings()).SetArgDisplayNames(nameof(BrowseToolbarStrings));
+        yield return new TestCaseData(new BrowsePluginStrings()).SetArgDisplayNames(nameof(BrowsePluginStrings));
         yield return new TestCaseData(new CommandlineHelpStrings()).SetArgDisplayNames(nameof(CommandlineHelpStrings));
         yield return new TestCaseData(new AddFilesStrings()).SetArgDisplayNames(nameof(AddFilesStrings));
         yield return new TestCaseData(new DonateStrings()).SetArgDisplayNames(nameof(DonateStrings));

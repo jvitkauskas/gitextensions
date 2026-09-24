@@ -38,6 +38,16 @@
         <Image Source="avares://GitUI.Avalonia/Assets/LayoutSidebarLeft.png" Width="16" Height="16" />
       </ToggleButton>
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding LeftPanel, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <SplitButton Name="worktreesButton" Classes="toolbar" IsVisible="{Binding ShowWorktrees}" ToolTip.Tip="{Binding ToolbarStrings.WorktreesToolTip.Text}"
+                   Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.ManageWorktrees}">
+        <Image Source="avares://GitUI.Avalonia/Assets/WorkTree.png" Width="16" Height="16" />
+      </SplitButton>
+      <DropDownButton Name="workingDirButton" Classes="toolbar" ToolTip.Tip="{Binding ToolbarStrings.WorkingDirToolTip.Text}">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Image Source="avares://GitUI.Avalonia/Assets/RepoOpen.png" Width="16" Height="16" />
+          <TextBlock Text="{Binding WorkingDirectoryText}" VerticalAlignment="Center" />
+        </StackPanel>
+      </DropDownButton>
       <Button Name="branchButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.CheckoutBranch}" ToolTip.Tip="{Binding Strings.BranchToolTip.Text}">
         <StackPanel Orientation="Horizontal" Spacing="4">
           <Image Source="avares://GitUI.Avalonia/Assets/BranchCheckout.png" Width="16" Height="16" />
@@ -47,8 +57,8 @@
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
       <Button Name="commitButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Commit}">
         <StackPanel Orientation="Horizontal" Spacing="4">
-          <Image Source="avares://GitUI.Avalonia/Assets/RepoStateClean.png" Width="16" Height="16" />
-          <TextBlock Text="{Binding Strings.CommitButton.Text}" VerticalAlignment="Center" />
+          <Image Name="commitButtonIcon" Source="{Binding CommitButtonIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+          <TextBlock Name="commitButtonText" Text="{Binding CommitButtonText}" VerticalAlignment="Center" />
         </StackPanel>
       </Button>
       <SplitButton Name="pullButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.PullDefault}">
@@ -70,13 +80,17 @@
       <Button Name="fileExplorerButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.FileExplorer}" ToolTip.Tip="{Binding Strings.FileExplorerToolTip.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
       </Button>
-      <Button Name="gitBashButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.GitBash}" ToolTip.Tip="{Binding Strings.GitBashToolTip.Text}">
+      <SplitButton Name="userShellButton" Classes="toolbar" IsVisible="{Binding HasShells}" ToolTip.Tip="{Binding DefaultShell.Name}">
+        <Image Source="{Binding DefaultShell.Icon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+      </SplitButton>
+      <Button Name="gitBashButton" Classes="toolbar" IsVisible="{Binding !HasShells}" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.GitBash}" ToolTip.Tip="{Binding Strings.GitBashToolTip.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/GitForWindows.png" Width="16" Height="16" />
       </Button>
       <Button Name="settingsButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Settings}" ToolTip.Tip="{Binding Strings.SettingsToolTip.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" Width="16" Height="16" />
       </Button>
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding Filters, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <StackPanel Name="scriptsToolBar" Orientation="Horizontal" Spacing="2" />
       <rg:FilterToolBarView Name="filterToolBar" DataContext="{Binding Filters}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </WrapPanel>
     <!-- The left panel (RepoObjectsTree in MainSplitContainer.Panel1) beside the grid and the tabs. -->
