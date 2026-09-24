@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Presentation.Editor;
 using DrawingColor = System.Drawing.Color;
 
@@ -19,10 +20,18 @@ internal sealed class DiffColorizer : DocumentColorizingTransformer
     private ColoredSegment[] _segments = [];
     private InlineDiffMarker[] _dimmed = [];
     private InlineDiffBrushes _inlineBrushes = new(null, null, null, null);
+    private bool _gitColorsBackground;
+
+    /// <summary>
+    ///  Whether the colors of the syntax highlighting are kept where git colors the background (<see cref="GitColoring.Reverse"/>):
+    ///  the text color git's colors come with only contrasts with its background.
+    /// </summary>
+    public bool KeepsSyntaxColors { get; set; }
 
     public void Update(GitColoring? gitColoring, IReadOnlyList<InlineDiffMarker> markers, InlineDiffBrushes inlineBrushes)
     {
         _segments = [.. gitColoring?.Segments ?? []];
+        _gitColorsBackground = gitColoring?.Reverse == true;
         _dimmed = [.. markers.Where(m => m.Length > 0 && m.Kind is InlineDiffMarkerKind.DimmedAdded or InlineDiffMarkerKind.DimmedRemoved).OrderBy(m => m.Offset)];
         _inlineBrushes = inlineBrushes;
     }
@@ -40,7 +49,10 @@ internal sealed class DiffColorizer : DocumentColorizingTransformer
         {
             ColoredSegment segment = _segments[i];
             IBrush back = GetBrush(segment.BackColor);
-            IBrush? fore = segment.ForeColor is { } foreColor ? GetBrush(foreColor) : null;
+
+            // As AnsiEscapeParser: git sets a background only, and the text gets the color that contrasts with it.
+            bool isContrastOnly = KeepsSyntaxColors && _gitColorsBackground && segment.ForeColor == segment.BackColor.GetTextColor();
+            IBrush? fore = segment.ForeColor is { } foreColor && !isContrastOnly ? GetBrush(foreColor) : null;
             Colorize(segment.Offset, segment.Offset + segment.Length, back, fore);
         }
 

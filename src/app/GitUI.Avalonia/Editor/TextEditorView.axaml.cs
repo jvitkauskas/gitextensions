@@ -325,6 +325,8 @@ public partial class TextEditorView : UserControl
             transformers.Insert(0, _textMate);
         }
 
+        _diffColorizer.KeepsSyntaxColors = _textMate is not null;
+
         // After the highlighting, which setting it may have added.
         transformers.Remove(_darkThemeAdapter);
         if (editor.SyntaxHighlighting is not null && isDarkTheme)

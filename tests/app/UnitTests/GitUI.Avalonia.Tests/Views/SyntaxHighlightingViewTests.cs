@@ -52,6 +52,24 @@ public sealed class SyntaxHighlightingViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_changed_lines_keep_their_syntax_colors_on_the_background_of_git_colors() => OnUiThreadAsync(() =>
+    {
+        // Git's colors as the background (ReverseGitColoring, git colors the changed lines in reverse video): the text color
+        // of the changed lines is only a contrast.
+        const string diff = "\u001b[36m@@ -1,2 +1,2 @@\u001b[m\n int a = 1;\n\u001b[7;31m-int b = 1;\u001b[m\n\u001b[7;32m+int b = 2;\u001b[m\n";
+        TextEditorViewModel viewModel = new();
+        viewModel.LoadDiff(diff, new DiffLoadOptions(GitColors: DefaultThemeColors.Instance, ReverseGitColoring: true, HighlightingFileName: "Sample.cs"));
+        (Window window, TextEditorView view) = Show(viewModel);
+
+        Color? keyword = ColorOf(ForegroundAt(view, line: 2, text: "int"));
+        ColorOf(ForegroundAt(view, line: 3, text: "int")).Should().Be(keyword);
+        ColorOf(ForegroundAt(view, line: 4, text: "int")).Should().Be(keyword);
+        ColorOf(ForegroundAt(view, line: 1, text: "@@")).Should().NotBeNull("the hunk header keeps git's text color")
+            .And.NotBe(keyword);
+        window.Close();
+    });
+
+    [Test]
     public Task A_file_without_grammar_is_not_highlighted_by_TextMate() => OnUiThreadAsync(() =>
     {
         TextEditorViewModel viewModel = new();
