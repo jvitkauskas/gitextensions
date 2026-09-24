@@ -437,20 +437,8 @@ A valid GitHub account is required</source>
         <source>&amp;Copy</source>
         <target />
       </trans-unit>
-      <trans-unit id="btnCopy.toolTip">
-        <source>Copy the issue details into clipboard</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="contentsLabel.Text">
-        <source>Double-click an item to open it with the associated program.</source>
-        <target />
-      </trans-unit>
       <trans-unit id="dateTimeLabel.Text">
         <source>Date/Time:</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="descriptionColumnHeader.Text">
-        <source>Description</source>
         <target />
       </trans-unit>
       <trans-unit id="errorDescriptionLabel.Text">
@@ -469,37 +457,12 @@ A valid GitHub account is required</source>
         <source>General</source>
         <target />
       </trans-unit>
-      <trans-unit id="nameColumnHeader.Text">
-        <source>Name</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="previewLabel.Text">
-        <source>Preview:</source>
-        <target />
-      </trans-unit>
       <trans-unit id="quitButton.Text">
         <source>&amp;Quit</source>
         <target />
       </trans-unit>
-      <trans-unit id="quitButton.toolTip">
-        <source>Quit application without reporting the issue</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="reportContentsTabPage.Text">
-        <source>Report Contents</source>
-        <target />
-      </trans-unit>
       <trans-unit id="sendAndQuitButton.Text">
         <source>&amp;Send and Quit</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="sendAndQuitButton.toolTip">
-        <source>Report the issue to GitHub and quit application.
-A valid GitHub account is required</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="sizeColumnHeader.Text">
-        <source>Size</source>
         <target />
       </trans-unit>
       <trans-unit id="targetSiteLabel.Text">
@@ -1388,6 +1351,26 @@ The primary difftool can still be selected by clicking the main menu entry.</sou
       </trans-unit>
       <trans-unit id="_selectAllMenuItemText.Text">
         <source>Select all</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="ExceptionDetails" source-language="en">
+    <body>
+      <trans-unit id="exceptionDetailsLabel.Text">
+        <source>Exception Details (double click on items to see details):</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="exceptionLabel.Text">
+        <source>Exception(s):</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="informationColumnHeader.Text">
+        <source>Information</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="propertyColumnHeader.Text">
+        <source>Property</source>
         <target />
       </trans-unit>
     </body>

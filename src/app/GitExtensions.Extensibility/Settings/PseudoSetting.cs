@@ -19,8 +19,8 @@ public class PseudoSetting : ISetting
     public string Name { get; } = "PseudoSetting";
     public string Caption { get; }
 
-    /// <summary>The text shown.</summary>
-    public string Text { get; }
+    /// <summary>The text shown (translated by the translations of the plugin, hence settable).</summary>
+    public string Text { get; private set; }
 
     /// <summary>The height of a multiline text, in pixels at 96 DPI; <see langword="null"/> for a single line.</summary>
     public int? Height { get; }

@@ -84,6 +84,14 @@
         <source>Arguments of git command to run</source>
         <target />
       </trans-unit>
+      <trans-unit id="_warningForceWithLease.Text">
+        <source>WARNING: be careful when force push with lease having the periodic background fetch enabled but chose not to auto-refresh after each fetch.
+
+You could lose new commits pushed by others to the remote branch.
+
+Be sure to refresh the revision grid before doing a force push with lease.</source>
+        <target />
+      </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="CreateLocalBranchesForm" source-language="en">
