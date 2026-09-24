@@ -136,6 +136,7 @@ internal static partial class AvaloniaDialogs
     {
         private readonly GitRevisionTester _revisionTester = new(new FullPathResolver(() => commands.Module.WorkingDir));
         private HoverHighlightCalculator? _hoverHighlight;
+        private SuperProjectInfo? _superproject;
         private RevisionGraph? _hoverGraph;
         private VisibleRowRange _visibleRange;
 
@@ -201,6 +202,9 @@ internal static partial class AvaloniaDialogs
                 {
                     ObjectId currentCheckout = module.GetCurrentCheckout();
                     graph.HeadId = currentCheckout;
+
+                    // As GetSuperprojectCheckoutAsync: in a submodule, the checkout and references of the superproject.
+                    _superproject = await GetSuperprojectInfoAsync(module);
 
                     // As PerformRefreshRevisions: the 'stash' ref is excluded when the stashes are shown as rows.
                     bool showStashes = AppSettings.ShowStashes;
@@ -280,6 +284,76 @@ internal static partial class AvaloniaDialogs
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     report();
                 });
+        }
+
+        /// <summary>As <c>DrawSuperprojectInfo</c> and <c>DrawSuperprojectRefs</c> of <c>MessageColumnProvider</c>.</summary>
+        public IReadOnlyList<RevisionRefItem> GetSuperprojectRefs(GitRevision revision)
+        {
+            if (_superproject is not { } superproject || revision.IsArtificial)
+            {
+                return [];
+            }
+
+            List<RevisionRefItem> items = [];
+            AddMarker(superproject.CurrentCommit, "\u25CF");
+            AddMarker(superproject.ConflictBase, "Base");
+            AddMarker(superproject.ConflictLocal, "Local");
+            AddMarker(superproject.ConflictRemote, "Remote");
+
+            // The references not also of the submodule, at most MaxSuperprojectRefs (the last as an ellipsis).
+            if (superproject.Refs is not null && superproject.Refs.TryGetValue(revision.ObjectId, out IReadOnlyList<IGitRef>? refs))
+            {
+                List<IGitRef> shown = [.. refs.Where(gitRef => !revision.Refs.Any(own => own.CompleteName == gitRef.CompleteName))];
+                for (int i = 0; i < Math.Min(MessageColumnProvider.MaxSuperprojectRefs, shown.Count); i++)
+                {
+                    string name = i < MessageColumnProvider.MaxSuperprojectRefs - 1 ? shown[i].Name : "\u2026";
+                    items.Add(new RevisionRefItem(name, RevisionRefKind.Superproject, IsCurrentBranch: shown[i].IsSelected));
+                }
+            }
+
+            return items;
+
+            void AddMarker(ObjectId id, string name)
+            {
+                if (id == revision.ObjectId)
+                {
+                    items.Add(new RevisionRefItem(name, RevisionRefKind.Superproject, IsCurrentBranch: false));
+                }
+            }
+        }
+
+        // Copied from GetSuperprojectCheckoutAsync of RevisionGridControl (a local function there).
+        private static async Task<SuperProjectInfo?> GetSuperprojectInfoAsync(IGitModule module)
+        {
+            if (module.SuperprojectModule is not { } superprojectModule)
+            {
+                return null;
+            }
+
+            SuperProjectInfo info = new();
+            (char code, ObjectId commit) = await module.GetSuperprojectCurrentCheckoutAsync().ConfigureAwait(false);
+            if (code == 'U')
+            {
+                ConflictData conflict = await superprojectModule.GetConflictAsync(module.SubmodulePath).ConfigureAwait(false);
+                info.ConflictBase = conflict.Base.ObjectId;
+                info.ConflictLocal = conflict.Local.ObjectId;
+                info.ConflictRemote = conflict.Remote.ObjectId;
+            }
+            else
+            {
+                info.CurrentCommit = commit;
+            }
+
+            Dictionary<IGitRef, IGitItem?> refs = await superprojectModule.GetSubmoduleItemsForEachRefAsync(module.SubmodulePath, noLocks: true).ConfigureAwait(false);
+            if (refs is not null)
+            {
+                info.Refs = refs
+                    .Where(pair => pair.Value is not null && !pair.Value.ObjectId.IsZero)
+                    .GroupBy(pair => pair.Value!.ObjectId)
+                    .ToDictionary(group => group.Key, group => (IReadOnlyList<IGitRef>)[.. group.Select(pair => pair.Key)]);
+            }
+
+            return info;
         }
 
         public void RunInBackground(Action work, Action then)

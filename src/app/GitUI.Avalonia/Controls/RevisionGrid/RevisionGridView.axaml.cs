@@ -498,6 +498,8 @@ public sealed class RevisionRefKindConverter(RevisionRefKind kind) : IValueConve
 
     public static RevisionRefKindConverter Stash { get; } = new(RevisionRefKind.Stash);
 
+    public static RevisionRefKindConverter Superproject { get; } = new(RevisionRefKind.Superproject);
+
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is RevisionRefKind k && k == kind;
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();

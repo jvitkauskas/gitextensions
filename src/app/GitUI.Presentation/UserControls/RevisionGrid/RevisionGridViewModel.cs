@@ -20,6 +20,12 @@ public enum RevisionRefKind
 
     /// <summary>The label of a stash (its reflog selector) or of the autostash (as <c>MessageColumnProvider</c>).</summary>
     Stash,
+
+    /// <summary>
+    ///  In a submodule, a reference of the superproject to the commit, or the commit checked out (or in conflict) in the
+    ///  superproject (the dashed labels of <c>DrawSuperprojectRefs</c> and <c>DrawSuperprojectInfo</c>).
+    /// </summary>
+    Superproject,
 }
 
 /// <summary>A reference shown before the subject (as the WinForms revision grid's ref "capsules").</summary>
@@ -45,12 +51,12 @@ public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsC
 /// <param name="QuickSearchTimeout">How long the quick search string is kept after typing (<c>AppSettings.RevisionGridQuickSearchTimeout</c>).</param>
 /// <param name="ShowRemoteBranches">As <c>AppSettings.ShowRemoteBranches</c>: the remote branches are shown as references.</param>
 /// <param name="ShowTags">As <c>AppSettings.ShowTags</c>: the tags are shown as references.</param>
-public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000, bool ShowRemoteBranches = true, bool ShowTags = true);
+public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000, bool ShowRemoteBranches = true, bool ShowTags = true, bool ShowCommitBody = false);
 
 /// <summary>A row of the revision grid: a revision and its row in the <see cref="RevisionGraph"/>.</summary>
 public sealed partial class RevisionGridRow : ObservableObject
 {
-    public RevisionGridRow(int index, GitRevision revision, RevisionGridDisplayOptions options, string? currentBranch)
+    public RevisionGridRow(int index, GitRevision revision, RevisionGridDisplayOptions options, string? currentBranch, IReadOnlyList<RevisionRefItem>? superprojectRefs = null)
     {
         Index = index;
         Revision = revision;
@@ -78,7 +84,15 @@ public sealed partial class RevisionGridRow : ObservableObject
             refs.Add(new RevisionRefItem(reflogSelector[5..], RevisionRefKind.Stash, IsCurrentBranch: false));
         }
 
+        // After the references (and the stash label), the ones of the superproject.
+        refs.AddRange(superprojectRefs ?? []);
         Refs = refs;
+
+        // As DrawCommitMessage with ShowCommitBodyInRevisionGrid: the other lines of the message after the subject.
+        if (options.ShowCommitBody && revision.Body?.Split('\n', StringSplitOptions.RemoveEmptyEntries) is { Length: > 1 } lines)
+        {
+            Body = string.Concat(lines.Skip(1).Select(line => " " + line.TrimEnd('\r')));
+        }
 
         // As NotesColumnProvider: the first line of the notes, all of them as tooltip.
         Notes = revision.Notes?.IndexOf('\n') is int eolIndex and >= 0 ? revision.Notes[..eolIndex] : revision.Notes ?? "";
@@ -102,6 +116,9 @@ public sealed partial class RevisionGridRow : ObservableObject
     public string Subject => Revision.IsAutostash ? "" : Revision.Subject;
 
     public string AuthorName => Revision.Author ?? "";
+
+    /// <summary>The body of the message, shown after the subject (<c>ShowCommitBodyInRevisionGrid</c>); empty if not shown.</summary>
+    public string Body { get; } = "";
 
     public string Date { get; }
 
@@ -228,6 +245,9 @@ public interface IRevisionGridHost
     void OpenUrl(string url)
     {
     }
+
+    /// <summary>In a submodule, the labels of the superproject for the revision (read with the revisions).</summary>
+    IReadOnlyList<RevisionRefItem> GetSuperprojectRefs(GitRevision revision) => [];
 }
 
 /// <summary>
@@ -393,7 +413,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         {
             if (Graph.GetNodeForRow(index)?.GitRevision is { } revision)
             {
-                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip, Changes = revision.IsArtificial ? GetArtificialCommitChanges(revision.ObjectId) : null });
+                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch, _host.GetSuperprojectRefs(revision)) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip, Changes = revision.IsArtificial ? GetArtificialCommitChanges(revision.ObjectId) : null });
             }
         }
 

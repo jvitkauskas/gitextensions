@@ -421,6 +421,7 @@ internal static partial class AvaloniaDialogs
                 new(_s.ShowCurrentBranchOnly.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: true), "BranchFilter", IsChecked: state?.ShowCurrentBranchOnly ?? filter.IsShowCurrentBranchOnlyChecked, Gesture: GetGesture(RevisionGridCommand.ShowCurrentBranchOnly)),
                 new(_s.ShowFilteredBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: true, currentOnly: false), "BranchFilter", IsChecked: state?.ShowFilteredBranches ?? filter.IsShowFilteredBranchesChecked, Gesture: GetGesture(RevisionGridCommand.ShowFilteredBranches)),
                 new(_s.ShowReflogReferences.AccessKeyText, ToggleShowReflogReferences, "Book", IsChecked: state?.ShowReflogReferences ?? AppSettings.ShowReflogReferences, Gesture: GetGesture(RevisionGridCommand.ShowReflogReferences)),
+                .. Filter is { } advancedFilter ? (MenuModelItem[])[new(_s.Filter.AccessKeyText, advancedFilter.ShowRevisionFilterDialog, "EditFilter", Gesture: GetGesture(RevisionGridCommand.RevisionFilter))] : [],
                 MenuModelItem.Separator,
                 new(_s.DrawNonrelativesGray.AccessKeyText, ToggleDrawNonRelativesGray, IsChecked: AppSettings.RevisionGraphDrawNonRelativesGray, Gesture: GetGesture(RevisionGridCommand.ToggleDrawNonRelativesGray)),
                 new(_s.HighlightSelectedBranch.AccessKeyText, grid.HighlightSelectedBranch, Gesture: highlightGesture is null ? "Alt+Click" : $"{highlightGesture}, Alt+Click"),
@@ -428,12 +429,17 @@ internal static partial class AvaloniaDialogs
                 new(_s.ShowArtificialCommits.AccessKeyText, () => ToggleAndReload(() => AppSettings.RevisionGraphShowArtificialCommits = !AppSettings.RevisionGraphShowArtificialCommits), IsChecked: AppSettings.RevisionGraphShowArtificialCommits),
                 new(_s.ShowStashes.AccessKeyText, ToggleShowStashes, IsChecked: AppSettings.ShowStashes, Gesture: GetGesture(RevisionGridCommand.ShowStashes)),
                 new(_s.ShowGitNotes.AccessKeyText, () => ToggleAndReload(() => AppSettings.ShowGitNotes = !AppSettings.ShowGitNotes), IsChecked: AppSettings.ShowGitNotes, Gesture: GetGesture(RevisionGridCommand.ToggleShowGitNotes)),
+                new(_s.ShowSessionCheckpoints.AccessKeyText, () => ToggleAndReload(() => AppSettings.ShowSessionRefs = !AppSettings.ShowSessionRefs), IsChecked: AppSettings.ShowSessionRefs),
                 MenuModelItem.Separator,
                 new(_s.ShowRemoteBranches.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowRemoteBranches = !AppSettings.ShowRemoteBranches), IsChecked: AppSettings.ShowRemoteBranches, Gesture: GetGesture(RevisionGridCommand.ShowRemoteBranches)),
                 new(_s.ShowTags.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowTags = !AppSettings.ShowTags), IsChecked: AppSettings.ShowTags, Gesture: GetGesture(RevisionGridCommand.ToggleShowTags)),
+                new(_s.ShowSuperprojectTags.AccessKeyText, () => ToggleAndReload(() => AppSettings.ShowSuperprojectTags = !AppSettings.ShowSuperprojectTags), IsChecked: AppSettings.ShowSuperprojectTags),
+                new(_s.ShowSuperprojectRemoteBranches.AccessKeyText, () => ToggleAndReload(() => AppSettings.ShowSuperprojectRemoteBranches = !AppSettings.ShowSuperprojectRemoteBranches), IsChecked: AppSettings.ShowSuperprojectRemoteBranches),
+                new(_s.ShowSuperprojectBranches.AccessKeyText, () => ToggleAndReload(() => AppSettings.ShowSuperprojectBranches = !AppSettings.ShowSuperprojectBranches), IsChecked: AppSettings.ShowSuperprojectBranches),
                 MenuModelItem.Separator,
                 new(_s.ShowBuildStatusIcon.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowBuildStatusIconColumn = !AppSettings.ShowBuildStatusIconColumn), IsChecked: AppSettings.ShowBuildStatusIconColumn),
                 new(_s.ShowBuildStatusText.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowBuildStatusTextColumn = !AppSettings.ShowBuildStatusTextColumn), IsChecked: AppSettings.ShowBuildStatusTextColumn),
+                new(_s.ShowCommitMessageBody.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowCommitBodyInRevisionGrid = !AppSettings.ShowCommitBodyInRevisionGrid), IsChecked: AppSettings.ShowCommitBodyInRevisionGrid),
                 new(_s.ShowAuthorDate.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowAuthorDate = !AppSettings.ShowAuthorDate), IsChecked: AppSettings.ShowAuthorDate, Gesture: GetGesture(RevisionGridCommand.ToggleAuthorDateCommitDate)),
                 new(_s.ShowRelativeDate.AccessKeyText, () => ToggleDisplay(() => AppSettings.RelativeDate = !AppSettings.RelativeDate), IsChecked: AppSettings.RelativeDate, Gesture: GetGesture(RevisionGridCommand.ToggleShowRelativeDate)),
                 MenuModelItem.Separator,
@@ -443,7 +449,17 @@ internal static partial class AvaloniaDialogs
                 new(_s.ShowAuthorNameColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowAuthorNameColumn = !AppSettings.ShowAuthorNameColumn), IsChecked: AppSettings.ShowAuthorNameColumn),
                 new(_s.ShowDateColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowDateColumn = !AppSettings.ShowDateColumn), IsChecked: AppSettings.ShowDateColumn),
                 new(_s.ShowIdColumn.AccessKeyText, () => ToggleColumns(() => AppSettings.ShowObjectIdColumn = !AppSettings.ShowObjectIdColumn), IsChecked: AppSettings.ShowObjectIdColumn),
+                MenuModelItem.Separator,
+
+                // As ToggleAuthorDateSort and ToggleTopoOrder: the order of git log (RevisionReader), or the default again.
+                new(_s.AuthorDateSort.AccessKeyText, () => ToggleSortOrder(RevisionSortOrder.AuthorDate), IsChecked: AppSettings.RevisionSortOrder == RevisionSortOrder.AuthorDate),
+                new(_s.TopoOrder.AccessKeyText, () => ToggleSortOrder(RevisionSortOrder.Topology), IsChecked: AppSettings.RevisionSortOrder == RevisionSortOrder.Topology),
+                MenuModelItem.Separator,
+                new(_s.SaveAsDefault.AccessKeyText, RevisionGridMenuCommands.SaveCurrentViewSettingsAsDefault),
             ];
+
+            void ToggleSortOrder(RevisionSortOrder order)
+                => ToggleAndReload(() => AppSettings.RevisionSortOrder.Value = AppSettings.RevisionSortOrder != order ? order : RevisionSortOrder.GitDefault);
 
             void SetBranchFilter(bool byBranchFilter, bool currentOnly)
             {
@@ -1005,7 +1021,7 @@ internal static partial class AvaloniaDialogs
 
     /// <summary>The display options of the grid from the settings (as <c>RevisionGridControl</c> reads them).</summary>
     internal static RevisionGridDisplayOptions GetDisplayOptions()
-        => new(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout, AppSettings.ShowRemoteBranches, AppSettings.ShowTags);
+        => new(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout, AppSettings.ShowRemoteBranches, AppSettings.ShowTags, AppSettings.ShowCommitBodyInRevisionGrid);
 
     /// <summary>The columns of the grid from the settings.</summary>
     internal static void ApplyColumns(RevisionGridViewModel grid)

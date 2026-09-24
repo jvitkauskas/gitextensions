@@ -45,6 +45,7 @@ public sealed partial class AvaloniaHostingTests
         List<string> focusedMenu = [];
         List<string> otherActions = [];
         bool? showStashesChecked = null;
+        List<string> viewHeaders = [];
         string? showStashesGesture = null;
         ObjectId? afterHotkey = null;
         bool closed = false;
@@ -66,6 +67,7 @@ public sealed partial class AvaloniaHostingTests
                     MenuModelItem view = grid.ContextMenuProvider!().Single(m => m.Header == "View");
                     MenuModelItem showStashes = view.Children!.Single(m => m.Header == "Show stashes");
                     showStashesChecked = showStashes.IsChecked;
+                    viewHeaders.AddRange(view.Children!.Select(m => m.Header));
                     showStashesGesture = view.Children!.Single(m => m.Header == "Show git _notes").Gesture;
 
                     // The menu of the label of the branch: its actions, the advanced items under "Other actions".
@@ -103,6 +105,12 @@ public sealed partial class AvaloniaHostingTests
         rows.Where(r => r.Labels.Contains("stash")).Should().BeEmpty("the stash ref is shown as the stash rows");
 
         showStashesChecked.Should().BeTrue();
+
+        // As RevisionGridMenuCommands.CreateViewMenuCommands.
+        viewHeaders.Should().ContainInOrder(
+            "Advanced filter...", "Show stashes", "Show session checkpoints", "Show su_perproject tags", "Show superpro_ject remote branches",
+            "Show sup_erproject branches", "Show commit message body", "_Sort commits by author date", "Arrange c_ommits by topo order (ancestor order)",
+            "Save current view settings as default");
         showStashesGesture.Should().BeNull("no hotkey is configured for it");
         focusedMenu.Should().Contain("_Other actions").And.Contain("Pus_h branch...").And.NotContain("Checkout _this commit...");
         otherActions.Should().Contain("Checkout _this commit...").And.Contain("_Navigate").And.Contain("View");

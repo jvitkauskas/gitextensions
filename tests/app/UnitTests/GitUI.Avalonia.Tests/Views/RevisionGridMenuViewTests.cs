@@ -202,6 +202,26 @@ public sealed class RevisionGridMenuViewTests : HeadlessTest
         viewModel.Rows[0].ChangeCounts.Should().BeEmpty();
     });
 
+    [Test]
+    public void A_row_shows_the_body_of_the_message_and_the_labels_of_the_superproject()
+    {
+        GitRevision revision = new(ObjectId.Random())
+        {
+            Subject = "Fix the bug",
+            Body = "Fix the bug\n\nThe details.\r\nMore details.",
+            Refs = [new GitCommands.GitRef(null!, ObjectId.Random(), "refs/heads/main")],
+        };
+        RevisionGridDisplayOptions options = new(RelativeDate: true, ShowAuthorDate: false, ShowCommitBody: true);
+
+        // As DrawCommitMessage: the other lines after the subject; as DrawSuperprojectRefs: after the references.
+        RevisionGridRow row = new(0, revision, options, currentBranch: "main", superprojectRefs: [new RevisionRefItem("v2.0", RevisionRefKind.Superproject, IsCurrentBranch: false)]);
+        row.Body.Should().Be(" The details. More details.");
+        row.Refs.Select(r => (r.Name, r.Kind)).Should().Equal(("main", RevisionRefKind.Branch), ("v2.0", RevisionRefKind.Superproject));
+
+        new RevisionGridRow(0, revision, options with { ShowCommitBody = false }, currentBranch: "main").Body.Should().BeEmpty();
+        new RevisionGridRow(0, new GitRevision(ObjectId.Random()) { Subject = "One line", Body = "One line" }, options, currentBranch: null).Body.Should().BeEmpty();
+    }
+
     private sealed class InsertingHost(IReadOnlyList<GitRevision> revisions) : IRevisionGridHost
     {
         public string CurrentBranch => "main";

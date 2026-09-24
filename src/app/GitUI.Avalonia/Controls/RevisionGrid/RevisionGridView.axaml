@@ -58,6 +58,12 @@
       <Setter Property="BorderBrush" Value="{DynamicResource AppColor.OtherTag}" />
       <Setter Property="TextElement.Foreground" Value="{DynamicResource AppColor.OtherTag}" />
     </Style>
+    <!-- As the dashed labels of the superproject (DrawSuperprojectRefs, Color.OrangeRed of DrawSuperprojectInfo). -->
+    <Style Selector="Border.ref.superproject">
+      <Setter Property="BorderBrush" Value="OrangeRed" />
+      <Setter Property="TextElement.Foreground" Value="OrangeRed" />
+      <Setter Property="Opacity" Value="0.8" />
+    </Style>
     <!-- The hovered label, whose ancestry is highlighted in the graph (the highlight border of RevisionGridRefRenderer). -->
     <Style Selector="Border.ref.hoverable:pointerover">
       <Setter Property="BorderThickness" Value="2" />
@@ -141,6 +147,7 @@
                               Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
                               Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
                               Classes.stash="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Stash}}"
+                              Classes.superproject="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Superproject}}"
                               Classes.hoverable="{Binding GitRef, Converter={x:Static ObjectConverters.IsNotNull}}"
                               Classes.current="{Binding IsCurrentBranch}">
                         <TextBlock Text="{Binding Name}" />
@@ -149,6 +156,8 @@
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock Classes="cellText" Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <!-- As CommitBodyForeColor: the body, grayed. -->
+                <TextBlock Classes="cellText" Text="{Binding Body}" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Body, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <!-- As DrawArtificialRevision: the counts of the changes of the working directory or the index. -->
                 <ItemsControl ItemsSource="{Binding ChangeCounts}" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip.Tip="{Binding ChangesToolTip}">
                   <ItemsControl.ItemsPanel>
