@@ -312,7 +312,7 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusPrevTab);
         viewModel.SelectedTab.Should().Be(BrowseTab.Commit);
         viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusPrevTab);
-        viewModel.SelectedTab.Should().Be(BrowseTab.Console, "the last shown tab");
+        viewModel.SelectedTab.Should().Be(BrowseTab.OutputHistory, "the last shown tab");
 
         BrowseFocusTarget? focused = null;
         viewModel.FocusRequested += (_, target) => focused = target;
@@ -323,6 +323,52 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.ExecuteHotkeyCommand(9001).Should().BeTrue();
         viewModel.ExecuteHotkeyCommand(9002).Should().BeFalse();
         host.ShellRuns.Should().Equal("script 9001");
+        window.Close();
+    });
+
+    [Test]
+    public Task The_output_tab_shows_the_history_and_copies_or_clears_it() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        viewModel.HasOutputHistory.Should().BeTrue();
+        viewModel.OutputHistoryText.Should().Be("git fetch");
+
+        host.AddOutput("git pull");
+        viewModel.OutputHistoryText.Should().Be("git fetch\ngit pull");
+        viewModel.ExecuteHotkeyCommand((int)BrowseHotkeyCommand.FocusOutputHistory).Should().BeTrue();
+        Dispatcher.UIThread.RunJobs();
+        window.Tabs.SelectedIndex.Should().Be((int)BrowseTab.OutputHistory);
+        SaveScreenshot(window.CaptureRenderedFrame(), "browse-output-history");
+
+        viewModel.CopyOutputHistory(selectedText: "");
+        viewModel.CopyOutputHistory(selectedText: "pull");
+        host.CopiedOutput.Should().Equal("git fetch\ngit pull", "pull");
+        viewModel.ClearOutputHistoryCommand.Execute(null);
+        viewModel.OutputHistoryText.Should().BeEmpty();
+        window.Close();
+    });
+
+    [Test]
+    public Task The_submodules_button_lists_the_submodules_or_goes_to_the_superproject() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        viewModel.CanShowSubmodules.Should().BeTrue();
+        viewModel.SubmoduleItems.Select(i => (i.Header, i.IsEnabled)).Should().Equal(("Loading...", false));
+
+        // As PopulateToolbar, when the provider reported the structure.
+        host.RaiseSubmodules([new("lib", null, "SubmoduleRevisionUp") { Invoke = () => host.ShellRuns.Add("open lib") }]);
+        viewModel.SubmoduleItems.Single().Header.Should().Be("lib");
+
+        // Without a superproject the click opens the drop down; with one it goes up.
+        int opened = 0;
+        viewModel.SubmodulesMenuRequested += (_, _) => opened++;
+        viewModel.GoUpOrShowSubmodules();
+        opened.Should().Be(1);
+        viewModel.SubmodulesIcon.Should().Be("SubmodulesManage");
+        host.HasSuperproject = true;
+        viewModel.GoUpOrShowSubmodules();
+        host.ShellRuns.Should().Equal("superproject");
+        viewModel.SubmodulesIcon.Should().Be("NavigateUp");
         window.Close();
     });
 
@@ -375,8 +421,30 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost
     {
+        public event EventHandler? OutputHistoryChanged;
+
+        public bool IsOutputHistoryEnabled => true;
+
+        public string OutputHistory { get; private set; } = "git fetch";
+
+        public List<string> CopiedOutput { get; } = [];
+
+        public void AddOutput(string line)
+        {
+            OutputHistory += "\n" + line;
+            OutputHistoryChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ClearOutputHistory()
+        {
+            OutputHistory = "";
+            OutputHistoryChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void CopyOutputHistory(string text) => CopiedOutput.Add(text);
+
         public bool RunScriptOfHotkey(int commandCode)
         {
             if (commandCode != 9001)
@@ -402,6 +470,16 @@ public sealed class BrowseViewTests : HeadlessTest
         public IReadOnlyList<BrowseShell> GetShells() => [new("bash", null, "bash"), new("pwsh", null, "pwsh")];
 
         public void RunShell(BrowseShell shell) => ShellRuns.Add(shell.Name);
+
+        public event EventHandler<IReadOnlyList<BrowseMenuItem>?>? SubmoduleMenuChanged;
+
+        public bool HasSuperproject { get; set; }
+
+        public bool CanShowSubmodules => true;
+
+        public void GoToSuperproject() => ShellRuns.Add("superproject");
+
+        public void RaiseSubmodules(IReadOnlyList<BrowseMenuItem>? items) => SubmoduleMenuChanged?.Invoke(this, items);
 
         public IReadOnlyList<BrowseMenuItem> GetToolbarScripts() => [new("Deploy", null) { Invoke = () => ShellRuns.Add("script Deploy") }];
 

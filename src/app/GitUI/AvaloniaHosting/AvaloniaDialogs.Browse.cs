@@ -272,6 +272,8 @@ internal static partial class AvaloniaDialogs
             _commands.PostRepositoryChanged -= OnPostRepositoryChanged;
             UnregisterPlugins();
             StopGitStatusMonitor();
+            UnsubscribeOutputHistory();
+            StopSubmoduleMenu();
             RepositoryChanged = null;
             _repositoriesMenu?.Dispose();
             _repositoriesMenu = null;

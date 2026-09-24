@@ -483,6 +483,7 @@ public enum BrowseTab
     FileTree,
     Gpg,
     Console,
+    OutputHistory,
 }
 
 /// <summary>
@@ -520,6 +521,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
         InitializeConsole();
         InitializeWorkingDirectoryStatus();
         InitializeToolbar();
+        InitializeOutputHistory();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
         Grid.Loaded += (_, _) =>

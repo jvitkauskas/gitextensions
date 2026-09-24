@@ -37,6 +37,21 @@ public partial class BrowseWindow : DialogWindow
             }
         };
 
+        // As CopyToClipboard of OutputHistoryControllerBase: the selection, else the whole history.
+        copyOutputHistoryItem.Click += (_, _) => _viewModel?.CopyOutputHistory(outputHistory.SelectedText);
+
+        // As Update of OutputHistoryControllerBase: the end of the history is shown.
+        outputHistory.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+            {
+                outputHistory.CaretIndex = outputHistory.Text?.Length ?? 0;
+            }
+        };
+
+        // As toolStripButtonLevelUp_ButtonClick.
+        submodulesButton.Click += (_, _) => _viewModel?.GoUpOrShowSubmodules();
+
         // As userShell_Click: the button runs the default shell, its drop down the others.
         userShellButton.Click += (_, _) => _viewModel?.RunDefaultShell();
 
@@ -107,10 +122,12 @@ public partial class BrowseWindow : DialogWindow
         _viewModel?.MenusChanged -= OnMenusChanged;
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel?.FocusRequested -= OnFocusRequested;
+        _viewModel?.SubmodulesMenuRequested -= OnSubmodulesMenuRequested;
         _viewModel = DataContext as BrowseViewModel;
         _viewModel?.MenusChanged += OnMenusChanged;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.FocusRequested += OnFocusRequested;
+        _viewModel?.SubmodulesMenuRequested += OnSubmodulesMenuRequested;
         if (_viewModel is null)
         {
             return;
@@ -125,6 +142,7 @@ public partial class BrowseWindow : DialogWindow
         BuildMainMenu();
         workingDirButton.Flyout = CreateFlyout(_viewModel.GetWorkingDirectoryItems());
         worktreesButton.Flyout = CreateFlyout(_viewModel.WorktreeItems);
+        submodulesButton.Flyout = CreateFlyout(_viewModel.SubmoduleItems);
         userShellButton.Flyout = CreateFlyout(_viewModel.ShellItems);
         FillScriptsToolBar(_viewModel.ScriptItems);
         pullButton.Flyout = CreateFlyout(_viewModel.PullItems);
@@ -159,12 +177,19 @@ public partial class BrowseWindow : DialogWindow
             worktreesButton.Flyout = CreateFlyout(_viewModel.WorktreeItems);
         }
 
+        if (e.PropertyName == nameof(BrowseViewModel.SubmoduleItems) && _viewModel is not null)
+        {
+            submodulesButton.Flyout = CreateFlyout(_viewModel.SubmoduleItems);
+        }
+
         // E.g. the hotkeys that show a tab (FocusDiff, FocusNextTab).
         if (e.PropertyName == nameof(BrowseViewModel.SelectedTab) && _viewModel is not null && tabs.SelectedIndex != (int)_viewModel.SelectedTab)
         {
             tabs.SelectedIndex = (int)_viewModel.SelectedTab;
         }
     }
+
+    private void OnSubmodulesMenuRequested(object? sender, EventArgs e) => submodulesButton.Flyout?.ShowAt(submodulesButton);
 
     // As FocusLeftPanel, RevisionGrid.Focus and ToolStripFilters.SetFocus of the hotkeys.
     private void OnFocusRequested(object? sender, BrowseFocusTarget target)

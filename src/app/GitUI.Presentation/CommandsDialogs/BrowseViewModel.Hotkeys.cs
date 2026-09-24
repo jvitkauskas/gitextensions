@@ -23,8 +23,11 @@ public enum BrowseHotkeyCommand
     ToggleLeftPanel = 21,
     FocusLeftPanel = 25,
     FocusGpgInfo = 26,
+    GoToSuperproject = 27,
+    GoToSubmodule = 28,
     FocusGitConsole = 29,
     FocusNextTab = 31,
+    FocusOutputHistory = 47,
     FocusPrevTab = 32,
     GoToChild = 37,
     GoToParent = 38,
@@ -97,6 +100,7 @@ public sealed partial class BrowseViewModel
             case BrowseHotkeyCommand.FocusFileTree: return FileTree is not null && SelectTab(BrowseTab.FileTree);
             case BrowseHotkeyCommand.FocusGpgInfo: return HasGpgInfo && SelectTab(BrowseTab.Gpg);
             case BrowseHotkeyCommand.FocusGitConsole: return HasConsole && SelectTab(BrowseTab.Console);
+            case BrowseHotkeyCommand.FocusOutputHistory: return HasOutputHistory && SelectTab(BrowseTab.OutputHistory);
             case BrowseHotkeyCommand.FocusNextTab: return SelectTab(NextTab(forward: true));
             case BrowseHotkeyCommand.FocusPrevTab: return SelectTab(NextTab(forward: false));
             case BrowseHotkeyCommand.ToggleLeftPanel:
@@ -107,6 +111,12 @@ public sealed partial class BrowseViewModel
                 }
 
                 return false;
+            case BrowseHotkeyCommand.GoToSuperproject:
+                GoUpOrShowSubmodules();
+                return true;
+            case BrowseHotkeyCommand.GoToSubmodule:
+                SubmodulesMenuRequested?.Invoke(this, EventArgs.Empty);
+                return true;
             case BrowseHotkeyCommand.OpenRepo: return RunAndHandle(BrowseCommand.Open);
             case BrowseHotkeyCommand.Commit: return RunAndHandle(BrowseCommand.Commit);
             case BrowseHotkeyCommand.CheckoutBranch: return RunAndHandle(BrowseCommand.CheckoutBranch);
@@ -169,6 +179,7 @@ public sealed partial class BrowseViewModel
         BrowseTab.FileTree => FileTree is not null,
         BrowseTab.Gpg => HasGpgInfo,
         BrowseTab.Console => HasConsole,
+        BrowseTab.OutputHistory => HasOutputHistory,
         _ => true,
     };
 }

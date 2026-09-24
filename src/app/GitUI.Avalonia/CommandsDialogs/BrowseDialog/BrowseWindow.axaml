@@ -15,7 +15,7 @@
                 ShowInTaskbar="True"
                 Width="1300" Height="900" MinWidth="600" MinHeight="400">
   <Window.Styles>
-    <Style Selector="Button.toolbar, SplitButton.toolbar, ToggleButton.toolbar">
+    <Style Selector="Button.toolbar, SplitButton.toolbar, ToggleButton.toolbar, DropDownButton.toolbar">
       <Setter Property="Padding" Value="4,3" />
       <Setter Property="MinWidth" Value="0" />
       <Setter Property="Background" Value="Transparent" />
@@ -38,6 +38,10 @@
         <Image Source="avares://GitUI.Avalonia/Assets/LayoutSidebarLeft.png" Width="16" Height="16" />
       </ToggleButton>
       <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding LeftPanel, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <SplitButton Name="submodulesButton" Classes="toolbar" IsEnabled="{Binding CanShowSubmodules}" ToolTip.Tip="{Binding SubmodulesToolTip}"
+                   IsVisible="{Binding !IsDashboard}">
+        <Image Source="{Binding SubmodulesIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+      </SplitButton>
       <SplitButton Name="worktreesButton" Classes="toolbar" IsVisible="{Binding ShowWorktrees}" ToolTip.Tip="{Binding ToolbarStrings.WorktreesToolTip.Text}"
                    Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.ManageWorktrees}">
         <Image Source="avares://GitUI.Avalonia/Assets/WorkTree.png" Width="16" Height="16" />
@@ -174,6 +178,24 @@
           </TabItem.Header>
           <!-- The terminal of the configured console emulator (ConEmu or Mintty), a WinForms control as a child window. -->
           <c:EmbeddedNativeViewPresenter Name="consoleView" View="{Binding ConsoleView}" />
+        </TabItem>
+        <TabItem Name="outputHistoryTab" IsVisible="{Binding HasOutputHistory}">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Image Source="avares://GitUI.Avalonia/Assets/GitCommandLog.png" Width="16" Height="16" />
+              <TextBlock Text="{Binding OutputHistoryStrings.Tab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <!-- Equivalent of OutputHistoryControl: the output of the git commands, with Copy and Clear. -->
+          <TextBox Name="outputHistory" Text="{Binding OutputHistoryText}" IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True"
+                   FontFamily="{DynamicResource MonospaceFontFamily}" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            <TextBox.ContextMenu>
+              <ContextMenu>
+                <MenuItem Name="copyOutputHistoryItem" Header="{Binding OutputHistoryStrings.Copy.AccessKeyText}" />
+                <MenuItem Header="{Binding OutputHistoryStrings.Clear.AccessKeyText}" Command="{Binding ClearOutputHistoryCommand}" />
+              </ContextMenu>
+            </TextBox.ContextMenu>
+          </TextBox>
         </TabItem>
       </TabControl>
       <bd:DashboardView Name="dashboard" Grid.RowSpan="3" Margin="-4,0,-4,-4" DataContext="{Binding Dashboard}" IsVisible="{Binding $parent[Window].((vm:BrowseViewModel)DataContext).IsDashboard}" />

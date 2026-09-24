@@ -15,7 +15,25 @@ public sealed class BrowseToolbarStrings : ViewStrings
         WorktreesToolTip = Add("toolStripWorktrees", "ToolTipText", "Worktrees");
         SubmodulesToolTip = Add("toolStripButtonLevelUp", "ToolTipText", "Submodules");
         ShellToolTip = Add("userShell", "ToolTipText", "Git bash");
+        GoToSuperProject = Add("_goToSuperProject", "Text", "Go to superproject");
+        NoSubmodulesPresent = Add("_noSubmodulesPresent", "Text", "No submodules");
+        TopProjectModuleFormat = Add("_topProjectModuleFormat", "Text", "Top project: {0}");
+        SuperprojectModuleFormat = Add("_superprojectModuleFormat", "Text", "Superproject: {0}");
+        UpdateCurrentSubmodule = Add("_updateCurrentSubmodule", "Text", "Update current submodule");
+        Loading = Add("_loading", "Text", "Loading...");
     }
+
+    public TranslatedText GoToSuperProject { get; }
+
+    public TranslatedText NoSubmodulesPresent { get; }
+
+    public TranslatedText TopProjectModuleFormat { get; }
+
+    public TranslatedText SuperprojectModuleFormat { get; }
+
+    public TranslatedText UpdateCurrentSubmodule { get; }
+
+    public TranslatedText Loading { get; }
 
     public TranslatedText NoWorkingFolder { get; }
 
@@ -57,6 +75,21 @@ public interface IBrowseToolbarHost
 
     /// <summary>As <c>LoadUserMenu</c>: the enabled scripts shown in the user menu bar, which run when clicked.</summary>
     IReadOnlyList<BrowseMenuItem> GetToolbarScripts();
+
+    /// <summary>
+    ///  Raised on the UI thread with the items of the submodules button (as <c>PopulateToolbar</c> and
+    ///  <c>UpdateSubmoduleMenuStatus</c>), or <see langword="null"/> while the submodules are read.
+    /// </summary>
+    event EventHandler<IReadOnlyList<BrowseMenuItem>?>? SubmoduleMenuChanged;
+
+    /// <summary>Whether the repository is a submodule (<c>Module.SuperprojectModule</c>).</summary>
+    bool HasSuperproject { get; }
+
+    /// <summary>Whether the button is enabled: a working directory that is not bare.</summary>
+    bool CanShowSubmodules { get; }
+
+    /// <summary>As <c>toolStripButtonLevelUp_ButtonClick</c> with a superproject: the superproject in this window.</summary>
+    void GoToSuperproject();
 }
 
 /// <summary>The working directory button of the main toolbar (<c>_NO_TRANSLATE_WorkingDir</c>).</summary>
@@ -115,6 +148,32 @@ public sealed partial class BrowseViewModel
 
     private void RunShell(BrowseShell shell) => (_host as IBrowseToolbarHost)?.RunShell(shell);
 
+    /// <summary>The items of the submodules button (<c>toolStripButtonLevelUp</c>).</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<BrowseMenuItem> SubmoduleItems { get; private set; } = [];
+
+    /// <summary>The image of the submodules button: up to the superproject, or the submodules.</summary>
+    public string SubmodulesIcon => (_host as IBrowseToolbarHost)?.HasSuperproject is true ? "NavigateUp" : "SubmodulesManage";
+
+    public string SubmodulesToolTip => (_host as IBrowseToolbarHost)?.HasSuperproject is true ? ToolbarStrings.GoToSuperProject.Text : ToolbarStrings.SubmodulesToolTip.Text;
+
+    public bool CanShowSubmodules { get; private set; }
+
+    /// <summary>Raised when the drop down of the submodules button should open (a click without a superproject).</summary>
+    public event EventHandler? SubmodulesMenuRequested;
+
+    /// <summary>As <c>toolStripButtonLevelUp_ButtonClick</c>: to the superproject, else the drop down of the submodules.</summary>
+    public void GoUpOrShowSubmodules()
+    {
+        if (_host is IBrowseToolbarHost { HasSuperproject: true } toolbarHost)
+        {
+            toolbarHost.GoToSuperproject();
+            return;
+        }
+
+        SubmodulesMenuRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private void InitializeToolbar()
     {
         IBrowseToolbarHost? toolbarHost = _host as IBrowseToolbarHost;
@@ -126,6 +185,9 @@ public sealed partial class BrowseViewModel
         }
 
         Shells = toolbarHost.GetShells();
+        CanShowSubmodules = !IsDashboard && toolbarHost.CanShowSubmodules;
+        SubmoduleItems = [new BrowseMenuItem(ToolbarStrings.Loading.Text, null) { IsEnabled = false }];
+        toolbarHost.SubmoduleMenuChanged += (_, items) => SubmoduleItems = items ?? [new BrowseMenuItem(ToolbarStrings.Loading.Text, null) { IsEnabled = false }];
         ScriptItems = IsDashboard ? [] : toolbarHost.GetToolbarScripts();
         if (!IsDashboard)
         {
