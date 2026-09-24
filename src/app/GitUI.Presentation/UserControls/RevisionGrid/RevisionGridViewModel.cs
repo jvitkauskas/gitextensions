@@ -238,6 +238,17 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
                 }
 
                 Graph.LoadingCompleted();
+
+                // Revisions inserted before the rows already shown (the artificial commits when HEAD is filtered out)
+                // move the rows: they are created again.
+                if (Rows.Where((row, index) => Graph.GetNodeForRow(index)?.GitRevision != row.Revision).Any())
+                {
+                    RevisionGridRow? selected = SelectedRow;
+                    Rows.Clear();
+                    AddNewRows();
+                    SelectedRow = selected is null ? null : Rows.FirstOrDefault(row => row.ObjectId == selected.ObjectId);
+                }
+
                 AddNewRows();
                 IsLoading = false;
                 if (_toBeSelected is { } id)

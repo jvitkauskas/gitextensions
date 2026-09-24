@@ -5,6 +5,7 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.Controls.RevisionGrid;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.RevisionGrid;
+using GitUI.UserControls.RevisionGrid.Graph;
 using GitUIPluginInterfaces;
 
 namespace GitUI.AvaloniaTests.Views;
@@ -109,6 +110,44 @@ public sealed class RevisionGridMenuViewTests : HeadlessTest
         viewModel.Rows.SelectMany(r => r.Refs).Should().OnlyContain(r => r.Kind != RevisionRefKind.RemoteBranch && r.Kind != RevisionRefKind.Tag);
         window.Close();
     });
+
+    [Test]
+    public Task The_rows_follow_revisions_inserted_before_them() => OnUiThreadAsync(() =>
+    {
+        // As the artificial commits when HEAD is filtered out: inserted first, after the rows of the listed revisions.
+        IReadOnlyList<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel viewModel = new(new InsertingHost(history), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false));
+        viewModel.Load();
+        Dispatcher.UIThread.RunJobs();
+
+        viewModel.Rows.Select(r => r.ObjectId).Should().Equal([ObjectId.WorkTreeId, ObjectId.IndexId, .. history.Select(r => r.ObjectId)]);
+        viewModel.Rows.Select(r => r.Index).Should().Equal(Enumerable.Range(0, history.Count + 2));
+    });
+
+    private sealed class InsertingHost(IReadOnlyList<GitRevision> revisions) : IRevisionGridHost
+    {
+        public string CurrentBranch => "main";
+
+        public bool MatchesQuickSearch(GitRevision revision, string criteria) => false;
+
+        public void LoadRevisions(RevisionGraph graph, Action reportBatch, Action<Exception?> completed, CancellationToken cancellationToken)
+        {
+            foreach (GitRevision revision in revisions)
+            {
+                graph.Add(revision);
+            }
+
+            reportBatch();
+            graph.Insert(new GitRevision(ObjectId.WorkTreeId) { ParentIds = [ObjectId.IndexId] }, new GitRevision(ObjectId.IndexId), []);
+            completed(null);
+        }
+
+        public void RunInBackground(Action work, Action then)
+        {
+            work();
+            then();
+        }
+    }
 
     private static (Window Window, RevisionGridView View, RevisionGridViewModel ViewModel) Show()
     {

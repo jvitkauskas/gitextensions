@@ -168,6 +168,12 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\PatchApply.png" Link="Assets\PatchApply.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\PatchView.png" Link="Assets\PatchView.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Book.png" Link="Assets\Book.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FunnelPencil.png" Link="Assets\FunnelPencil.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\FunnelExclamation.png" Link="Assets\FunnelExclamation.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchLocal.png" Link="Assets\BranchLocal.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\BranchFilter.png" Link="Assets\BranchFilter.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\EditFilter.png" Link="Assets\EditFilter.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowOnlyFirstParent.png" Link="Assets\ShowOnlyFirstParent.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GitForWindows.png" Link="Assets\GitForWindows.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Changelog.png" Link="Assets\Changelog.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Translate.png" Link="Assets\Translate.png" />

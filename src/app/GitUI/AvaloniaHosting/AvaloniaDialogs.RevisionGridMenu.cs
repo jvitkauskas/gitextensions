@@ -32,6 +32,9 @@ internal static partial class AvaloniaDialogs
         /// <summary>Selects a reference in the left panel (<c>SelectInLeftPanel</c>), if there is one.</summary>
         public Action<string>? SelectInLeftPanel { get; set; }
 
+        /// <summary>The filter of the grid (the main window's), which the branch and reflog items of the View menu change.</summary>
+        public IRevisionGridFilterHost? Filter { get; init; }
+
         private IGitModule Module => commands.Module;
 
         public IReadOnlyList<MenuModelItem> Build()
@@ -376,13 +379,14 @@ internal static partial class AvaloniaDialogs
         private IReadOnlyList<MenuModelItem> CreateViewItems()
         {
             FilterInfo filter = new();
+            RevisionGridFilterState? state = Filter?.State;
             return
             [
-                new(_s.ShowAllBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: false), IsChecked: filter.IsShowAllBranchesChecked),
-                new(_s.ShowCurrentBranchOnly.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: true), IsChecked: filter.IsShowCurrentBranchOnlyChecked),
-                new(_s.ShowFilteredBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: true, currentOnly: false), IsChecked: filter.IsShowFilteredBranchesChecked),
+                new(_s.ShowAllBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: false), IsChecked: state?.ShowAllBranches ?? filter.IsShowAllBranchesChecked),
+                new(_s.ShowCurrentBranchOnly.AccessKeyText, () => SetBranchFilter(byBranchFilter: false, currentOnly: true), IsChecked: state?.ShowCurrentBranchOnly ?? filter.IsShowCurrentBranchOnlyChecked),
+                new(_s.ShowFilteredBranches.AccessKeyText, () => SetBranchFilter(byBranchFilter: true, currentOnly: false), IsChecked: state?.ShowFilteredBranches ?? filter.IsShowFilteredBranchesChecked),
                 MenuModelItem.Separator,
-                new(_s.ShowReflogReferences.AccessKeyText, () => Toggle(() => AppSettings.ShowReflogReferences.Value = !AppSettings.ShowReflogReferences), IsChecked: AppSettings.ShowReflogReferences),
+                new(_s.ShowReflogReferences.AccessKeyText, ToggleReflog, IsChecked: state?.ShowReflogReferences ?? AppSettings.ShowReflogReferences),
                 new(_s.ShowArtificialCommits.AccessKeyText, () => Toggle(() => AppSettings.RevisionGraphShowArtificialCommits = !AppSettings.RevisionGraphShowArtificialCommits), IsChecked: AppSettings.RevisionGraphShowArtificialCommits),
                 MenuModelItem.Separator,
                 new(_s.ShowRemoteBranches.AccessKeyText, () => ToggleDisplay(() => AppSettings.ShowRemoteBranches = !AppSettings.ShowRemoteBranches), IsChecked: AppSettings.ShowRemoteBranches),
@@ -403,8 +407,26 @@ internal static partial class AvaloniaDialogs
                 grid.Load(grid.SelectedRow?.ObjectId);
             }
 
+            void ToggleReflog()
+            {
+                if (Filter is not null)
+                {
+                    Filter.ToggleShowReflogReferences();
+                    return;
+                }
+
+                Toggle(() => AppSettings.ShowReflogReferences.Value = !AppSettings.ShowReflogReferences);
+            }
+
             void SetBranchFilter(bool byBranchFilter, bool currentOnly)
             {
+                if (Filter is not null)
+                {
+                    // As the handlers of the menu: through the filter of the grid, which the toolbar shows.
+                    (currentOnly ? (Action)Filter.ShowCurrentBranchOnly : byBranchFilter ? Filter.ShowFilteredBranches : Filter.ShowAllBranches)();
+                    return;
+                }
+
                 // As ShowAllBranches, ShowCurrentBranchOnly and ShowFilteredBranches: the settings of the filter of the grid.
                 FilterInfo current = new();
                 current.ByBranchFilter = byBranchFilter;

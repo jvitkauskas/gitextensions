@@ -61,17 +61,23 @@ internal static partial class AvaloniaDialogs
             SelectedId = args.SelectedId.IsZero ? null : args.SelectedId,
         };
         BrowseHost host = new(commands, window);
+        BrowseGridFilter gridFilter = new(commands, () => new NativeWindowOwner(window), CreateBrowseFilter(args));
         RevisionGridHost gridHost = new(
             commands,
-            currentCheckout => new FilterInfo().GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
-            showArtificial: true);
+            currentCheckout => gridFilter.Filter.GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
+            showArtificial: true,
+            getPathFilter: _ => gridFilter.GetPathFilter());
         RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
         {
             MultiSelect = true,
         };
+        gridFilter.Grid = grid;
         ApplyColumns(grid);
         BrowseViewModel? browseViewModel = null;
-        RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => browseViewModel?.RefreshRevisions());
+        RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => browseViewModel?.RefreshRevisions())
+        {
+            Filter = gridFilter,
+        };
         grid.ContextMenuProvider = gridMenu.Build;
         BrowseViewModel viewModel = new(
             ViewStrings.Load<BrowseStrings>(),
@@ -80,7 +86,10 @@ internal static partial class AvaloniaDialogs
             new CommitInfoHost(commands),
             new FileViewerHost(commands),
             ViewStrings.Load<FileStatusListStrings>(),
-            GetFileStatusTreeOptions());
+            GetFileStatusTreeOptions())
+        {
+            Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
+        };
         browseViewModel = viewModel;
         UseFileStatusListMenu(viewModel.Files, commands, window);
         if (viewModel.FileTree is { } fileTree)

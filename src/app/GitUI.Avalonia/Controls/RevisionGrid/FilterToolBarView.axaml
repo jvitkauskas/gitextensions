@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:s="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog"
+             xmlns:vm="using:GitUI.Presentation.UserControls.RevisionGrid"
+             x:Class="GitUI.Avalonia.Controls.RevisionGrid.FilterToolBarView"
+             x:DataType="vm:FilterToolBarViewModel"
+             IsEnabled="{Binding IsEnabled}">
+  <UserControl.Styles>
+    <Style Selector="Button.toolbar, SplitButton.toolbar, ToggleButton.toolbar, DropDownButton.toolbar">
+      <Setter Property="Padding" Value="4,3" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="ComboBox.filter">
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="Padding" Value="4,1" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+  <!-- Equivalent of FilterToolBar (ToolStripFilters of FormBrowse). -->
+  <StackPanel Orientation="Horizontal" Spacing="2">
+    <SplitButton Name="advancedFilterButton" Classes="toolbar" ToolTip.Tip="{Binding AdvancedFilterToolTip}">
+      <Image Source="{Binding AdvancedFilterIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+      <SplitButton.Flyout>
+        <MenuFlyout>
+          <MenuItem Name="resetPathFilterItem" Header="{Binding Strings.ResetPathFilters.AccessKeyText}" Command="{Binding ResetPathFilterCommand}" IsEnabled="{Binding CanResetPathFilter}" />
+          <MenuItem Name="resetAllFiltersItem" Header="{Binding Strings.ResetAllFilters.AccessKeyText}" Command="{Binding ResetAllFiltersCommand}" IsEnabled="{Binding CanResetAllFilters}" />
+          <Separator />
+          <MenuItem Name="advancedFilterItem" Header="{Binding Strings.AdvancedFilter.AccessKeyText}" Command="{Binding ShowAdvancedFilterCommand}" />
+        </MenuFlyout>
+      </SplitButton.Flyout>
+    </SplitButton>
+    <ToggleButton Name="reflogButton" Classes="toolbar" IsChecked="{Binding State.ShowReflogReferences, Mode=OneWay}"
+                  Command="{Binding ToggleShowReflogCommand}" ToolTip.Tip="{Binding Strings.ShowReflogToolTip.Text}">
+      <Image Source="avares://GitUI.Avalonia/Assets/Book.png" Width="16" Height="16" />
+    </ToggleButton>
+    <DropDownButton Name="branchesButton" Classes="toolbar" ToolTip.Tip="{Binding BranchesModeToolTip}">
+      <StackPanel Orientation="Horizontal" Spacing="4">
+        <Image Source="{Binding BranchesModeIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+        <TextBlock Text="{Binding BranchesModeText}" VerticalAlignment="Center" />
+      </StackPanel>
+      <DropDownButton.Flyout>
+        <MenuFlyout>
+          <MenuItem Name="allBranchesItem" Header="{Binding Strings.AllBranches.AccessKeyText}" Command="{Binding ShowAllBranchesCommand}"
+                    ToggleType="Radio" IsChecked="{Binding State.ShowAllBranches, Mode=OneWay}" ToolTip.Tip="{Binding Strings.AllBranchesToolTip.Text}" />
+          <MenuItem Name="currentBranchItem" Header="{Binding Strings.CurrentBranch.AccessKeyText}" Command="{Binding ShowCurrentBranchOnlyCommand}"
+                    ToggleType="Radio" IsChecked="{Binding State.ShowCurrentBranchOnly, Mode=OneWay}" ToolTip.Tip="{Binding Strings.CurrentBranchToolTip.Text}" />
+          <MenuItem Name="filteredBranchesItem" Header="{Binding Strings.FilteredBranches.AccessKeyText}" Command="{Binding ShowFilteredBranchesCommand}"
+                    ToggleType="Radio" IsChecked="{Binding State.ShowFilteredBranches, Mode=OneWay}" ToolTip.Tip="{Binding Strings.FilteredBranchesToolTip.Text}" />
+        </MenuFlyout>
+      </DropDownButton.Flyout>
+    </DropDownButton>
+    <Label Content="{Binding Strings.Branches.AccessKeyText}" Target="branchFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.BranchesToolTip.Text}" />
+    <ComboBox Name="branchFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding BranchFilter}" ItemsSource="{Binding BranchItems}" />
+    <DropDownButton Name="branchTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.BranchType.Text}">
+      <Image Source="avares://GitUI.Avalonia/Assets/EditFilter.png" Width="16" Height="16" />
+      <DropDownButton.Flyout>
+        <MenuFlyout>
+          <MenuItem Name="localItem" Header="{Binding Strings.Local.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding IncludeLocal}" />
+          <MenuItem Name="remoteItem" Header="{Binding Strings.Remote.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding IncludeRemote}" />
+          <MenuItem Name="tagItem" Header="{Binding Strings.Tag.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding IncludeTags}" />
+        </MenuFlyout>
+      </DropDownButton.Flyout>
+    </DropDownButton>
+    <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    <Label Content="{Binding Strings.Filter.AccessKeyText}" Target="revisionFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.FilterToolTip.Text}" />
+    <ComboBox Name="revisionFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding RevisionFilter}" ItemsSource="{Binding RevisionFilterItems}" />
+    <DropDownButton Name="filterTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.FilterType.Text}">
+      <Image Source="avares://GitUI.Avalonia/Assets/EditFilter.png" Width="16" Height="16" />
+      <DropDownButton.Flyout>
+        <MenuFlyout>
+          <MenuItem Name="messageItem" Header="{Binding Strings.CommitMessage.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding ByMessage}" />
+          <MenuItem Name="committerItem" Header="{Binding Strings.Committer.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding ByCommitter}" />
+          <MenuItem Name="authorItem" Header="{Binding Strings.Author.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding ByAuthor}" />
+          <MenuItem Name="diffContainsItem" Header="{Binding Strings.DiffContains.AccessKeyText}" ToggleType="CheckBox" IsChecked="{Binding ByDiffContent}" />
+        </MenuFlyout>
+      </DropDownButton.Flyout>
+    </DropDownButton>
+    <ToggleButton Name="firstParentButton" Classes="toolbar" IsChecked="{Binding State.ShowOnlyFirstParent, Mode=OneWay}"
+                  Command="{Binding ToggleShowOnlyFirstParentCommand}" ToolTip.Tip="{Binding Strings.ShowOnlyFirstParent.Text}">
+      <Image Source="avares://GitUI.Avalonia/Assets/ShowOnlyFirstParent.png" Width="16" Height="16" />
+    </ToggleButton>
+  </StackPanel>
+</UserControl>
