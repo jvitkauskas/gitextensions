@@ -1,3 +1,4 @@
+using GitCommands.Settings;
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Editor;
@@ -138,7 +139,7 @@ public sealed class DiffViewModelTests
 
         public Task Shown => _shown.Task;
 
-        public IThemeColors ThemeColors => DefaultThemeColors.Instance;
+        public IThemeColors ThemeColors { get; set; } = DefaultThemeColors.Instance;
 
         public bool ReverseGitColoring => true;
 
@@ -152,7 +153,21 @@ public sealed class DiffViewModelTests
 
         public void OpenSettings() => SettingsOpened++;
 
-        public bool IsPatchAppearance => true;
+        public DiffDisplayAppearance DiffAppearance { get; set; } = DiffDisplayAppearance.Patch;
+
+        public bool IsDifftasticEnabled { get; set; }
+
+        public int VerticalRulerPosition { get; set; }
+
+        public List<string> DifftoolsOpened { get; } = [];
+
+        public void OpenWithDifftool(FileStatusEntry entry) => DifftoolsOpened.Add(entry.Item.Name);
+
+        /// <summary>The requests of the changes (with the options of the viewer).</summary>
+        public List<FileViewRequest> Requests { get; } = [];
+
+        /// <summary>The content returned instead of the diff, if any.</summary>
+        public FileViewContent? Content { get; set; }
 
         public IReadOnlyList<HotkeyBinding> Hotkeys { get; set; } = [];
 
@@ -174,11 +189,12 @@ public sealed class DiffViewModelTests
         /// <summary>The diff returned instead of the default one.</summary>
         public string? Diff { get; set; }
 
-        public Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, string? encodingName, CancellationToken cancellationToken)
+        public Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, FileViewRequest request, CancellationToken cancellationToken)
         {
-            Requested.Add(encodingName is null ? entry.Item.Name : $"{entry.Item.Name} ({encodingName})");
+            Requested.Add(request.EncodingName is null ? entry.Item.Name : $"{entry.Item.Name} ({request.EncodingName})");
+            Requests.Add(request);
             _shown.TrySetResult();
-            return Task.FromResult(new FileViewContent(FileViewKind.Diff, Diff ?? $"diff of {entry.Item.Name}", SupportsLinePatching: SupportsLinePatching));
+            return Task.FromResult(Content ?? new FileViewContent(FileViewKind.Diff, Diff ?? $"diff of {entry.Item.Name}", SupportsLinePatching: SupportsLinePatching, CanOpenWithDifftool: true));
         }
 
         public Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, string? encodingName, CancellationToken cancellationToken)

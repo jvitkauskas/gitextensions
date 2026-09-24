@@ -29,8 +29,8 @@ public sealed class FileViewerContextMenuViewTests : HeadlessTest
         view.FillContextMenu().Select(i => i is MenuItem item ? item.Header : "-").Should().Equal(
             "Stage selected line(s)", "Reset selected line(s)", "_Copy", "Copy _patch", "Copy _new version", "Copy _old version", "-",
             "_Increase the number of lines of context", "_Decrease the number of lines of context", "Show _entire file", "S_how nonprinting characters",
-            "Ignore whitespace changes at end of _line", "Ignore changes in _amount of whitespace", "Ignore all _whitespace changes", "-",
-            "_Find...", "_Go to line");
+            "Show synta_x highlighting", "Ignore whitespace changes at end of _line", "Ignore changes in _amount of whitespace", "Ignore all _whitespace changes",
+            "Diff appea_rance", "-", "_Treat all files as text", "_Find...", "_Go to line");
 
         viewModel.Show(new FileViewContent(FileViewKind.Text, "text"));
         view.FillContextMenu().Select(i => i is MenuItem item ? item.Header : "-").Should().Equal(

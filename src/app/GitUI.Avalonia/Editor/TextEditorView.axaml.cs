@@ -264,7 +264,19 @@ public partial class TextEditorView : UserControl
             case nameof(TextEditorViewModel.IsReadOnly) or nameof(TextEditorViewModel.ShowWhitespace) or nameof(TextEditorViewModel.FileName):
                 ApplyOptions();
                 break;
+
+            case nameof(TextEditorViewModel.VerticalRulerColumn):
+                ApplyVerticalRuler();
+                break;
         }
+    }
+
+    /// <summary>As <c>FileViewerInternal.VRulerPosition</c>: a vertical line after the column, none for 0.</summary>
+    private void ApplyVerticalRuler()
+    {
+        int column = _viewModel!.VerticalRulerColumn;
+        editor.Options.ShowColumnRulers = column > 0;
+        editor.Options.ColumnRulerPositions = column > 0 ? [column] : [];
     }
 
     private void OnFocusRequested(object? sender, EventArgs e) => editor.TextArea.Focus();
@@ -281,11 +293,20 @@ public partial class TextEditorView : UserControl
             : null;
 
         // After the highlighting, which setting it may have added.
-        editor.TextArea.TextView.LineTransformers.Remove(_darkThemeAdapter);
+        IList<IVisualLineTransformer> transformers = editor.TextArea.TextView.LineTransformers;
+        transformers.Remove(_darkThemeAdapter);
         if (editor.SyntaxHighlighting is not null && ActualThemeVariant == ThemeVariant.Dark)
         {
-            editor.TextArea.TextView.LineTransformers.Add(_darkThemeAdapter);
+            transformers.Add(_darkThemeAdapter);
         }
+
+        // Git's colors of a diff come last, over the syntax highlighting (as the markers of the WinForms viewer).
+        if (transformers.Remove(_diffColorizer))
+        {
+            transformers.Add(_diffColorizer);
+        }
+
+        ApplyVerticalRuler();
     }
 
     private void OnTextLoaded(object? sender, EventArgs e)
@@ -307,7 +328,8 @@ public partial class TextEditorView : UserControl
     }
 
     /// <summary>
-    ///  A diff shows its line numbers in the old and new file, its added and removed lines colored (by git, or as
+    ///  A diff shows its line numbers in the old and new file (on the colors of the kinds of the lines, as
+    ///  <c>DiffViewerLineNumberControl</c>), its added and removed lines colored (by git, or as
     ///  <c>DiffHighlightService.HighlightAddedAndDeletedLines</c>) and the in-line differences of the matching lines.
     /// </summary>
     private void ShowDiff(IReadOnlyList<DiffLine>? lines)
@@ -333,10 +355,12 @@ public partial class TextEditorView : UserControl
         }
 
         TextEditorViewModel viewModel = _viewModel!;
+        _diffBrushes ??= CreateDiffBrushes();
         editor.TextArea.LeftMargins.Insert(0, _diffLineNumbers);
+        _diffLineNumbers.Brushes = new DiffMarginBrushes(_diffBrushes.Added, _diffBrushes.Removed, _diffBrushes.Header);
+        _diffLineNumbers.ShowLeftColumn = viewModel.ShowLeftLineNumbers;
         _diffLineNumbers.Lines = lines!;
 
-        _diffBrushes ??= CreateDiffBrushes();
         _diffBackground ??= new DiffBackgroundRenderer(_diffBrushes.Added, _diffBrushes.Removed, _diffBrushes.Header);
         _diffAnchors ??= new DiffAnchorRenderer(_diffBrushes.AddedAnchor, _diffBrushes.RemovedAnchor);
         if (viewModel.GitColoring is null)

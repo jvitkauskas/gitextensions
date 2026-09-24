@@ -15,7 +15,7 @@ namespace GitUI;
 public static partial class GitUIExtensions
 {
     [GeneratedRegex(@"\n\s*(@@|##)\s+(?<file>[^#:\n]+)", RegexOptions.ExplicitCapture)]
-    private static partial Regex FileNameRegex { get; }
+    internal static partial Regex FileNameRegex { get; }
 
     /// <summary>
     /// View the changes between the revisions, if possible as a diff.

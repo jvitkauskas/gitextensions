@@ -323,22 +323,26 @@ public partial class FileViewer : GitModuleControl
                     return isEnabled;
                 }
 
-                isEnabled = _difftasticCmdCache[Module.WorkingDir] = new Lazy<bool>(() =>
-                {
-                    try
-                    {
-                        const string difftasticCmd = "difftool.difftastic.cmd";
-                        return !string.IsNullOrEmpty(Module.GetEffectiveSetting(difftasticCmd));
-                    }
-                    catch (Exception exception)
-                    {
-                        Trace.WriteLine(exception);
-                        return false;
-                    }
-                });
+                IGitModule module = Module;
+                isEnabled = _difftasticCmdCache[Module.WorkingDir] = new Lazy<bool>(() => IsDifftasticConfigured(module));
 
                 return isEnabled;
             }
+        }
+    }
+
+    /// <summary>Whether the difftastic difftool is configured in the repository, also for the Avalonia viewer (<c>FileViewerHost</c>).</summary>
+    internal static bool IsDifftasticConfigured(IGitModule module)
+    {
+        try
+        {
+            const string difftasticCmd = "difftool.difftastic.cmd";
+            return !string.IsNullOrEmpty(module.GetEffectiveSetting(difftasticCmd));
+        }
+        catch (Exception exception)
+        {
+            Trace.WriteLine(exception);
+            return false;
         }
     }
 
@@ -429,22 +433,37 @@ public partial class FileViewer : GitModuleControl
     }
 
     public ArgumentString GetExtraDiffArguments(bool isRangeDiff = false, bool isCombinedDiff = false)
+        => GetExtraDiffArguments(IgnoreWhitespace, ShowEntireFile, NumberOfContextLines, TreatAllFilesAsText, AppSettings.DiffDisplayAppearance.Value, isRangeDiff, isCombinedDiff);
+
+    /// <summary>The diff arguments of the options of a viewer, also for the Avalonia viewer (<c>FileViewerHost</c>).</summary>
+    internal static ArgumentString GetExtraDiffArguments(IgnoreWhitespaceKind ignoreWhitespace, bool showEntireFile, int numberOfContextLines, bool treatAllFilesAsText,
+        DiffDisplayAppearance diffDisplayAppearance, bool isRangeDiff, bool isCombinedDiff)
     {
         return new ArgumentBuilder
         {
-            { IgnoreWhitespace == IgnoreWhitespaceKind.AllSpace, "--ignore-all-space" },
-            { IgnoreWhitespace == IgnoreWhitespaceKind.Change, "--ignore-space-change" },
-            { IgnoreWhitespace == IgnoreWhitespaceKind.Eol, "--ignore-space-at-eol" },
-            { ShowEntireFile, "--inter-hunk-context=9000 --unified=9000", $"--unified={NumberOfContextLines}" },
+            { ignoreWhitespace == IgnoreWhitespaceKind.AllSpace, "--ignore-all-space" },
+            { ignoreWhitespace == IgnoreWhitespaceKind.Change, "--ignore-space-change" },
+            { ignoreWhitespace == IgnoreWhitespaceKind.Eol, "--ignore-space-at-eol" },
+            { showEntireFile, "--inter-hunk-context=9000 --unified=9000", $"--unified={numberOfContextLines}" },
 
             // Handle zero context as showing no file changes, to get the summary only
-            { isRangeDiff && NumberOfContextLines == 0, "--no-patch " },
-            { TreatAllFilesAsText, "--text" },
-            { !isCombinedDiff && AppSettings.DiffDisplayAppearance.Value == DiffDisplayAppearance.GitWordDiff, "--word-diff=color" },
+            { isRangeDiff && numberOfContextLines == 0, "--no-patch " },
+            { treatAllFilesAsText, "--text" },
+            { !isCombinedDiff && diffDisplayAppearance == DiffDisplayAppearance.GitWordDiff, "--word-diff=color" },
         };
     }
 
     public (ArgumentString Args, string ExtraCacheKey) GetDifftasticArguments()
+        => GetDifftasticArguments(IgnoreWhitespace, ShowSyntaxHighlightingInDiff, ShowEntireFile, NumberOfContextLines, TreatAllFilesAsText, internalFileViewer.Width, out _);
+
+    /// <summary>
+    ///  The difftool arguments and the environment of difftastic for the options of a viewer, also for the Avalonia viewer
+    ///  (<c>FileViewerHost</c>).
+    /// </summary>
+    /// <param name="viewerWidth">The width of the viewer in pixels.</param>
+    /// <param name="width">The width of the output (<c>DFT_WIDTH</c>).</param>
+    internal static (ArgumentString Args, string ExtraCacheKey) GetDifftasticArguments(IgnoreWhitespaceKind ignoreWhitespace, bool showSyntaxHighlightingInDiff,
+        bool showEntireFile, int numberOfContextLines, bool treatAllFilesAsText, int viewerWidth, out int width)
     {
         EnvironmentAbstraction env = new();
         StringBuilder extraCacheKey = new();
@@ -455,17 +474,17 @@ public partial class FileViewer : GitModuleControl
 
         // DFT_BACKGROUND="dark" applies bold-bold colors, "light" corresponds better with Git colors
         SetEnvironmentVariable("DFT_BACKGROUND", "light");
-        SetEnvironmentVariable("DFT_SYNTAX_HIGHLIGHT", ShowSyntaxHighlightingInDiff ? "on" : "off");
-        int contextLines = ShowEntireFile ? 9000 : NumberOfContextLines;
+        SetEnvironmentVariable("DFT_SYNTAX_HIGHLIGHT", showSyntaxHighlightingInDiff ? "on" : "off");
+        int contextLines = showEntireFile ? 9000 : numberOfContextLines;
         SetEnvironmentVariable("DFT_CONTEXT", contextLines.ToString());
 
         // Reasonable similar to IgnoreWhitespaceKind.Eol
-        SetEnvironmentVariable("DFT_STRIP_CR", IgnoreWhitespace == IgnoreWhitespaceKind.None ? "off" : "on");
+        SetEnvironmentVariable("DFT_STRIP_CR", ignoreWhitespace == IgnoreWhitespaceKind.None ? "off" : "on");
 
         // Guess a reasonable even column number from viewer width, so scrollbar is (barely) activated.
         // At least 2*(2+linenoLength) of the width is used for difftastic lineno.
         // DFT_WIDTH is also used when parsing in GE, must be in environment.
-        int width = Math.Max(88, Math.Min(200, DpiUtil.Scale(internalFileViewer.Width) / 7)) / 2 * 2;
+        width = Math.Max(88, Math.Min(200, DpiUtil.Scale(viewerWidth) / 7)) / 2 * 2;
         SetEnvironmentVariable("DFT_WIDTH", width.ToString());
 
         // Also export to WSL environment.
@@ -474,7 +493,7 @@ public partial class FileViewer : GitModuleControl
         return (new ArgumentBuilder
         {
             "--tool=difftastic",
-            { TreatAllFilesAsText, "--text" },
+            { treatAllFilesAsText, "--text" },
         },
         extraCacheKey.ToString());
 
@@ -486,13 +505,17 @@ public partial class FileViewer : GitModuleControl
     }
 
     public ArgumentString GetExtraGrepArguments()
+        => GetExtraGrepArguments(ShowEntireFile, NumberOfContextLines, TreatAllFilesAsText);
+
+    /// <summary>The grep arguments of the options of a viewer, also for the Avalonia viewer (<c>FileViewerHost</c>).</summary>
+    internal static ArgumentString GetExtraGrepArguments(bool showEntireFile, int numberOfContextLines, bool treatAllFilesAsText)
     {
-        int numberOfContextLines = ShowEntireFile ? 100_000 : NumberOfContextLines;
+        int contextLines = showEntireFile ? 100_000 : numberOfContextLines;
         return new ArgumentBuilder
         {
             "-h",
-            $"--context={numberOfContextLines}",
-            { TreatAllFilesAsText, "--text" },
+            $"--context={contextLines}",
+            { treatAllFilesAsText, "--text" },
         };
     }
 

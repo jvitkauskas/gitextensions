@@ -43,7 +43,28 @@ public sealed class FileViewerStrings : ViewStrings
         Find = Add("findToolStripMenuItem", "Text", "&Find...");
         Replace = Add("replaceToolStripMenuItem", "Text", "&Replace...");
         GoToLine = Add("goToLineToolStripMenuItem", "Text", "&Go to line");
+        ShowSyntaxHighlighting = Add("showSyntaxHighlighting", "ToolTipText", "Show syntax highlighting");
+        ShowSyntaxHighlightingMenu = Add("showSyntaxHighlightingToolStripMenuItem", "Text", "Show synta&x highlighting");
+        DiffAppearance = Add("diffAppearanceToolStripMenuItem", "Text", "Diff appea&rance");
+        ShowPatch = Add("showPatchToolStripMenuItem", "Text", "&Patch");
+        ShowGitWordColoring = Add("showGitWordColoringToolStripMenuItem", "Text", "Git wor&d diff");
+        ShowDifftastic = Add("showDifftasticToolStripMenuItem", "Text", "Diff&tastic");
+        TreatAllFilesAsText = Add("treatAllFilesAsTextToolStripMenuItem", "Text", "&Treat all files as text");
     }
+
+    public TranslatedText ShowSyntaxHighlighting { get; }
+
+    public TranslatedText ShowSyntaxHighlightingMenu { get; }
+
+    public TranslatedText DiffAppearance { get; }
+
+    public TranslatedText ShowPatch { get; }
+
+    public TranslatedText ShowGitWordColoring { get; }
+
+    public TranslatedText ShowDifftastic { get; }
+
+    public TranslatedText TreatAllFilesAsText { get; }
 
     public TranslatedText StageSelectedLines { get; }
 
@@ -125,6 +146,9 @@ public enum FileViewKind
 /// <param name="Image">The content of an image.</param>
 /// <param name="SupportsLinePatching">Whether lines can be staged, unstaged or reset (as <c>FileViewer.SupportLinePatching</c>).</param>
 /// <param name="FilePreamble">The preamble of the encoding of a new file read from the working directory (<c>FilePreamble</c>).</param>
+/// <param name="DiffMode">The kind of a diff (the view mode of <c>FileViewer.View*Async</c>).</param>
+/// <param name="CanOpenWithDifftool">Whether F3 opens the difftool without a search (the <c>openWithDifftool</c> of <c>ViewChangesAsync</c>).</param>
+/// <param name="DifftasticWidth">The width of the output of difftastic (<c>DFT_WIDTH</c>).</param>
 public sealed record FileViewContent(
     FileViewKind Kind,
     string Text,
@@ -132,7 +156,10 @@ public sealed record FileViewContent(
     bool HasGitColors = false,
     byte[]? Image = null,
     bool SupportsLinePatching = false,
-    byte[]? FilePreamble = null)
+    byte[]? FilePreamble = null,
+    DiffViewMode DiffMode = DiffViewMode.Diff,
+    bool CanOpenWithDifftool = false,
+    int DifftasticWidth = 80)
 {
     public static FileViewContent Empty { get; } = new(FileViewKind.Text, "");
 }
@@ -142,7 +169,14 @@ public sealed record FileViewerSettings(
     bool ShowNonPrintingChars = false,
     bool ShowEntireFile = false,
     int NumberOfContextLines = 3,
-    IgnoreWhitespaceKind IgnoreWhitespace = IgnoreWhitespaceKind.None);
+    IgnoreWhitespaceKind IgnoreWhitespace = IgnoreWhitespaceKind.None,
+    bool ShowSyntaxHighlighting = true);
+
+/// <summary>The options of the viewer that the changes of a file depend on, besides <see cref="FileViewerSettings"/>.</summary>
+/// <param name="EncodingName">The encoding chosen in the viewer, or <see langword="null"/> for the files encoding.</param>
+/// <param name="TreatAllFilesAsText">Whether binary files are diffed as texts (<c>TreatAllFilesAsText</c>, not saved).</param>
+/// <param name="ViewerWidth">The width of the viewer, which the width of the output of difftastic depends on.</param>
+public sealed record FileViewRequest(string? EncodingName = null, bool TreatAllFilesAsText = false, double ViewerWidth = 0);
 
 /// <summary>The line patches of the context menu (<c>StageSelectedLines</c>, <c>UnstageSelectedLines</c>, <c>ResetSelectedLines</c>).</summary>
 public enum LinePatchOperation
@@ -183,9 +217,8 @@ public sealed record FileViewerMenuState(bool CanStage, bool CanUnstage, bool Ca
 /// <summary>Gets the changes of a file (the WinForms <c>GitUIExtensions.ViewChangesAsync</c>) from the repository.</summary>
 public interface IFileViewerHost
 {
-    /// <summary>The changes of the file between its revisions, if possible as a diff.</summary>
-    /// <param name="encodingName">The encoding chosen in the viewer, or <see langword="null"/> for the files encoding.</param>
-    Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, string? encodingName, CancellationToken cancellationToken);
+    /// <summary>The changes of the file between its revisions, if possible as a diff (in <see cref="DiffAppearance"/>).</summary>
+    Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, FileViewRequest request, CancellationToken cancellationToken);
 
     /// <summary>The file in the revision, or in the working directory (as <c>FileViewer.ViewGitItemAsync</c>).</summary>
     Task<FileViewContent> GetFileAsync(GitItemStatus file, ObjectId objectId, string? encodingName, CancellationToken cancellationToken);
@@ -208,8 +241,17 @@ public interface IFileViewerHost
     /// <summary>Opens the settings of the diff viewer (<c>settingsButton_Click</c>).</summary>
     void OpenSettings();
 
-    /// <summary>Whether diffs are shown as patches (<c>AppSettings.DiffDisplayAppearance</c>), which can be copied.</summary>
-    bool IsPatchAppearance { get; }
+    /// <summary>How diffs are shown (<c>AppSettings.DiffDisplayAppearance</c>); setting it saves it.</summary>
+    DiffDisplayAppearance DiffAppearance { get; set; }
+
+    /// <summary>Whether the difftastic difftool is configured (<c>FileViewer.IsDifftasticEnabled</c>).</summary>
+    bool IsDifftasticEnabled { get; }
+
+    /// <summary>The column of the vertical ruler of the viewer, 0 for none (<c>AppSettings.DiffVerticalRulerPosition</c>).</summary>
+    int VerticalRulerPosition { get; }
+
+    /// <summary>As the <c>OpenWithDiffTool</c> of <c>ViewChangesAsync</c>: opens the changes of the file in the difftool.</summary>
+    void OpenWithDifftool(FileStatusEntry entry);
 
     /// <summary>The configured hotkeys of the viewer (the "FileViewer" hotkey settings).</summary>
     IReadOnlyList<Services.HotkeyBinding> Hotkeys { get; }
@@ -258,10 +300,56 @@ public sealed partial class FileViewerViewModel : ObservableObject
 
     /// <summary>What is shown, which chooses the buttons of the toolbar (as <c>SetVisibilityDiffContextMenu</c>).</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDiff))]
+    [NotifyPropertyChangedFor(nameof(IsDiff), nameof(CanChangeContextLines), nameof(CanIgnoreWhitespaceChanges), nameof(CanIgnoreWhitespaceAtEol), nameof(IsDiffAppearanceVisible))]
     public partial FileViewKind Kind { get; private set; }
 
+    /// <summary>The kind of the diff shown (see <see cref="IsDiff"/>).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanChangeContextLines), nameof(CanIgnoreWhitespaceChanges), nameof(CanIgnoreWhitespaceAtEol), nameof(IsDiffAppearanceVisible))]
+    public partial DiffViewMode DiffMode { get; private set; }
+
+    /// <summary>
+    ///  Whether a diff (or grep results) is shown, with next / previous change and the syntax highlighting button (as
+    ///  <c>IsPartialTextView</c>).
+    /// </summary>
     public bool IsDiff => Kind == FileViewKind.Diff;
+
+    /// <summary>Whether the number of lines of context can change (<c>isPartialFlexibleView</c>, also for the syntax highlighting item).</summary>
+    public bool CanChangeContextLines => IsDiff && DiffMode != DiffViewMode.FixedDiff;
+
+    /// <summary>Whether whitespace changes can be ignored (<c>diffCanBeModified</c>).</summary>
+    public bool CanIgnoreWhitespaceChanges => IsDiff && DiffMode.IsDiffView() && DiffMode is not (DiffViewMode.FixedDiff or DiffViewMode.Difftastic);
+
+    /// <summary>Whether whitespace changes at the end of lines can be ignored (also by difftastic, <c>DFT_STRIP_CR</c>).</summary>
+    public bool CanIgnoreWhitespaceAtEol => CanIgnoreWhitespaceChanges || (IsDiff && DiffMode == DiffViewMode.Difftastic);
+
+    /// <summary>Whether the appearance of the diff can be chosen (<c>isDiffAppearanceVisible</c>).</summary>
+    public bool IsDiffAppearanceVisible => IsDiff && DiffMode is DiffViewMode.Diff or DiffViewMode.Difftastic;
+
+    /// <summary>How diffs are shown (<c>AppSettings.DiffDisplayAppearance</c>).</summary>
+    public DiffDisplayAppearance DiffAppearance => _host.DiffAppearance;
+
+    /// <summary>Whether difftastic can be chosen (<c>IsDifftasticEnabled</c>).</summary>
+    public bool IsDifftasticEnabled => _host.IsDifftasticEnabled;
+
+    /// <summary>As <c>TreatAllFilesAsText</c>: binary files are diffed as texts (not saved).</summary>
+    [ObservableProperty]
+    public partial bool TreatAllFilesAsText { get; private set; }
+
+    /// <summary>The width of the viewer, which the view reports (the width of the output of difftastic depends on it).</summary>
+    public double ViewerWidth { get; set; }
+
+    /// <summary>Whether F3 opens the difftool when there is no search (the <c>OpenWithDifftool</c> of <c>FileViewerInternal</c>).</summary>
+    public bool CanOpenWithDifftool => _content.CanOpenWithDifftool && _entry is not null;
+
+    /// <summary>As <c>FindNextAsync</c> without a search: opens the changes in the difftool.</summary>
+    public void OpenWithDifftool()
+    {
+        if (CanOpenWithDifftool)
+        {
+            _host.OpenWithDifftool(_entry!);
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IgnoresWhitespaceAtEol), nameof(IgnoresWhitespaceChanges), nameof(IgnoresAllWhitespace))]
@@ -284,7 +372,7 @@ public sealed partial class FileViewerViewModel : ObservableObject
     /// <summary>The file shown (as <c>ViewChangesAsync</c>), <see langword="null"/> to clear.</summary>
     /// <param name="defaultText">The text shown if there are no changes (the <c>defaultText</c> of <c>ViewChangesAsync</c>).</param>
     public Task ShowChangesAsync(FileStatusEntry? entry, string? defaultText = null)
-        => LoadAsync(entry, entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, EncodingName, cancellationToken), defaultText);
+        => LoadAsync(entry, entry is null ? null : cancellationToken => _host.GetChangesAsync(entry, new FileViewRequest(EncodingName, TreatAllFilesAsText, ViewerWidth), cancellationToken), defaultText);
 
     /// <summary>The file in the revision, or in the working directory for the artificial commits (as <c>ViewGitItemAsync</c>).</summary>
     public Task ShowFileAsync(GitItemStatus file, ObjectId objectId)
@@ -351,17 +439,45 @@ public sealed partial class FileViewerViewModel : ObservableObject
         _content = content;
         _allowLinePatching = content.SupportsLinePatching;
         Image = content.Kind == FileViewKind.Image ? content.Image : null;
-        Kind = content.Kind;
-        switch (content.Kind)
+        DiffViewMode diffMode = content.DiffMode;
+        FileViewKind kind = content.Kind;
+        bool hasGitColors = content.HasGitColors;
+        if (kind == FileViewKind.Text && IsDiffFile(content.FileName))
+        {
+            // As ResetView: a .diff or .patch file is shown as a fixed diff, with the colors of the escape sequences it has (ViewTextAsync).
+            kind = FileViewKind.Diff;
+            diffMode = DiffViewMode.FixedDiff;
+            hasGitColors = AnsiEscapeParser.HasEscapes(content.Text);
+        }
+
+        DiffMode = diffMode;
+        Kind = kind;
+
+        // As SetText: the vertical ruler of the settings (difftastic sets its own).
+        Editor.VerticalRulerColumn = Math.Max(0, _host.VerticalRulerPosition);
+        switch (kind)
         {
             case FileViewKind.Diff:
-                Editor.LoadDiff(content.Text, content.HasGitColors ? _host.ThemeColors : null, _host.ReverseGitColoring);
+                // As ResetView: the syntax highlighting of the file, if chosen.
+                Editor.LoadDiff(content.Text, new DiffLoadOptions(
+                    GitColors: hasGitColors || diffMode is DiffViewMode.Difftastic or DiffViewMode.Grep or DiffViewMode.RangeDiff ? _host.ThemeColors : null,
+                    ReverseGitColoring: _host.ReverseGitColoring,
+                    Mode: diffMode,
+                    IsGitWordDiff: diffMode.IsNormalDiffView() && _host.DiffAppearance == DiffDisplayAppearance.GitWordDiff,
+                    HighlightingFileName: Settings.ShowSyntaxHighlighting ? content.FileName : null,
+                    DifftasticWidth: content.DifftasticWidth));
                 break;
             default:
                 Editor.Load(content.Text, content.FileName);
                 break;
         }
+
+        OnPropertyChanged(nameof(DiffAppearance));
     }
+
+    private static bool IsDiffFile(string? fileName)
+        => fileName is not null
+            && (fileName.EndsWith(".diff", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".patch", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>As <c>OnExtraDiffArgumentsChanged</c>: the file is shown again with the new options.</summary>
     private void Reload()
@@ -407,6 +523,30 @@ public sealed partial class FileViewerViewModel : ObservableObject
     private void ToggleIgnoreWhitespace(IgnoreWhitespaceKind kind)
         => ChangeSettings(Settings with { IgnoreWhitespace = Settings.IgnoreWhitespace == kind ? IgnoreWhitespaceKind.None : kind });
 
+    /// <summary>As <c>ShowSyntaxHighlighting_Click</c>.</summary>
+    [RelayCommand]
+    private void ToggleSyntaxHighlighting() => ChangeSettings(Settings with { ShowSyntaxHighlighting = !Settings.ShowSyntaxHighlighting });
+
+    /// <summary>As <c>TreatAllFilesAsTextToolStripMenuItemClick</c>.</summary>
+    [RelayCommand]
+    private void ToggleTreatAllFilesAsText()
+    {
+        TreatAllFilesAsText = !TreatAllFilesAsText;
+        Reload();
+    }
+
+    /// <summary>
+    ///  As <c>ResetPatchAppearanceToolStripMenuItemClick</c>, <c>ToggleGitWordColoringToolStripMenuItemClick</c> and
+    ///  <c>ToggleDifftasticToolStripMenuItemClick</c>: the patch is chosen, the others toggle.
+    /// </summary>
+    [RelayCommand]
+    private void ChangeDiffAppearance(DiffDisplayAppearance appearance)
+    {
+        _host.DiffAppearance = appearance == DiffDisplayAppearance.Patch || _host.DiffAppearance != appearance ? appearance : DiffDisplayAppearance.Patch;
+        OnPropertyChanged(nameof(DiffAppearance));
+        Reload();
+    }
+
     [RelayCommand]
     private void OpenSettings() => _host.OpenSettings();
 
@@ -451,11 +591,14 @@ public sealed partial class FileViewerViewModel : ObservableObject
     {
         bool supportsLinePatching = _content.SupportsLinePatching && _entry is not null;
         bool isIndex = supportsLinePatching && StagedStatus == StagedStatus.Index;
+
+        // A range diff patch is undefined, could be new/old commit or to parents.
+        bool isCopyPatch = IsDiff && DiffMode.IsNormalDiffView() && _host.DiffAppearance == DiffDisplayAppearance.Patch;
         return new FileViewerMenuState(
             CanStage: supportsLinePatching && !isIndex,
             CanUnstage: isIndex,
             CanReset: supportsLinePatching,
-            CanCopyPatch: IsDiff && _host.IsPatchAppearance,
+            CanCopyPatch: isCopyPatch,
             IsDiff: IsDiff);
     }
 
@@ -505,7 +648,9 @@ public sealed partial class FileViewerViewModel : ObservableObject
             return;
         }
 
-        string text = IsDiff ? RemoveDiffPrefixes(Editor.Text, selectedText, selectionStart, IsCombinedDiff) : selectedText;
+        // As GetFullDiffPrefixes: a difftastic diff and grep results are copied as they are.
+        string[]? prefixes = !IsDiff ? null : IsCombinedDiff ? DiffViewMode.CombinedDiff.GetFullDiffPrefixes() : DiffMode.GetFullDiffPrefixes();
+        string text = prefixes is null ? selectedText : RemoveDiffPrefixes(Editor.Text, selectedText, selectionStart, prefixes);
         _host.CopyToClipboard(text, adjustLineEndings: true);
     }
 
@@ -526,12 +671,15 @@ public sealed partial class FileViewerViewModel : ObservableObject
     public void CopyVersion(string selectedText, int selectionStart, bool newVersion)
         => _host.CopyToClipboard(GetVersionText(Editor.Text, selectedText, selectionStart, IsDiff, newVersion ? '-' : '+'), adjustLineEndings: true);
 
-    private bool IsCombinedDiff => _entry?.FirstRevision?.ObjectId == ObjectId.CombinedDiffId;
+    private bool IsCombinedDiff => DiffMode == DiffViewMode.CombinedDiff || _entry?.FirstRevision?.ObjectId == ObjectId.CombinedDiffId;
 
     /// <summary>As <c>CopyToolStripMenuItemClick</c>: the prefixes are kept when the header is selected.</summary>
     public static string RemoveDiffPrefixes(string fullText, string selectedText, int selectionStart, bool isCombinedDiff)
+        => RemoveDiffPrefixes(fullText, selectedText, selectionStart, (isCombinedDiff ? DiffViewMode.CombinedDiff : DiffViewMode.Diff).GetFullDiffPrefixes()!);
+
+    /// <summary>As <c>CopyToolStripMenuItemClick</c> with the prefixes of the highlight service (for a range diff, the header never matches).</summary>
+    public static string RemoveDiffPrefixes(string fullText, string selectedText, int selectionStart, string[] prefixes)
     {
-        string[] prefixes = isCombinedDiff ? ["  ", "++", "+ ", " +", "--", "- ", " -"] : [" ", "+", "-"];
         int headerEnd = fullText.IndexOf("\n@@", StringComparison.Ordinal);
         if (headerEnd > selectionStart)
         {
@@ -580,7 +728,8 @@ public sealed partial class FileViewerViewModel : ObservableObject
 
     /// <summary>
     ///  As <c>GoToNextChange</c> and <c>GoToPreviousChange</c>: the first line of the next (or previous) block of added or
-    ///  removed lines from <paramref name="currentLine"/> (1-based), or <see langword="null"/> if there is none.
+    ///  removed lines (<c>IsSearchMatch</c>; for a range diff, of commit headers) from <paramref name="currentLine"/> (1-based),
+    ///  or <see langword="null"/> if there is none.
     /// </summary>
     public int? GetChangeLine(int currentLine, bool backwards)
     {
@@ -589,7 +738,8 @@ public sealed partial class FileViewerViewModel : ObservableObject
             return null;
         }
 
-        HashSet<int> changed = [.. lines.Where(l => l.Kind is DiffLineKind.Plus or DiffLineKind.Minus).Select(l => l.LineNumInDiff)];
+        DiffViewMode mode = Editor.DiffMode;
+        HashSet<int> changed = [.. lines.Where(l => mode.IsSearchMatch(l.Kind)).Select(l => l.LineNumInDiff)];
         List<int> starts = [.. changed.Where(line => !changed.Contains(line - 1)).Order()];
         return backwards
             ? starts.LastOrDefault(line => line < currentLine) is int previous and > 0 ? previous : null

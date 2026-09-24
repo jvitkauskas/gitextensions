@@ -222,6 +222,7 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\NumberOfLinesDecrease.png" Link="Assets\NumberOfLinesDecrease.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowEntireFile.png" Link="Assets\ShowEntireFile.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\ShowWhitespace.png" Link="Assets\ShowWhitespace.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\SyntaxHighlighting.png" Link="Assets\SyntaxHighlighting.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnoreEol.png" Link="Assets\WhitespaceIgnoreEol.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnore.png" Link="Assets\WhitespaceIgnore.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\WhitespaceIgnoreAll.png" Link="Assets\WhitespaceIgnoreAll.png" />

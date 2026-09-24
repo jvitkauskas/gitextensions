@@ -8,6 +8,7 @@ using GitCommands.Settings;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
+using GitExtUtils.GitUI;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.Editor;
@@ -24,8 +25,7 @@ namespace GitUI.AvaloniaHosting;
 
 /// <summary>
 ///  The changes of a file for the Avalonia file viewer: a port of <c>GitUIExtensions.ViewChangesAsync</c> and the parts of
-///  <c>FileViewer</c> it uses (docs/avalonia-port/PLAN.md, phase 3); keep it in sync. Range diffs, git grep and difftastic are
-///  not ported yet.
+///  <c>FileViewer</c> it uses (docs/avalonia-port/PLAN.md, phase 3); keep it in sync.
 /// </summary>
 internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileViewerHost
 {
@@ -43,7 +43,38 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
 
     private IWin32Window? Owner => Window is null ? null : new AvaloniaDialogs.NativeWindowOwner(Window);
 
-    public bool IsPatchAppearance => AppSettings.DiffDisplayAppearance.Value == GitCommands.Settings.DiffDisplayAppearance.Patch;
+    public DiffDisplayAppearance DiffAppearance
+    {
+        get => AppSettings.DiffDisplayAppearance.Value;
+        set => AppSettings.DiffDisplayAppearance.Value = value;
+    }
+
+    /// <summary>As <c>FileViewer.IsDifftasticEnabled</c> (for the repository of the viewer).</summary>
+    public bool IsDifftasticEnabled
+    {
+        get
+        {
+            IGitModule module = Module;
+            return _difftasticCmdCache.GetOrAdd(module.WorkingDir, _ => new Lazy<bool>(() => FileViewer.IsDifftasticConfigured(module))).Value;
+        }
+    }
+
+    // As the cache of FileViewer: the configuration of a difftastic difftool.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<bool>> _difftasticCmdCache = [];
+
+    public int VerticalRulerPosition => AppSettings.DiffVerticalRulerPosition;
+
+    /// <summary>As the <c>OpenWithDiffTool</c> of <c>ViewChangesAsync</c>.</summary>
+    public void OpenWithDifftool(FileStatusEntry entry)
+    {
+        ObjectId firstId = entry.FirstRevision?.ObjectId ?? entry.SecondRevision.FirstParentId;
+        Module.OpenWithDifftool(
+            entry.Item.Name,
+            entry.Item.OldName,
+            firstId.IsZero ? null : firstId.ToString(),
+            entry.SecondRevision.ObjectId.ToString(),
+            isTracked: entry.Item.IsTracked);
+    }
 
     public IReadOnlyList<HotkeyBinding> Hotkeys => field ??= [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(FileViewer.HotkeySettingsName)
         .Select(hotkey => new HotkeyBinding(hotkey.CommandCode, (int)hotkey.KeyData))];
@@ -160,13 +191,15 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
 
     public FileViewerSettings Settings
     {
-        get => new(AppSettings.ShowNonPrintingChars.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, AppSettings.IgnoreWhitespaceKind.Value);
+        get => new(AppSettings.ShowNonPrintingChars.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, AppSettings.IgnoreWhitespaceKind.Value,
+            AppSettings.ShowSyntaxHighlightingInDiff.Value);
         set
         {
             AppSettings.ShowNonPrintingChars.Value = value.ShowNonPrintingChars;
             AppSettings.ShowEntireFile.Value = value.ShowEntireFile;
             AppSettings.NumberOfContextLines = value.NumberOfContextLines;
             AppSettings.IgnoreWhitespaceKind.Value = value.IgnoreWhitespace;
+            AppSettings.ShowSyntaxHighlightingInDiff.Value = value.ShowSyntaxHighlighting;
         }
     }
 
@@ -178,10 +211,13 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
     public void OpenSettings()
         => AvaloniaUi.RunInHostContext(() => commands.StartSettingsDialog(owner: null, CommandsDialogs.SettingsDialog.Pages.DiffViewerSettingsPage.GetPageReference()));
 
-    public async Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, string? encodingName, CancellationToken cancellationToken)
+    public async Task<FileViewContent> GetChangesAsync(FileStatusEntry entry, FileViewRequest request, CancellationToken cancellationToken)
     {
         await TaskScheduler.Default;
-        FileViewContent content = GetChanges(entry, GetEncoding(encodingName), cancellationToken);
+
+        // The menu of the viewer shows whether difftastic can be chosen (as SetDifftasticEnabled, off the UI thread).
+        _ = IsDifftasticEnabled;
+        FileViewContent content = GetChanges(entry, GetEncoding(request.EncodingName), request, cancellationToken);
         content = content with { SupportsLinePatching = SupportsLinePatching(entry, content) };
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
         return content;
@@ -195,7 +231,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
     {
         GitItemStatus item = entry.Item;
         string? fullPath = new FullPathResolver(() => Module.WorkingDir).Resolve(item.Name);
-        bool isNormalDiff = content.Kind == FileViewKind.Diff && entry.FirstRevision?.ObjectId != ObjectId.CombinedDiffId;
+        bool isNormalDiff = content.Kind == FileViewKind.Diff && content.DiffMode == DiffViewMode.Diff && entry.FirstRevision?.ObjectId != ObjectId.CombinedDiffId;
         bool isDiff = isNormalDiff
             && content.Text.Contains("@@")
             && AppSettings.DiffDisplayAppearance.Value != GitCommands.Settings.DiffDisplayAppearance.GitWordDiff
@@ -214,7 +250,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
     }
 
     /// <summary>As <c>ViewChangesAsync</c>.</summary>
-    private FileViewContent GetChanges(FileStatusEntry entry, Encoding encoding, CancellationToken cancellationToken)
+    private FileViewContent GetChanges(FileStatusEntry entry, Encoding encoding, FileViewRequest request, CancellationToken cancellationToken)
     {
         GitItemStatus item = entry.Item;
         if (item.IsStatusOnly)
@@ -229,17 +265,62 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         if (!item.IsSubmodule && (item.IsNew || firstId.IsZero || (!item.IsDeleted && FileHelper.IsImage(item.Name))))
         {
             // View blob guid from revision, or file for worktree
-            return GetGitItem(item, secondId, encoding, cancellationToken);
+            return GetGitItem(item, secondId, encoding, cancellationToken) with { CanOpenWithDifftool = true };
         }
 
-        if (item.IsRangeDiff || !string.IsNullOrWhiteSpace(item.GrepString))
+        if (item.IsRangeDiff)
         {
-            return new FileViewContent(FileViewKind.Text, "(Range diffs and git grep results are not shown by the Avalonia viewer yet.)");
+            // Git range-diff has cubic runtime complexity and can be slow and memory consuming (the WinForms viewer shows the
+            // command meanwhile). The path filter of the diff tab of the main window is not ported.
+            ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetRangeDiffAsync(
+                firstId,
+                secondId,
+                entry.BaseA ?? default,
+                entry.BaseB ?? default,
+                GetExtraDiffArguments(request, isRangeDiff: true),
+                pathFilter: "",
+                useGitColoring: true,
+                commandConfiguration: RangeDiffHighlightService.GetGitCommandConfiguration(Module),
+                cancellationToken));
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!result.ExitedSuccessfully)
+            {
+                string output = $"{result.StandardError}{Environment.NewLine}Git output (exit code: {result.ExitCodeDisplay}): {Environment.NewLine}{result.StandardOutput}";
+                return new FileViewContent(FileViewKind.Text, output, item.Name);
+            }
+
+            // Try set highlighting from first found filename
+            Match match = GitUIExtensions.FileNameRegex.Match(result.StandardOutput);
+            string fileName = match.Groups["file"].Success ? match.Groups["file"].Value : item.Name;
+            return new FileViewContent(FileViewKind.Diff, result.StandardOutput, fileName, HasGitColors: true, DiffMode: DiffViewMode.RangeDiff);
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.GrepString))
+        {
+            IGitCommandConfiguration commandConfiguration = GrepHighlightService.GetGitCommandConfiguration(Module);
+            ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetGrepFileAsync(
+                secondId,
+                item.Name,
+                FileViewer.GetExtraGrepArguments(AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, request.TreatAllFilesAsText),
+                item.GrepString,
+                useGitColoring: true,
+                showFunctionName: true,
+                commandConfiguration: commandConfiguration,
+                encoding,
+                cancellationToken));
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!result.ExitedSuccessfully)
+            {
+                string output = $"{result.StandardError}{Environment.NewLine}Git command (exit code: {result.ExitCodeDisplay}): {result}{Environment.NewLine}";
+                return new FileViewContent(FileViewKind.Text, output, item.Name);
+            }
+
+            return new FileViewContent(FileViewKind.Diff, result.StandardOutput, item.Name, HasGitColors: true, DiffMode: DiffViewMode.Grep);
         }
 
         if (firstId == ObjectId.CombinedDiffId)
         {
-            bool success = Module.GetCombinedDiffContent(secondId, item.Name, GetExtraDiffArguments(isCombinedDiff: true), encoding, out string diffOfConflict,
+            bool success = Module.GetCombinedDiffContent(secondId, item.Name, GetExtraDiffArguments(request, isCombinedDiff: true), encoding, out string diffOfConflict,
                 useGitColoring: UseGitColoring,
                 commandConfiguration: CombinedDiffHighlightService.GetGitCommandConfiguration(Module, UseGitColoring),
                 cancellationToken);
@@ -250,7 +331,7 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
 
             return string.IsNullOrWhiteSpace(diffOfConflict)
                 ? new FileViewContent(FileViewKind.Text, TranslatedStrings.UninterestingDiffOmitted, item.Name)
-                : Diff(diffOfConflict);
+                : Diff(diffOfConflict, DiffViewMode.CombinedDiff);
         }
 
         if (item.IsSubmodule)
@@ -266,18 +347,45 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
             string text = status is null
                 ? $"Failed to get status for submodule \"{item.Name}\""
                 : SubmoduleResources.GetSubmoduleStatusText(Module, status);
-            return new FileViewContent(FileViewKind.Text, text, item.Name);
+            return new FileViewContent(FileViewKind.Text, text, item.Name, CanOpenWithDifftool: true);
         }
 
-        // Diff of a text file (difftastic is not ported yet, the patch is shown instead).
-        string patch = ThreadHelper.JoinableTaskFactory.Run(() => GetSelectedPatchAsync(item, firstId, secondId, encoding, cancellationToken)) ?? "";
-        return Diff(patch);
+        if (DiffAppearance == DiffDisplayAppearance.Difftastic && IsDifftasticEnabled)
+        {
+            bool isTracked = item.IsTracked || (!item.TreeId.IsZero && !secondId.IsZero);
 
-        static FileViewContent Diff(string text) => new(FileViewKind.Diff, text, HasGitColors: AnsiEscapeParser.HasEscapes(text));
+            // As the width of the viewer in pixels.
+            int viewerWidth = (int)Math.Round(request.ViewerWidth * DpiUtil.ScaleX);
+            FileViewerSettings settings = Settings;
+            (ArgumentString diffArgs, string extraCacheKey) = FileViewer.GetDifftasticArguments(settings.IgnoreWhitespace, settings.ShowSyntaxHighlighting, settings.ShowEntireFile,
+                settings.NumberOfContextLines, request.TreatAllFilesAsText, viewerWidth, out int width);
+            ExecutionResult result = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetSingleDifftoolAsync(firstId, secondId, item.Name, item.OldName,
+                diffArgs,
+                cacheResult: true,
+                extraCacheKey,
+                isTracked,
+                useGitColoring: true,
+                cancellationToken));
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!result.ExitedSuccessfully)
+            {
+                string output = $"Git command exit code: {result.ExitCodeDisplay}{Environment.NewLine}{result.StandardError}";
+                return new FileViewContent(FileViewKind.Text, output, item.Name);
+            }
+
+            return new FileViewContent(FileViewKind.Diff, result.StandardOutput, item.Name, HasGitColors: true, DiffMode: DiffViewMode.Difftastic, DifftasticWidth: width);
+        }
+
+        // Diff of a text file.
+        string patch = ThreadHelper.JoinableTaskFactory.Run(() => GetSelectedPatchAsync(item, firstId, secondId, encoding, request, cancellationToken)) ?? "";
+        return Diff(patch, DiffViewMode.Diff);
+
+        FileViewContent Diff(string text, DiffViewMode mode)
+            => new(FileViewKind.Diff, text, item.Name, HasGitColors: AnsiEscapeParser.HasEscapes(text), DiffMode: mode, CanOpenWithDifftool: true);
     }
 
     /// <summary>As <c>GetSelectedPatchAsync</c> in <c>ViewChangesAsync</c>.</summary>
-    private async Task<string?> GetSelectedPatchAsync(GitItemStatus file, ObjectId firstId, ObjectId selectedId, Encoding encoding, CancellationToken cancellationToken)
+    private async Task<string?> GetSelectedPatchAsync(GitItemStatus file, ObjectId firstId, ObjectId selectedId, Encoding encoding, FileViewRequest request, CancellationToken cancellationToken)
     {
         bool isSkipWorktree = file.IsSkipWorktree;
         if (isSkipWorktree)
@@ -291,9 +399,9 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         {
             // Files with tree guid should be presented with normal diff
             bool isTracked = file.IsTracked || (!file.TreeId.IsZero && !selectedId.IsZero);
-            (patch, errorMessage) = await Module.GetSingleDiffAsync(firstId, selectedId, file.Name, file.OldName, GetExtraDiffArguments(), encoding, cacheResult: true, isTracked,
-                UseGitColoring,
-                PatchHighlightService.GetGitCommandConfiguration(Module, UseGitColoring),
+            (patch, errorMessage) = await Module.GetSingleDiffAsync(firstId, selectedId, file.Name, file.OldName, GetExtraDiffArguments(request), encoding, cacheResult: true, isTracked,
+                PatchUseGitColoring,
+                PatchHighlightService.GetGitCommandConfiguration(Module, PatchUseGitColoring),
                 cancellationToken);
         }
         finally
@@ -316,18 +424,13 @@ internal sealed partial class FileViewerHost(IGitUICommands commands) : IFileVie
         return patch?.Text ?? errorMessage;
     }
 
-    /// <summary>As <c>FileViewer.GetExtraDiffArguments</c> with its settings (the git word diff is not ported yet).</summary>
-    private static ArgumentString GetExtraDiffArguments(bool isCombinedDiff = false)
-    {
-        IgnoreWhitespaceKind ignoreWhitespace = AppSettings.IgnoreWhitespaceKind.Value;
-        return new ArgumentBuilder
-        {
-            { ignoreWhitespace == IgnoreWhitespaceKind.AllSpace, "--ignore-all-space" },
-            { ignoreWhitespace == IgnoreWhitespaceKind.Change, "--ignore-space-change" },
-            { ignoreWhitespace == IgnoreWhitespaceKind.Eol, "--ignore-space-at-eol" },
-            { AppSettings.ShowEntireFile.Value, "--inter-hunk-context=9000 --unified=9000", $"--unified={AppSettings.NumberOfContextLines}" },
-        };
-    }
+    /// <summary>As <c>FileViewer.PatchUseGitColoring</c>: always for the git word diff, the setting for a normal patch.</summary>
+    private bool PatchUseGitColoring => DiffAppearance == DiffDisplayAppearance.GitWordDiff || UseGitColoring;
+
+    /// <summary>As <c>FileViewer.GetExtraDiffArguments</c> with the settings of the viewer.</summary>
+    private static ArgumentString GetExtraDiffArguments(FileViewRequest request, bool isRangeDiff = false, bool isCombinedDiff = false)
+        => FileViewer.GetExtraDiffArguments(AppSettings.IgnoreWhitespaceKind.Value, AppSettings.ShowEntireFile.Value, AppSettings.NumberOfContextLines, request.TreatAllFilesAsText,
+            AppSettings.DiffDisplayAppearance.Value, isRangeDiff, isCombinedDiff);
 
     /// <summary>As <c>FileViewer.ViewGitItemAsync</c>: the blob of the revision, or the file of the working directory.</summary>
     private FileViewContent GetGitItem(GitItemStatus file, ObjectId objectId, Encoding encoding, CancellationToken cancellationToken)

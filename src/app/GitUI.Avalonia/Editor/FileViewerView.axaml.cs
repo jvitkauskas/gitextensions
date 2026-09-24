@@ -32,6 +32,15 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         ContextMenu menu = new();
         menu.Opening += (_, _) => FillContextMenu();
         textView.Editor.ContextMenu = menu;
+
+        // The width of the output of difftastic depends on the width of the viewer (GetDifftasticArguments).
+        textView.SizeChanged += (_, e) =>
+        {
+            if (_viewModel is not null)
+            {
+                _viewModel.ViewerWidth = e.NewSize.Width;
+            }
+        };
     }
 
     /// <summary>The text editor, e.g. for tests.</summary>
@@ -116,23 +125,49 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         }
 
         menu.Items.Add(new Separator());
-        if (state.IsDiff)
+        if (viewModel.CanChangeContextLines)
         {
-            Add(strings.IncreaseContextLinesMenu, () => viewModel.IncreaseContextLinesCommand.Execute(null), isEnabled: !viewModel.Settings.ShowEntireFile);
-            Add(strings.DecreaseContextLinesMenu, () => viewModel.DecreaseContextLinesCommand.Execute(null), isEnabled: !viewModel.Settings.ShowEntireFile);
+            Add(strings.IncreaseContextLinesMenu, () => viewModel.IncreaseContextLinesCommand.Execute(null), isEnabled: !viewModel.Settings.ShowEntireFile, icon: "NumberOfLinesIncrease");
+            Add(strings.DecreaseContextLinesMenu, () => viewModel.DecreaseContextLinesCommand.Execute(null), isEnabled: !viewModel.Settings.ShowEntireFile, icon: "NumberOfLinesDecrease");
             Add(strings.ShowEntireFileMenu, () => viewModel.ToggleShowEntireFileCommand.Execute(null), isChecked: viewModel.Settings.ShowEntireFile);
         }
 
         Add(strings.ShowNonPrintingCharsMenu, () => viewModel.ToggleNonPrintingCharsCommand.Execute(null), isChecked: viewModel.Settings.ShowNonPrintingChars);
-        if (state.IsDiff)
+        if (viewModel.CanChangeContextLines)
+        {
+            Add(strings.ShowSyntaxHighlightingMenu, () => viewModel.ToggleSyntaxHighlightingCommand.Execute(null), isChecked: viewModel.Settings.ShowSyntaxHighlighting);
+        }
+
+        if (viewModel.CanIgnoreWhitespaceAtEol)
         {
             Add(strings.IgnoreWhitespaceAtEolMenu, () => viewModel.ToggleIgnoreWhitespaceCommand.Execute(IgnoreWhitespaceKind.Eol), isChecked: viewModel.IgnoresWhitespaceAtEol);
+        }
+
+        if (viewModel.CanIgnoreWhitespaceChanges)
+        {
             Add(strings.IgnoreWhitespaceChangesMenu, () => viewModel.ToggleIgnoreWhitespaceCommand.Execute(IgnoreWhitespaceKind.Change), isChecked: viewModel.IgnoresWhitespaceChanges);
             Add(strings.IgnoreAllWhitespaceChangesMenu, () => viewModel.ToggleIgnoreWhitespaceCommand.Execute(IgnoreWhitespaceKind.AllSpace), isChecked: viewModel.IgnoresAllWhitespace);
         }
 
+        if (viewModel.IsDiffAppearanceVisible)
+        {
+            // As diffAppearanceToolStripMenuItem: the patch, git's word diff or difftastic (if configured).
+            MenuItem appearance = Add(strings.DiffAppearance, action: null, icon: "Diff");
+            AddTo(appearance.Items, strings.ShowPatch, () => viewModel.ChangeDiffAppearanceCommand.Execute(DiffDisplayAppearance.Patch),
+                isChecked: viewModel.DiffAppearance is not (DiffDisplayAppearance.GitWordDiff or DiffDisplayAppearance.Difftastic));
+            AddTo(appearance.Items, strings.ShowGitWordColoring, () => viewModel.ChangeDiffAppearanceCommand.Execute(DiffDisplayAppearance.GitWordDiff),
+                isChecked: viewModel.DiffAppearance == DiffDisplayAppearance.GitWordDiff);
+            AddTo(appearance.Items, strings.ShowDifftastic, () => viewModel.ChangeDiffAppearanceCommand.Execute(DiffDisplayAppearance.Difftastic),
+                isEnabled: viewModel.IsDifftasticEnabled, isChecked: viewModel.DiffAppearance == DiffDisplayAppearance.Difftastic);
+        }
+
         menu.Items.Add(new Separator());
-        Add(strings.Find, () => ExecuteHotkeyCommand(FileViewerHotkeyCommand.Find));
+        if (state.IsDiff)
+        {
+            Add(strings.TreatAllFilesAsText, () => viewModel.ToggleTreatAllFilesAsTextCommand.Execute(null), isChecked: viewModel.TreatAllFilesAsText);
+        }
+
+        Add(strings.Find, () => ExecuteHotkeyCommand(FileViewerHotkeyCommand.Find), icon: "Preview");
         if (!editor.IsReadOnly)
         {
             Add(strings.Replace, () => ExecuteHotkeyCommand(FileViewerHotkeyCommand.Replace));
@@ -141,7 +176,10 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         Add(strings.GoToLine, () => ExecuteHotkeyCommand(FileViewerHotkeyCommand.GoToLine));
         return [.. menu.Items.OfType<object>()];
 
-        void Add(TranslatedText header, Action action, bool isEnabled = true, bool? isChecked = null, string? icon = null)
+        MenuItem Add(TranslatedText header, Action? action, bool isEnabled = true, bool? isChecked = null, string? icon = null)
+            => AddTo(menu.Items, header, action, isEnabled, isChecked, icon);
+
+        MenuItem AddTo(ItemCollection items, TranslatedText header, Action? action, bool isEnabled = true, bool? isChecked = null, string? icon = null)
         {
             MenuItem item = new()
             {
@@ -160,8 +198,13 @@ public partial class FileViewerView : UserControl, IHotkeyControl
                 item.Icon = new Image { Width = 16, Height = 16, Source = new Bitmap(AssetLoader.Open(new Uri($"avares://GitUI.Avalonia/Assets/{icon}.png"))) };
             }
 
-            item.Click += (_, _) => action();
-            menu.Items.Add(item);
+            if (action is not null)
+            {
+                item.Click += (_, _) => action();
+            }
+
+            items.Add(item);
+            return item;
         }
     }
 
@@ -202,6 +245,13 @@ public partial class FileViewerView : UserControl, IHotkeyControl
                 textView.OpenSearch(replace: true);
                 return true;
             case FileViewerHotkeyCommand.FindNextOrOpenWithDifftool:
+                // As FindNextAsync: without a search, the changes open in the difftool.
+                if (viewModel.CanOpenWithDifftool && string.IsNullOrEmpty(textView.Search.SearchPattern))
+                {
+                    viewModel.OpenWithDifftool();
+                    return true;
+                }
+
                 textView.FindNext(backward: false);
                 return true;
             case FileViewerHotkeyCommand.FindPrevious:
@@ -214,14 +264,26 @@ public partial class FileViewerView : UserControl, IHotkeyControl
                 }
 
                 return true;
-            case FileViewerHotkeyCommand.IncreaseNumberOfVisibleLines when viewModel.IsDiff && !viewModel.Settings.ShowEntireFile:
+            case FileViewerHotkeyCommand.IncreaseNumberOfVisibleLines when viewModel.CanChangeContextLines && !viewModel.Settings.ShowEntireFile:
                 viewModel.IncreaseContextLinesCommand.Execute(null);
                 return true;
-            case FileViewerHotkeyCommand.DecreaseNumberOfVisibleLines when viewModel.IsDiff && !viewModel.Settings.ShowEntireFile:
+            case FileViewerHotkeyCommand.DecreaseNumberOfVisibleLines when viewModel.CanChangeContextLines && !viewModel.Settings.ShowEntireFile:
                 viewModel.DecreaseContextLinesCommand.Execute(null);
                 return true;
-            case FileViewerHotkeyCommand.ShowEntireFile when viewModel.IsDiff:
+            case FileViewerHotkeyCommand.ShowEntireFile when viewModel.CanChangeContextLines:
                 viewModel.ToggleShowEntireFileCommand.Execute(null);
+                return true;
+            case FileViewerHotkeyCommand.ShowSyntaxHighlighting when viewModel.CanChangeContextLines:
+                viewModel.ToggleSyntaxHighlightingCommand.Execute(null);
+                return true;
+            case FileViewerHotkeyCommand.ShowGitWordColoring when viewModel.IsDiffAppearanceVisible:
+                viewModel.ChangeDiffAppearanceCommand.Execute(DiffDisplayAppearance.GitWordDiff);
+                return true;
+            case FileViewerHotkeyCommand.ShowDifftastic when viewModel.IsDiffAppearanceVisible && viewModel.IsDifftasticEnabled:
+                viewModel.ChangeDiffAppearanceCommand.Execute(DiffDisplayAppearance.Difftastic);
+                return true;
+            case FileViewerHotkeyCommand.TreatFileAsText when viewModel.IsDiff:
+                viewModel.ToggleTreatAllFilesAsTextCommand.Execute(null);
                 return true;
             case FileViewerHotkeyCommand.NextChange when viewModel.IsDiff:
                 GoToChange(backwards: false);
@@ -229,7 +291,7 @@ public partial class FileViewerView : UserControl, IHotkeyControl
             case FileViewerHotkeyCommand.PreviousChange when viewModel.IsDiff:
                 GoToChange(backwards: true);
                 return true;
-            case FileViewerHotkeyCommand.IgnoreAllWhitespace when viewModel.IsDiff:
+            case FileViewerHotkeyCommand.IgnoreAllWhitespace when viewModel.CanIgnoreWhitespaceChanges:
                 viewModel.ToggleIgnoreWhitespaceCommand.Execute(IgnoreWhitespaceKind.AllSpace);
                 return true;
             case FileViewerHotkeyCommand.StageLines:
@@ -250,6 +312,7 @@ public partial class FileViewerView : UserControl, IHotkeyControl
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel = DataContext as FileViewerViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
+        _viewModel?.ViewerWidth = textView.Bounds.Width;
         ShowImage();
     }
 
@@ -266,6 +329,10 @@ public partial class FileViewerView : UserControl, IHotkeyControl
             : header == strings.DecreaseContextLinesMenu ? FileViewerHotkeyCommand.DecreaseNumberOfVisibleLines
             : header == strings.ShowEntireFileMenu ? FileViewerHotkeyCommand.ShowEntireFile
             : header == strings.IgnoreAllWhitespaceChangesMenu ? FileViewerHotkeyCommand.IgnoreAllWhitespace
+            : header == strings.ShowSyntaxHighlightingMenu ? FileViewerHotkeyCommand.ShowSyntaxHighlighting
+            : header == strings.ShowGitWordColoring ? FileViewerHotkeyCommand.ShowGitWordColoring
+            : header == strings.ShowDifftastic ? FileViewerHotkeyCommand.ShowDifftastic
+            : header == strings.TreatAllFilesAsText ? FileViewerHotkeyCommand.TreatFileAsText
             : null;
         HotkeyBinding? hotkey = command is null ? null : _viewModel?.Hotkeys.FirstOrDefault(h => h.CommandCode == (int)command);
         return hotkey is null ? null : KeyMapping.ToKeyGesture(hotkey.KeyData);
