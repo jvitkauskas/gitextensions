@@ -10,7 +10,7 @@ public class CmdShell : ShellDescriptor
         Icon = EmbeddedIcons.Get("cmd");
 
         ExecutableName = "cmd.exe";
-        if (PathUtil.TryFindShellPath(ExecutableName, out string? exePath))
+        if (OperatingSystem.IsWindows() && PathUtil.TryFindShellPath(ExecutableName, out string? exePath))
         {
             ExecutablePath = exePath;
             ExecutableCommandLine = exePath.Quote();

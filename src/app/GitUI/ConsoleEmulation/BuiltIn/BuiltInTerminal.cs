@@ -47,6 +47,12 @@ internal sealed class BuiltInTerminal : IEmbeddedControlView, IDisposable
         _control.OutputReceived += (_, e) => OutputReceived?.Invoke(this, e.Bytes);
         _control.ProcessExited += (_, e) => ProcessExited?.Invoke(this, e.ExitCodeKnown ? e.ExitCode : -1);
         _control.Loaded += OnLoaded;
+
+        if (!OperatingSystem.IsWindows())
+        {
+            // The control launches its process (bash) when it is loaded without one; ours replaces it.
+            _control.Process = string.Empty;
+        }
     }
 
     public object Control => _control;
@@ -121,7 +127,7 @@ internal sealed class BuiltInTerminal : IEmbeddedControlView, IDisposable
             }
 
             _connection = connection;
-            _control.AttachConnection(connection);
+            _control.AttachConnection(OperatingSystem.IsWindows() ? connection : new EndOfOutputConnection(connection));
         }));
     }
 
@@ -265,5 +271,155 @@ internal sealed class BuiltInTerminal : IEmbeddedControlView, IDisposable
         }
 
         return [.. result];
+    }
+
+    /// <summary>
+    ///  The connection of a process off Windows. A Linux pseudo terminal reports the end of the output of an exited process
+    ///  as EIO, which the terminal control would print ("Error reading from process"), and it reports the exit before the
+    ///  rest of the output is read: the exit is raised once the output has ended (or after a while).
+    /// </summary>
+    private sealed class EndOfOutputConnection : IPtyConnection
+    {
+        private readonly IPtyConnection _connection;
+        private readonly EndOfOutputStream _reader;
+        private EventHandler<PtyExitedEventArgs>? _processExited;
+
+        public EndOfOutputConnection(IPtyConnection connection)
+        {
+            _connection = connection;
+            _reader = new EndOfOutputStream(connection.ReaderStream);
+            connection.ProcessExited += OnProcessExited;
+        }
+
+        public event EventHandler<PtyExitedEventArgs>? ProcessExited
+        {
+            add => _processExited += value;
+            remove => _processExited -= value;
+        }
+
+        public Stream ReaderStream => _reader;
+
+        public bool SupportsCancellableRead => _connection.SupportsCancellableRead;
+
+        public Stream WriterStream => _connection.WriterStream;
+
+        public int Pid => _connection.Pid;
+
+        public int ExitCode => _connection.ExitCode;
+
+        public bool WaitForExit(int milliseconds) => _connection.WaitForExit(milliseconds);
+
+        public void Kill() => _connection.Kill();
+
+        public void Resize(int cols, int rows) => _connection.Resize(cols, rows);
+
+        public void Dispose()
+        {
+            _connection.ProcessExited -= OnProcessExited;
+            _connection.Dispose();
+        }
+
+        private void OnProcessExited(object? sender, PtyExitedEventArgs e)
+        {
+            ThreadHelper.FileAndForget(async () =>
+            {
+#pragma warning disable VSTHRD003 // The output ends on its own: the terminal control reads it on a thread of its own.
+                await Task.WhenAny(_reader.Ended, Task.Delay(TimeSpan.FromSeconds(2)));
+#pragma warning restore VSTHRD003
+                _processExited?.Invoke(this, e);
+            });
+        }
+    }
+
+    /// <summary>A stream that ends where reading it fails with an <see cref="IOException"/>.</summary>
+    private sealed class EndOfOutputStream(Stream inner) : Stream
+    {
+        private readonly TaskCompletionSource _ended = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>Completes when the stream has ended.</summary>
+        public Task Ended => _ended.Task;
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            try
+            {
+                return Checked(inner.Read(buffer, offset, count));
+            }
+            catch (IOException)
+            {
+                return Checked(0);
+            }
+        }
+
+        public override int Read(Span<byte> buffer)
+        {
+            try
+            {
+                return Checked(inner.Read(buffer));
+            }
+            catch (IOException)
+            {
+                return Checked(0);
+            }
+        }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return Checked(await inner.ReadAsync(buffer, cancellationToken));
+            }
+            catch (IOException)
+            {
+                return Checked(0);
+            }
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+
+        public override void Flush()
+        {
+        }
+
+        private int Checked(int count)
+        {
+            if (count == 0)
+            {
+                _ended.TrySetResult();
+            }
+
+            return count;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                inner.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

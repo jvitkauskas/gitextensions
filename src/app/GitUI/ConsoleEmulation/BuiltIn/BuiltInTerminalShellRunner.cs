@@ -46,8 +46,11 @@ internal sealed class BuiltInTerminalShellRunner(IShellProvider shellProvider, C
         string commandLine = shellProvider.GetShellCommandLine(AppSettings.ConEmuTerminal.Value);
         if (commandLine == ShellProvider.DefaultConsoleCommandLine)
         {
-            // The fallback of the shell provider, in the syntax of ConEmu.
-            commandLine = "cmd.exe";
+            // The fallback of the shell provider, in the syntax of ConEmu: cmd on Windows, the shell of the user elsewhere
+            // (docs/avalonia-port/CROSS-PLATFORM.md, phase 3 brings the shells of each system).
+            commandLine = OperatingSystem.IsWindows()
+                ? "cmd.exe"
+                : $"\"{(Environment.GetEnvironmentVariable("SHELL") is { Length: > 0 } shell ? shell : "/bin/sh")}\"";
         }
 
         (string executable, string arguments) = SplitCommandLine(commandLine);

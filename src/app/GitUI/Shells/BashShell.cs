@@ -14,6 +14,20 @@ public class BashShell : ShellDescriptor
         Name = ShellName;
         Icon = EmbeddedIcons.Get("GitForWindows");
 
+        if (!OperatingSystem.IsWindows())
+        {
+            // The bash of the system: the shells of Git for Windows are Windows-only (under WSL the PATH of Windows would
+            // find them). docs/avalonia-port/CROSS-PLATFORM.md, phase 3 brings the shells of each system.
+            if (PathUtil.TryFindFullPath("bash", out string? bashPath))
+            {
+                ExecutableName = "bash";
+                ExecutablePath = bashPath;
+                ExecutableCommandLine = $"{bashPath.Quote()} --login -i";
+            }
+
+            return;
+        }
+
         if (PathUtil.TryFindShellPath(GitBashExe, out string? exePath))
         {
             ExecutableName = GitBashExe;
@@ -41,6 +55,11 @@ public class BashShell : ShellDescriptor
 
     public override string GetChangeDirCommand(string path)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            return $"cd {path.QuoteNE()}";
+        }
+
         try
         {
             DirectoryInfo directoryInfo = new(path);

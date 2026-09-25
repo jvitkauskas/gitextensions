@@ -10,7 +10,7 @@ public class PwshShell : ShellDescriptor
         Icon = EmbeddedIcons.Get("pwsh");
 
         ExecutableName = "pwsh.exe";
-        if (PathUtil.TryFindShellPath(ExecutableName, out string? exePath))
+        if (OperatingSystem.IsWindows() && PathUtil.TryFindShellPath(ExecutableName, out string? exePath))
         {
             ExecutablePath = exePath;
             ExecutableCommandLine = exePath.Quote();

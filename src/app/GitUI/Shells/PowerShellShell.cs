@@ -10,7 +10,7 @@ public class PowerShellShell : ShellDescriptor
         Icon = EmbeddedIcons.Get("powershell");
 
         ExecutableName = "powershell.exe";
-        if (PathUtil.TryFindShellPath(ExecutableName, out string? exePath))
+        if (OperatingSystem.IsWindows() && PathUtil.TryFindShellPath(ExecutableName, out string? exePath))
         {
             ExecutablePath = exePath;
             ExecutableCommandLine = exePath.Quote();
