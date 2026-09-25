@@ -143,10 +143,12 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel?.QuickSearchRestarted -= OnQuickSearchRestarted;
         _viewModel?.RelativesChanged -= OnRelativesChanged;
+        _viewModel?.RowsSelectionRequested -= OnRowsSelectionRequested;
         _viewModel = DataContext as RevisionGridViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.QuickSearchRestarted += OnQuickSearchRestarted;
         _viewModel?.RelativesChanged += OnRelativesChanged;
+        _viewModel?.RowsSelectionRequested += OnRowsSelectionRequested;
         ViewModel = _viewModel;
         Graph = _viewModel?.Graph;
         UpdateColumns();
@@ -154,6 +156,18 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
         _maxLaneCount = 1;
         _laneCountScannedTo = 0;
         base.OnDataContextChanged(e);
+    }
+
+    /// <summary>The rows selected in this order (the first one the base of a diff); the last one is shown.</summary>
+    private void OnRowsSelectionRequested(object? sender, IReadOnlyList<RevisionGridRow> rows)
+    {
+        revisionsGrid.SelectedItems.Clear();
+        foreach (RevisionGridRow row in rows)
+        {
+            revisionsGrid.SelectedItems.Add(row);
+        }
+
+        revisionsGrid.ScrollIntoView(rows[^1], column: null);
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

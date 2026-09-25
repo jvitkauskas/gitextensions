@@ -298,10 +298,16 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     /// <summary>Raised when <see cref="SelectedRows"/> changed.</summary>
     public event EventHandler? SelectionChanged;
 
-    /// <summary>Sets the selected rows (from the view).</summary>
+    /// <summary>
+    ///  Sets the selected rows (from the view), in the order they were selected: the rows still selected keep their place, the
+    ///  new ones come last (the grid lists its selection in the order of the rows).
+    /// </summary>
     public void SetSelectedRows(IEnumerable<RevisionGridRow> rows)
     {
-        SelectedRows = [.. rows];
+        List<RevisionGridRow> selected = [.. rows];
+        HashSet<RevisionGridRow> stillSelected = [.. selected];
+        HashSet<RevisionGridRow> previous = [.. SelectedRows];
+        SelectedRows = [.. SelectedRows.Where(stillSelected.Contains), .. selected.Where(row => !previous.Contains(row))];
         UpdateAuthorHighlight();
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }

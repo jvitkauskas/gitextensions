@@ -251,6 +251,7 @@ public sealed partial class RevisionGridViewModel
             case RevisionGridCommand.NavigateForward:
             case RevisionGridCommand.NavigateForward_AlternativeHotkey: NavigateForward(); break;
             case RevisionGridCommand.ToggleHighlightSelectedBranch: HighlightSelectedBranch(); break;
+            case RevisionGridCommand.SelectNextForkPointAsDiffBase: SelectNextForkPointAsDiffBase(); break;
             default: return CommandHandler?.Invoke(command) ?? false;
         }
 

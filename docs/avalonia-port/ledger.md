@@ -181,7 +181,8 @@ of a plugin) stay `TreeView`s.
 
 Every "not yet" of the rows above was checked against the code on 2026-09-25; the rows now say what is really missing. By area:
 
-- **File status list**: the file type icons of the shell. (The script hotkeys of the main window get the files of the diff
+- **File status list**: none left. (The file type icons of the shell, read in the background for each extension
+  (`FileStatusIconImage`); the script hotkeys of the main window get the files of the diff
   tab or the file tree and the line and column at the caret, as `FormBrowse.GetScriptOptionsProvider`.)
   (Done since the audit: git grep with its box, prompt and hotkeys; the toolbar with the settings button and the A/B filter;
   select all and collapse root folders; the custom difftool submenus and the First / Second captions, also in the grid and
@@ -192,7 +193,7 @@ Every "not yet" of the rows above was checked against the code on 2026-09-25; th
   hotkeys, the first change after loading, the position kept for the same file, go to line by the line of the file. Going
   to an occurrence selects it: AvaloniaEdit drops a selection the caret leaves. `TextEditor.ScrollToVerticalOffset` does not
   scroll, so `TextEditorView` sets the offset of its scroll viewer.)
-- **Revision grid**: the "select next fork point" hotkey, ref label tooltips and double-click, nested remote / ahead-behind
+- **Revision grid**: ref label tooltips and double-click, nested remote / ahead-behind
   labels, avatars reloaded when their cache is cleared, the favicon of the build report tab; the grid menu of `FormLog`.
 - **File history**: the filter toolbar, the build report tab, the Navigate and View menus of its grid.
 - **Stash**: the hotkeys (next / previous stash, refresh), the cherry-pick of all changes.

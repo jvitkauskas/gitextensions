@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.Services;
 using GitUI.UserControls.RevisionGrid.Graph;
+using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.UserControls.RevisionGrid;
 
@@ -118,6 +119,75 @@ public sealed partial class RevisionGridViewModel
         {
             NavigateParentChild(revision.ObjectId, child, toChild: true);
         }
+    }
+
+    /// <summary>
+    ///  As <c>SelectNextForkPointAsDiffBase</c>: the first ancestor of the (first) selected revision with a branch or another
+    ///  child is selected first, as the base of the diff, with the other selected revisions.
+    /// </summary>
+    public void SelectNextForkPointAsDiffBase()
+    {
+        IReadOnlyList<GitRevision> revisions = GetSelectedRevisionsLatestSelectedFirst();
+        if (revisions.Count == 0)
+        {
+            return;
+        }
+
+        GitRevision? revision = revisions[^1];
+        while (revision is { IsArtificial: true })
+        {
+            revision = GetRevision(revision.FirstParentId);
+        }
+
+        if (revision is null)
+        {
+            return;
+        }
+
+        do
+        {
+            if (!revision.HasParent || GetRevision(revision.FirstParentId) is not { } parent)
+            {
+                break;
+            }
+
+            revision = parent;
+        }
+        while (!revision.Refs.Any(r => r.IsHead || r.IsRemote) && GetChildren(revision.ObjectId).Count == 1);
+
+        SelectRevisions([revision.ObjectId, .. revisions.Take(Math.Max(1, revisions.Count - 1)).Select(r => r.ObjectId)]);
+    }
+
+    /// <summary>Raised to select several rows in this order (the first one first), which the view selects.</summary>
+    public event EventHandler<IReadOnlyList<RevisionGridRow>>? RowsSelectionRequested;
+
+    /// <summary>
+    ///  Selects the listed revisions in this order (as <c>SetSelectedRevision</c> with <c>toggleSelection</c> for the next
+    ///  ones); the last one only without <see cref="MultiSelect"/>.
+    /// </summary>
+    public void SelectRevisions(IReadOnlyList<ObjectId> objectIds)
+    {
+        List<RevisionGridRow> rows = [];
+        foreach (ObjectId objectId in objectIds.Distinct())
+        {
+            if (Graph.TryGetRowIndex(objectId, out int index) && index < Rows.Count)
+            {
+                rows.Add(Rows[index]);
+            }
+        }
+
+        if (rows.Count == 0)
+        {
+            return;
+        }
+
+        if (!MultiSelect || rows.Count == 1)
+        {
+            SelectedRow = rows[^1];
+            return;
+        }
+
+        RowsSelectionRequested?.Invoke(this, rows);
     }
 
     /// <summary>The children of a revision in the grid (<c>GetRevisionChildren</c>), the newest first.</summary>
