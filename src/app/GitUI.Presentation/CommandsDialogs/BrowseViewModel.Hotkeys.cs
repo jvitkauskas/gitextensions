@@ -1,3 +1,6 @@
+using GitUI.Presentation.Editor;
+using GitUI.Presentation.UserControls.FileStatusList;
+
 namespace GitUI.Presentation.CommandsDialogs;
 
 /// <summary>The commands of the "Browse" hotkeys; the values are the ones of <c>HotkeyCommands.Browse</c>, which the settings store.</summary>
@@ -60,13 +63,47 @@ public interface IBrowseScriptsHost
     /// <summary>
     ///  As <c>GitModuleForm.ExecuteCommand</c> for a script: runs the script of the hotkey command, if it is one.
     /// </summary>
+    /// <param name="selection">The files and the position the script gets (as <c>GetScriptOptionsProvider</c>).</param>
     /// <returns><see langword="true"/> if a script has the command.</returns>
-    bool RunScriptOfHotkey(int commandCode);
+    bool RunScriptOfHotkey(int commandCode, ScriptSelection selection);
+}
+
+/// <summary>
+///  What a script runs with (the <c>IScriptOptionsProvider</c> of the tab shown): the selected files, and the line and column of
+///  the file at the caret of its viewer.
+/// </summary>
+public sealed record ScriptSelection(IReadOnlyList<string> SelectedFiles, int? LineNumber, int? ColumnNumber)
+{
+    public static ScriptSelection None { get; } = new([], null, null);
 }
 
 /// <summary>The hotkeys of the main window (<c>FormBrowse.ExecuteCommand</c>).</summary>
 public sealed partial class BrowseViewModel
 {
+    /// <summary>
+    ///  As <c>FormBrowse.GetScriptOptionsProvider</c>: the files selected in the file tree or the diff tab (whichever is shown),
+    ///  with the line and column at the caret of its viewer (<c>ScriptOptionsProvider</c> of <c>RevisionDiffControl</c>).
+    /// </summary>
+    public ScriptSelection GetScriptSelection()
+    {
+        (FileStatusListViewModel? files, FileViewerViewModel? viewer) = SelectedTab switch
+        {
+            BrowseTab.FileTree => (FileTree, TreeViewer),
+            BrowseTab.Diff => (Files, Viewer),
+            _ => (null, null),
+        };
+        if (files is null)
+        {
+            return ScriptSelection.None;
+        }
+
+        IReadOnlyList<string> selected = files.SelectedEntries.Count > 0
+            ? [.. files.SelectedEntries.Select(entry => entry.Item.Name)]
+            : files.SelectedFolder is { Length: > 0 } folder ? [folder.Value] : [];
+        (int Line, int Column)? position = viewer?.Editor.GetCurrentFilePosition();
+        return new ScriptSelection(selected, position?.Line, position?.Column);
+    }
+
     /// <summary>Raised when a hotkey moves the focus to a part of the window the view model has no view model for.</summary>
     public event EventHandler<BrowseFocusTarget>? FocusRequested;
 
@@ -149,7 +186,7 @@ public sealed partial class BrowseViewModel
         }
 
         // As the base class: the scripts with a hotkey.
-        return _host is IBrowseScriptsHost scriptsHost && scriptsHost.RunScriptOfHotkey(commandCode);
+        return _host is IBrowseScriptsHost scriptsHost && scriptsHost.RunScriptOfHotkey(commandCode, GetScriptSelection());
 
         bool RunAndHandle(BrowseCommand command)
         {

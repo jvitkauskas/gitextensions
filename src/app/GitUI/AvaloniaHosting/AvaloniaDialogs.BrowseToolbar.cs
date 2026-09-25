@@ -20,14 +20,14 @@ internal static partial class AvaloniaDialogs
     private sealed partial class BrowseHost : IBrowseToolbarHost, IBrowseScriptsHost
     {
         /// <summary>As <c>GitModuleForm.ExecuteCommand</c>: the enabled script of the hotkey command.</summary>
-        public bool RunScriptOfHotkey(int commandCode)
+        public bool RunScriptOfHotkey(int commandCode, ScriptSelection selection)
         {
             if (_commands.GetRequiredService<IScriptsManager>().GetScripts().FirstOrDefault(script => script.Enabled && script.HotkeyCommandIdentifier == commandCode) is not { } script)
             {
                 return false;
             }
 
-            RunToolbarScript(script);
+            RunToolbarScript(script, new ScriptOptionsProvider(() => selection.SelectedFiles, () => selection.LineNumber, () => selection.ColumnNumber));
             return true;
         }
 
@@ -128,9 +128,9 @@ internal static partial class AvaloniaDialogs
                 .Select(script => new BrowseMenuItem((script.Name ?? "").Replace("_", "__"), null, ToPng(script.GetIcon())) { Invoke = () => RunToolbarScript(script) })];
 
         // As ExecuteCommand of a script: run with the owner of the window, the grid refreshed if the script asks for it.
-        private void RunToolbarScript(ScriptInfo script) => AvaloniaUi.RunInHostContext(() =>
+        private void RunToolbarScript(ScriptInfo script, ScriptOptionsProvider? options = null) => AvaloniaUi.RunInHostContext(() =>
         {
-            if (_commands.GetRequiredService<IScriptsRunner>().RunScript(script, Owner, _commands, new ScriptOptionsProvider(() => [], () => null, () => null)))
+            if (_commands.GetRequiredService<IScriptsRunner>().RunScript(script, Owner, _commands, options ?? new ScriptOptionsProvider(() => [], () => null, () => null)))
             {
                 RepositoryChanged?.Invoke(this, EventArgs.Empty);
             }

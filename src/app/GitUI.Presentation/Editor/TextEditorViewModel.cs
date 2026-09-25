@@ -214,6 +214,29 @@ public sealed partial class TextEditorViewModel : ObservableObject
             : starts.FirstOrDefault(line => line > currentLine) is int next and > 0 ? next : null;
     }
 
+    /// <summary>
+    ///  As <c>CurrentFileLine</c> and <c>CurrentFileColumn</c> of the viewer: the line (1-based; in a diff, of the new file, else
+    ///  of the old one) and the column (0-based) at the caret, <see langword="null"/> on a line of a diff without line number.
+    /// </summary>
+    public (int Line, int Column)? GetCurrentFilePosition()
+    {
+        int caret = Math.Clamp(CaretOffset, 0, Text.Length);
+        int lineStart = caret == 0 ? 0 : Text.LastIndexOf('\n', caret - 1) + 1;
+        int line = 1 + Text.AsSpan(0, lineStart).Count('\n');
+        int column = caret - lineStart;
+        if (DiffLines is null)
+        {
+            return (line, column);
+        }
+
+        return DiffLines.FirstOrDefault(diffLine => diffLine.LineNumInDiff == line) switch
+        {
+            { RightLineNumber: not DiffLine.NotApplicable } diffLine => (diffLine.RightLineNumber, column),
+            { LeftLineNumber: not DiffLine.NotApplicable } diffLine => (diffLine.LeftLineNumber, column),
+            _ => null,
+        };
+    }
+
     /// <summary>Marks the current text as saved.</summary>
     public void MarkSaved()
     {

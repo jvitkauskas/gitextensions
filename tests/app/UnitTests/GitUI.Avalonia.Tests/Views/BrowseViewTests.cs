@@ -11,6 +11,7 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs;
+using GitUI.Presentation.Editor;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -381,6 +382,15 @@ public sealed class BrowseViewTests : HeadlessTest
         viewModel.ExecuteHotkeyCommand(9001).Should().BeTrue();
         viewModel.ExecuteHotkeyCommand(9002).Should().BeFalse();
         host.ShellRuns.Should().Equal("script 9001");
+
+        // As the ScriptOptionsProvider of RevisionDiffControl: the selected files and the line of the file at the caret.
+        viewModel.SelectedTab = BrowseTab.Diff;
+        viewModel.Files.SetDiff(null, new GitRevision(ObjectId.Parse("b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2")), [new GitItemStatus("f") { IsChanged = true, IsTracked = true }]);
+        viewModel.Files.Select(_ => true);
+        viewModel.Viewer.Show(new FileViewContent(FileViewKind.Diff, FileViewerContextMenuTests.Patch));
+        viewModel.Viewer.Editor.CaretOffset = FileViewerContextMenuTests.Patch.IndexOf("+c", StringComparison.Ordinal) + 1;
+        viewModel.ExecuteHotkeyCommand(9001);
+        host.ShellRuns[^1].Should().Be("script 9001 f at 2:1");
         window.Close();
     });
 
@@ -885,14 +895,14 @@ public sealed class BrowseViewTests : HeadlessTest
 
         public void CopyOutputHistory(string text) => CopiedOutput.Add(text);
 
-        public bool RunScriptOfHotkey(int commandCode)
+        public bool RunScriptOfHotkey(int commandCode, ScriptSelection selection)
         {
             if (commandCode != 9001)
             {
                 return false;
             }
 
-            ShellRuns.Add($"script {commandCode}");
+            ShellRuns.Add($"script {commandCode}{(selection.SelectedFiles.Count > 0 ? $" {string.Join(",", selection.SelectedFiles)} at {selection.LineNumber}:{selection.ColumnNumber}" : "")}");
             return true;
         }
 
