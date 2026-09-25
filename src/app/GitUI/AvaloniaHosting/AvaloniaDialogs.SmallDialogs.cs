@@ -72,6 +72,14 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
+    /// <summary>The prompt of ssh and git off Windows (<c>GitExtensions askpass</c>): the answer, or <see langword="null"/> if cancelled.</summary>
+    public static string? ShowAskPass(string prompt)
+    {
+        GitUI.Presentation.HelperDialogs.AskPassViewModel viewModel = new(prompt, ViewStrings.Load<GitUI.Presentation.HelperDialogs.DialogBoxStrings>());
+        ShowDialog(() => new GitUI.Avalonia.HelperDialogs.AskPassWindow { DataContext = viewModel }, owner: null);
+        return viewModel.Answer;
+    }
+
     /// <summary>As <c>SearchWindow</c>: finds an item by the name typed, from the matches of <paramref name="getCandidates"/>.</summary>
     /// <returns>The chosen item, or <see langword="null"/> if cancelled.</returns>
     public static T? ShowSearch<T>(IWin32Window? owner, Func<string, IEnumerable<T>> getCandidates)

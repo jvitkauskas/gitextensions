@@ -34,6 +34,12 @@ internal static class BrowseWebViews
     /// <summary>Whether the WebView2 runtime is installed (and its loader can be loaded).</summary>
     internal static bool IsWebView2Available(Func<string?> getAvailableBrowserVersion)
     {
+        // WebView2 is Windows-only: elsewhere the report opens in the default browser (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
         try
         {
             return !string.IsNullOrEmpty(getAvailableBrowserVersion());

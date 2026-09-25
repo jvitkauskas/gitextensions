@@ -15,6 +15,12 @@ internal static class VisualStudioIntegration
 
     static VisualStudioIntegration()
     {
+        // Visual Studio is Windows-only (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
         ThreadHelper.FileAndForget(async () =>
         {
             string vswhere = $@"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)}\Microsoft Visual Studio\Installer\vswhere.exe";

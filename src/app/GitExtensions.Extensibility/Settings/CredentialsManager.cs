@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using AdysTech.CredentialManager;
 
 namespace GitExtensions.Extensibility.Settings;
 
@@ -32,18 +30,25 @@ internal class CredentialsManager : ICredentialsManager
             return;
         }
 
+        // Without a store of the system, the credentials are kept for the session only (never in clear on disk).
+        ICredentialStore store = CredentialStores.Current;
+        if (!store.IsAvailable)
+        {
+            return;
+        }
+
         Credentials.Clear();
 
         foreach (KeyValuePair<string, NetworkCredential?> networkCredentials in credentials)
         {
+            // Cleared credentials (no user name) are removed from the store.
             if (networkCredentials.Value is null)
             {
+                store.Remove(networkCredentials.Key);
                 continue;
             }
 
-            AdysTechCredentialManagerWrapper.UpdateCredentials(networkCredentials.Key,
-                networkCredentials.Value.UserName,
-                networkCredentials.Value.Password);
+            UpdateCredentials(store, networkCredentials.Key, networkCredentials.Value.UserName, networkCredentials.Value.Password);
         }
     }
 
@@ -55,9 +60,15 @@ internal class CredentialsManager : ICredentialsManager
             return defaultValue;
         }
 
-        if (Credentials.TryGetValue(targetName, out NetworkCredential? result) || AdysTechCredentialManagerWrapper.TryGetCredentials(targetName, out result))
+        if (Credentials.TryGetValue(targetName, out NetworkCredential? result))
         {
             return result ?? defaultValue;
+        }
+
+        ICredentialStore store = CredentialStores.Current;
+        if (store.IsAvailable && store.Get(targetName) is NetworkCredential stored)
+        {
+            return stored;
         }
 
         return defaultValue;
@@ -82,54 +93,9 @@ internal class CredentialsManager : ICredentialsManager
         return string.IsNullOrWhiteSpace(suffix) ? null : $"{name}_{suffix}";
     }
 
-    private static class AdysTechCredentialManagerWrapper
-    {
-        private const string TargetPrefix = "GitExtensions_";
-
-        private static string GetTarget(string rawTarget)
-        {
-            if (string.IsNullOrWhiteSpace(rawTarget))
-            {
-                throw new ArgumentNullException(nameof(rawTarget));
-            }
-
-            return $"{TargetPrefix}{rawTarget}";
-        }
-
-        public static bool TryGetCredentials(string target, [NotNullWhen(true)] out NetworkCredential? credentials)
-        {
-            credentials = CredentialManager.GetCredentials(GetTarget(target));
-            return credentials is not null;
-        }
-
-        public static bool SaveCredentials(string target, string userName, string password)
-        {
-            if (string.IsNullOrWhiteSpace(target))
-            {
-                return false;
-            }
-
-            return CredentialManager.SaveCredentials(GetTarget(target), new NetworkCredential(userName.Trim(), password)) != null;
-        }
-
-        private static bool RemoveCredentials(string target)
-        {
-            if (string.IsNullOrWhiteSpace(target) || CredentialManager.GetCredentials(GetTarget(target)) is null)
-            {
-                return false;
-            }
-
-            return CredentialManager.RemoveCredentials(GetTarget(target));
-        }
-
-        public static bool UpdateCredentials(string target, string userName, string password)
-        {
-            if (string.IsNullOrWhiteSpace(userName))
-            {
-                return RemoveCredentials(target);
-            }
-
-            return SaveCredentials(target, userName, password);
-        }
-    }
+    /// <summary>Stores the credentials (without a user name: removes them).</summary>
+    private static bool UpdateCredentials(ICredentialStore store, string target, string userName, string password)
+        => string.IsNullOrWhiteSpace(userName)
+            ? store.Remove(target)
+            : store.Save(target, new NetworkCredential(userName.Trim(), password));
 }

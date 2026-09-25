@@ -159,6 +159,9 @@ ledger's "Platforms" section has the details, including what was checked under W
   (the system's `gource`).
 
 ### Phase 4: Credentials, SSH and the Windows capabilities (M)
+**Linux done (2026-09-25); macOS to do.** As planned, except: the askpass program is a small sh script that runs
+`GitExtensions askpass`, since ssh passes only the prompt; the Windows capabilities are guarded where they are used
+(no `IPlatformFeatures`); the macOS Keychain is not written yet (there nothing is stored, as without a secret service).
 - **SSH askpass.** A managed askpass mode of the application (`GitExtensions askpass <prompt>`, a small Avalonia
   prompt) is set as `SSH_ASKPASS` off Windows, instead of relying on an `ssh-askpass` package; the C++
   `GitExtSshAskPass` stays on Windows until the managed one has proved itself there too. PuTTY, Plink and pageant are

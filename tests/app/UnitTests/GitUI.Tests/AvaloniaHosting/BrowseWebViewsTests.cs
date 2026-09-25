@@ -9,6 +9,7 @@ namespace GitUITests.AvaloniaHosting;
 public sealed class BrowseWebViewsTests
 {
     [Test]
+    [Platform(Include = "Win")]
     public void The_build_report_is_shown_with_WebView2_when_its_runtime_is_installed()
     {
         FakeWebView webView2 = new();
@@ -16,6 +17,13 @@ public sealed class BrowseWebViewsTests
         IBrowseWebView? created = BrowseWebViews.Create(() => "140.0.3485.54", () => webView2);
 
         created.Should().BeSameAs(webView2);
+    }
+
+    [Test]
+    [Platform(Exclude = "Win")]
+    public void Off_Windows_the_build_report_has_no_browser()
+    {
+        BrowseWebViews.Create(() => "140.0.3485.54", () => new FakeWebView()).Should().BeNull("WebView2 is Windows-only: the report opens in the default browser");
     }
 
     [Test]

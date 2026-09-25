@@ -20,6 +20,8 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 - Phase 3 (git, tools and processes on each system) is done for Linux: the file manager, git discovery, editors, diff
   and merge tools, shells, scripts and plugins. The owner checks macOS afterwards; the macOS branches exist (`open`,
   TextEdit, Homebrew folders, Araxis) but were not run.
+- Phase 4 (credentials, SSH, the Windows capabilities) is done for Linux: the askpass prompt of Git Extensions, the
+  Secret Service for credentials, the Windows features hidden. macOS needs its Keychain (`ICredentialStore`).
 - Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
   a fast-forward of `avalonia` and a push of it.
 

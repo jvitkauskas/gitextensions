@@ -7,7 +7,8 @@
   <StackPanel>
     <HeaderedContentControl Classes="groupBox" Header="{Binding Strings.SshClient.PlainText}">
       <Grid ColumnDefinitions="140,*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="6" RowSpacing="4">
-        <RadioButton Name="putty" GroupName="sshClient" Content="{Binding Strings.Putty.AccessKeyText}" IsChecked="{Binding IsPutty}" />
+        <RadioButton Name="putty" GroupName="sshClient" Content="{Binding Strings.Putty.AccessKeyText}" IsChecked="{Binding IsPutty}"
+                     IsVisible="{Binding CanUsePutty}" />
         <RadioButton Name="openSsh" Grid.Row="1" GroupName="sshClient" Content="{Binding Strings.OpenSsh.AccessKeyText}" IsChecked="{Binding IsOpenSsh}" />
         <!-- Equivalent of label18. -->
         <Border Grid.Column="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Classes="info" VerticalAlignment="Center">

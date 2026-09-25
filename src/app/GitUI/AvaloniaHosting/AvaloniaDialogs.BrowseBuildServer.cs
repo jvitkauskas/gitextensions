@@ -243,62 +243,52 @@ internal static partial class AvaloniaDialogs
                 const string UsernameKey = "Username";
                 const string PasswordKey = "Password";
                 const string BearerTokenKey = "BearerToken";
-                using (IsolatedStorageFileStream stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Read, FileShare.Read))
+                string? storedConfig;
+                try
                 {
-                    // Protected per user by Windows (DPAPI); elsewhere nothing is stored yet (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).
-                    if (OperatingSystem.IsWindows() && stream.Position < stream.Length)
+                    storedConfig = ReadStoredCredentials(buildServerAdapter);
+                }
+                catch (CryptographicException)
+                {
+                    // The data is protected per user: the user can reset the credentials.
+                    storedConfig = null;
+                    useStoredCredentialsIfExisting = false;
+                }
+
+                if (storedConfig is not null)
+                {
+                    ConfigFile credentialsConfig = new(fileName: "");
+                    credentialsConfig.LoadFromString(storedConfig);
+                    IConfigSection? section = credentialsConfig.FindConfigSection(CredentialsConfigName);
+
+                    if (section is not null)
                     {
-                        byte[] protectedData = new byte[stream.Length];
-
-                        stream.ReadExactly(protectedData, 0, (int)stream.Length);
-                        try
+                        string? buildServerCredentialsType = section.GetValue(BuildServerCredentialsTypeKey);
+                        if (!string.IsNullOrWhiteSpace(buildServerCredentialsType))
                         {
-                            byte[] unprotectedData = ProtectedData.Unprotect(protectedData, null, DataProtectionScope.CurrentUser);
-                            using MemoryStream memoryStream = new(unprotectedData);
-                            ConfigFile credentialsConfig = new(fileName: "");
-
-                            using (StreamReader textReader = new(memoryStream, Encoding.UTF8))
+                            if (!Enum.TryParse(buildServerCredentialsType, ignoreCase: true, out BuildServerCredentialsType credentialsType))
                             {
-                                credentialsConfig.LoadFromString(textReader.ReadToEnd());
+                                credentialsType = BuildServerCredentialsType.Guest;
                             }
 
-                            IConfigSection? section = credentialsConfig.FindConfigSection(CredentialsConfigName);
-
-                            if (section is not null)
-                            {
-                                string? buildServerCredentialsType = section.GetValue(BuildServerCredentialsTypeKey);
-                                if (!string.IsNullOrWhiteSpace(buildServerCredentialsType))
-                                {
-                                    if (!Enum.TryParse(buildServerCredentialsType, ignoreCase: true, out BuildServerCredentialsType credentialsType))
-                                    {
-                                        credentialsType = BuildServerCredentialsType.Guest;
-                                    }
-
-                                    buildServerCredentials.BuildServerCredentialsType = credentialsType;
-                                }
-                                else
-                                {
-                                    buildServerCredentials.BuildServerCredentialsType =
-                                        section.GetValueAsBool(UseGuestAccessKey, true)
-                                            ? BuildServerCredentialsType.Guest
-                                            : BuildServerCredentialsType.UsernameAndPassword;
-                                }
-
-                                buildServerCredentials.Username = section.GetValue(UsernameKey);
-                                buildServerCredentials.Password = section.GetValue(PasswordKey);
-                                buildServerCredentials.BearerToken = section.GetValue(BearerTokenKey);
-                                foundInConfig = true;
-
-                                if (useStoredCredentialsIfExisting)
-                                {
-                                    return buildServerCredentials;
-                                }
-                            }
+                            buildServerCredentials.BuildServerCredentialsType = credentialsType;
                         }
-                        catch (CryptographicException)
+                        else
                         {
-                            // The data is protected per user: the user can reset the credentials.
-                            useStoredCredentialsIfExisting = false;
+                            buildServerCredentials.BuildServerCredentialsType =
+                                section.GetValueAsBool(UseGuestAccessKey, true)
+                                    ? BuildServerCredentialsType.Guest
+                                    : BuildServerCredentialsType.UsernameAndPassword;
+                        }
+
+                        buildServerCredentials.Username = section.GetValue(UsernameKey);
+                        buildServerCredentials.Password = section.GetValue(PasswordKey);
+                        buildServerCredentials.BearerToken = section.GetValue(BearerTokenKey);
+                        foundInConfig = true;
+
+                        if (useStoredCredentialsIfExisting)
+                        {
+                            return buildServerCredentials;
                         }
                     }
                 }
@@ -309,12 +299,6 @@ internal static partial class AvaloniaDialogs
 
                     if (buildServerCredentials is not null)
                     {
-                        if (!OperatingSystem.IsWindows())
-                        {
-                            // Not stored in clear: asked again in the next session.
-                            return buildServerCredentials;
-                        }
-
                         ConfigFile credentialsConfig = new(fileName: "");
 
                         IConfigSection section = credentialsConfig.FindOrCreateConfigSection(CredentialsConfigName);
@@ -324,15 +308,7 @@ internal static partial class AvaloniaDialogs
                         section.SetValue(PasswordKey, buildServerCredentials.Password);
                         section.SetValue(BearerTokenKey, buildServerCredentials.BearerToken);
 
-                        using IsolatedStorageFileStream stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Write, FileShare.None);
-                        using MemoryStream memoryStream = new();
-                        using (StreamWriter textWriter = new(memoryStream, Encoding.UTF8))
-                        {
-                            textWriter.Write(credentialsConfig.GetAsString());
-                        }
-
-                        byte[] protectedData = ProtectedData.Protect(memoryStream.ToArray(), null, DataProtectionScope.CurrentUser);
-                        stream.Write(protectedData, 0, protectedData.Length);
+                        WriteStoredCredentials(buildServerAdapter, credentialsConfig.GetAsString());
 
                         return buildServerCredentials;
                     }
@@ -554,6 +530,48 @@ internal static partial class AvaloniaDialogs
 
             return remoteUrls;
         }
+
+        /// <summary>
+        ///  The stored credentials of a build server (the text of their config), or <see langword="null"/>: protected per user
+        ///  by Windows (DPAPI, in the isolated storage), elsewhere in the credential store of the system (the Secret Service
+        ///  of Linux); without one they are asked again in each session (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).
+        /// </summary>
+        private static string? ReadStoredCredentials(IBuildServerAdapter buildServerAdapter)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return CredentialStores.Current.Get(GetCredentialStoreTarget(buildServerAdapter))?.Password;
+            }
+
+            using IsolatedStorageFileStream stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Read, FileShare.Read);
+            if (stream.Position >= stream.Length)
+            {
+                return null;
+            }
+
+            byte[] protectedData = new byte[stream.Length];
+            stream.ReadExactly(protectedData, 0, (int)stream.Length);
+
+            // Read as it was written, with a UTF-8 byte order mark.
+            using StreamReader reader = new(new MemoryStream(ProtectedData.Unprotect(protectedData, null, DataProtectionScope.CurrentUser)), Encoding.UTF8);
+            return reader.ReadToEnd();
+        }
+
+        private static void WriteStoredCredentials(IBuildServerAdapter buildServerAdapter, string config)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                CredentialStores.Current.Save(GetCredentialStoreTarget(buildServerAdapter), new System.Net.NetworkCredential("buildserver", config));
+                return;
+            }
+
+            using IsolatedStorageFileStream stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Write, FileShare.None);
+            byte[] protectedData = ProtectedData.Protect(Encoding.UTF8.GetBytes(config), null, DataProtectionScope.CurrentUser);
+            stream.SetLength(0);
+            stream.Write(protectedData, 0, protectedData.Length);
+        }
+
+        private static string GetCredentialStoreTarget(IBuildServerAdapter buildServerAdapter) => $"BuildServer_{buildServerAdapter.UniqueKey}";
 
         private static IsolatedStorageFileStream GetBuildServerOptionsIsolatedStorageStream(IBuildServerAdapter buildServerAdapter, FileAccess fileAccess, FileShare fileShare)
         {

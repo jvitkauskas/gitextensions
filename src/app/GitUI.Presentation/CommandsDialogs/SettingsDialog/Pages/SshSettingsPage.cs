@@ -93,6 +93,9 @@ public sealed partial class SshSettingsPageViewModel(SshSettingsPageStrings stri
     [ObservableProperty]
     public partial bool IsPutty { get; set; } = true;
 
+    /// <summary>Whether PuTTY is offered: it is Windows-only (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).</summary>
+    public bool CanUsePutty { get; } = OperatingSystem.IsWindows();
+
     [ObservableProperty]
     public partial bool IsOpenSsh { get; set; }
 

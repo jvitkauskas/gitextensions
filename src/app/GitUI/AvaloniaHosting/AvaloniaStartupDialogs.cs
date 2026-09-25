@@ -20,6 +20,23 @@ public static class AvaloniaStartupDialogs
     /// </summary>
     public static bool TryShowChooseTranslation() => AvaloniaDialogs.TryShowChooseTranslation(owner: null);
 
+    /// <summary>
+    ///  The askpass mode (<c>GitExtensions askpass &lt;prompt&gt;</c>, off Windows): the prompt of ssh or git, whose answer
+    ///  is written to the standard output; the exit code is 1 if the prompt is cancelled.
+    /// </summary>
+    public static int RunAskPass(string prompt)
+    {
+        InitializeUi();
+        if (AvaloniaDialogs.ShowAskPass(prompt) is not string answer)
+        {
+            return 1;
+        }
+
+        Console.Out.Write(answer + "\n");
+        Console.Out.Flush();
+        return 0;
+    }
+
     /// <summary>As <c>FormFixHome.CheckHomePath</c>: the dialog to fix HOME if it has no git configuration.</summary>
     public static void CheckHomePath() => HomeDirectoryCheck.CheckHomePath();
 

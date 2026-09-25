@@ -28,6 +28,14 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
+        // The askpass mode of ssh and git off Windows: the script of SSH_ASKPASS runs "GitExtensions askpass <prompt>".
+        string[] commandLine = Environment.GetCommandLineArgs();
+        if (!OperatingSystem.IsWindows() && commandLine.Length >= 2 && commandLine[1] == "askpass")
+        {
+            Environment.Exit(GitUI.AvaloniaHosting.AvaloniaStartupDialogs.RunAskPass(string.Join(" ", commandLine[2..])));
+            return;
+        }
+
         // If you want to suppress the BugReportInvoker when debugging and exit quickly, uncomment the condition:
         ////if (!Debugger.IsAttached)
         {
@@ -87,6 +95,11 @@ internal static class Program
         ManagedExtensibility.Initialise(userPluginsPath: AppSettings.UserPluginsPath);
 
         AppSettings.LoadSettings();
+
+        if (!OperatingSystem.IsWindows())
+        {
+            SetUpAskPass();
+        }
 
         if (OperatingSystem.IsWindows())
         {
@@ -295,6 +308,20 @@ internal static class Program
             }
 
             Environment.Exit(1);
+        }
+    }
+
+    /// <summary>The prompt of ssh and git off Windows (<see cref="AskPassScript"/>), in the local data folder of the application.</summary>
+    private static void SetUpAskPass()
+    {
+        try
+        {
+            string folder = AppSettings.LocalApplicationDataPath.Value ?? Path.GetTempPath();
+            EnvironmentConfiguration.AskPassCommand = AskPassScript.Write(folder, AppSettings.GetGitExtensionsFullPath());
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Trace.WriteLine($"The prompt of ssh could not be set up: {ex.Message}");
         }
     }
 

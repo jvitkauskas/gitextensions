@@ -17,6 +17,9 @@ public class CredentialsSetting : ICredentialsManager, ISetting
 
     public string Name { get; }
     public string Caption { get; }
+
+    /// <summary>Whether the credentials are kept by the store of the system (else for the session only).</summary>
+    public bool IsPersistent => CredentialStores.Current.IsAvailable;
     public NetworkCredential GetValueOrDefault(SettingsSource settings)
     {
         return _credentialsManager.GetCredentialOrDefault(settings.SettingLevel, Name, _defaultValue);

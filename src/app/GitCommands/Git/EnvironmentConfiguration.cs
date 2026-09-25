@@ -2,6 +2,12 @@
 
 public static class EnvironmentConfiguration
 {
+    /// <summary>
+    ///  The program of <c>SSH_ASKPASS</c> off Windows: the script of <see cref="AskPassScript"/>, set by the application at
+    ///  startup (the prompt of ssh and git); none in the tests.
+    /// </summary>
+    public static string? AskPassCommand { get; set; }
+
     private static readonly IEnvironmentAbstraction Env = new EnvironmentAbstraction();
 
     /// <summary>
@@ -64,9 +70,10 @@ public static class EnvironmentConfiguration
                 Env.SetEnvironmentVariable("SSH_ASKPASS", sshAskPass);
             }
         }
-        else if (string.IsNullOrEmpty(Env.GetEnvironmentVariable("SSH_ASKPASS")))
+        else if (string.IsNullOrEmpty(Env.GetEnvironmentVariable("SSH_ASKPASS")) && !string.IsNullOrEmpty(AskPassCommand))
         {
-            Env.SetEnvironmentVariable("SSH_ASKPASS", "ssh-askpass");
+            // The prompt of Git Extensions (an SSH_ASKPASS of the user is kept).
+            Env.SetEnvironmentVariable("SSH_ASKPASS", AskPassCommand);
         }
 
         if (!string.IsNullOrEmpty(Env.GetEnvironmentVariable("SSH_ASKPASS")))

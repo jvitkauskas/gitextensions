@@ -47,11 +47,15 @@
         </DataTemplate>
         <!-- Equivalent of CredentialsControl. -->
         <DataTemplate DataType="sv:CredentialsSettingValue">
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" IsEnabled="{Binding IsEnabled}">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" IsEnabled="{Binding IsEnabled}">
             <TextBlock Text="User name" VerticalAlignment="Center" Margin="0,0,8,4" />
             <TextBox Grid.Column="1" Text="{Binding UserName}" Margin="0,0,0,4" />
             <TextBlock Grid.Row="1" Text="API token/Password" VerticalAlignment="Center" Margin="0,0,8,0" />
             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Password}" PasswordChar="●" />
+            <!-- Without a store of the system (no secret service), the password is not written in clear anywhere. -->
+            <TextBlock Name="credentialsForSessionOnly" Grid.Row="2" Grid.Column="1" Classes="info" TextWrapping="Wrap" Margin="0,4,0,0"
+                       IsVisible="{Binding !Setting.IsPersistent}"
+                       Text="No secret service keeps passwords on this system: the password is kept until Git Extensions closes." />
           </Grid>
         </DataTemplate>
       </ItemsControl.DataTemplates>
