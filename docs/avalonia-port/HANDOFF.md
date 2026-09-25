@@ -71,8 +71,10 @@ The subsequent QA click-through (2026-09-25) fixed first-run stack overflow in t
 checkout error dialogs while typing partial branch names. Both have regression tests and were rechecked in the
 macOS app; the Release build and all 18 suite invocations pass. Culture-dependent decimal expectations in two
 headless tests were corrected too. Windows and WSL were rerun afterwards (builds, suites, a portable smoke test).
-The [macOS QA report](QA-2026-09-25.md) records coverage and remaining checks. Open: Cmd+C selects all revisions
-under automated native input (the headless test passes), and Hotkeys settings displays Ctrl for Command shortcuts.
+The [macOS QA report](QA-2026-09-25.md) records coverage and remaining checks. Its two open findings are closed: Cmd+C
+selecting all revisions came from the test input (System Events sends its Cmd modifier with key code 0, which
+Avalonia.Native reports as Cmd+A; with the key code of a real Cmd key only the selection is copied), and the Hotkeys
+settings show the shortcuts of macOS (`⇧⌘X`, `KeysExtensions.ToMacOSText`).
 P4Merge passed a saved resolution after the user approved Gatekeeper; no integration defect was established.
 Test processes and credential entries were cleaned up; see the report for the whole-Keychain metadata comparison
 limitation. `QA.md` now also covers the click-through on Windows and under WSLg.

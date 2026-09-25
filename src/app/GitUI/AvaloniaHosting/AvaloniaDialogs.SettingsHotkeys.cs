@@ -21,7 +21,8 @@ internal static partial class AvaloniaDialogs
 
         public bool IsUsedKey(int keyData) => manager.IsUniqueKey((Keys)keyData);
 
-        public string ToText(int keyData) => ((Keys)keyData).ToText();
+        // On macOS with the symbols of its shortcuts: Control is Cmd there.
+        public string ToText(int keyData) => OperatingSystem.IsMacOS() ? ((Keys)keyData).ToMacOSText() : ((Keys)keyData).ToText();
 
         private IReadOnlyList<HotkeySettingsGroup> ToGroups(IReadOnlyList<HotkeySettings> settings)
             => [.. settings.Select(setting => new HotkeySettingsGroup(

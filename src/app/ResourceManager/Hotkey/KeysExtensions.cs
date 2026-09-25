@@ -49,6 +49,19 @@ public static class KeysExtensions
                 .ToArray());
     }
 
+    /// <summary>
+    ///  The text of a hotkey as macOS shows shortcuts, e.g. "⇧⌘C": the symbols of the modifiers in the order of macOS, then
+    ///  the key. <see cref="Keys.Control"/> is Cmd there (the hotkeys stay stored with it, docs/avalonia-port/CROSS-PLATFORM.md,
+    ///  phase 5). Only for display: the texts of <see cref="ToText"/> are also parsed as gestures.
+    /// </summary>
+    public static string ToMacOSText(this Keys key)
+    {
+        string modifiers = ((key & Keys.Alt) != 0 ? "⌥" : "")
+            + ((key & Keys.Shift) != 0 ? "⇧" : "")
+            + ((key & Keys.Control) != 0 ? "⌘" : "");
+        return modifiers + key.GetKeyCode().ToFormattedString();
+    }
+
     public static string? ToFormattedString(this Keys key)
     {
         if (key == Keys.Oemcomma)

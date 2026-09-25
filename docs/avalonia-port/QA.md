@@ -73,6 +73,9 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
 - Drive the UI with `screencapture -x -o -l <window id>` (window ids from `CGWindowListCopyWindowInfo`, e.g. through
   `osascript -l JavaScript`) and `cliclick`. Pitfalls:
   - Escape must be sent with `osascript -e 'tell application "System Events" to key code 53'`.
+  - Do not send Cmd shortcuts with System Events (`keystroke "c" using command down`): its Cmd modifier event has key
+    code 0, which the application receives as an extra Cmd+A (e.g. the revision grid selects all). Post the keys with
+    CoreGraphics (`CGEvent` for key code 55, then the key, with `.maskCommand`), as a physical keyboard sends them.
   - A lost click is retried with `dd:x,y w:100 du:x,y`.
   - Check `lsappinfo front` before typing, since someone may be using the Mac.
   - A macOS crash report dialog swallows input; close it with `killall UserNotificationCenter`.

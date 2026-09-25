@@ -316,8 +316,11 @@ current culture for decimal numbers; their hard-coded decimal points failed on t
 passed, and all 18 sequential suite invocations passed with `--blame-hang-timeout 3m` (25,277 tests passed;
 Windows-only and other excluded tests skipped). The opt-in Keychain round trip passed and removed its test item.
 Windows and Linux were not rerun on this machine. The [macOS QA report](QA-2026-09-25.md) records manual coverage,
-remaining checks, cleanup and two open findings: Cmd+C selects every revision under automated native input, and
-the Hotkeys settings page still labels Command shortcuts as Ctrl. P4Merge completed a saved resolution after the
+remaining checks, cleanup and two findings, since closed: Cmd+C selected every revision only under System Events'
+synthetic input (its Cmd modifier event has key code 0, which Avalonia.Native reports as Cmd+A, and the DataGrid
+selects all; with the key code of a real Cmd key, 55, only the selected hashes are copied), and the Hotkeys settings
+page labeled Command shortcuts as Ctrl (on macOS it shows `⇧⌘X`, `⌥Left` with `KeysExtensions.ToMacOSText`; the menu
+texts keep `ToText`, which is parsed as gestures). P4Merge completed a saved resolution after the
 user approved Gatekeeper. This pass is not an all-green checklist sign-off.
 Rerun afterwards on Windows and in WSL (at `57e71ce9e`): the Release builds, all 18 Windows suites and the portable
 suites on Linux pass, and a portable copy browses a scratch repository with its plugins on both. `QA.md` now covers
