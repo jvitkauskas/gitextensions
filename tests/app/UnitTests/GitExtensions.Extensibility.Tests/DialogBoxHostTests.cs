@@ -100,6 +100,17 @@ public sealed class DialogBoxHostTests
         dialog.FileName.Should().Be("/tmp/out.zip");
     }
 
+    [TestCase(".txt", "txt")]
+    [TestCase("txt", "txt")]
+    [TestCase(null, null)]
+    public void The_default_extension_is_kept_without_its_dot(string? extension, string? expected)
+    {
+        // As WinForms: the file history builds its filter as "*." + DefaultExt, from Path.GetExtension.
+        using SaveFileDialog dialog = new() { DefaultExt = extension };
+
+        dialog.DefaultExt.Should().Be(expected);
+    }
+
     [Test]
     public void Save_file_dialog_without_AddExtension_asks_for_no_default_extension()
     {

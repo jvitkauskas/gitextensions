@@ -58,8 +58,13 @@ public enum SettingsFontKind
 /// <param name="SizeInPoints">The size of the font, in points.</param>
 public sealed record SettingsFont(object Value, string FamilyName, float SizeInPoints, bool IsBold, bool IsItalic)
 {
-    /// <summary>As <c>SetFontButtonText</c>: the name and the rounded size.</summary>
-    public string Text => $"{FamilyName}, {(int)(SizeInPoints + 0.5f)}";
+    /// <summary>
+    ///  As <c>SetFontButtonText</c>: the name and the rounded size; on macOS with its decimals, since the default UI font is
+    ///  9.75 points there (13 pixels), which would read 10.
+    /// </summary>
+    public string Text => OperatingSystem.IsMacOS()
+        ? $"{FamilyName}, {SizeInPoints.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture)}"
+        : $"{FamilyName}, {(int)(SizeInPoints + 0.5f)}";
 
     /// <summary>The size in device independent pixels, to show the font.</summary>
     public double DisplaySize => SizeInPoints * 96 / 72;

@@ -6,15 +6,20 @@
                 x:DataType="vm:AskPassViewModel"
                 Title="Git Extensions"
                 Width="420" MinWidth="320" SizeToContent="Height" CanMaximize="False">
-  <!-- The prompt of ssh and git off Windows (GitExtensions askpass), as GitExtSshAskPass on Windows. -->
-  <StackPanel Margin="12,10,12,10" Spacing="8">
-    <TextBlock Name="promptText" Text="{Binding Prompt}" TextWrapping="Wrap" />
-    <TextBox Name="inputTextBox" Text="{Binding Input}" />
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
-      <Button Name="okButton" MinWidth="75" Classes="accent" IsDefault="True"
-              Content="{Binding Strings.Ok.Text}" Command="{Binding OkCommand}" />
-      <Button Name="cancelButton" MinWidth="75" IsCancel="True"
-              Content="{Binding Strings.Cancel.Text}" Command="{Binding CancelCommand}" />
+  <!-- The prompt of ssh and git off Windows (GitExtensions askpass), as GitExtSshAskPass on Windows. The buttons are those
+       of a dialog footer, in the order of the system (DialogButtonOrder). -->
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Classes="dialogFooter">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+        <Button Name="okButton" Classes="accent" IsDefault="True"
+                Content="{Binding Strings.Ok.Text}" Command="{Binding OkCommand}" />
+        <Button Name="cancelButton" IsCancel="True"
+                Content="{Binding Strings.Cancel.Text}" Command="{Binding CancelCommand}" />
+      </StackPanel>
+    </Border>
+    <StackPanel Margin="12,10,12,10" Spacing="8">
+      <TextBlock Name="promptText" Text="{Binding Prompt}" TextWrapping="Wrap" />
+      <TextBox Name="inputTextBox" Text="{Binding Input}" />
     </StackPanel>
-  </StackPanel>
+  </DockPanel>
 </h:DialogWindow>

@@ -37,20 +37,24 @@ file and font pickers (native open panel as a sheet), the clipboard; the dark th
 terminal tab (zsh); git from Homebrew; editors (TextEdit with `open -W -n -e` waits); diff and merge tools (bundles of
 `/Applications`, FileMerge / `opendiff`, Beyond Compare's `bcomp`); `open` and `open -R`; the askpass prompt with
 macOS's OpenSSH (`ssh-add` of a key with a passphrase); the Keychain (opt-in test); Cmd for the shortcuts; the
-application menu (About, Settings with Cmd+,, Quit that closes the windows) and the main menu in the menu bar; the order of the dialog buttons; the
+application menu (About, Settings with Cmd+,, Quit that closes the windows) and the main menu in the menu bar, with the
+shortcuts, also over the other windows; the order of the dialog buttons; the
 default UI font (13 pixels, it was 17); the scaling of Retina displays (`DpiUtil`).
 
 Left for macOS, in batches:
 
-1. **Small issues seen**: the footer of the settings (OK, Cancel, Apply) and the askpass prompt keep the order of
-   Windows; the askpass prompt ignores the dark theme; the font picker and the Fonts page round 9.75 points (the default
-   UI font) to 9.8 / 10, and saving from the picker stores the rounded size.
-2. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), merges in each tool, a push over
+1. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), merges in each tool, a push over
    SSH to a server, the credentials from the plugin settings, the color picker.
-3. **Phase 5, rest**: file dialog filters, fixed widths that still clip with the macOS fonts, a menu bar for the other
-   windows (they show the application menu only), defaults for the hotkeys that macOS takes (Cmd+Space, Commit).
-4. **Phase 6**: the `.app` bundle, signing and notarization. The application cannot start while the display sleeps
+2. **Phase 6**: the `.app` bundle, signing and notarization. The application cannot start while the display sleeps
    or the screen is locked (Avalonia.Native: "not able to start the RenderTimer", -6661).
+
+Done in the last batch of phase 5: the order of the buttons of the settings (`StackPanel.dialogButtons`) and of the
+askpass prompt (a dialog footer), the theme of the askpass prompt (`ThemeModule.Load` in the askpass mode), the sizes
+with decimals of the font picker and the Fonts page (9.75), the defaults of the hotkeys on keys that macOS takes
+(Commit Cmd+Return, the tabs Cmd+Shift+] / [, the multi-selection of the left panel Cmd+Shift+Space; saved hotkeys on
+such keys are moved at load), the menu of the main window in the menu bar of the other windows (without shortcuts,
+disabled while modal), the default extension of the save dialogs (`*..txt` in the filter of the file history). Checked
+with the macOS fonts: the stash, commit, push, create branch and settings dialogs fit.
 
 Seen on macOS but not specific to it: Cmd/Ctrl+C in the revision grid copies the built-in DataGrid text of the row
 (empty cells), there is no hotkey for it; the commit dialog puts no focus in the message when it opens; `dotnet

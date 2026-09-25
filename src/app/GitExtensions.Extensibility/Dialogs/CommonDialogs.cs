@@ -25,8 +25,11 @@ public abstract class FileDialog : IDisposable
     /// <summary>The initial file name, and the chosen one once the dialog is accepted.</summary>
     public string FileName { get; set; } = "";
 
-    /// <summary>The extension added to a file name typed without one (with or without the dot).</summary>
-    public string? DefaultExt { get; set; }
+    /// <summary>
+    ///  The extension added to a file name typed without one, set with or without the dot and kept without it, as the
+    ///  <c>DefaultExt</c> of WinForms (callers set it from <see cref="Path.GetExtension(string)"/> and build filters with it).
+    /// </summary>
+    public string? DefaultExt { get; set => field = value?.TrimStart('.'); }
 
     /// <summary>Whether <see cref="DefaultExt"/> is added to a file name typed without extension.</summary>
     public bool AddExtension { get; set; } = true;

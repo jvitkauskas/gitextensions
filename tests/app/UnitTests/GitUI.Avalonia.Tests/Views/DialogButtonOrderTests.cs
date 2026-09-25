@@ -31,6 +31,21 @@ public sealed class DialogButtonOrderTests : HeadlessTest
     });
 
     [Test]
+    public Task A_row_of_buttons_marked_as_dialog_buttons_is_reversed_too() => OnUiThreadAsync(() =>
+    {
+        StackPanel row = new() { Orientation = Orientation.Horizontal };
+        row.Classes.Add("dialogButtons");
+        row.Children.Add(new Button { Name = "ok" });
+        row.Children.Add(new Button { Name = "cancel" });
+        row.Children.Add(new Button { Name = "apply" });
+        DockPanel panel = new() { Children = { row } };
+
+        DialogButtonOrder.Apply(panel, reverse: true);
+
+        row.Children.Select(c => c.Name).Should().Equal("apply", "cancel", "ok");
+    });
+
+    [Test]
     public Task The_rows_outside_a_footer_keep_their_order() => OnUiThreadAsync(() =>
     {
         StackPanel row = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };

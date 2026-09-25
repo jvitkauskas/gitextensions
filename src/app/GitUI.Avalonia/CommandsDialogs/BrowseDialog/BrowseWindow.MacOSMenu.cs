@@ -26,9 +26,64 @@ namespace GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 /// </remarks>
 public partial class BrowseWindow
 {
-    private readonly List<(NativeMenu Menu, BrowseSubmenu Submenu)> _macOSDynamicMenus = [];
+    /// <summary>The main window activated last, whose menu the windows without a main window among their owners show.</summary>
+    private static BrowseWindow? _lastActiveMainWindow;
+
+    private readonly List<(NativeMenu Root, NativeMenu Menu, BrowseSubmenu Submenu)> _macOSDynamicMenus = [];
     private readonly ConditionalWeakTable<NativeMenuItem, Action> _macOSActions = [];
     private NativeMenu? _macOSMenu;
+
+    // How the items being created are made: the menu they belong to, whether they are enabled and show their shortcuts.
+    private NativeMenu? _macOSBuildRoot;
+    private bool _macOSBuildEnabled = true;
+    private bool _macOSBuildGestures = true;
+
+    /// <summary>
+    ///  On macOS, gives another window (a dialog) the menu of its main window, so that the menu bar keeps it: a copy without
+    ///  shortcuts (the keys belong to the window, e.g. Cmd+Return commits in the commit dialog), whose items are disabled
+    ///  while the window is modal, as the menus of macOS applications during a modal dialog.
+    /// </summary>
+    internal static void AttachMacOSMenu(DialogWindow window, bool isModal)
+    {
+        if (!OperatingSystem.IsMacOS() || window is BrowseWindow || NativeMenu.GetMenu(window) is not null)
+        {
+            return;
+        }
+
+        BrowseWindow? main = null;
+        for (WindowBase? owner = window.Owner; owner is not null && main is null; owner = (owner as Window)?.Owner)
+        {
+            main = owner as BrowseWindow;
+        }
+
+        main ??= _lastActiveMainWindow;
+        if (main is null)
+        {
+            return;
+        }
+
+        NativeMenu menu = new();
+        NativeMenu.SetMenu(window, menu);
+
+        // Filled once the platform shows it, as the menu of the main window.
+        void Fill()
+        {
+            if (window.GetValue(NativeMenu.IsNativeMenuExportedProperty) is true)
+            {
+                main.FillMacOSMenu(menu, enabled: !isModal, gestures: false);
+            }
+        }
+
+        window.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == NativeMenu.IsNativeMenuExportedProperty)
+            {
+                Fill();
+            }
+        };
+        window.Closed += (_, _) => main._macOSDynamicMenus.RemoveAll(dynamicMenu => dynamicMenu.Root == menu);
+        Fill();
+    }
 
     private void InitializeMacOSMenu()
     {
@@ -37,6 +92,14 @@ public partial class BrowseWindow
             return;
         }
 
+        Activated += (_, _) => _lastActiveMainWindow = this;
+        Closed += (_, _) =>
+        {
+            if (_lastActiveMainWindow == this)
+            {
+                _lastActiveMainWindow = null;
+            }
+        };
         PropertyChanged += (_, e) =>
         {
             if (e.Property == NativeMenu.IsNativeMenuExportedProperty)
@@ -68,11 +131,34 @@ public partial class BrowseWindow
         }
 
         // The top level is built again while no menu is open (e.g. once the plugins are loaded).
-        _macOSMenu.Items.Clear();
-        _macOSDynamicMenus.Clear();
-        foreach (BrowseMenuItem item in _viewModel.Menus)
+        FillMacOSMenu(_macOSMenu, enabled: true, gestures: true);
+    }
+
+    /// <summary>Fills a menu of the menu bar (the one of this window, or a copy of another window) with the menus of the view model.</summary>
+    private void FillMacOSMenu(NativeMenu root, bool enabled, bool gestures)
+    {
+        if (_viewModel is null)
         {
-            _macOSMenu.Items.Add(CreateNativeItem(item));
+            return;
+        }
+
+        root.Items.Clear();
+        _macOSDynamicMenus.RemoveAll(dynamicMenu => dynamicMenu.Root == root);
+        _macOSBuildRoot = root;
+        _macOSBuildEnabled = enabled;
+        _macOSBuildGestures = gestures;
+        try
+        {
+            foreach (BrowseMenuItem item in _viewModel.Menus)
+            {
+                root.Items.Add(CreateNativeItem(item));
+            }
+        }
+        finally
+        {
+            _macOSBuildRoot = null;
+            _macOSBuildEnabled = true;
+            _macOSBuildGestures = true;
         }
     }
 
@@ -87,10 +173,16 @@ public partial class BrowseWindow
         if (item.Submenu is BrowseSubmenu submenu)
         {
             NativeMenu dynamicMenu = new();
-            FillNativeSubmenu(dynamicMenu, submenu);
-            dynamicMenu.NeedsUpdate += (_, _) => FillNativeSubmenu(dynamicMenu, submenu);
-            dynamicMenu.Closed += (_, _) => Dispatcher.UIThread.Post(() => FillNativeSubmenu(dynamicMenu, submenu));
-            _macOSDynamicMenus.Add((dynamicMenu, submenu));
+            if (_macOSBuildEnabled)
+            {
+                // A disabled copy is not opened: its submenus are not read.
+                bool gestures = _macOSBuildGestures;
+                FillNativeSubmenu(dynamicMenu, submenu, gestures);
+                dynamicMenu.NeedsUpdate += (_, _) => FillNativeSubmenu(dynamicMenu, submenu, gestures);
+                dynamicMenu.Closed += (_, _) => Dispatcher.UIThread.Post(() => FillNativeSubmenu(dynamicMenu, submenu, gestures));
+                _macOSDynamicMenus.Add((_macOSBuildRoot ?? _macOSMenu!, dynamicMenu, submenu));
+            }
+
             nativeItem.Menu = dynamicMenu;
         }
         else if (item.Children is { } children)
@@ -105,7 +197,7 @@ public partial class BrowseWindow
         }
         else if (item.Command is BrowseCommand command)
         {
-            nativeItem.Gesture = GetMacOSGesture(command);
+            nativeItem.Gesture = _macOSBuildGestures ? GetMacOSGesture(command) : null;
             _macOSActions.AddOrUpdate(nativeItem, () => _viewModel?.RunCommand.Execute(command));
         }
         else if (item.Invoke is { } invoke)
@@ -124,7 +216,7 @@ public partial class BrowseWindow
         }
 
         NativeMenuItem nativeItem = CreateNativeMenuItem(ToNativeHeader(item.Header, shortcut: null), item.IsEnabled, item.IsChecked, item.ToolTip, item.IsChecked is null ? item.Icon : null);
-        nativeItem.Gesture = ToMacOSGesture(item.Gesture);
+        nativeItem.Gesture = _macOSBuildGestures ? ToMacOSGesture(item.Gesture) : null;
         if (item.Children is { } children)
         {
             NativeMenu childMenu = new();
@@ -146,7 +238,7 @@ public partial class BrowseWindow
     /// <summary>An item whose click runs its action of <see cref="_macOSActions"/> (replaced when the item is updated).</summary>
     private NativeMenuItem CreateNativeMenuItem(string header, bool isEnabled, bool? isChecked, string? toolTip, object? icon)
     {
-        NativeMenuItem nativeItem = new(header) { IsEnabled = isEnabled, ToolTip = toolTip, Icon = ToBitmap(icon) };
+        NativeMenuItem nativeItem = new(header) { IsEnabled = isEnabled && _macOSBuildEnabled, ToolTip = toolTip, Icon = ToBitmap(icon) };
         if (isChecked is bool check)
         {
             nativeItem.ToggleType = MenuItemToggleType.CheckBox;
@@ -169,9 +261,27 @@ public partial class BrowseWindow
 
     private void RefreshMacOSDynamicMenus()
     {
-        foreach ((NativeMenu menu, BrowseSubmenu submenu) in _macOSDynamicMenus)
+        foreach ((NativeMenu root, NativeMenu menu, BrowseSubmenu submenu) in _macOSDynamicMenus.ToList())
+        {
+            FillNativeSubmenu(menu, submenu, gestures: root == _macOSMenu);
+        }
+    }
+
+    private void FillNativeSubmenu(NativeMenu menu, BrowseSubmenu submenu, bool gestures)
+    {
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        _macOSBuildGestures = gestures;
+        try
         {
             FillNativeSubmenu(menu, submenu);
+        }
+        finally
+        {
+            _macOSBuildGestures = true;
         }
     }
 

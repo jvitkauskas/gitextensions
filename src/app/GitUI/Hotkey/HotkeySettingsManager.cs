@@ -60,8 +60,50 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
         HotkeySettings[]? loadedSettings = LoadSerializedSettings();
 
         MergeIntoDefaultSettings(defaultSettings, loadedSettings);
+        if (OperatingSystem.IsMacOS())
+        {
+            ReplaceKeysTakenByMacOS(defaultSettings, CreateDefaultSettings());
+        }
 
         return defaultSettings;
+    }
+
+    /// <summary>
+    ///  The keys that macOS takes before the application (Control is Cmd there): Cmd+Space (Spotlight), Cmd+Tab and
+    ///  Cmd+Shift+Tab (the switch between applications), Cmd+H (hide the application), Cmd+Q (quit).
+    /// </summary>
+    internal static readonly Keys[] TakenByMacOS =
+    [
+        Keys.Control | Keys.Space,
+        Keys.Control | Keys.Tab,
+        Keys.Control | Keys.Shift | Keys.Tab,
+        Keys.Control | Keys.H,
+        Keys.Control | Keys.Q,
+    ];
+
+    /// <summary>
+    ///  On macOS, a hotkey saved with a key that macOS takes (e.g. the Ctrl+Space of Windows, saved before macOS had its own
+    ///  defaults) never runs: it gets the default of its command there instead, if that key is free in its window.
+    /// </summary>
+    internal static void ReplaceKeysTakenByMacOS(IReadOnlyList<HotkeySettings> settings, IReadOnlyList<HotkeySettings> macOSDefaults)
+    {
+        foreach (HotkeySettings setting in settings)
+        {
+            if (setting.Commands is null)
+            {
+                continue;
+            }
+
+            HotkeySettings? defaults = macOSDefaults.FirstOrDefault(d => d.Name == setting.Name);
+            foreach (HotkeyCommand command in setting.Commands.Where(c => TakenByMacOS.Contains(c.KeyData)))
+            {
+                Keys replacement = defaults?.Commands?.FirstOrDefault(d => d.CommandCode == command.CommandCode)?.KeyData ?? Keys.None;
+                if (replacement != Keys.None && !TakenByMacOS.Contains(replacement) && !setting.Commands.Any(other => other.KeyData == replacement))
+                {
+                    command.KeyData = replacement;
+                }
+            }
+        }
     }
 
     private void UpdateUsedKeys(IEnumerable<HotkeySettings> settings)
@@ -182,6 +224,13 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
 
         // Control is Cmd on macOS, where Cmd+H hides the application: Cmd+Option+F there, as in Xcode.
         Keys replaceHotkey = OperatingSystem.IsMacOS() ? Keys.Control | Keys.Alt | Keys.F : Keys.Control | Keys.H;
+
+        // Keys that macOS takes (Control is Cmd there, see TakenByMacOS) get other defaults there: Cmd+Return commits (as in
+        // the commit dialog), Cmd+Shift+] and Cmd+Shift+[ select the tabs (as in Safari, Xcode and Terminal).
+        Keys commitHotkey = OperatingSystem.IsMacOS() ? Keys.Control | Keys.Return : Keys.Control | Keys.Space;
+        Keys nextTabHotkey = OperatingSystem.IsMacOS() ? Keys.Control | Keys.Shift | Keys.OemCloseBrackets : Keys.Control | Keys.Tab;
+        Keys previousTabHotkey = OperatingSystem.IsMacOS() ? Keys.Control | Keys.Shift | Keys.OemOpenBrackets : Keys.Control | Keys.Shift | Keys.Tab;
+        Keys multiSelectHotkey = OperatingSystem.IsMacOS() ? Keys.Control | Keys.Shift | Keys.Space : Keys.Control | Keys.Space;
         const Keys OpenWithDifftoolFirstToLocalHotkey = Keys.Alt | Keys.F3;
         const Keys OpenWithDifftoolSelectedToLocalHotkey = Keys.Shift | Keys.Alt | Keys.F3;
         const Keys OpenAsTempFileHotkey = Keys.Control | Keys.F3;
@@ -219,7 +268,7 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
                 Hk(HotkeyCommands.Browse.AddNotes, Keys.Control | Keys.Shift | Keys.N),
                 Hk(HotkeyCommands.Browse.CheckoutBranch, Keys.Control | Keys.OemPeriod),
                 Hk(HotkeyCommands.Browse.CloseRepository, Keys.Control | Keys.W),
-                Hk(HotkeyCommands.Browse.Commit, Keys.Control | Keys.Space),
+                Hk(HotkeyCommands.Browse.Commit, commitHotkey),
                 Hk(HotkeyCommands.Browse.CreateBranch, Keys.Control | Keys.B),
                 Hk(HotkeyCommands.Browse.CreateTag, Keys.Control | Keys.T),
                 Hk(HotkeyCommands.Browse.EditFile, EditFileHotkey),
@@ -233,8 +282,8 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
                 Hk(HotkeyCommands.Browse.FocusGitConsole, Keys.Control | Keys.D6),
                 Hk(HotkeyCommands.Browse.FocusBuildServerStatus, Keys.Control | Keys.D7),
                 Hk(HotkeyCommands.Browse.FocusOutputHistoryAndToggleIfPanel, Keys.Control | Keys.D9),
-                Hk(HotkeyCommands.Browse.FocusNextTab, Keys.Control | Keys.Tab),
-                Hk(HotkeyCommands.Browse.FocusPrevTab, Keys.Control | Keys.Shift | Keys.Tab),
+                Hk(HotkeyCommands.Browse.FocusNextTab, nextTabHotkey),
+                Hk(HotkeyCommands.Browse.FocusPrevTab, previousTabHotkey),
                 Hk(HotkeyCommands.Browse.FocusFilter, Keys.Control | Keys.E),
                 Hk(HotkeyCommands.Browse.GitBash, Keys.Control | Keys.G),
                 Hk(HotkeyCommands.Browse.GitGui, Keys.None),
@@ -268,7 +317,7 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
             new HotkeySettings(
                 HotkeyCommands.LeftPanelSettingsName,
                 Hk(HotkeyCommands.LeftPanel.Delete, Keys.Delete),
-                Hk(HotkeyCommands.LeftPanel.MultiSelect, Keys.Control | Keys.Space),
+                Hk(HotkeyCommands.LeftPanel.MultiSelect, multiSelectHotkey),
                 Hk(HotkeyCommands.LeftPanel.MultiSelectWithChildren, Keys.Control | Keys.Shift | Keys.Space),
                 Hk(HotkeyCommands.LeftPanel.Rename, Keys.F2),
                 Hk(HotkeyCommands.LeftPanel.Search, Keys.F3)),

@@ -26,6 +26,8 @@ public static class AvaloniaStartupDialogs
     /// </summary>
     public static int RunAskPass(string prompt)
     {
+        // The theme of the settings (a dark theme), as the application loads it at its start.
+        GitUI.Theming.ThemeModule.Load();
         InitializeUi();
         if (AvaloniaDialogs.ShowAskPass(prompt) is not string answer)
         {

@@ -211,7 +211,7 @@ public sealed class SettingsPagesBatchAViewModelTests
 
         host.PickedFont = FakePagesHost.Font("Cascadia Code", 11.6f);
         page.ChangeCodeFontCommand.Execute(null);
-        page.CodeFont!.Text.Should().Be("Cascadia Code, 12");
+        page.CodeFont!.Text.Should().Be(OperatingSystem.IsMacOS() ? $"Cascadia Code, {11.6:0.##}" : "Cascadia Code, 12", "rounded as WinForms, with the decimals on macOS");
         host.PickedKinds.Should().Equal(SettingsFontKind.Code, SettingsFontKind.Code);
         page.SaveSettings();
 

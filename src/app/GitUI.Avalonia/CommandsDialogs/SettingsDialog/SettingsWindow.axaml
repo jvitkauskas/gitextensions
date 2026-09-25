@@ -33,7 +33,7 @@
   <!-- Equivalent of FormSettings: the tree (settingsTreeView) on the left, the page on the right, the buttons below. -->
   <DockPanel Margin="8">
     <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
-      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom" Classes="dialogButtons">
         <Button Name="discardButton" MinWidth="88" Content="{Binding Strings.Discard.AccessKeyText}" Command="{Binding DiscardCommand}" IsVisible="False" />
         <Button Name="okButton" MinWidth="88" IsDefault="True" Content="{Binding Strings.Ok.AccessKeyText}" Command="{Binding OkCommand}" />
         <Button Name="cancelButton" MinWidth="88" Content="{Binding Strings.Cancel.AccessKeyText}" Command="{Binding CancelCommand}" />

@@ -19,6 +19,45 @@ public class HotkeySettingsManagerTests
         _settingsManager = new(scriptsManager);
     }
 
+    // Keys that macOS takes (Control is Cmd there) get the default of macOS of their command, if it is free in the window.
+    [Test]
+    public void A_saved_key_that_macOS_takes_gets_the_default_of_macOS()
+    {
+        HotkeySettings[] saved =
+        [
+            new HotkeySettings("Browse",
+                new HotkeyCommand(7, "Commit") { KeyData = Keys.Control | Keys.Space },
+                new HotkeyCommand(31, "FocusNextTab") { KeyData = Keys.Control | Keys.Tab },
+                new HotkeyCommand(8, "Other") { KeyData = Keys.Control | Keys.Shift | Keys.OemCloseBrackets },
+                new HotkeyCommand(9, "Kept") { KeyData = Keys.Control | Keys.K }),
+        ];
+        HotkeySettings[] macOSDefaults =
+        [
+            new HotkeySettings("Browse",
+                new HotkeyCommand(7, "Commit") { KeyData = Keys.Control | Keys.Return },
+                new HotkeyCommand(31, "FocusNextTab") { KeyData = Keys.Control | Keys.Shift | Keys.OemCloseBrackets },
+                new HotkeyCommand(9, "Kept") { KeyData = Keys.Control | Keys.J }),
+        ];
+
+        HotkeySettingsManager.ReplaceKeysTakenByMacOS(saved, macOSDefaults);
+
+        saved[0].Commands![0].KeyData.Should().Be(Keys.Control | Keys.Return);
+        saved[0].Commands![1].KeyData.Should().Be(Keys.Control | Keys.Tab, "the default of macOS is used by another command");
+        saved[0].Commands![3].KeyData.Should().Be(Keys.Control | Keys.K, "a key that macOS does not take is kept");
+    }
+
+    [Test]
+    public void The_defaults_of_macOS_use_no_key_that_macOS_takes()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            Assert.Ignore("The defaults of macOS");
+        }
+
+        _settingsManager.CreateDefaultSettings().SelectMany(setting => setting.Commands!).Select(command => command.KeyData)
+            .Should().NotContain(key => HotkeySettingsManager.TakenByMacOS.Contains(key));
+    }
+
     [Test]
     public void MergeEqualSettings()
     {

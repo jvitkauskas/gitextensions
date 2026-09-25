@@ -31,6 +31,13 @@ public static class MacOSApplicationMenu
     /// </summary>
     public static void Install(Application application) => NativeMenu.SetMenu(application, _menu);
 
+    /// <summary>Enables the items, or disables them while a modal dialog is the key window.</summary>
+    public static void SetEnabled(bool isEnabled)
+    {
+        _about.IsEnabled = isEnabled;
+        _settings.IsEnabled = isEnabled;
+    }
+
     /// <summary>Makes the items run the commands of a main window (when it is activated), with its texts.</summary>
     public static void Attach(string aboutText, Action showAbout, string settingsText, Action showSettings)
     {

@@ -54,6 +54,9 @@ public class DialogWindow : Window
     /// </summary>
     public nint NativeHandle => TryGetPlatformHandle()?.Handle ?? 0;
 
+    /// <summary>Whether the window is shown modally (off Windows, by <see cref="AvaloniaDialogHost"/>).</summary>
+    internal bool IsModal { get; set; }
+
     /// <summary>
     ///  The name under which the window position is persisted (the name of the WinForms form it replaces),
     ///  or <see langword="null"/> to not persist it.
@@ -121,6 +124,19 @@ public class DialogWindow : Window
 
         // Off Windows the scaling of the screens is known from the windows only (e.g. Retina displays).
         GitExtUtils.GitUI.DpiUtil.UseRenderScaling(RenderScaling);
+
+        // On macOS the menu bar keeps the menu of the main window (disabled while this window is modal).
+        if (OperatingSystem.IsMacOS())
+        {
+            CommandsDialogs.BrowseDialog.BrowseWindow.AttachMacOSMenu(this, IsModal);
+            Activated += (_, _) =>
+            {
+                if (OperatingSystem.IsMacOS())
+                {
+                    MacOSApplicationMenu.SetEnabled(!IsModal);
+                }
+            };
+        }
 
         // Before the base raises Opened, where the host centers the dialog with its final size.
         _frameThickness = FrameSize is { } frameSize ? new Size(Math.Max(0, frameSize.Width - ClientSize.Width), Math.Max(0, frameSize.Height - ClientSize.Height)) : default;

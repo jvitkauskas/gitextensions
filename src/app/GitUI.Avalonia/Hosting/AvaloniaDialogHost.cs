@@ -201,6 +201,7 @@ public static class AvaloniaDialogHost
     {
         DialogWindow? owner = FindOpenWindow(ownerHandle);
         PrepareForOwner(window, owner);
+        window.IsModal = true;
 
         DispatcherFrame frame = new();
         window.Closed += (_, _) => frame.Continue = false;

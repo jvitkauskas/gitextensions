@@ -192,7 +192,7 @@ public sealed class FontPickerWindow : DialogWindow
             Families.ItemsSource = _families.Where(f => f.Contains(filter, StringComparison.CurrentCultureIgnoreCase)).ToList();
         };
 
-        FontSizeBox = new NumericUpDown { Minimum = 4, Maximum = 96, Increment = 1, FormatString = "0.#", Value = (decimal)(font?.SizeInPoints ?? 10), Width = 110, Name = "size" };
+        FontSizeBox = new NumericUpDown { Minimum = 4, Maximum = 96, Increment = 1, FormatString = "0.##", Value = (decimal)(font?.SizeInPoints ?? 10), Width = 110, Name = "size" };
         Bold = new CheckBox { Content = strings.Bold.AccessKeyText, IsChecked = font?.IsBold == true, Name = "bold" };
         Italic = new CheckBox { Content = strings.Italic.AccessKeyText, IsChecked = font?.IsItalic == true, Name = "italic" };
         _sample = new TextBlock { Text = "AaBbYyZz 0123 {}[]", TextWrapping = TextWrapping.Wrap, Name = "sample" };
