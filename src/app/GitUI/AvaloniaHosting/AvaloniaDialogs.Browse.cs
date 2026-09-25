@@ -56,6 +56,7 @@ internal static partial class AvaloniaDialogs
             PositionName = "FormBrowse",
             PositionStore = WindowPositionStore.Instance,
             SelectedId = args.SelectedId.IsZero ? null : args.SelectedId,
+            FirstId = args.FirstId.IsZero ? null : args.FirstId,
         };
         BrowseSession session = new(window, args);
         session.Load(commands);
@@ -111,7 +112,9 @@ internal static partial class AvaloniaDialogs
 
         public IGitUICommands? Commands => _host?.Commands;
 
-        public void Load(IGitUICommands commands)
+        /// <param name="selectedId">The revision to select once loaded (<c>RevisionGrid.SelectedId</c>), else the current one.</param>
+        /// <param name="firstId">With <paramref name="selectedId"/>, the revision selected first (<c>RevisionGrid.FirstId</c>).</param>
+        public void Load(IGitUICommands commands, ObjectId? selectedId = null, ObjectId? firstId = null)
         {
             Dispose();
 
@@ -212,12 +215,12 @@ internal static partial class AvaloniaDialogs
 
             // As LoadHotkeys(HotkeySettingsName): the "Browse" hotkeys, with the ones of the scripts.
             window.Hotkeys = LoadHotkeys(commands, HotkeyCommands.BrowseSettingsName);
-            window.ShowViewModel(viewModel);
+            window.ShowViewModel(viewModel, selectedId, firstId);
             AttachTaskbar(commands, isValid);
         }
 
         /// <summary>As <c>FormBrowse.SetGitModule</c>, once the current event is handled (e.g. the click of a menu item).</summary>
-        public void SetGitModule(IGitModule module)
+        public void SetGitModule(IGitModule module, ObjectId? selectedId = null, ObjectId? firstId = null)
             => global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 if (_host is not { } host)
@@ -233,15 +236,15 @@ internal static partial class AvaloniaDialogs
                     AppSettings.RecentWorkingDir = module.WorkingDir;
                 }
 
-                Load(host.Commands.WithGitModule(module));
+                Load(host.Commands.WithGitModule(module), selectedId, firstId);
             });
 
-        /// <summary>As <c>FormBrowse.SetWorkingDir</c>: an empty path shows the dashboard.</summary>
-        public void SetWorkingDir(string path)
+        /// <summary>As <c>FormBrowse.SetWorkingDir</c>: an empty path shows the dashboard; the revisions to select, if any.</summary>
+        public void SetWorkingDir(string path, ObjectId selectedId = default, ObjectId firstId = default)
         {
             if (_host is { } host)
             {
-                SetGitModule(new GitModule(host.Commands.GetRequiredService<IGitExecutorProvider>(), path));
+                SetGitModule(new GitModule(host.Commands.GetRequiredService<IGitExecutorProvider>(), path), selectedId.IsZero ? null : selectedId, firstId.IsZero ? null : firstId);
             }
         }
 
@@ -710,6 +713,6 @@ internal static partial class AvaloniaDialogs
         }
 
         // As FormBrowse.SetWorkingDir: another repository is shown in the main window (the revisions to select are not passed yet).
-        public void SetWorkingDir(string? path, ObjectId selectedId = default, ObjectId firstId = default) => session.SetWorkingDir(path ?? "");
+        public void SetWorkingDir(string? path, ObjectId selectedId = default, ObjectId firstId = default) => session.SetWorkingDir(path ?? "", selectedId, firstId);
     }
 }

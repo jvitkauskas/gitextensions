@@ -39,6 +39,26 @@ public sealed class RevisionGridForkPointViewTests : HeadlessTest
     });
 
     [Test]
+    public Task A_load_selects_the_first_revision_then_the_selected_one() => OnUiThreadAsync(() =>
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel viewModel = new(new RevisionGridViewTests.FakeRevisionGridHost(history), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false)) { MultiSelect = true };
+        Window window = new() { Width = 760, Height = 260, Content = new RevisionGridView { DataContext = viewModel } };
+        window.Show();
+
+        // As GetToBeSelectedRevisions with FirstId and SelectedId (FormBrowse.SetWorkingDir).
+        viewModel.Load(history[1].ObjectId, firstSelected: history[4].ObjectId);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedRows.Select(r => r.ObjectId).Should().Equal(history[4].ObjectId, history[1].ObjectId);
+
+        // Once: a reload keeps the selection.
+        viewModel.Load(history[2].ObjectId);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedRows.Select(r => r.ObjectId).Should().Equal(history[2].ObjectId);
+        window.Close();
+    });
+
+    [Test]
     public Task A_double_click_on_a_label_goes_to_its_related_branch() => OnUiThreadAsync(() =>
     {
         List<GitRevision> history = RevisionGridViewTests.CreateHistory();

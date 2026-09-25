@@ -324,11 +324,15 @@ public sealed class PullViewModelTests
     public void Solving_conflicts_offers_to_commit()
     {
         FakePullHost host = new();
-        PullViewModel viewModel = Create(host, Options());
+        ProcessViewModelTests.FakeMessageBoxes messageBoxes = new();
+        PullViewModel viewModel = Create(host, Options(), messageBoxes);
 
         viewModel.SolveConflictsCommand.Execute(null);
 
         host.Calls.Should().Equal("MergeTool", "Commit");
+
+        // As FormPull: a question (MessageBoxIcon.Question).
+        messageBoxes.Questions.Should().ContainSingle();
     }
 
     internal static PullOptions Options(GitPullAction pullAction = GitPullAction.None, string? remote = null, string? remoteBranch = null)

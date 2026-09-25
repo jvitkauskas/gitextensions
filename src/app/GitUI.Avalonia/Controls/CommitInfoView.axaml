@@ -29,7 +29,22 @@
       <!-- Equivalent of CommitInfoHeader: the avatar, and the labels aligned as the tab stops of the RichTextBox. -->
       <Grid ColumnDefinitions="Auto,*">
         <Image Name="avatar" Margin="0,0,8,0" VerticalAlignment="Top" IsVisible="{Binding ShowAvatar}"
-               Width="{Binding AvatarSize}" Height="{Binding AvatarSize}" />
+               Width="{Binding AvatarSize}" Height="{Binding AvatarSize}">
+          <!-- The menu of AvatarControl. -->
+          <Image.ContextMenu>
+            <ContextMenu Name="avatarMenu">
+              <MenuItem Name="clearImageCacheItem">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/CleanupRepo.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Name="avatarProviderItem" />
+              <MenuItem Name="fallbackAvatarStyleItem" />
+              <Separator />
+              <MenuItem Name="registerGravatarItem" />
+            </ContextMenu>
+          </Image.ContextMenu>
+        </Image>
         <ItemsControl Name="header" Grid.Column="1" ItemsSource="{Binding Header}" Grid.IsSharedSizeScope="True">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:CommitInfoHeaderLine">

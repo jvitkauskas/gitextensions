@@ -74,6 +74,9 @@ public sealed class SettingsIconConverter : IValueConverter
 
     public static SettingsIconConverter Instance { get; } = new();
 
+    /// <summary>Whether the icon of a page is lightened on a dark theme (the Font and Link icons of <c>FormSettings</c>).</summary>
+    public static IValueConverter AdaptsLightness { get; } = new FuncValueConverter<object?, bool>(icon => icon is "Font" or "Link");
+
     public static IValueConverter BoldWhenTrue { get; } = new FuncValueConverter<bool, FontWeight>(value => value ? FontWeight.Bold : FontWeight.Normal);
 
     public static IValueConverter VisibleWhenTrue { get; } = new FuncValueConverter<bool, double>(value => value ? 1 : 0);

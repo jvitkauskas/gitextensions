@@ -156,6 +156,9 @@ public class DialogWindow : Window
         }
     }
 
+    /// <summary>Escape: the dialog is cancelled (the <c>CancelButton</c> of <c>GitExtensionsForm</c>); a window may do otherwise.</summary>
+    protected virtual void OnEscapePressed() => CloseDialog(accepted: false);
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
@@ -168,7 +171,7 @@ public class DialogWindow : Window
         if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
         {
             e.Handled = true;
-            CloseDialog(accepted: false);
+            OnEscapePressed();
             return;
         }
 

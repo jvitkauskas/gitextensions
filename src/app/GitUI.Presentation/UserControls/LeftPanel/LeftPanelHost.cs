@@ -130,7 +130,8 @@ public sealed record LeftPanelMenuItem(
     string? ToolTip = null,
     bool IsEnabled = true,
     bool? IsChecked = null,
-    IReadOnlyList<LeftPanelMenuItem>? Children = null)
+    IReadOnlyList<LeftPanelMenuItem>? Children = null,
+    byte[]? Image = null)
 {
     public static LeftPanelMenuItem Separator { get; } = new("-");
 
@@ -200,12 +201,25 @@ public interface ILeftPanelHost
 
     void CopyToClipboard(string text);
 
+    /// <summary>The enabled user scripts (<c>AddUserScripts</c>); none by default.</summary>
+    IReadOnlyList<LeftPanelScript> GetScripts() => [];
+
+    /// <summary>Runs a user script as its hotkey (<c>ExecuteCommand</c>, with the options of the main window).</summary>
+    void RunScript(int scriptId)
+    {
+    }
+
     /// <summary>A node's revision is not in the grid (<c>MessageBoxes.RevisionFilteredInGrid</c>).</summary>
     void ShowRevisionNotInGrid(ObjectId objectId);
 
     /// <summary>A submodule's directory is missing (<c>MessageBoxes.SubmoduleDirectoryDoesNotExist</c>).</summary>
     void ShowSubmoduleDirectoryMissing(string directory, string submoduleName);
 }
+
+/// <summary>A user script of the menu of a branch: in the menu itself if <paramref name="IsDirect"/> (<c>AddToRevisionGridContextMenu</c>), else under "Run script".</summary>
+/// <param name="Id">The identifier of its hotkey command (<c>HotkeyCommandIdentifier</c>).</param>
+/// <param name="Icon">Its icon as an image file, if any.</param>
+public sealed record LeftPanelScript(int Id, string Name, bool IsDirect, byte[]? Icon = null);
 
 /// <summary>The settings of the left panel (the <c>AppSettings</c> of <c>RepoObjectsTree</c>).</summary>
 public interface ILeftPanelSettings

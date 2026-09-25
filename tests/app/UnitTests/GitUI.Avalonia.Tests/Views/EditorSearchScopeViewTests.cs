@@ -44,6 +44,7 @@ public sealed class EditorSearchScopeViewTests : HeadlessTest
         SearchCommands.FindNext.Execute(null, view.Search);
         editor.SelectionStart.Should().Be(6, "the search loops around in the region");
         TextBox searchBox = view.Search.GetVisualDescendants().OfType<TextBox>().First();
+        searchBox.PlaceholderText.Should().Be("Find (selection only)...", "as the title of FindAndReplaceForm");
         searchBox.Focus();
         window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
         editor.SelectionStart.Should().Be(12);
@@ -54,6 +55,9 @@ public sealed class EditorSearchScopeViewTests : HeadlessTest
         view.FindNext(backward: false);
         view.ScanRegion.Should().BeNull();
         editor.SelectionStart.Should().Be(0);
+        view.OpenSearch(replace: false);
+        Dispatcher.UIThread.RunJobs();
+        searchBox.PlaceholderText.Should().Be("Find...");
         window.Close();
     });
 

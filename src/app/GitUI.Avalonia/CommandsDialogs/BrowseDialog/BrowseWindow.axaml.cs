@@ -38,7 +38,19 @@ public partial class BrowseWindow : DialogWindow
         Opened += (_, _) =>
         {
             _isOpened = true;
-            Dispatcher.UIThread.Post(() => _viewModel?.Initialize(SelectedId));
+            if (_viewModel is not null)
+            {
+                RestoreSplitters(_viewModel);
+            }
+
+            Dispatcher.UIThread.Post(() => _viewModel?.Initialize(SelectedId, FirstId));
+        };
+        Closing += (_, _) =>
+        {
+            if (_viewModel is not null && _isOpened)
+            {
+                SaveSplitters(_viewModel);
+            }
         };
         tabs.SelectionChanged += (_, _) =>
         {
@@ -93,6 +105,9 @@ public partial class BrowseWindow : DialogWindow
     /// <summary>The revision to select first (<c>BrowseArguments.SelectedId</c>).</summary>
     public ObjectId? SelectedId { get; init; }
 
+    /// <summary>The revision selected before <see cref="SelectedId"/> (<c>BrowseArguments.FirstId</c>).</summary>
+    public ObjectId? FirstId { get; init; }
+
     public RevisionGridView RevisionGrid => revisionGrid;
 
     public Menu MainMenu => mainMenu;
@@ -105,12 +120,14 @@ public partial class BrowseWindow : DialogWindow
     ///  Shows another view model, e.g. for another repository (as <c>SetGitModule</c>); it is initialized at once if the window
     ///  is already shown.
     /// </summary>
-    public void ShowViewModel(BrowseViewModel viewModel)
+    /// <param name="selectedId">The revision to select (<c>FormBrowse.SetWorkingDir</c>), else the current one.</param>
+    /// <param name="firstId">With <paramref name="selectedId"/>, the revision selected first.</param>
+    public void ShowViewModel(BrowseViewModel viewModel, ObjectId? selectedId = null, ObjectId? firstId = null)
     {
         DataContext = viewModel;
         if (_isOpened)
         {
-            viewModel.Initialize(selectedId: null);
+            viewModel.Initialize(selectedId, firstId);
         }
     }
 
@@ -339,6 +356,9 @@ public partial class BrowseWindow : DialogWindow
             tabs.SelectedIndex = (int)_viewModel.SelectedTab;
         }
     }
+
+    // As FormBrowse.CancelButtonClick: Escape does not close the main window.
+    protected override void OnEscapePressed() => _viewModel?.CancelByEscape();
 
     // As RefreshSplitViewLayout and LayoutRevisionInfo: the tabs below the grid, and the commit info in its tab or beside the grid.
     private void ApplyLayout()

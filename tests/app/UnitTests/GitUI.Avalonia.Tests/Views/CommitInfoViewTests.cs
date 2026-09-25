@@ -1,10 +1,12 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.Controls;
 using GitUI.Presentation.UserControls;
@@ -109,6 +111,54 @@ public sealed class CommitInfoViewTests : HeadlessTest
         copyLink.IsVisible.Should().BeFalse();
         window.Close();
     });
+    [Test]
+    public Task The_menu_of_the_avatar_chooses_the_provider_and_the_style_and_clears_the_cache() => OnUiThreadAsync(() =>
+    {
+        FakeHost host = new() { ShowAvatar = true, HasAvatarMenu = true };
+        CommitInfoViewModel viewModel = new(host);
+        CommitInfoView view = new() { DataContext = viewModel };
+        Window window = new() { Content = view, Width = 400, Height = 300 };
+        window.Show();
+        viewModel.SetRevision(Revision);
+        Dispatcher.UIThread.RunJobs();
+        int requests = host.AvatarRequests;
+
+        // As AvatarControl: an item for each provider and style, the current ones checked.
+        view.UpdateAvatarMenu();
+        MenuItem[] providers = [.. view.FindControl<MenuItem>("avatarProviderItem")!.Items.OfType<MenuItem>()];
+        providers.Select(i => i.Header).Should().Equal("Default", "Custom", "None");
+        providers.Where(i => i.IsChecked).Select(i => i.Header).Should().Equal("Default");
+        MenuItem[] styles = [.. view.FindControl<MenuItem>("fallbackAvatarStyleItem")!.Items.OfType<MenuItem>()];
+        styles[0].Header.Should().Be("Author initials");
+        styles.Where(i => i.IsChecked).Should().Equal(styles[0]);
+
+        // Choosing one saves it, clears the cache and loads the avatar again.
+        providers[2].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        host.AvatarProvider.Should().Be(AvatarProvider.None);
+        host.CacheClears.Should().Be(1);
+        host.AvatarRequests.Should().Be(requests + 1);
+        styles[1].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        host.AvatarFallbackType.Should().Be(AvatarFallbackType.MonsterId);
+        host.CacheClears.Should().Be(2);
+        view.FindControl<MenuItem>("clearImageCacheItem")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        host.CacheClears.Should().Be(3);
+        view.FindControl<MenuItem>("registerGravatarItem")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        host.Executed.Should().Equal("https://www.gravatar.com");
+
+        // Cleared elsewhere (the settings): loaded again while the view is shown.
+        requests = host.AvatarRequests;
+        host.RaiseAvatarsCleared();
+        Dispatcher.UIThread.RunJobs();
+        host.AvatarRequests.Should().Be(requests + 1);
+        window.Close();
+        Dispatcher.UIThread.RunJobs();
+        host.RaiseAvatarsCleared();
+        host.AvatarRequests.Should().Be(requests + 1, "not watched once closed");
+    });
+
     internal sealed class FakeHost : ICommitInfoHost
     {
         public List<string> Executed { get; } = [];
@@ -128,7 +178,33 @@ public sealed class CommitInfoViewTests : HeadlessTest
         // A 1x1 PNG.
         public static byte[] AvatarImage { get; } = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
 
-        public Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken) => Task.FromResult<byte[]?>(AvatarImage);
+        public int AvatarRequests { get; private set; }
+
+        public Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken)
+        {
+            AvatarRequests++;
+            return Task.FromResult<byte[]?>(AvatarImage);
+        }
+
+        public bool HasAvatarMenu { get; set; }
+
+        public AvatarProvider AvatarProvider { get; set; }
+
+        public AvatarFallbackType AvatarFallbackType { get; set; }
+
+        public int CacheClears { get; private set; }
+
+        public Task ClearAvatarCacheAsync()
+        {
+            CacheClears++;
+            return Task.CompletedTask;
+        }
+
+        public void OpenUrl(string url) => Executed.Add(url);
+
+        public event EventHandler? AvatarsCleared;
+
+        public void RaiseAvatarsCleared() => AvatarsCleared?.Invoke(this, EventArgs.Empty);
 
         public void EditNotes(ObjectId objectId) => EditedNotes.Add(objectId);
 

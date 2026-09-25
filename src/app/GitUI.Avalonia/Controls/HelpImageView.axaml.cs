@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.UserControls;
 
 namespace GitUI.Avalonia.Controls;
@@ -21,6 +22,7 @@ public partial class HelpImageView : UserControl
     public HelpImageView()
     {
         InitializeComponent();
+        ActualThemeVariantChanged += (_, _) => UpdateImage();
     }
 
     public IImage? Image1
@@ -70,6 +72,7 @@ public partial class HelpImageView : UserControl
         }
     }
 
+    // As the AdaptLightness of the images of the forms: lightened on a dark theme.
     private void UpdateImage()
-        => helpImage.Source = _viewModel?.IsOnHoverShowImage2 == true && IsPointerOver && Image2 is not null ? Image2 : Image1;
+        => helpImage.Source = ImageLightness.ForTheme(_viewModel?.IsOnHoverShowImage2 == true && IsPointerOver && Image2 is not null ? Image2 : Image1, ActualThemeVariant);
 }

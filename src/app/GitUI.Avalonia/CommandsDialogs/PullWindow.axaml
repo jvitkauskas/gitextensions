@@ -52,7 +52,7 @@
               <RadioButton Name="pullFromRemoteRadioButton" GroupName="pullFrom" VerticalAlignment="Center"
                            Content="{Binding Strings.PullFromRemote.AccessKeyText}" IsChecked="{Binding IsPullFromRemote}"
                            ToolTip.Tip="{Binding Strings.PullFromRemoteToolTip.Text}" />
-              <ComboBox Name="remotesComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True"
+              <ComboBox Name="remotesComboBox" Grid.Column="1" HorizontalAlignment="Stretch" IsEditable="True" h:ComboBoxSuggestAppend.IsEnabled="True"
                         ItemsSource="{Binding Remotes}" Text="{Binding Remote}" IsEnabled="{Binding IsPullFromRemote}" />
               <Button Name="manageRemotesButton" Grid.Column="2" MinWidth="150" Command="{Binding ManageRemotesCommand}"
                       IsEnabled="{Binding IsPullFromRemote}">

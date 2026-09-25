@@ -52,6 +52,7 @@ public partial class BrowseWindow
         _leftPanelViewModel?.PropertyChanged -= OnLeftPanelPropertyChanged;
         _leftPanelViewModel = _leftPanelOwner?.LeftPanel;
         _leftPanelViewModel?.PropertyChanged += OnLeftPanelPropertyChanged;
+        ApplyLeftPanelShown();
         UpdateLeftPanelColumn();
     }
 
@@ -59,6 +60,7 @@ public partial class BrowseWindow
     {
         if (e.PropertyName == nameof(LeftPanelViewModel.IsVisible))
         {
+            _leftPanelShown = _leftPanelViewModel!.IsVisible;
             UpdateLeftPanelColumn();
         }
     }

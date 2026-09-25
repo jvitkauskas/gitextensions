@@ -878,7 +878,7 @@ public sealed partial class PullViewModel : DialogViewModel
             IsBusy = false;
         }
 
-        if (_messageBoxes.Confirm(Strings.AllMergeConflictSolvedQuestion.Text, Strings.AllMergeConflictSolvedQuestionCaption.Text))
+        if (_messageBoxes.ConfirmQuestion(Strings.AllMergeConflictSolvedQuestion.Text, Strings.AllMergeConflictSolvedQuestionCaption.Text))
         {
             _host.StartCommitDialog();
         }
@@ -1055,7 +1055,7 @@ public sealed partial class PullViewModel : DialogViewModel
             {
                 // If the "Update submodules on checkout" option is `true`, initialize and update all submodules. If it's
                 // `false` don't initialize/update the submodules. If it's indeterminate, ask the user what they'd like to do.
-                if (_host.UpdateSubmodulesWithoutAsking ?? _messageBoxes.Confirm(Strings.QuestionInitSubmodules.Text, Strings.QuestionInitSubmodulesCaption.Text))
+                if (_host.UpdateSubmodulesWithoutAsking ?? _messageBoxes.ConfirmQuestion(Strings.QuestionInitSubmodules.Text, Strings.QuestionInitSubmodulesCaption.Text))
                 {
                     _host.StartUpdateSubmodulesDialog();
                 }

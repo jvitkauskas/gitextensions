@@ -14,6 +14,7 @@ public sealed class FindAndReplaceStrings : ViewStrings
         Find = Add("_findString", "Text", "Find");
         FindAndReplace = Add("_findAndReplaceString", "Text", "Find & replace");
         TextNotFound = Add("_textNotFoundString", "Text", "Text not found");
+        SelectionOnly = Add("_selectionOnlyString", "Text", "selection only");
         FindNext = Add("btnFindNext", "Text", "&Find next");
         FindPrevious = Add("btnFindPrevious", "Text", "Find pre&vious");
         Replace = Add("btnReplace", "Text", "&Replace");
@@ -31,6 +32,9 @@ public sealed class FindAndReplaceStrings : ViewStrings
     /// <summary>The message when F3 finds nothing (a plain text).</summary>
     public TranslatedText TextNotFound { get; }
 
+    /// <summary>The suffix of the title when a selection is searched only (a plain text).</summary>
+    public TranslatedText SelectionOnly { get; }
+
     public TranslatedText FindNext { get; }
 
     public TranslatedText FindPrevious { get; }
@@ -47,6 +51,9 @@ public sealed class FindAndReplaceStrings : ViewStrings
     ///  The texts of the search panel by the name of their AvaloniaEdit resource (<c>AvaloniaEdit.SR</c>), with the keys
     ///  AvaloniaEdit shows beside them; the other resources (the regular expression option, the match counts) stay English.
     /// </summary>
+    /// <summary>As <c>UpdateTitleBar</c>: the label of the search box, "(selection only)" when a selection is searched only.</summary>
+    public string GetSearchLabel(bool selectionOnly) => selectionOnly ? $"{Find.Text} ({SelectionOnly.Text})..." : Find.Text + "...";
+
     public IReadOnlyDictionary<string, string> GetSearchPanelTexts() => new Dictionary<string, string>
     {
         ["SearchLabel"] = Find.Text + "...",

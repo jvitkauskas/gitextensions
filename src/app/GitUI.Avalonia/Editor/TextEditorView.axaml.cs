@@ -42,9 +42,11 @@ public partial class TextEditorView : UserControl
     private int _scrollVersion;
     private string? _capturedForText;
 
+    private static readonly FindAndReplaceStrings _findStrings = ViewStrings.Load<FindAndReplaceStrings>();
+
     static TextEditorView()
     {
-        SearchPanelLocalization.Apply(ViewStrings.Load<FindAndReplaceStrings>());
+        SearchPanelLocalization.Apply(_findStrings);
     }
 
     public TextEditorView()
@@ -145,7 +147,18 @@ public partial class TextEditorView : UserControl
             Search.SearchPattern = text;
         }
 
-        Dispatcher.UIThread.Post(Search.Reactivate, DispatcherPriority.Input);
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                // As FindAndReplaceForm.UpdateTitleBar: "(selection only)" in the label of the search box (the panel has no title).
+                if (Search.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(box => box.Name == "PART_searchTextBox") is { } searchBox)
+                {
+                    searchBox.PlaceholderText = _findStrings.GetSearchLabel(selectionOnly: ScanRegion is not null);
+                }
+
+                Search.Reactivate();
+            },
+            DispatcherPriority.Input);
     }
 
     /// <summary>The part of the text searched only (a selection of several lines when the search was opened), if any.</summary>

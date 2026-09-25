@@ -115,6 +115,9 @@ public sealed partial class BrowseViewModel
             {
                 Menus = AddDynamicMenus(_baseMenus);
                 MenusChanged?.Invoke(this, EventArgs.Empty);
+
+                // As FormBrowse once the git hosters are loaded: their "Clone fork" links on the dashboard.
+                Dashboard?.RefreshStartLinks();
             };
         }
     }

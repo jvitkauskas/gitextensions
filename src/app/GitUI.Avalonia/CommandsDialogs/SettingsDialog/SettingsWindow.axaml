@@ -57,7 +57,8 @@
           <TreeView.ItemTemplate>
             <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="vm:SettingsTreeNode">
               <StackPanel Orientation="Horizontal" Spacing="4" Classes.highlighted="{Binding IsHighlighted}">
-                <Image Width="16" Height="16" Source="{Binding Icon, Converter={x:Static local:SettingsIconConverter.Instance}}" />
+                <Image Width="16" Height="16" Source="{Binding Icon, Converter={x:Static local:SettingsIconConverter.Instance}}"
+                       h:ImageLightness.Adapt="{Binding Icon, Converter={x:Static local:SettingsIconConverter.AdaptsLightness}}" />
                 <TextBlock Text="{Binding Title}" FontWeight="{Binding IsHighlighted, Converter={x:Static local:SettingsIconConverter.BoldWhenTrue}}" />
               </StackPanel>
             </TreeDataTemplate>

@@ -333,6 +333,18 @@ public abstract class LeftPanelBranchNode : LeftPanelRevisionNode
 
     protected override string DisplayText() => string.IsNullOrEmpty(AheadBehind) ? Name : $"{Name} ({AheadBehind})";
 
+    // As BaseBranchLeafNode.SelectRevision: with Alt, the related branch.
+    private protected override void SelectRevision()
+    {
+        if (Panel.IsAlternateSelection && RelatedBranch is { } relatedBranch)
+        {
+            Panel.GoToRef(relatedBranch);
+            return;
+        }
+
+        base.SelectRevision();
+    }
+
     protected internal override void ApplyStyle()
     {
         base.ApplyStyle();

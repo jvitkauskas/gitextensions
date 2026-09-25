@@ -3,6 +3,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
+using GitCommands;
+using GitCommands.Utils;
 using GitUI.Presentation.UserControls;
 
 namespace GitUI.Avalonia.Controls;
@@ -49,6 +51,62 @@ public partial class CommitInfoView : UserControl
         showContainedInTagsItem.Click += (_, _) => Toggle(o => o with { ShowContainedInTags = !o.ShowContainedInTags });
         showAnnotatedTagsMessagesItem.Click += (_, _) => Toggle(o => o with { ShowAnnotatedTagsMessages = !o.ShowAnnotatedTagsMessages });
         showTagThisCommitDerivesFromItem.Click += (_, _) => Toggle(o => o with { ShowTagThisCommitDerivesFrom = !o.ShowTagThisCommitDerivesFrom });
+
+        // As AvatarControl: the menu of the avatar, one item for each provider and generated style.
+        foreach (AvatarProvider provider in EnumHelper.GetValues<AvatarProvider>())
+        {
+            MenuItem item = new() { Header = provider.GetDescription(), ToggleType = MenuItemToggleType.Radio, Tag = provider };
+            item.Click += (_, _) => _ = _viewModel?.SetAvatarProviderAsync(provider);
+            avatarProviderItem.Items.Add(item);
+        }
+
+        foreach (AvatarFallbackType fallbackType in EnumHelper.GetValues<AvatarFallbackType>())
+        {
+            MenuItem item = new() { Header = fallbackType.GetDescription(), ToggleType = MenuItemToggleType.Radio, Tag = fallbackType };
+            item.Click += (_, _) => _ = _viewModel?.SetAvatarFallbackTypeAsync(fallbackType);
+            fallbackAvatarStyleItem.Items.Add(item);
+        }
+
+        avatarMenu.Opening += (_, e) =>
+        {
+            if (_viewModel?.HasAvatarMenu is not true)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            UpdateAvatarMenu();
+        };
+        clearImageCacheItem.Click += (_, _) => _ = _viewModel?.ClearAvatarCacheAsync();
+        registerGravatarItem.Click += (_, _) => _viewModel?.RegisterAtGravatar();
+    }
+
+    public ContextMenu AvatarMenu => avatarMenu;
+
+    /// <summary>The check marks of the current provider and style (as the <c>DropDownOpening</c> of their items).</summary>
+    public void UpdateAvatarMenu()
+    {
+        foreach (MenuItem item in avatarProviderItem.Items.OfType<MenuItem>())
+        {
+            item.IsChecked = Equals(item.Tag, _viewModel?.AvatarProvider);
+        }
+
+        foreach (MenuItem item in fallbackAvatarStyleItem.Items.OfType<MenuItem>())
+        {
+            item.IsChecked = Equals(item.Tag, _viewModel?.AvatarFallbackType);
+        }
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _viewModel?.WatchAvatarCache(true);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _viewModel?.WatchAvatarCache(false);
+        base.OnDetachedFromVisualTree(e);
     }
 
     public ContextMenu Menu => menu;
@@ -65,12 +123,24 @@ public partial class CommitInfoView : UserControl
         base.OnDataContextChanged(e);
 
         _viewModel?.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel?.WatchAvatarCache(false);
         _viewModel = DataContext as CommitInfoViewModel;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         if (_viewModel is null)
         {
             return;
         }
+
+        if (this.IsAttachedToVisualTree())
+        {
+            _viewModel.WatchAvatarCache(true);
+        }
+
+        AvatarStrings avatarStrings = _viewModel.AvatarStrings;
+        clearImageCacheItem.Header = avatarStrings.ClearImageCache.AccessKeyText;
+        avatarProviderItem.Header = avatarStrings.AvatarProvider.AccessKeyText;
+        fallbackAvatarStyleItem.Header = avatarStrings.FallbackAvatarStyle.AccessKeyText;
+        registerGravatarItem.Header = avatarStrings.RegisterGravatar.AccessKeyText;
 
         CommitInfoStrings strings = _viewModel.Strings;
         copyCommitInfoItem.Header = strings.CopyCommitInfo.AccessKeyText;

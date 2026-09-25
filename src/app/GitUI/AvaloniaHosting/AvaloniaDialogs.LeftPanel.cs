@@ -16,6 +16,7 @@ using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.LeftPanel;
 using GitUI.Presentation.UserControls.RevisionGrid;
+using GitUI.ScriptsEngine;
 using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 using Microsoft.VisualStudio.Threading;
@@ -48,7 +49,7 @@ internal static partial class AvaloniaDialogs
         Action<string?> setBranchFilter,
         Func<bool>? isBranchFilterActive = null)
     {
-        LeftPanelHost host = new(commands, window, grid, setBranchFilter, isBranchFilterActive);
+        LeftPanelHost host = new(commands, window, grid, setBranchFilter, isBranchFilterActive, runScript: code => viewModel.RunScript(code));
         LeftPanelViewModel leftPanel = new(ViewStrings.Load<LeftPanelStrings>(), host, new LeftPanelSettings(), grid);
         if (_leftPanels.TryGetValue(window, out LeftPanelAttachment? previous))
         {
@@ -176,13 +177,15 @@ internal static partial class AvaloniaDialogs
         private readonly RevisionGridViewModel _grid;
         private readonly Action<string?> _setBranchFilter;
         private readonly Func<bool>? _isBranchFilterActive;
+        private readonly Func<int, bool> _runScript;
         private readonly ISubmoduleStatusProvider _submoduleStatusProvider;
         private readonly AheadBehindDataProvider _aheadBehindDataProvider;
         private IReadOnlyList<HotkeyBinding>? _hotkeys;
         private bool _disposed;
 
-        public LeftPanelHost(IGitUICommands commands, BrowseWindow window, RevisionGridViewModel grid, Action<string?> setBranchFilter, Func<bool>? isBranchFilterActive)
+        public LeftPanelHost(IGitUICommands commands, BrowseWindow window, RevisionGridViewModel grid, Action<string?> setBranchFilter, Func<bool>? isBranchFilterActive, Func<int, bool> runScript)
         {
+            _runScript = runScript;
             _commands = commands;
             _window = window;
             _grid = grid;
@@ -198,6 +201,15 @@ internal static partial class AvaloniaDialogs
         private IGitModule Module => _commands.Module;
 
         private NativeWindowOwner Owner => new(_window);
+
+        // As AddUserScripts: the enabled scripts, those of the grid's menu in the menu itself.
+        public IReadOnlyList<LeftPanelScript> GetScripts()
+            => [.. _commands.GetRequiredService<IScriptsManager>().GetScripts()
+                .Where(script => script.Enabled)
+                .Select(script => new LeftPanelScript(script.HotkeyCommandIdentifier, script.Name ?? "", script.AddToRevisionGridContextMenu, ToPng(script.GetIcon())))];
+
+        // As the scriptInvoker of AddUserScripts (ExecuteCommand with the options of the main window).
+        public void RunScript(int scriptId) => _runScript(scriptId);
 
         public bool IsValidWorkingDir => Module.IsValidGitWorkingDir();
 

@@ -32,8 +32,8 @@
             </Button>
             <Button Name="toggleStateButton" Padding="4" ToolTip.Tip="{Binding ToggleStateTooltip}" Command="{Binding ToggleStateCommand}">
               <Panel>
-                <Image Source="avares://GitUI.Avalonia/Assets/EyeOpened.png" Width="16" Height="16" IsVisible="{Binding IsSelectedDisabled}" />
-                <Image Source="avares://GitUI.Avalonia/Assets/EyeClosed.png" Width="16" Height="16" IsVisible="{Binding !IsSelectedDisabled}" />
+                <Image h:ImageLightness.Adapt="True" Source="avares://GitUI.Avalonia/Assets/EyeOpened.png" Width="16" Height="16" IsVisible="{Binding IsSelectedDisabled}" />
+                <Image h:ImageLightness.Adapt="True" Source="avares://GitUI.Avalonia/Assets/EyeClosed.png" Width="16" Height="16" IsVisible="{Binding !IsSelectedDisabled}" />
               </Panel>
             </Button>
           </StackPanel>

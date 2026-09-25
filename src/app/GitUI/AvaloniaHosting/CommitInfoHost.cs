@@ -181,6 +181,62 @@ internal sealed class CommitInfoHost : ICommitInfoHost
 
     public int AvatarSize => AppSettings.AuthorImageSizeInCommitInfo;
 
+    public bool HasAvatarMenu => true;
+
+    public AvatarProvider AvatarProvider
+    {
+        get => AppSettings.AvatarProvider;
+        set => AppSettings.AvatarProvider = value;
+    }
+
+    public AvatarFallbackType AvatarFallbackType
+    {
+        get => AppSettings.AvatarFallbackType;
+        set => AppSettings.AvatarFallbackType = value;
+    }
+
+    // As AvatarControl.ClearCache: the provider of the settings, then its cache cleared.
+    public async Task ClearAvatarCacheAsync()
+    {
+        GitUI.Avatars.AvatarService.UpdateAvatarProvider();
+        await GitUI.Avatars.AvatarService.CacheCleaner.ClearCacheAsync();
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+    }
+
+    public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
+
+    private EventHandler? _avatarsCleared;
+
+    // As AvatarControl.OnCacheCleared (the cache may be cleared by another control, e.g. the settings dialog).
+    public event EventHandler? AvatarsCleared
+    {
+        add
+        {
+            if (_avatarsCleared is null)
+            {
+                GitUI.Avatars.AvatarService.CacheCleaner.CacheCleared += OnAvatarCacheCleared;
+            }
+
+            _avatarsCleared += value;
+        }
+
+        remove
+        {
+            _avatarsCleared -= value;
+            if (_avatarsCleared is null)
+            {
+                GitUI.Avatars.AvatarService.CacheCleaner.CacheCleared -= OnAvatarCacheCleared;
+            }
+        }
+    }
+
+    private void OnAvatarCacheCleared(object? sender, EventArgs e)
+        => ThreadHelper.FileAndForget(async () =>
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            _avatarsCleared?.Invoke(this, EventArgs.Empty);
+        });
+
     /// <summary>As <c>AvatarControl.UpdateAvatarAsync</c>: the avatar of the provider, or the default image.</summary>
     public async Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken)
     {

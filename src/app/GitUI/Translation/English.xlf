@@ -234,6 +234,26 @@ Click this info icon for more details.</source>
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="AvatarControl" source-language="en">
+    <body>
+      <trans-unit id="avatarProviderToolStripMenuItem.Text">
+        <source>Avatar provider</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="clearImagecacheToolStripMenuItem.Text">
+        <source>Clear image cache</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="fallbackAvatarStyleToolStripMenuItem.Text">
+        <source>Fallback generated avatar style</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="registerGravatarToolStripMenuItem.Text">
+        <source>Register at gravatar.com</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="BlameControl" source-language="en">
     <body>
       <trans-unit id="_blameActualPreviousRevision.Text">
@@ -1942,6 +1962,10 @@ Suitable for some config files modified locally.</source>
       </trans-unit>
       <trans-unit id="_findString.Text">
         <source>Find</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_selectionOnlyString.Text">
+        <source>selection only</source>
         <target />
       </trans-unit>
       <trans-unit id="_textNotFoundString.Text">
@@ -8603,6 +8627,10 @@ Reset the filter via View &gt; Show all branches.</source>
       </trans-unit>
       <trans-unit id="mnubtnUpdateSubmodule.ToolTipText">
         <source>Update selected submodule recursively</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="runScriptToolStripMenuItem.Text">
+        <source>Run script</source>
         <target />
       </trans-unit>
       <trans-unit id="tsbCollapseAll.ToolTipText">

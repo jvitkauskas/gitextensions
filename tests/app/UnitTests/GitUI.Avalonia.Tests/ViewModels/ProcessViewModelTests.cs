@@ -427,6 +427,15 @@ public sealed class ProcessViewModelTests
             return ConfirmResult;
         }
 
+        /// <summary>The questions asked with the Question icon (also in <see cref="Confirmations"/>).</summary>
+        public List<string> Questions { get; } = [];
+
+        public bool ConfirmQuestion(string text, string caption)
+        {
+            Questions.Add(text);
+            return Confirm(text, caption);
+        }
+
         /// <summary>The answer to the next yes/no/cancel questions.</summary>
         public bool? ConfirmWithCancelResult { get; set; } = true;
 

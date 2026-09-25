@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ed="using:GitUI.Avalonia.Editor"
+             xmlns:h="using:GitUI.Avalonia.Hosting"
              xmlns:vm="using:GitUI.Presentation.Editor"
              xmlns:gs="using:GitCommands.Settings"
              xmlns:hex="using:AvaloniaHex"
@@ -80,17 +81,17 @@
         <ToggleButton Name="ignoreWhitespaceAtEolButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceAtEol.Text}" IsVisible="{Binding CanIgnoreWhitespaceAtEol}"
                       IsChecked="{Binding IgnoresWhitespaceAtEol, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
                       CommandParameter="{x:Static gs:IgnoreWhitespaceKind.Eol}">
-          <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreEol.png" />
+          <Image h:ImageLightness.Adapt="True" Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreEol.png" />
         </ToggleButton>
         <ToggleButton Name="ignoreWhitespaceChangesButton" ToolTip.Tip="{Binding Strings.IgnoreWhitespaceChanges.Text}" IsVisible="{Binding CanIgnoreWhitespaceChanges}"
                       IsChecked="{Binding IgnoresWhitespaceChanges, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
                       CommandParameter="{x:Static gs:IgnoreWhitespaceKind.Change}">
-          <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnore.png" />
+          <Image h:ImageLightness.Adapt="True" Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnore.png" />
         </ToggleButton>
         <ToggleButton Name="ignoreAllWhitespaceButton" ToolTip.Tip="{Binding Strings.IgnoreAllWhitespaceChanges.Text}" IsVisible="{Binding CanIgnoreWhitespaceChanges}"
                       IsChecked="{Binding IgnoresAllWhitespace, Mode=OneWay}" Command="{Binding ToggleIgnoreWhitespaceCommand}"
                       CommandParameter="{x:Static gs:IgnoreWhitespaceKind.AllSpace}">
-          <Image Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreAll.png" />
+          <Image h:ImageLightness.Adapt="True" Source="avares://GitUI.Avalonia/Assets/WhitespaceIgnoreAll.png" />
         </ToggleButton>
         <ComboBox Name="encodingComboBox" MinWidth="120" MaxWidth="200" Padding="4,1" VerticalAlignment="Center"
                   ItemsSource="{Binding Encodings}" SelectedItem="{Binding SelectedEncoding}" />

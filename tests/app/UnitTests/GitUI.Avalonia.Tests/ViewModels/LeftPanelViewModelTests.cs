@@ -129,6 +129,48 @@ public sealed class LeftPanelViewModelTests
     }
 
     [Test]
+    public void The_menu_of_a_visible_local_branch_has_the_user_scripts()
+    {
+        (LeftPanelViewModel panel, FakeLeftPanelHost host, FakeLeftPanelSettings _) = Create();
+        host.Scripts = [new(7, "Deploy", IsDirect: false), new(8, "Lint", IsDirect: true)];
+
+        // As AddUserScripts: "Run script" with the scripts not in the grid's menu, then the others in the menu itself.
+        IReadOnlyList<LeftPanelMenuItem> items = OpenMenu(panel, panel.BranchesTree.Children[0]);
+        items.Select(i => i.Header).Should().EndWith(["-", "Run script", "Lint"]);
+        LeftPanelMenuItem runScript = items.Single(i => i.Header == "Run script");
+        runScript.Icon.Should().Be("Console");
+        runScript.Children!.Select(i => i.Header).Should().Equal("Deploy");
+        runScript.Children![0].Execute!();
+        items.Single(i => i.Header == "Lint").Execute!();
+        host.ScriptsRun.Should().Equal(7, 8);
+
+        // Not for a hidden branch nor a tag.
+        OpenMenu(panel, panel.BranchesTree.Children[2].Children[0]).Should().NotContain(i => i.Header == "Lint");
+        OpenMenu(panel, panel.TagsTree.Children[0]).Should().NotContain(i => i.Header == "Lint");
+    }
+
+    [Test]
+    public async Task A_click_with_alt_on_a_branch_selects_its_related_branch()
+    {
+        (LeftPanelViewModel panel, FakeLeftPanelHost host, FakeLeftPanelSettings _) = Create();
+        GitRevision release = panel.Grid.Rows.Single(r => r.Subject == "Release").Revision;
+        host.Refs[3] = new GitRef(TestGitModule.Instance, release.ObjectId, "refs/remotes/origin/main", "origin");
+        await panel.RefreshAsync();
+        LeftPanelNode main = panel.BranchesTree.Children[0];
+
+        panel.SelectByClick(main);
+        panel.Grid.SelectedRow!.Revision.Should().NotBeSameAs(release);
+
+        // As BaseBranchLeafNode.SelectRevision: with Alt, the tracked branch; and the local branch of a remote one.
+        panel.SelectByClick(main, alternate: true);
+        panel.Grid.SelectedRow!.Revision.Should().BeSameAs(release);
+        panel.SelectByClick(panel.RemotesTree.Children[0].Children[0], alternate: true);
+        panel.Grid.SelectedRow!.Revision.Should().NotBeSameAs(release);
+        panel.SelectByClick(panel.RemotesTree.Children[0].Children[0]);
+        panel.Grid.SelectedRow!.Revision.Should().BeSameAs(release);
+    }
+
+    [Test]
     public void A_refresh_keeps_the_expanded_nodes_the_selection_and_the_multi_selection()
     {
         (LeftPanelViewModel panel, FakeLeftPanelHost host, FakeLeftPanelSettings _) = Create();
@@ -565,6 +607,14 @@ public sealed class LeftPanelViewModelTests
         ];
 
         public bool IsBranchFilterActive { get; set; }
+
+        public IReadOnlyList<LeftPanelScript> Scripts { get; set; } = [];
+
+        public List<int> ScriptsRun { get; } = [];
+
+        public IReadOnlyList<LeftPanelScript> GetScripts() => Scripts;
+
+        public void RunScript(int scriptId) => ScriptsRun.Add(scriptId);
 
         public IReadOnlyList<IGitRef> GetRefs()
         {

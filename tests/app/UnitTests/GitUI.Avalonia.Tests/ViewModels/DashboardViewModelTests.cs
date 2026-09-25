@@ -214,7 +214,7 @@ public sealed class DashboardViewModelTests
             ValidPaths = [.. _recent.Concat(_favourites).Select(r => r.Path).Where(p => !p.Contains("gone"))];
         }
 
-        public IReadOnlyList<string> GitHosters { get; init; } = [];
+        public IReadOnlyList<string> GitHosters { get; set; } = [];
 
         /// <summary>The width of the repositories combobox, or NaN to fit the captions.</summary>
         public double TileWidth { get; init; } = double.NaN;

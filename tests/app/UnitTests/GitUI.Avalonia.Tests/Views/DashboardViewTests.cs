@@ -87,6 +87,35 @@ public sealed class DashboardViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_arrow_keys_move_between_the_groups() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, _, _, _) = Show(new FakeDashboardHost());
+        ListBox[] lists = [.. window.Dashboard.GetTileLists()];
+        lists.Select(l => l.ItemCount).Should().Equal(3, 1, 2);
+        lists[0].SelectedIndex = 2;
+        lists[0].ContainerFromIndex(2)!.Focus();
+        Dispatcher.UIThread.RunJobs();
+
+        // Right on the last tile of a group: the first of the next group; Down on its last row: the next group.
+        window.KeyPressQwerty(PhysicalKey.ArrowRight, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        lists[1].SelectedIndex.Should().Be(0);
+        lists[0].SelectedIndex.Should().Be(-1, "one tile is selected in all the groups");
+        window.KeyPressQwerty(PhysicalKey.ArrowDown, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        lists[2].SelectedIndex.Should().Be(0);
+
+        // Up on the first row: the previous group; Left on its first tile: the last tile of the previous group.
+        window.KeyPressQwerty(PhysicalKey.ArrowUp, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        lists[1].SelectedIndex.Should().Be(0);
+        window.KeyPressQwerty(PhysicalKey.ArrowLeft, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        lists[0].SelectedIndex.Should().Be(2);
+        window.Close();
+    });
+
+    [Test]
     public Task A_click_on_a_tile_opens_its_repository() => OnUiThreadAsync(() =>
     {
         FakeDashboardHost dashboardHost = new();
@@ -135,6 +164,21 @@ public sealed class DashboardViewTests : HeadlessTest
 
         start.IsSubMenuOpen = false;
         viewModel.RunCommand.Execute(BrowseCommand.RefreshDashboard);
+        window.Close();
+    });
+
+    [Test]
+    public Task The_links_of_the_git_hosters_are_added_once_the_plugins_are_loaded() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeDashboardHost dashboardHost, FakeBrowseHost host) = Show(new FakeDashboardHost());
+        int links = viewModel.Dashboard!.StartLinks.Count;
+
+        // As FormBrowse after InitializeGitHostersOnly: the dashboard shows the "Clone fork" link of the hoster.
+        dashboardHost.GitHosters = ["GitHub"];
+        host.LoadPlugins([], "GitHub");
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Dashboard.StartLinks.Should().HaveCount(links + 1);
+        viewModel.Dashboard.StartLinks[^1].Text.Should().Contain("GitHub");
         window.Close();
     });
 

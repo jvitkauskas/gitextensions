@@ -24,4 +24,13 @@ public sealed partial class BrowseViewModel
             }
         }
     }
+
+    /// <summary>As <c>FormBrowse.CancelButtonClick</c> (Escape): the text filter is cleared if a filter is applied; the window stays open.</summary>
+    public void CancelByEscape()
+    {
+        if (Filters is { State.HasFilter: true } filters)
+        {
+            filters.SetRevisionFilter("");
+        }
+    }
 }

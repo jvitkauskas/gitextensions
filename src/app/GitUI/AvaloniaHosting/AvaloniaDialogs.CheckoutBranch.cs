@@ -88,6 +88,9 @@ internal static partial class AvaloniaDialogs
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(
                 owner(), text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, defaultNo ? MessageBoxDefaultButton.Button2 : MessageBoxDefaultButton.Button1) == DialogResult.Yes);
 
+        public bool ConfirmQuestion(string text, string caption)
+            => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(owner(), text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes);
+
         public bool? ConfirmWithCancel(string text, string caption)
             => AvaloniaUi.RunInHostContext(() => MessageBoxes.Show(owner(), text, caption, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question) switch
             {

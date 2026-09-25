@@ -22,6 +22,13 @@ public static class LeftPanelConverters
     /// <summary>The icon of a node (see <see cref="LeftPanelIcons"/>): the asset of the same name.</summary>
     public static IValueConverter Icon { get; } = new FuncValueConverter<string?, Bitmap?>(key => key is null ? null : FileStatusIconConverter.GetIcon(key));
 
+    /// <summary>Whether the icon is lightened on a dark theme, as the icons <c>RepoObjectsTree</c> adapts (<c>AdaptLightness</c>).</summary>
+    public static IValueConverter AdaptsLightness { get; } = new FuncValueConverter<string?, bool>(AdaptsIconLightness);
+
+    // As InitImageList and the menu items of RepoObjectsTree whose images are adapted.
+    internal static bool AdaptsIconLightness(string? key)
+        => key is "Branch" or "EyeClosed" or "EyeOpened" or "RemoteEnableAndFetch" or "CollapseAll" or "ExpandAll";
+
     public static IValueConverter Bold { get; } = new FuncValueConverter<bool, FontWeight>(value => value ? FontWeight.Bold : FontWeight.Normal);
 
     public static IValueConverter Italic { get; } = new FuncValueConverter<bool, FontStyle>(value => value ? FontStyle.Italic : FontStyle.Normal);
@@ -182,7 +189,20 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
         MenuItem menuItem = new() { Header = item.Header, IsEnabled = item.IsEnabled };
         if (item.Icon is { } icon && FileStatusIconConverter.GetIcon(icon) is { } bitmap)
         {
-            menuItem.Icon = new Image { Source = bitmap, Width = 16, Height = 16 };
+            Image image = new() { Source = bitmap, Width = 16, Height = 16 };
+            ImageLightness.SetAdapt(image, LeftPanelConverters.AdaptsIconLightness(icon));
+            menuItem.Icon = image;
+        }
+        else if (item.Image is { } image)
+        {
+            try
+            {
+                menuItem.Icon = new Image { Source = new global::Avalonia.Media.Imaging.Bitmap(new MemoryStream(image)), Width = 16, Height = 16 };
+            }
+            catch (Exception)
+            {
+                // Not an image Avalonia can decode: no icon.
+            }
         }
 
         if (item.ToolTip is { } toolTip)
@@ -220,7 +240,7 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
         _viewModel.ClickNode(node, multiple, includingDescendants: e.KeyModifiers.HasFlag(KeyModifiers.Shift), rightButton);
 
         // Any click selects the node (a right click too, for the context menu), and its revision again if it was selected.
-        _viewModel.SelectByClick(node);
+        _viewModel.SelectByClick(node, alternate: e.KeyModifiers.HasFlag(KeyModifiers.Alt));
 
         // With Ctrl, the tree would toggle its own selection.
         if (multiple)

@@ -267,6 +267,8 @@ WinForms `ConEmuControl` are no longer built, and the `GE_AVALONIA` switch with 
   are git grep in the file lists and the custom difftool submenus.
 
 ### Later, out of scope for now: cross-platform
+The plan for macOS and Linux, with a survey of what still ties the application to Windows, is in
+`CROSS-PLATFORM.md`. The outline it details:
 - Retarget the core libraries to `net10.0`, removing `System.Drawing` `Font` / `Color` / `Image` from `AppSettings`, `GitModule` and the plugin API.
 - Put these behind OS services:
   - diff/merge tool and editor discovery (`src/app/GitCommands/DiffMergeTools/`, `EditorHelper.cs`);

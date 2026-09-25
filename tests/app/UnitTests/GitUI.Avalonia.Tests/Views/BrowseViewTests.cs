@@ -15,6 +15,7 @@ using GitUI.Presentation.Editor;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.UserControls.Blame;
 using GitUI.Presentation.UserControls.FileStatusList;
+using GitUI.Presentation.UserControls.LeftPanel;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 
@@ -792,6 +793,56 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task Escape_clears_an_applied_filter_and_does_not_close_the_window() => OnUiThreadAsync(() =>
+    {
+        FilterToolBarViewTests.FakeFilterHost filterHost = new();
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost _) = Show(filterHost: filterHost);
+        window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        window.IsVisible.Should().BeTrue("FormBrowse.CancelButtonClick does not close the window");
+        filterHost.Calls.Should().BeEmpty("no filter to clear");
+
+        // As CancelButtonClick: with a filter, the text filter is cleared.
+        filterHost.Raise(new RevisionGridFilterState(AuthorFilter: "bob", HasFilter: true, FilterSummary: "Author: bob"));
+        window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        window.IsVisible.Should().BeTrue();
+        filterHost.Calls.Should().ContainSingle().Which.Should().StartWith("text ").And.NotContain("bob");
+        viewModel.Filters!.RevisionFilter.Should().BeEmpty();
+        window.Close();
+    });
+
+    [Test]
+    public Task The_splitters_are_restored_when_the_window_opens_and_saved_when_it_closes() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(configure: h =>
+        {
+            // As SplitterManager: in pixels at the DPI they were saved at.
+            h.Splitters["MainSplitContainer"] = new(300, 2000, 192, Panel1Collapsed: true);
+            h.Splitters["RightSplitContainer"] = new(500, 700, 96);
+            h.Splitters["revisionDiff.DiffSplitContainer"] = new(250, 800, 96);
+        });
+        LeftPanelViewModel leftPanel = LeftPanelViewModelTests.Create().Panel;
+        viewModel.LeftPanel = leftPanel;
+        Dispatcher.UIThread.RunJobs();
+        ColumnDefinition leftColumn = window.FindControl<Grid>("mainSplit")!.ColumnDefinitions[0];
+
+        leftPanel.IsVisible.Should().BeFalse("hidden when the window was closed");
+        leftColumn.Width.Value.Should().Be(0);
+        window.FindControl<Grid>("contentGrid")!.RowDefinitions[2].Height.Value.Should().Be(200, "the tabs keep their height");
+        window.FindControl<Grid>("diffPanel")!.ColumnDefinitions[0].Width.Value.Should().Be(250);
+        leftPanel.IsVisible = true;
+        Dispatcher.UIThread.RunJobs();
+        leftColumn.Width.Value.Should().Be(150);
+
+        window.Close();
+        host.Splitters["MainSplitContainer"].Should().Match<SplitterPosition>(p => p.Distance == 150 && p.Dpi == 96 && !p.Panel1Collapsed);
+        SplitterPosition tabs = host.Splitters["RightSplitContainer"];
+        (tabs.Size - tabs.Distance).Should().Be(200);
+        host.Splitters["fileTree.DiffSplitContainer"].Distance.Should().Be(300);
+    });
+
+    [Test]
     public Task The_output_history_panel_is_toggled_by_its_hotkey_and_saved() => OnUiThreadAsync(() =>
     {
         (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(configure: h => h.ShowOutputHistoryAsTab = false);
@@ -964,6 +1015,13 @@ public sealed class BrowseViewTests : HeadlessTest
         public bool ShowSplitViewLayout { get; set; } = true;
 
         public GitCommands.CommitInfoPosition CommitInfoPosition { get; set; }
+
+        /// <summary>The saved splitters, by name.</summary>
+        public Dictionary<string, SplitterPosition> Splitters { get; } = [];
+
+        public SplitterPosition? GetSplitter(string name) => Splitters.GetValueOrDefault(name);
+
+        public void SaveSplitter(string name, SplitterPosition position) => Splitters[name] = position;
 
         public event EventHandler? OutputHistoryChanged;
 

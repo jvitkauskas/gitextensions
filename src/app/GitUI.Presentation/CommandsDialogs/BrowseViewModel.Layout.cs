@@ -29,12 +29,26 @@ public sealed class BrowseLayoutStrings : ViewStrings
     public TranslatedText CommitInfoRightward { get; }
 }
 
+/// <summary>
+///  A saved splitter of a window, as <c>SplitterManager</c> saves a <c>SplitContainer</c>: the distance of the splitter and
+///  the size of the container in pixels at <paramref name="Dpi"/>, and whether its first panel is collapsed.
+/// </summary>
+public sealed record SplitterPosition(int Distance, int Size, int Dpi, bool Panel1Collapsed = false);
+
 /// <summary>The layout settings of the main window (<c>AppSettings.ShowSplitViewLayout</c>, <c>AppSettings.CommitInfoPosition</c>).</summary>
 public interface IBrowseLayoutHost
 {
     bool ShowSplitViewLayout { get; set; }
 
     CommitInfoPosition CommitInfoPosition { get; set; }
+
+    /// <summary>The saved splitter (<c>SplitterManager.RestoreSplitters</c>, <c>FormBrowse.{name}_Distance</c>, ...), if any.</summary>
+    SplitterPosition? GetSplitter(string name) => null;
+
+    /// <summary>Saves the splitter (<c>SplitterManager.SaveSplitters</c>, when the window closes).</summary>
+    void SaveSplitter(string name, SplitterPosition position)
+    {
+    }
 }
 
 /// <summary>The layout of the main window: the tabs below the grid, and where the commit info is (<c>LayoutRevisionInfo</c>).</summary>
@@ -77,6 +91,12 @@ public sealed partial class BrowseViewModel
 
     [RelayCommand]
     private void ToggleSplitViewLayout() => ShowSplitViewLayout = !ShowSplitViewLayout;
+
+    /// <summary>The saved splitter of the window (the <c>SplitterManager</c> of <c>FormBrowse</c>), if any.</summary>
+    public SplitterPosition? GetSplitter(string name) => _layoutHost?.GetSplitter(name);
+
+    /// <summary>Saves a splitter of the window (when it closes).</summary>
+    public void SaveSplitter(string name, SplitterPosition position) => _layoutHost?.SaveSplitter(name, position);
 
     private BrowseMenuItem PositionItem(TranslatedText text, CommitInfoPosition position, string icon)
         => new(text.AccessKeyText, null, icon) { Invoke = () => CommitInfoPosition = position };

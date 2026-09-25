@@ -216,12 +216,63 @@ public partial class DashboardView : UserControl
             searchBox.Focus();
             e.Handled = true;
         }
+        else if (e.KeyModifiers == KeyModifiers.None && GetAdjacentGroupTarget(list, e.Key) is (ListBox target, int index))
+        {
+            // As the groups of the WinForms list view: the arrows move on to the tiles of the next or previous group.
+            target.SelectedIndex = index;
+            target.ContainerFromIndex(index)?.Focus(NavigationMethod.Directional);
+            e.Handled = true;
+        }
+    }
+
+    // The tile of the next (or previous) group that an arrow key moves to from the edge of a group: the one below (above) in
+    // the nearest column, or the first (last) one for Right (Left).
+    private (ListBox List, int Index)? GetAdjacentGroupTarget(ListBox list, Key key)
+    {
+        List<ListBox> lists = [.. GetTileLists().Where(l => l.ItemCount > 0)];
+        int position = lists.IndexOf(list);
+        if (position < 0 || list.SelectedIndex < 0)
+        {
+            return null;
+        }
+
+        double x = list.ContainerFromIndex(list.SelectedIndex)?.Bounds.X ?? 0;
+        switch (key)
+        {
+            case Key.Down when position < lists.Count - 1 && IsOnLastRow(list):
+                return (lists[position + 1], NearestInRow(lists[position + 1], row: 0, x));
+            case Key.Up when position > 0 && IsOnFirstRow(list):
+                return (lists[position - 1], NearestInRow(lists[position - 1], row: -1, x));
+            case Key.Right when position < lists.Count - 1 && list.SelectedIndex == list.ItemCount - 1:
+                return (lists[position + 1], 0);
+            case Key.Left when position > 0 && list.SelectedIndex == 0:
+                return (lists[position - 1], lists[position - 1].ItemCount - 1);
+            default:
+                return null;
+        }
+
+        // The tile of the first (0) or last (-1) row nearest to x.
+        static int NearestInRow(ListBox target, int row, double x)
+        {
+            double rowY = target.ContainerFromIndex(row == 0 ? 0 : target.ItemCount - 1)?.Bounds.Y ?? 0;
+            return Enumerable.Range(0, target.ItemCount)
+                .Select(i => (Index: i, Bounds: target.ContainerFromIndex(i)?.Bounds))
+                .Where(t => t.Bounds is { } b && Math.Abs(b.Y - rowY) < 1)
+                .OrderBy(t => Math.Abs(t.Bounds!.Value.X - x))
+                .Select(t => t.Index)
+                .DefaultIfEmpty(row == 0 ? 0 : target.ItemCount - 1)
+                .First();
+        }
     }
 
     private static bool IsOnFirstRow(ListBox list)
         => list.SelectedIndex < 0
             || (list.ContainerFromIndex(list.SelectedIndex) is { } selected && list.ContainerFromIndex(0) is { } first
                 && Math.Abs(selected.Bounds.Y - first.Bounds.Y) < 1);
+
+    private static bool IsOnLastRow(ListBox list)
+        => list.ContainerFromIndex(list.SelectedIndex) is { } selected && list.ContainerFromIndex(list.ItemCount - 1) is { } last
+            && Math.Abs(selected.Bounds.Y - last.Bounds.Y) < 1;
 
     private void OnTileSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {

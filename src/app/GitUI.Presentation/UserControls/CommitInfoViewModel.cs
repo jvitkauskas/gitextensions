@@ -1,9 +1,31 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitUI.Presentation.Translations;
 using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.UserControls;
+
+/// <summary>Strings of the menu of the avatar; ids match <c>AvatarControl</c>.</summary>
+public sealed class AvatarStrings : ViewStrings
+{
+    public AvatarStrings()
+        : base("AvatarControl")
+    {
+        ClearImageCache = Add("clearImagecacheToolStripMenuItem", "Text", "Clear image cache");
+        AvatarProvider = Add("avatarProviderToolStripMenuItem", "Text", "Avatar provider");
+        FallbackAvatarStyle = Add("fallbackAvatarStyleToolStripMenuItem", "Text", "Fallback generated avatar style");
+        RegisterGravatar = Add("registerGravatarToolStripMenuItem", "Text", "Register at gravatar.com");
+    }
+
+    public TranslatedText ClearImageCache { get; }
+
+    public TranslatedText AvatarProvider { get; }
+
+    public TranslatedText FallbackAvatarStyle { get; }
+
+    public TranslatedText RegisterGravatar { get; }
+}
 
 /// <summary>Strings of the commit info; ids match <c>CommitInfo</c>.</summary>
 public sealed class CommitInfoStrings : ViewStrings
@@ -111,6 +133,42 @@ public interface ICommitInfoHost
     /// <summary>The avatar of the author as an image file, or the default one (as <c>AvatarControl.UpdateAvatarAsync</c>).</summary>
     Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken);
 
+    /// <summary>Whether the avatar has the menu of <c>AvatarControl</c> (the provider, the fallback style, the cache); none by default.</summary>
+    bool HasAvatarMenu => false;
+
+    /// <summary>The provider of the avatars (<c>AppSettings.AvatarProvider</c>).</summary>
+    AvatarProvider AvatarProvider
+    {
+        get => default;
+        set
+        {
+        }
+    }
+
+    /// <summary>The style of the generated avatars (<c>AppSettings.AvatarFallbackType</c>).</summary>
+    AvatarFallbackType AvatarFallbackType
+    {
+        get => default;
+        set
+        {
+        }
+    }
+
+    /// <summary>As <c>AvatarControl.ClearCache</c>: the provider of the settings, and its cache cleared.</summary>
+    Task ClearAvatarCacheAsync() => Task.CompletedTask;
+
+    /// <summary>"Register at gravatar.com": the site in the default browser.</summary>
+    void OpenUrl(string url)
+    {
+    }
+
+    /// <summary>The cache of the avatars was cleared, maybe by another window (<c>IAvatarCacheCleaner.CacheCleared</c>); raised on the UI thread.</summary>
+    event EventHandler? AvatarsCleared
+    {
+        add { }
+        remove { }
+    }
+
     /// <summary>As <c>addNoteToolStripMenuItem_Click</c>: edits the notes of the commit (<c>GitModule.EditNotes</c>).</summary>
     void EditNotes(ObjectId objectId);
 
@@ -161,6 +219,63 @@ public sealed partial class CommitInfoViewModel : ObservableObject
 
     /// <summary>The size of the avatar (in device-independent pixels).</summary>
     public int AvatarSize => _host.AvatarSize;
+
+    /// <summary>Whether the avatar has its menu (<c>AvatarControl</c>).</summary>
+    public bool HasAvatarMenu => _host.HasAvatarMenu;
+
+    public AvatarStrings AvatarStrings => field ??= ViewStrings.Load<AvatarStrings>();
+
+    public AvatarProvider AvatarProvider => _host.AvatarProvider;
+
+    public AvatarFallbackType AvatarFallbackType => _host.AvatarFallbackType;
+
+    /// <summary>As the items of "Avatar provider": the provider saved, and the cache cleared.</summary>
+    public Task SetAvatarProviderAsync(AvatarProvider provider)
+    {
+        _host.AvatarProvider = provider;
+        return ClearAvatarCacheAsync();
+    }
+
+    /// <summary>As the items of "Fallback generated avatar style": the style saved, and the cache cleared.</summary>
+    public Task SetAvatarFallbackTypeAsync(AvatarFallbackType fallbackType)
+    {
+        _host.AvatarFallbackType = fallbackType;
+        return ClearAvatarCacheAsync();
+    }
+
+    /// <summary>As <c>AvatarControl.ClearCache</c>: the avatar loaded again once the cache is cleared.</summary>
+    public async Task ClearAvatarCacheAsync()
+    {
+        await _host.ClearAvatarCacheAsync();
+        if (_revision is { } revision)
+        {
+            await LoadAvatarAsync(revision);
+        }
+    }
+
+    /// <summary>As <c>OnRegisterGravatarClick</c>.</summary>
+    public void RegisterAtGravatar() => _host.OpenUrl("https://www.gravatar.com");
+
+    /// <summary>
+    ///  As <c>OnCacheCleared</c>: the avatar is loaded again when the cache is cleared elsewhere, while <paramref name="watch"/>
+    ///  (the view is shown).
+    /// </summary>
+    public void WatchAvatarCache(bool watch)
+    {
+        _host.AvatarsCleared -= OnAvatarsCleared;
+        if (watch)
+        {
+            _host.AvatarsCleared += OnAvatarsCleared;
+        }
+    }
+
+    private void OnAvatarsCleared(object? sender, EventArgs e)
+    {
+        if (_revision is { } revision)
+        {
+            _ = LoadAvatarAsync(revision);
+        }
+    }
 
     /// <summary>The settings of the context menu, as its check boxes.</summary>
     public CommitInfoDisplayOptions Options => _host.Options;

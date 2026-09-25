@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:h="using:GitUI.Avalonia.Hosting"
              xmlns:vm="using:GitUI.Presentation.CommandsDialogs.BrowseDialog"
              xmlns:sd="using:GitUI.Avalonia.CommandsDialogs.SettingsDialog"
              xmlns:local="using:GitUI.Avalonia.CommandsDialogs.BrowseDialog"
@@ -10,7 +11,7 @@
     <ResourceDictionary>
       <!--
         DashboardTheme: Light is the paletton palette of the WinForms dashboard, Dark its SystemColors of a dark theme. The
-        background image fills the dashboard (WinForms tiled it, which shows the same for usual window sizes).
+        background image is tiled at its size, as the BackgroundImageLayout of the WinForms dashboard.
       -->
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
@@ -27,7 +28,7 @@
           <SolidColorBrush x:Key="DashboardGroupHeaderBrush" Color="#1E3287" />
           <SolidColorBrush x:Key="DashboardGroupLineBrush" Color="#DDE3F0" />
           <ImageBrush x:Key="DashboardBackgroundBrush" Source="avares://GitUI.Avalonia/Assets/DashboardBackgroundBlue.png"
-                      Stretch="UniformToFill" AlignmentX="Left" AlignmentY="Top" />
+                      TileMode="Tile" Stretch="Fill" DestinationRect="0,0,1240,940" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="DashboardWindowBrush" Color="#1E1E1E" />
@@ -43,7 +44,7 @@
           <SolidColorBrush x:Key="DashboardGroupHeaderBrush" Color="#99B4F5" />
           <SolidColorBrush x:Key="DashboardGroupLineBrush" Color="#3A3F4A" />
           <ImageBrush x:Key="DashboardBackgroundBrush" Source="avares://GitUI.Avalonia/Assets/DashboardBackgroundGrey.png"
-                      Stretch="UniformToFill" AlignmentX="Left" AlignmentY="Top" />
+                      TileMode="Tile" Stretch="Fill" DestinationRect="0,0,1399,939" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
@@ -94,7 +95,7 @@
               <DataTemplate x:DataType="vm:DashboardLinkItem">
                 <Button Classes="dashboardLink" Command="{Binding Command}">
                   <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Image Source="{Binding Icon, Converter={x:Static sd:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+                    <Image Source="{Binding Icon, Converter={x:Static sd:SettingsIconConverter.Instance}}" Width="16" Height="16" h:ImageLightness.Adapt="{Binding AdaptsLightness}" />
                     <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
                   </StackPanel>
                 </Button>

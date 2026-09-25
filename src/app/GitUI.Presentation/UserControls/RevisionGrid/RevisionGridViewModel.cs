@@ -296,6 +296,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     private RevisionGridDisplayOptions _options;
     private CancellationTokenSource? _loadCancellation;
     private ObjectId? _toBeSelected;
+    private ObjectId? _firstToBeSelected;
     private bool _isCaching;
     private int _cacheRequestedTo = -1;
     private bool _disposed;
@@ -388,7 +389,10 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     public event EventHandler? Loaded;
 
     /// <summary>(Re)loads the revisions, selecting <paramref name="toBeSelected"/> once it is loaded.</summary>
-    public void Load(ObjectId? toBeSelected = null)
+    /// <param name="firstSelected">
+    ///  With <paramref name="toBeSelected"/>, the revision selected first (as <c>FirstId</c>: the first commit of a diff).
+    /// </param>
+    public void Load(ObjectId? toBeSelected = null, ObjectId? firstSelected = null)
     {
         // E.g. the repository changed after the window of the grid closed.
         if (_disposed)
@@ -401,6 +405,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         CancellationToken cancellationToken = _loadCancellation.Token;
 
         _toBeSelected = toBeSelected;
+        _firstToBeSelected = toBeSelected is null ? null : firstSelected;
         _aheadBehind = null;
         _aheadBehindRead = false;
         Graph.Clear();
@@ -445,7 +450,16 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
                 IsLoading = false;
                 if (_toBeSelected is { } id)
                 {
-                    SelectRevision(id);
+                    // As GetToBeSelectedRevisions: FirstId, then SelectedId.
+                    if (_firstToBeSelected is { } first)
+                    {
+                        _firstToBeSelected = null;
+                        SelectRevisions([first, id]);
+                    }
+                    else
+                    {
+                        SelectRevision(id);
+                    }
                 }
 
                 Loaded?.Invoke(this, EventArgs.Empty);

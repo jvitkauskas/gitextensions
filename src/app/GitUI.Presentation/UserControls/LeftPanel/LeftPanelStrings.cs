@@ -159,6 +159,7 @@ public sealed class LeftPanelStrings : ViewStrings
         ContainedInCurrentCommit = Add("_containedInCurrentCommitText", "Text", "'{0}' is contained in the currently selected commit", category: TranslatedStringsCategory);
 
         // FormBrowse
+        RunScript = Add("runScriptToolStripMenuItem", "Text", "Run script");
         ToggleLeftPanel = Add("toggleLeftPanel", "ToolTipText", "Toggle left panel", category: "FormBrowse");
         ShowAllBranches = Add("tsmiShowBranchesAll", "ToolTipText", "Show all branches", category: "FormBrowse");
     }
@@ -406,6 +407,8 @@ public sealed class LeftPanelStrings : ViewStrings
     public TranslatedText InvisibleCommit { get; }
 
     public TranslatedText ContainedInCurrentCommit { get; }
+
+    public TranslatedText RunScript { get; }
 
     public TranslatedText ToggleLeftPanel { get; }
 

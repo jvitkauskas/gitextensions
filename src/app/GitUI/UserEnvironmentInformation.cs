@@ -19,6 +19,11 @@ public static partial class UserEnvironmentInformation
 
     [GeneratedRegex(@"^Microsoft\.WindowsDesktop\.App\s+(?<version>[\w.-]+)\s+.*$", RegexOptions.Multiline | RegexOptions.ExplicitCapture)]
     private static partial Regex DesktopAppRegex { get; }
+
+    // The runtime the application runs on (the Avalonia UI needs no desktop runtime).
+    [GeneratedRegex(@"^Microsoft\.NETCore\.App\s+(?<version>[\w.-]+)\s+.*$", RegexOptions.Multiline | RegexOptions.ExplicitCapture)]
+    private static partial Regex CoreAppRegex { get; }
+
     [GeneratedRegex(@"^", RegexOptions.Multiline | RegexOptions.ExplicitCapture)]
     private static partial Regex LineStartRegex { get; }
 
@@ -130,18 +135,19 @@ public static partial class UserEnvironmentInformation
         }
     }
 
+    /// <summary>The lines of the runtime of the application (<c>Microsoft.NETCore.App</c>) in <c>dotnet --list-runtimes</c>, indented.</summary>
+    internal static string GetDotnetRuntimeLines(string versions)
+        => LineStartRegex.Replace(string.Join(Environment.NewLine, CoreAppRegex.Matches(versions).Select(match => match.Value.TrimEnd())), "    ");
+
     private static string GetDotnetVersionInfo()
     {
         StringBuilder sb = new();
-        sb.AppendLine("- Microsoft.WindowsDesktop.App Versions");
+        sb.AppendLine("- Microsoft.NETCore.App Versions");
         sb.AppendLine();
         sb.AppendLine("```");
         try
         {
-            IEnumerable<Match> desktopAppMatches = GetDotnetDesktopRuntimeMatches(GetDotnetDesktopRuntimeEntries());
-            string desktopAppLines = string.Join(Environment.NewLine, desktopAppMatches);
-            desktopAppLines = LineStartRegex.Replace(desktopAppLines, "    ");
-            sb.AppendLine($"{desktopAppLines}");
+            sb.AppendLine(GetDotnetRuntimeLines(GetDotnetDesktopRuntimeEntries()));
         }
         catch (Exception ex)
         {

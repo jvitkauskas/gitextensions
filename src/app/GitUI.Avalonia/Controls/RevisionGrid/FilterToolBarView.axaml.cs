@@ -33,7 +33,16 @@ public partial class FilterToolBarView : UserControl
         };
 
         // As tscboBranchFilter_DropDown: the refs matching the filter are listed when it drops down.
-        branchFilterBox.DropDownOpened += (_, _) => _ = ViewModel?.UpdateBranchItemsAsync();
+        branchFilterBox.DropDownOpened += (_, _) =>
+        {
+            if (!_updatingWhileTyping)
+            {
+                _ = ViewModel?.UpdateBranchItemsAsync();
+            }
+        };
+
+        // As tscboBranchFilter_TextUpdate: typing lists the refs containing the text, dropped down.
+        branchFilterBox.AddHandler(KeyUpEvent, (_, e) => _ = OnBranchFilterTypedAsync(e.Key), RoutingStrategies.Bubble, handledEventsToo: true);
 
         // As the KeyUp handlers: Enter applies the filter.
         branchFilterBox.AddHandler(KeyDownEvent, (_, e) => OnEnter(e, vm => vm.ApplyBranchFilter()), RoutingStrategies.Tunnel);
@@ -41,6 +50,42 @@ public partial class FilterToolBarView : UserControl
     }
 
     public ComboBox BranchFilterBox => branchFilterBox;
+
+    private string? _typedBranchFilter;
+    private bool _updatingWhileTyping;
+
+    private async Task OnBranchFilterTypedAsync(Key key)
+    {
+        string? text = branchFilterBox.Text;
+        if (ViewModel is not { } viewModel || key is Key.Enter or Key.Escape or Key.Up or Key.Down || text == _typedBranchFilter)
+        {
+            _typedBranchFilter = text;
+            return;
+        }
+
+        _typedBranchFilter = text;
+        await viewModel.UpdateBranchItemsAsync();
+        if (branchFilterBox.Text != text || !branchFilterBox.IsKeyboardFocusWithin)
+        {
+            return;
+        }
+
+        _updatingWhileTyping = true;
+        try
+        {
+            branchFilterBox.IsDropDownOpen = true;
+        }
+        finally
+        {
+            _updatingWhileTyping = false;
+        }
+
+        // The text as typed, not an item it matches.
+        if (branchFilterBox.Text != text)
+        {
+            branchFilterBox.Text = text;
+        }
+    }
 
     public ComboBox RevisionFilterBox => revisionFilterBox;
 

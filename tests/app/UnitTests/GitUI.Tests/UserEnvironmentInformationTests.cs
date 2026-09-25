@@ -58,6 +58,15 @@ public sealed class UserEnvironmentInformationTests
             .Select(v => v.ToString()).Should().BeEquivalentTo([version]);
     }
 
+    [Test]
+    public void The_runtime_of_the_application_is_listed()
+    {
+        string versions = "Microsoft.AspNetCore.App 10.0.1 [C:\\dotnet\\shared]\r\nMicrosoft.NETCore.App 9.0.4 [C:\\dotnet\\shared]\r\nMicrosoft.NETCore.App 10.0.1 [C:\\dotnet\\shared]\r\nMicrosoft.WindowsDesktop.App 10.0.1 [C:\\dotnet\\shared]\r\n";
+
+        UserEnvironmentInformation.GetDotnetRuntimeLines(versions).Split(Environment.NewLine)
+            .Should().Equal(@"    Microsoft.NETCore.App 9.0.4 [C:\dotnet\shared]", @"    Microsoft.NETCore.App 10.0.1 [C:\dotnet\shared]");
+    }
+
     [TestCase("1.2-rc3.42.17", "1.2")]
     [TestCase("1.2.3-", "1.2.3")]
     [TestCase("1.2.3.4-suffix", "1.2.3.4")]

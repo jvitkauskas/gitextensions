@@ -192,18 +192,33 @@ public sealed partial class LeftPanelViewModel : ObservableObject, IDisposable
     ///  As <c>NativeTreeViewExplorerNavigationDecorator.OnNodeMouseClick</c>: a clicked node is selected, and its revision
     ///  selected in the grid again if the node was selected already.
     /// </summary>
-    public void SelectByClick(LeftPanelNode node)
+    /// <param name="alternate">
+    ///  A click with Alt: the related branch of a branch (its tracked or tracking branch) is selected in the grid (as
+    ///  <c>BaseBranchLeafNode.SelectRevision</c>).
+    /// </param>
+    public void SelectByClick(LeftPanelNode node, bool alternate = false)
     {
         _keyboardNavigationTime = 0;
-        if (SelectedNode == node)
+        IsAlternateSelection = alternate;
+        try
         {
-            OnSelectedNodeChanged(node);
+            if (SelectedNode == node)
+            {
+                OnSelectedNodeChanged(node);
+            }
+            else
+            {
+                SelectedNode = node;
+            }
         }
-        else
+        finally
         {
-            SelectedNode = node;
+            IsAlternateSelection = false;
         }
     }
+
+    /// <summary>Whether the node is selected with Alt (<c>Control.ModifierKeys.HasFlag(Keys.Alt)</c>).</summary>
+    internal bool IsAlternateSelection { get; private set; }
 
     /// <summary>
     ///  As the explorer navigation of the WinForms tree: the arrow keys move the selection without selecting the revisions in
@@ -580,6 +595,21 @@ public sealed partial class LeftPanelViewModel : ObservableObject, IDisposable
             }
         }
 
+        // As AddUserScripts for a visible local branch: "Run script" with the scripts not in the grid's menu, then the others.
+        if (single && node is LocalBranchNode { Visible: true } && Host.GetScripts() is { Count: > 0 } scripts)
+        {
+            items.Add(LeftPanelMenuItem.Separator);
+            List<LeftPanelMenuItem> others = [.. scripts.Where(script => !script.IsDirect).Select(ScriptItem)];
+            if (others.Count > 0)
+            {
+                items.Add(new(s.RunScript.AccessKeyText, Icon: "Console", Children: others));
+            }
+
+            items.AddRange(scripts.Where(script => script.IsDirect).Select(ScriptItem));
+
+            LeftPanelMenuItem ScriptItem(LeftPanelScript script) => new(script.Name, () => Host.RunScript(script.Id), Image: script.Icon);
+        }
+
         // Without enabled items, the menu does not open.
         List<LeftPanelMenuItem> result = ToggleSeparators(items);
         return result.Any(item => !item.IsSeparator && item.IsEnabled) ? result : [];
@@ -601,6 +631,15 @@ public sealed partial class LeftPanelViewModel : ObservableObject, IDisposable
         }
 
         return done;
+    }
+
+    /// <summary>As <c>GoToRevision(string)</c>: the revision of a reference (its complete or short name) in the grid.</summary>
+    internal void GoToRef(string gitRef)
+    {
+        if ((GetAllRefs().FirstOrDefault(r => r.CompleteName == gitRef) ?? GetAllRefs().FirstOrDefault(r => r.Name == gitRef)) is { ObjectId: { } objectId })
+        {
+            GoToRevision(objectId);
+        }
     }
 
     /// <summary>Selects the revision in the grid; tells if it is not there (as <c>GoToRef</c>).</summary>

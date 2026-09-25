@@ -122,6 +122,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new CopyPathsStrings()).SetArgDisplayNames(nameof(CopyPathsStrings));
         yield return new TestCaseData(new StashStrings()).SetArgDisplayNames(nameof(StashStrings));
         yield return new TestCaseData(new CommitInfoStrings()).SetArgDisplayNames(nameof(CommitInfoStrings));
+        yield return new TestCaseData(new AvatarStrings()).SetArgDisplayNames(nameof(AvatarStrings));
         yield return new TestCaseData(new CommitDiffStrings()).SetArgDisplayNames(nameof(CommitDiffStrings));
         yield return new TestCaseData(new BlameStrings()).SetArgDisplayNames(nameof(BlameStrings));
         yield return new TestCaseData(new FileHistoryStrings()).SetArgDisplayNames(nameof(FileHistoryStrings));

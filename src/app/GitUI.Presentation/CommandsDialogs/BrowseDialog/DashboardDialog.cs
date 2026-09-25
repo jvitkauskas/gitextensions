@@ -181,7 +181,11 @@ public interface IDashboardHost
 }
 
 /// <summary>A link of the start or the contribute panel of the dashboard.</summary>
-public sealed record DashboardLinkItem(string Text, string Icon, IRelayCommand Command);
+public sealed record DashboardLinkItem(string Text, string Icon, IRelayCommand Command)
+{
+    /// <summary>Whether the icon is lightened on a dark theme (the <c>AdaptLightness</c> of <c>Dashboard.InitDashboardLayout</c>).</summary>
+    public bool AdaptsLightness { get; init; }
+}
 
 /// <summary>An item of a context menu of the dashboard, or a separator (<see cref="Execute"/> null and no children).</summary>
 public sealed record DashboardMenuItem(string Header, Action? Execute, string? Icon = null, bool IsEnabled = true, IReadOnlyList<DashboardMenuItem>? Children = null)
@@ -254,9 +258,9 @@ public sealed partial class DashboardViewModel : ObservableObject
         _host = host;
         ContributeLinks =
         [
-            new(strings.Develop.Text, "Develop", new RelayCommand(() => _host.Run(DashboardLink.Develop))),
+            new(strings.Develop.Text, "Develop", new RelayCommand(() => _host.Run(DashboardLink.Develop))) { AdaptsLightness = true },
             new(strings.Donate.Text, "DollarSign", new RelayCommand(() => _host.Run(DashboardLink.Donate))),
-            new(strings.Translate.Text, "Translate", new RelayCommand(() => _host.Run(DashboardLink.Translate))),
+            new(strings.Translate.Text, "Translate", new RelayCommand(() => _host.Run(DashboardLink.Translate))) { AdaptsLightness = true },
             new(strings.Issues.Text, "Bug", new RelayCommand(() => _host.Run(DashboardLink.Issues))),
         ];
         StartLinks = CreateStartLinks();
@@ -288,6 +292,9 @@ public sealed partial class DashboardViewModel : ObservableObject
 
     /// <summary>All the listed repositories, in the order of the groups.</summary>
     public IEnumerable<DashboardRepositoryItem> Repositories => Groups.SelectMany(g => g.Items);
+
+    /// <summary>The links of the Start panel read again, e.g. with the git hosters of the plugins once they are loaded.</summary>
+    public void RefreshStartLinks() => StartLinks = CreateStartLinks();
 
     /// <summary>As <c>Dashboard.RefreshContent</c>: the links and the repositories, read again.</summary>
     [RelayCommand]

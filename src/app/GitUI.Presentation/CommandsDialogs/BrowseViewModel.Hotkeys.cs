@@ -84,6 +84,12 @@ public sealed partial class BrowseViewModel
     ///  As <c>FormBrowse.GetScriptOptionsProvider</c>: the files selected in the file tree or the diff tab (whichever is shown),
     ///  with the line and column at the caret of its viewer (<c>ScriptOptionsProvider</c> of <c>RevisionDiffControl</c>).
     /// </summary>
+    /// <summary>
+    ///  As <c>GitModuleControl.ExecuteCommand</c> of a script (also of the menu of the left panel): the script of the command,
+    ///  with the files and the line of the window (<c>FindScriptOptionsProvider</c>).
+    /// </summary>
+    public bool RunScript(int commandCode) => _host is IBrowseScriptsHost scriptsHost && scriptsHost.RunScriptOfHotkey(commandCode, GetScriptSelection());
+
     public ScriptSelection GetScriptSelection()
     {
         (FileStatusListViewModel? files, FileViewerViewModel? viewer) = SelectedTab switch
@@ -186,7 +192,7 @@ public sealed partial class BrowseViewModel
         }
 
         // As the base class: the scripts with a hotkey.
-        return _host is IBrowseScriptsHost scriptsHost && scriptsHost.RunScriptOfHotkey(commandCode, GetScriptSelection());
+        return RunScript(commandCode);
 
         bool RunAndHandle(BrowseCommand command)
         {

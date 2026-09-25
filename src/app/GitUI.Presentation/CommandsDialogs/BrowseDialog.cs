@@ -614,7 +614,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
     public partial BrowseTab SelectedTab { get; set; }
 
     /// <summary>Loads the revisions, or the repositories of the dashboard (when the window is shown).</summary>
-    public void Initialize(ObjectId? selectedId)
+    /// <param name="firstId">With <paramref name="selectedId"/>, the revision selected first (<c>FirstId</c>).</param>
+    public void Initialize(ObjectId? selectedId, ObjectId? firstId = null)
     {
         if (Dashboard is not null)
         {
@@ -622,7 +623,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
             return;
         }
 
-        Grid.Load(selectedId);
+        Grid.Load(selectedId, firstId);
     }
 
     /// <summary>As <c>RefreshRevisions</c>: the revisions are loaded again, keeping the selection (the dashboard is refreshed).</summary>
