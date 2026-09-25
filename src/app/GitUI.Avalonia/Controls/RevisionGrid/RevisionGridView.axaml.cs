@@ -318,7 +318,7 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
         }
 
         _hoveredRef = item;
-        int rowIndex = item is null ? -1 : _viewModel.Rows.FirstOrDefault(r => r.Refs.Any(i => ReferenceEquals(i, item)))?.Index ?? -1;
+        int rowIndex = item is null ? -1 : _viewModel.Rows.FirstOrDefault(r => r.Refs.Any(i => ReferenceEquals(i, item) || ReferenceEquals(i.Nested, item)))?.Index ?? -1;
         List<int> shown = [.. revisionsGrid.GetVisualDescendants().OfType<DataGridRow>().Where(r => r.IsVisible).Select(r => r.Index).Where(i => i >= 0)];
         int first = shown.Count == 0 ? 0 : shown.Min();
         int count = shown.Count == 0 ? 0 : shown.Max() - first + 1;
@@ -453,6 +453,12 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
         if (source is Visual visual && visual.FindAncestorOfType<DataGridRow>(includeSelf: true) is null)
         {
             // Not on a row, e.g. on the scroll bar.
+            return;
+        }
+
+        // As OnGridViewDoubleClick: a label with a tracked (or tracking) branch goes to it.
+        if (GetRefItem(source) is { } refItem && _viewModel?.GoToRelatedRef(refItem) == true)
+        {
             return;
         }
 

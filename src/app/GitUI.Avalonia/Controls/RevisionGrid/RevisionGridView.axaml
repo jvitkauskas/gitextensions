@@ -73,6 +73,28 @@
     <Style Selector="Border.ref.current TextBlock">
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
+    <!-- The branch and its nestled label as one group. -->
+    <Style Selector="Border.ref.nestedHost">
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="CornerRadius" Value="3,0,0,3" />
+    </Style>
+    <Style Selector="Border.ref.nested">
+      <Setter Property="CornerRadius" Value="0,3,3,0" />
+      <Setter Property="BorderThickness" Value="0,1,1,1" />
+    </Style>
+    <Style Selector="Border.ref.nested.hoverable:pointerover">
+      <Setter Property="BorderThickness" Value="0,2,2,2" />
+    </Style>
+    <!-- As the dashed NestledVirtualRef: the counts of the branch of another commit; bold if its remote is gone. -->
+    <Style Selector="Border.ref.virtual TextBlock">
+      <Setter Property="FontStyle" Value="Italic" />
+    </Style>
+    <Style Selector="Border.ref.virtual">
+      <Setter Property="Opacity" Value="0.85" />
+    </Style>
+    <Style Selector="Border.ref.gone TextBlock">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
     <Style Selector="Border#quickSearchLabel TextBlock">
       <Setter Property="Foreground" Value="Black" />
     </Style>
@@ -142,16 +164,29 @@
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:RevisionRefItem">
-                      <Border Classes="ref"
-                              Classes.branch="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Branch}}"
-                              Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
-                              Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
-                              Classes.stash="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Stash}}"
-                              Classes.superproject="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Superproject}}"
-                              Classes.hoverable="{Binding GitRef, Converter={x:Static ObjectConverters.IsNotNull}}"
-                              Classes.current="{Binding IsCurrentBranch}">
-                        <TextBlock Text="{Binding Name}" />
-                      </Border>
+                      <!-- As DrawBranchWithNestledRemote: the tracked remote (or the ahead / behind counts) nestled after the branch. -->
+                      <StackPanel Orientation="Horizontal">
+                        <Border Classes="ref"
+                                Classes.branch="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Branch}}"
+                                Classes.remote="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.RemoteBranch}}"
+                                Classes.tag="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Tag}}"
+                                Classes.stash="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Stash}}"
+                                Classes.superproject="{Binding Kind, Converter={x:Static rg:RevisionRefKindConverter.Superproject}}"
+                                Classes.hoverable="{Binding IsInteractive}"
+                                Classes.current="{Binding IsCurrentBranch}"
+                                Classes.nestedHost="{Binding Nested, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                ToolTip.Tip="{Binding ToolTip}">
+                          <TextBlock Text="{Binding Name}" />
+                        </Border>
+                        <Border Classes="ref remote nested" DataContext="{Binding Nested}"
+                                IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Classes.hoverable="{Binding IsInteractive, FallbackValue=False}"
+                                Classes.virtual="{Binding IsVirtual, FallbackValue=False}"
+                                Classes.gone="{Binding IsGone, FallbackValue=False}"
+                                ToolTip.Tip="{Binding ToolTip, FallbackValue={x:Null}}">
+                          <TextBlock Text="{Binding Name, FallbackValue={x:Null}}" />
+                        </Border>
+                      </StackPanel>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>

@@ -180,6 +180,19 @@ public sealed class RevisionGridColumnsViewModelTests
         await Task.Yield();
         host.AvatarRequests.Should().BeEquivalentTo(["alice@example.com", "bob@example.com", "carol@example.com"]);
         viewModel.Rows.Should().OnlyContain(r => r.Avatar != null && r.Avatar[0] == (byte)r.AuthorName[0]);
+
+        // As AvatarColumnProvider on CacheCleared: the avatars shown are read again.
+        host.AvatarRequests.Clear();
+        host.RaiseAvatarsCleared();
+        await Task.Yield();
+        host.AvatarRequests.Should().BeEquivalentTo(["alice@example.com", "bob@example.com", "carol@example.com"]);
+        viewModel.Rows.Should().OnlyContain(r => r.Avatar != null);
+
+        // Disposed with its window: no longer.
+        viewModel.Dispose();
+        host.AvatarRequests.Clear();
+        host.RaiseAvatarsCleared();
+        host.AvatarRequests.Should().BeEmpty();
     }
 
     [Test]
@@ -240,6 +253,10 @@ public sealed class RevisionGridColumnsViewModelTests
         public List<string> OpenedUrls { get; } = [];
 
         public List<string> AvatarRequests { get; } = [];
+
+        public event EventHandler? AvatarsCleared;
+
+        public void RaiseAvatarsCleared() => AvatarsCleared?.Invoke(this, EventArgs.Empty);
 
         public List<(IGitRef? Ref, int Row, int First, int Count)> HoverRequests { get; } = [];
 

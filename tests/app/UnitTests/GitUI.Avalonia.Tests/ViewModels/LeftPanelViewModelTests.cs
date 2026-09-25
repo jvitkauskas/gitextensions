@@ -140,7 +140,7 @@ public sealed class LeftPanelViewModelTests
         panel.ClickNode(panel.TagsTree.Children[0], multiple: false, includingDescendants: false);
         panel.ClickNode(panel.BranchesTree.Children[1], multiple: true, includingDescendants: false);
 
-        host.Refs.Add(new GitRef(null!, host.Refs[0].ObjectId, "refs/tags/v2.0"));
+        host.Refs.Add(new GitRef(TestGitModule.Instance, host.Refs[0].ObjectId, "refs/tags/v2.0"));
         panel.Grid.Load(panel.Grid.SelectedRow!.ObjectId);
 
         panel.TagsTree.Children.Select(n => n.Text).Should().Equal("v1.0", "old", "v2.0");
@@ -517,12 +517,12 @@ public sealed class LeftPanelViewModelTests
             ObjectId unknown = ObjectId.Random();
             Refs =
             [
-                new GitRef(null!, side.ObjectId, "refs/heads/experiment"),
-                new GitRef(null!, unknown, "refs/heads/feature/login"),
-                new GitRef(null!, head.ObjectId, "refs/heads/main"),
-                new GitRef(null!, head.ObjectId, "refs/remotes/origin/main", "origin"),
-                new GitRef(null!, release.ObjectId, "refs/tags/v1.0"),
-                new GitRef(null!, unknown, "refs/tags/old/v0.9"),
+                new GitRef(TestGitModule.Instance, side.ObjectId, "refs/heads/experiment"),
+                new GitRef(TestGitModule.Instance, unknown, "refs/heads/feature/login"),
+                new GitRef(TestGitModule.Instance, head.ObjectId, "refs/heads/main"),
+                new GitRef(TestGitModule.Instance, head.ObjectId, "refs/remotes/origin/main", "origin"),
+                new GitRef(TestGitModule.Instance, release.ObjectId, "refs/tags/v1.0"),
+                new GitRef(TestGitModule.Instance, unknown, "refs/tags/old/v0.9"),
             ];
             Stashes = [new GitRevision(ObjectId.Random()) { Subject = "WIP on main", ReflogSelector = "refs/stash@{0}" }];
         }

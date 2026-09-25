@@ -5,6 +5,7 @@ using GitExtensions.Extensibility.Git;
 using GitExtUtils.GitUI;
 using GitUI.Avalonia.HelperDialogs;
 using GitUI.Avalonia.Hosting;
+using GitUI.Avatars;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.Presentation.HelperDialogs;
 using GitUI.Presentation.Translations;
@@ -132,6 +133,50 @@ internal static partial class AvaloniaDialogs
         private VisibleRowRange _visibleRange;
 
         public bool MatchesQuickSearch(GitRevision revision, string criteria) => _revisionTester.Matches(revision, criteria);
+
+        /// <summary>The ahead / behind data of the labels (as <c>SetAheadBehindDataProvider</c> of <c>FormBrowse</c>), if any.</summary>
+        public GitCommands.Git.IAheadBehindDataProvider? AheadBehindDataProvider { get; init; }
+
+        public IReadOnlyDictionary<string, GitCommands.Git.AheadBehindData>? GetAheadBehindData()
+        {
+            // Read again for each load, as the references may have changed.
+            AheadBehindDataProvider?.ResetCache();
+            return AheadBehindDataProvider?.GetData();
+        }
+
+        private EventHandler? _avatarsCleared;
+
+        /// <summary>As the <c>CacheCleared</c> of <c>AvatarColumnProvider</c>: raised on the UI thread.</summary>
+        public event EventHandler? AvatarsCleared
+        {
+            add
+            {
+                if (_avatarsCleared is null)
+                {
+                    AvatarService.CacheCleaner.CacheCleared += OnAvatarCacheCleared;
+                }
+
+                _avatarsCleared += value;
+            }
+
+            remove
+            {
+                _avatarsCleared -= value;
+                if (_avatarsCleared is null)
+                {
+                    AvatarService.CacheCleaner.CacheCleared -= OnAvatarCacheCleared;
+                }
+            }
+        }
+
+        private void OnAvatarCacheCleared(object? sender, EventArgs e)
+            => ThreadHelper.FileAndForget(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                _avatarsCleared?.Invoke(this, EventArgs.Empty);
+            });
+
+        public void DeleteBranch(string branchName) => AvaloniaUi.RunInHostContext(() => commands.StartDeleteBranchDialog(owner: null, branchName));
 
         public string CurrentBranch => commands.Module.GetSelectedBranch(emptyIfDetached: true);
 

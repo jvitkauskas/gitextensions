@@ -122,7 +122,10 @@ internal static partial class AvaloniaDialogs
                 commands,
                 currentCheckout => gridFilter.Filter.GetRevisionFilter(new Lazy<ObjectId>(() => currentCheckout)),
                 showArtificial: true,
-                getPathFilter: _ => gridFilter.GetPathFilter());
+                getPathFilter: _ => gridFilter.GetPathFilter())
+            {
+                AheadBehindDataProvider = new GitCommands.Git.AheadBehindDataProvider(() => commands.Module.GitExecutable),
+            };
             RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
             {
                 MultiSelect = true,

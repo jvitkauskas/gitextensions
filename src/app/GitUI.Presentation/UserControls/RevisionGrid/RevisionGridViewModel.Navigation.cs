@@ -158,6 +158,37 @@ public sealed partial class RevisionGridViewModel
         SelectRevisions([revision.ObjectId, .. revisions.Take(Math.Max(1, revisions.Count - 1)).Select(r => r.ObjectId)]);
     }
 
+    /// <summary>
+    ///  As <c>GoToRelatedRef</c> on the double click of a label: the tracked (or tracking) branch is selected, or the deletion
+    ///  of a branch whose remote is gone offered.
+    /// </summary>
+    /// <returns>Whether the label has a related branch (else the double click opens the revision).</returns>
+    public bool GoToRelatedRef(RevisionRefItem item)
+    {
+        if (item.GoneLocalBranch is { } goneBranch)
+        {
+            _host.DeleteBranch(goneBranch);
+            return true;
+        }
+
+        if (item.RelatedRefCompleteName is not { } completeName)
+        {
+            return false;
+        }
+
+        // As GoToRef: the revision of the reference, if listed.
+        foreach (RevisionGridRow row in Rows)
+        {
+            if (row.Revision.Refs.Any(r => r.CompleteName == completeName))
+            {
+                SelectRevision(row.ObjectId);
+                break;
+            }
+        }
+
+        return true;
+    }
+
     /// <summary>Raised to select several rows in this order (the first one first), which the view selects.</summary>
     public event EventHandler<IReadOnlyList<RevisionGridRow>>? RowsSelectionRequested;
 

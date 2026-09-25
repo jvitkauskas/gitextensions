@@ -998,7 +998,7 @@ internal static partial class AvaloniaDialogs
     }
 
     internal static RevisionGridDisplayOptions GetDisplayOptions()
-        => new(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout, AppSettings.ShowRemoteBranches, AppSettings.ShowTags, AppSettings.ShowCommitBodyInRevisionGrid);
+        => new(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout, AppSettings.ShowRemoteBranches, AppSettings.ShowTags, AppSettings.ShowCommitBodyInRevisionGrid, AppSettings.ShowRevisionGridTooltips.Value);
 
     /// <summary>The columns of the grid from the settings.</summary>
     internal static void ApplyColumns(RevisionGridViewModel grid)

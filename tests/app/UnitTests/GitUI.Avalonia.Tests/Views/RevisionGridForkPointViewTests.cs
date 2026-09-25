@@ -37,4 +37,20 @@ public sealed class RevisionGridForkPointViewTests : HeadlessTest
         viewModel.SelectedRows.Select(r => r.ObjectId).Should().Equal(history[6].ObjectId, history[3].ObjectId);
         window.Close();
     });
+
+    [Test]
+    public Task A_double_click_on_a_label_goes_to_its_related_branch() => OnUiThreadAsync(() =>
+    {
+        List<GitRevision> history = RevisionGridViewTests.CreateHistory();
+        RevisionGridViewModel viewModel = new(new RevisionGridViewTests.FakeRevisionGridHost(history), new RevisionGridDisplayOptions(RelativeDate: true, ShowAuthorDate: false));
+        viewModel.Load();
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectRevision(history[0].ObjectId);
+
+        // As GoToRelatedRef: the revision of the tracked (or tracking) branch.
+        viewModel.GoToRelatedRef(new RevisionRefItem("feature", RevisionRefKind.Branch, IsCurrentBranch: false) { RelatedRefCompleteName = "refs/tags/v1.0" }).Should().BeTrue();
+        viewModel.SelectedRow!.ObjectId.Should().Be(history[6].ObjectId);
+
+        viewModel.GoToRelatedRef(new RevisionRefItem("main", RevisionRefKind.Branch, IsCurrentBranch: false)).Should().BeFalse("without a related branch, the double click opens the revision");
+    });
 }

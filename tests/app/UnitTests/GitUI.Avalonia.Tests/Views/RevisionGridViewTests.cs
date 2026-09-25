@@ -101,7 +101,7 @@ public sealed class RevisionGridViewTests : HeadlessTest
     }
 
     private static IGitRef Ref(GitRevision revision, string completeName, string remote = "")
-        => new GitRef(null!, revision.ObjectId, completeName, remote);
+        => new GitRef(TestGitModule.Instance, revision.ObjectId, completeName, remote);
 
     private static (Window Window, RevisionGridViewModel ViewModel) Show(List<GitRevision> history, ObjectId? toBeSelected = null)
     {

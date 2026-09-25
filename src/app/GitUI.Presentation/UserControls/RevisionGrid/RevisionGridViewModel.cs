@@ -37,11 +37,36 @@ public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsC
     /// <summary>The reference (none for a stash label), for its menu and the hover highlighting of its ancestry.</summary>
     public IGitRef? GitRef { get; init; }
 
+    /// <summary>
+    ///  The label nestled after it (as <c>DrawBranchWithNestledRemote</c>): the remote branch the local branch tracks, or the
+    ///  ahead / behind counts of the tracked (or tracking) branch.
+    /// </summary>
+    public RevisionRefItem? Nested { get; init; }
+
+    /// <summary>Whether the label stands for a branch of another commit (the dashed <c>NestledVirtualRef</c>).</summary>
+    public bool IsVirtual { get; init; }
+
+    /// <summary>Whether the tracked remote branch is gone (in bold).</summary>
+    public bool IsGone { get; init; }
+
+    /// <summary>The branch a double click selects (as <c>GoToRelatedRef</c>), if any.</summary>
+    public string? RelatedRefCompleteName { get; init; }
+
+    /// <summary>The local branch whose deletion a double click offers, as its tracked remote branch is gone.</summary>
+    public string? GoneLocalBranch { get; init; }
+
+    /// <summary>The tooltip of the label (<c>TryGetToolTip</c> with it highlighted), if any.</summary>
+    public string? ToolTip { get; init; }
+
+    /// <summary>Whether the label is hovered and double clicked.</summary>
+    public bool IsInteractive => GitRef is not null || RelatedRefCompleteName is not null || GoneLocalBranch is not null;
+
     // Compared as shown, not by the reference object.
     public bool Equals(RevisionRefItem? other)
-        => other is not null && Name == other.Name && Kind == other.Kind && IsCurrentBranch == other.IsCurrentBranch;
+        => other is not null && Name == other.Name && Kind == other.Kind && IsCurrentBranch == other.IsCurrentBranch
+            && IsVirtual == other.IsVirtual && IsGone == other.IsGone && Equals(Nested, other.Nested);
 
-    public override int GetHashCode() => HashCode.Combine(Name, Kind, IsCurrentBranch);
+    public override int GetHashCode() => HashCode.Combine(Name, Kind, IsCurrentBranch, IsVirtual, Nested);
 }
 
 /// <summary>How the revisions are shown (the <c>AppSettings</c> of the WinForms columns).</summary>
@@ -51,27 +76,20 @@ public sealed record RevisionRefItem(string Name, RevisionRefKind Kind, bool IsC
 /// <param name="QuickSearchTimeout">How long the quick search string is kept after typing (<c>AppSettings.RevisionGridQuickSearchTimeout</c>).</param>
 /// <param name="ShowRemoteBranches">As <c>AppSettings.ShowRemoteBranches</c>: the remote branches are shown as references.</param>
 /// <param name="ShowTags">As <c>AppSettings.ShowTags</c>: the tags are shown as references.</param>
-public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000, bool ShowRemoteBranches = true, bool ShowTags = true, bool ShowCommitBody = false);
+/// <param name="ShowRevisionGridTooltips">As <c>AppSettings.ShowRevisionGridTooltips</c>: the labels always have a tooltip.</param>
+public sealed record RevisionGridDisplayOptions(bool RelativeDate, bool ShowAuthorDate, string QuickSearchLabel = "Searching for: ", int QuickSearchTimeout = 4000, bool ShowRemoteBranches = true, bool ShowTags = true, bool ShowCommitBody = false, bool ShowRevisionGridTooltips = false);
 
 /// <summary>A row of the revision grid: a revision and its row in the <see cref="RevisionGraph"/>.</summary>
 public sealed partial class RevisionGridRow : ObservableObject
 {
-    public RevisionGridRow(int index, GitRevision revision, RevisionGridDisplayOptions options, string? currentBranch, IReadOnlyList<RevisionRefItem>? superprojectRefs = null)
+    /// <param name="aheadBehind">The ahead / behind data by local branch (<c>IAheadBehindDataProvider.GetData</c>), if shown.</param>
+    public RevisionGridRow(int index, GitRevision revision, RevisionGridDisplayOptions options, string? currentBranch, IReadOnlyList<RevisionRefItem>? superprojectRefs = null, IReadOnlyDictionary<string, GitCommands.Git.AheadBehindData>? aheadBehind = null)
     {
         Index = index;
         Revision = revision;
         ShortId = revision.IsArtificial ? "" : revision.ObjectId.ToShortString();
         Date = FormatDate(options.ShowAuthorDate ? revision.AuthorDate : revision.CommitDate, options.RelativeDate);
-        List<RevisionRefItem> refs = [.. revision.Refs
-            .Where(r => (options.ShowRemoteBranches || !r.IsRemote) && (options.ShowTags || !r.IsTag))
-            .OrderBy(r => r.IsTag ? 2 : r.IsRemote ? 1 : 0)
-            .Select(r => new RevisionRefItem(
-                r.Name,
-                r.IsHead ? RevisionRefKind.Branch : r.IsRemote ? RevisionRefKind.RemoteBranch : r.IsTag ? RevisionRefKind.Tag : RevisionRefKind.Other,
-                r.IsHead && r.Name == currentBranch)
-            {
-                GitRef = r,
-            })];
+        List<RevisionRefItem> refs = RevisionRefLabels.Build(revision, options, currentBranch, aheadBehind);
 
         // As MessageColumnProvider.OnCellPainting: after the references, the label of a stash (its reflog selector without
         // "refs/"), or the autostash with its subject as label (and no message).
@@ -248,6 +266,24 @@ public interface IRevisionGridHost
 
     /// <summary>In a submodule, the labels of the superproject for the revision (read with the revisions).</summary>
     IReadOnlyList<RevisionRefItem> GetSuperprojectRefs(GitRevision revision) => [];
+
+    /// <summary>
+    ///  The ahead / behind data by local branch for the labels (<c>SetAheadBehindDataProvider</c>), <see langword="null"/> if
+    ///  not shown (<c>AppSettings.ShowAheadBehindData</c>).
+    /// </summary>
+    IReadOnlyDictionary<string, GitCommands.Git.AheadBehindData>? GetAheadBehindData() => null;
+
+    /// <summary>Raised on the UI thread when the cache of the avatars was cleared (<c>IAvatarCacheCleaner.CacheCleared</c>).</summary>
+    event EventHandler? AvatarsCleared
+    {
+        add { }
+        remove { }
+    }
+
+    /// <summary>As the <c>handleGone</c> of <c>GoToRelatedRef</c>: offers to delete the branch whose remote is gone.</summary>
+    void DeleteBranch(string branchName)
+    {
+    }
 }
 
 /// <summary>
@@ -263,12 +299,17 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     private bool _isCaching;
     private int _cacheRequestedTo = -1;
     private bool _disposed;
+    private IReadOnlyDictionary<string, GitCommands.Git.AheadBehindData>? _aheadBehind;
+    private bool _aheadBehindRead;
 
     public RevisionGridViewModel(IRevisionGridHost host, RevisionGridDisplayOptions options)
     {
         _host = host;
         _options = options;
+        _host.AvatarsCleared += OnAvatarsCleared;
     }
+
+    private void OnAvatarsCleared(object? sender, EventArgs e) => ClearAvatars();
 
     /// <summary>How the revisions are shown; setting it loads them again (as the view settings of the grid).</summary>
     public RevisionGridDisplayOptions DisplayOptions
@@ -360,6 +401,8 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         CancellationToken cancellationToken = _loadCancellation.Token;
 
         _toBeSelected = toBeSelected;
+        _aheadBehind = null;
+        _aheadBehindRead = false;
         Graph.Clear();
         Rows.Clear();
         CachedGraphRowCount = 0;
@@ -415,11 +458,19 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
         int count = Graph.Count;
         List<RevisionGridRow> rows = [];
         string currentBranch = _host.CurrentBranch;
+
+        // As GetAheadBehind: read once for each load, when the first labels are shown.
+        if (!_aheadBehindRead)
+        {
+            _aheadBehind = _host.GetAheadBehindData();
+            _aheadBehindRead = true;
+        }
+
         for (int index = Rows.Count; index < count; index++)
         {
             if (Graph.GetNodeForRow(index)?.GitRevision is { } revision)
             {
-                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch, _host.GetSuperprojectRefs(revision)) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip, Changes = revision.IsArtificial ? GetArtificialCommitChanges(revision.ObjectId) : null });
+                rows.Add(new RevisionGridRow(index, revision, _options, currentBranch, _host.GetSuperprojectRefs(revision), _aheadBehind) { IsAuthorHighlighted = IsAuthorHighlightedFor(revision), AuthorToolTipProvider = GetAuthorToolTip, Changes = revision.IsArtificial ? GetArtificialCommitChanges(revision.ObjectId) : null });
             }
         }
 
@@ -577,6 +628,7 @@ public sealed partial class RevisionGridViewModel : ObservableObject, IDisposabl
     {
         // Not disposed: the revision reader in the background may still use its token.
         _disposed = true;
+        _host.AvatarsCleared -= OnAvatarsCleared;
         _loadCancellation?.Cancel();
     }
 }

@@ -193,8 +193,9 @@ Every "not yet" of the rows above was checked against the code on 2026-09-25; th
   hotkeys, the first change after loading, the position kept for the same file, go to line by the line of the file. Going
   to an occurrence selects it: AvaloniaEdit drops a selection the caret leaves. `TextEditor.ScrollToVerticalOffset` does not
   scroll, so `TextEditorView` sets the offset of its scroll viewer.)
-- **Revision grid**: ref label tooltips and double-click, nested remote / ahead-behind
-  labels, avatars reloaded when their cache is cleared, the favicon of the build report tab; the grid menu of `FormLog`.
+- **Revision grid**: the favicon of the build report tab; the grid menu of `FormLog`. (Done since the audit: the "select next fork point" hotkey; the avatars loaded again when their cache is cleared; the labels of
+  `MessageColumnProvider` with the tracked remote nestled after its branch and the ahead / behind counts as a virtual label
+  (in italics: Avalonia borders have no dashes), their tooltips and the double click going to the related branch.)
 - **File history**: the filter toolbar, the build report tab, the Navigate and View menus of its grid.
 - **Stash**: the hotkeys (next / previous stash, refresh), the cherry-pick of all changes.
 - **Blame**: avatars; inline blame in the file tree tab.

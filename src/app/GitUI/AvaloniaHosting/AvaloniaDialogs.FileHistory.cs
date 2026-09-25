@@ -48,6 +48,7 @@ internal static partial class AvaloniaDialogs
         {
             MultiSelect = true,
         };
+        window.Closed += (_, _) => grid.Dispose();
         FileViewerHost fileViewerHost = new(commands);
         CommitDiffViewModel commitDiff = new(
             ViewStrings.Load<CommitDiffStrings>(),

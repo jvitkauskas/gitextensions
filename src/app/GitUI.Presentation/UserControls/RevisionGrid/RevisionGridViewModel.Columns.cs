@@ -199,13 +199,26 @@ public sealed partial class RevisionGridViewModel
         _ = SetAvatarAsync(row, avatar);
     }
 
-    /// <summary>Forgets the loaded avatars, e.g. after the cache of the avatars was cleared.</summary>
+    /// <summary>
+    ///  Forgets the loaded avatars after the cache of the avatars was cleared, and loads again those shown (as
+    ///  <c>AvatarColumnProvider</c> repaints the grid).
+    /// </summary>
     public void ClearAvatars()
     {
         _avatars.Clear();
+        List<RevisionGridRow> shown = [];
         foreach (RevisionGridRow row in Rows)
         {
-            row.Avatar = null;
+            if (row.Avatar is not null)
+            {
+                row.Avatar = null;
+                shown.Add(row);
+            }
+        }
+
+        foreach (RevisionGridRow row in shown)
+        {
+            RequestAvatar(row);
         }
     }
 
