@@ -13,6 +13,18 @@ internal sealed class AppSettingsTests
 {
     private const string SettingsFileContent = @"<?xml version=""1.0"" encoding=""utf-8""?><dictionary />";
 
+    [Test]
+    public void The_mutex_of_the_settings_file_can_be_created_on_every_system()
+    {
+        // The settings were not saved at all off Windows while the name had the path (with '/') in it.
+        string path = Path.Combine(Path.GetTempPath(), "some folder", "GitExtensions.settings");
+
+        using Mutex mutex = new(initiallyOwned: false, name: AppSettings.GetSettingsMutexName(path));
+
+        mutex.WaitOne(TimeSpan.FromSeconds(10)).Should().BeTrue();
+        mutex.ReleaseMutex();
+    }
+
     [TestCase(null, "https://git-extensions-documentation.readthedocs.org/en/main/")]
     [TestCase("", "https://git-extensions-documentation.readthedocs.org/en/main/")]
     [TestCase("\t", "https://git-extensions-documentation.readthedocs.org/en/main/")]

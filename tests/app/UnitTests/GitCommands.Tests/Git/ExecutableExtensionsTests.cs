@@ -19,13 +19,8 @@ public sealed class ExecutableExtensionsTests
     {
         _executable = new MockExecutable();
 
-        // Work around: When running unittest, Application.UserAppDataPath always points to
-        // %APPDATA%Roaming\Microsoft Corporation\Microsoft.TestHost.x86
-        // We need to correct it to %APPDATA%\GitExtensions\GitExtensions for v3 at least
-        string userAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string settingPath = Path.Combine(userAppDataPath, "GitExtensions\\GitExtensions\\GitExtensions.settings");
-        DistributedSettings settingContainer = new(lowerPriority: null, GitExtSettingsCache.FromCache(settingPath), SettingLevel.Unknown);
-        _appPath = settingContainer.GetString("gitcommand", "git.exe");
+        // git on the PATH (the lengths of the batch tests below are calibrated for the name git.exe on Windows).
+        _appPath = OperatingSystem.IsWindows() ? "git.exe" : "git";
 
         // Execute process in GitExtension working directory, so that git will return success exit-code
         // git always return non-zero exit code when run git reset outside of git repository
@@ -116,6 +111,7 @@ public sealed class ExecutableExtensionsTests
 
     [TestCase(32766 - 8, 32766 - 8, int.MaxValue)]
     [TestCase(32766 - 9, 1, int.MaxValue)]
+    [Platform(Include = "Win")] // The length of a command line is limited to 32767 characters on Windows only.
     public void RunBatchCommand_throw_when_cmd_exceed_max_length(int arg1Len, int arg2Len,
         int maxLength)
     {

@@ -74,7 +74,7 @@ public sealed class GitBranchNameNormaliserTest
     [TestCase("Anhörung`!@#$%", "Anhörung`!@#$%")]
     [TestCase("test\"test", "test_test")]
     [TestCase("test<test>test", "test_test_test")]
-    [TestCase("test|test", "test_test")]
+    [TestCase("test|test", "test_test", IncludePlatform = "Win")] // '|' is only invalid in the file names of Windows
     public void Normalise_rule04(string input, string expected)
     {
         GitBranchNameNormaliser.Rule04(input, _gitBranchNameOptions).Should().Be(expected);

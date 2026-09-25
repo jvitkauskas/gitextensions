@@ -1,8 +1,11 @@
 ﻿using System.IO.Abstractions;
+using System.Runtime.Versioning;
 using GitCommands;
 using NSubstitute;
 
 namespace GitCommandsTests;
+[Platform(Include = "Win")]
+[SupportedOSPlatform("windows6.1")]
 public class FileAssociatedIconProviderTests
 {
     private FileBase _file = null!;

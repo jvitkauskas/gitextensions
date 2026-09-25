@@ -23,7 +23,6 @@ public class PathUtilTest
     [TestCase('"', false)]
     [TestCase('<', false)]
     [TestCase('>', false)]
-    [TestCase('|', false)]
     [TestCase('\0', false)]
     [TestCase('\t', false)]
     [TestCase('\n', false)]
@@ -32,6 +31,12 @@ public class PathUtilTest
     public void IsValidPathChar_should_return_expected(char c, bool expected)
     {
         PathUtil.IsValidPathChar(c).Should().Be(expected);
+    }
+
+    [Test]
+    public void IsValidPathChar_should_follow_the_invalid_path_chars_of_the_system_for_the_pipe()
+    {
+        PathUtil.IsValidPathChar('|').Should().Be(!Path.GetInvalidPathChars().Contains('|'));
     }
 
     [Test]
@@ -96,6 +101,7 @@ public class PathUtilTest
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void ToWslPathTest()
     {
         PathUtil.ToWslPath(null).Should().BeNull();
@@ -105,6 +111,7 @@ public class PathUtilTest
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void ToCygwinPathTest()
     {
         PathUtil.ToCygwinPath(null).Should().BeNull();
@@ -114,6 +121,7 @@ public class PathUtilTest
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void ToMountPathTest()
     {
         const string prefix = "PrEfiX";
@@ -361,6 +369,7 @@ public class PathUtilTest
     [TestCase(@"\\wsl$\Ubuntu\work\..\GitExtensions\", "", @"//wsl$/Ubuntu/work/../GitExtensions/")]
     [TestCase(@"C:\work\..\GitExtensions\", "", @"C:/work/../GitExtensions/")]
     [TestCase(@"work\..\GitExtensions\", "", @"work/../GitExtensions/")]
+    [Platform(Include = "Win")]
     public void GetPathForGitExecution_GetWindowsPath_default(string? path, string wslDistro, string expected)
     {
         PathUtil.GetPathForGitExecution(path, wslDistro).Should().Be(expected);
@@ -372,6 +381,7 @@ public class PathUtilTest
     [TestCase(@"\\wsl$\Ubuntu-20.04\work\..\GitExtensions\", "Ubuntu-20.04", @"/work/../GitExtensions/")]
     [TestCase(@"C:\work\..\GitExtensions\", "Ubuntu", @"/mnt/c/work/../GitExtensions/")]
     [TestCase(@"work\..\GitExtensions\", "Ubuntu", @"work/../GitExtensions/")]
+    [Platform(Include = "Win")]
     public void GetPathForGitExecution_wsl(string? path, string wslDistro, string expected)
     {
         PathUtil.GetPathForGitExecution(path, wslDistro).Should().Be(expected);
@@ -379,6 +389,7 @@ public class PathUtilTest
 
     [TestCase(@"\\wsl$/Ubuntu/work/../GitExtensions", "Ubuntu", @"//wsl$/Ubuntu/work/../GitExtensions")]
     [TestCase(@"\\wsl$\Ubuntu-20.04\work\..\GitExtensions\", "Ubuntu", @"//wsl$/Ubuntu-20.04/work/../GitExtensions/")]
+    [Platform(Include = "Win")]
     public void GetPathForGitExecution_unexpected_usage(string? path, string wslDistro, string expected)
     {
         PathUtil.GetPathForGitExecution(path, wslDistro).Should().Be(expected);
@@ -390,6 +401,7 @@ public class PathUtilTest
     [TestCase(@"\\wsl$\Ubuntu-20.04\work\..\GitExtensions\", "Ubuntu-20.04", @"/work/../GitExtensions/")]
     [TestCase(@"C:\work\..\GitExtensions\", "Ubuntu", @"/mnt/c/work/../GitExtensions/")]
     [TestCase(@"\\wsl$\Ubuntu\work\..\GitExtensions\", "Ubuntu", @"work/../GitExtensions/")]
+    [Platform(Include = "Win")]
     public void GetWindowsPath_wsl(string expected, string wslDistro, string? path)
     {
         PathUtil.GetWindowsPath(path, wslDistro).Should().Be(expected);
@@ -428,7 +440,7 @@ public class PathUtilTest
     {
         string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-        PathUtil.GetDisplayPath(Path.Combine(home, "SomePath")).Should().Be(@"~\SomePath");
+        PathUtil.GetDisplayPath(Path.Combine(home, "SomePath")).Should().Be($"~{Path.DirectorySeparatorChar}SomePath");
         PathUtil.GetDisplayPath("c:\\SomePath").Should().Be("c:\\SomePath");
     }
 
@@ -439,7 +451,19 @@ public class PathUtilTest
     [TestCase("/", new string[0])]
     [TestCase("C:\\foo\\bar", new[] { "C:\\foo\\", "C:\\" })]
     [TestCase("C:\\", new string[0])]
+    [Platform(Include = "Win")]
     public void FindAncestors(string? path, string[] expected)
+    {
+        PathUtil.FindAncestors(path!).ToArray().Should().Equal(expected);
+    }
+
+    [TestCase("/foo/bar", new[] { "/foo/", "/" })]
+    [TestCase("/foo/bar/", new[] { "/foo/", "/" })]
+    [TestCase("/foo", new[] { "/" })]
+    [TestCase("/foo/", new[] { "/" })]
+    [TestCase("/", new string[0])]
+    [Platform(Exclude = "Win")]
+    public void FindAncestors_unix(string? path, string[] expected)
     {
         PathUtil.FindAncestors(path!).ToArray().Should().Equal(expected);
     }

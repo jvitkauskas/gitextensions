@@ -1680,8 +1680,7 @@ public static partial class AppSettings
         {
             SettingsContainer.LockedAction(() =>
             {
-                // prepend "Global\" in order to be safe in preparation for non-Windows OS, too
-                _globalMutex ??= new Mutex(initiallyOwned: false, name: @$"Global\Mutex{SettingsFilePath.ToPosixPath()}");
+                _globalMutex ??= new Mutex(initiallyOwned: false, name: GetSettingsMutexName(SettingsFilePath));
 
                 try
                 {
@@ -1699,6 +1698,22 @@ public static partial class AppSettings
         catch
         {
         }
+    }
+
+    /// <summary>
+    ///  The name of the mutex that serializes the saving of a settings file between the processes. On Windows it contains the
+    ///  path (as before, so that other versions running at the same time use the same mutex); a name on Unix cannot contain
+    ///  '/', so there it has a hash of the path.
+    /// </summary>
+    internal static string GetSettingsMutexName(string settingsFilePath)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return @$"Global\Mutex{settingsFilePath.ToPosixPath()}";
+        }
+
+        byte[] hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(settingsFilePath));
+        return @$"Global\GitExtensionsSettings{Convert.ToHexString(hash)}";
     }
 
     public static void LoadSettings()

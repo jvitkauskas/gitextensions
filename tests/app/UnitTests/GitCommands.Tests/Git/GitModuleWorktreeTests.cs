@@ -27,6 +27,7 @@ public sealed class GitModuleWorktreeTests
     }
 
     [Test]
+    [Platform(Include = "Win")] // The paths of Windows given by git with slashes.
     public void GetWorktrees_should_parse_single_worktree_with_branch()
     {
         string output = string.Join('\0',
@@ -88,6 +89,7 @@ public sealed class GitModuleWorktreeTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void GetWorktrees_should_parse_multiple_worktrees()
     {
         string output = string.Join('\0',
@@ -142,6 +144,7 @@ public sealed class GitModuleWorktreeTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void GetWorktrees_should_handle_path_with_spaces()
     {
         string output = string.Join('\0',

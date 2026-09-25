@@ -77,6 +77,7 @@ public class GitDirectoryResolverTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void Resolve_should_return_resolved_full_path_from_git_file_if_present()
     {
         _file.Exists(_gitFile).Returns(true);
@@ -152,7 +153,7 @@ public class GitDirectoryResolverTests
         helper.CreateFile(submodulePath, ".git", "\r \r\ngitdir: ../../.git/modules/Externals/Git.hub\r\ntext");
         _resolver = new GitDirectoryResolver();
 
-        _resolver.Resolve(submodulePath).Should().Be($@"{helper.Module.WorkingDirGitDir}modules\Externals\Git.hub\");
+        _resolver.Resolve(submodulePath).Should().Be(helper.Module.WorkingDirGitDir + Path.Combine("modules", "Externals", "Git.hub") + Path.DirectorySeparatorChar);
         _resolver.Resolve(helper.Module.WorkingDir).Should().Be(helper.Module.WorkingDirGitDir);
     }
 }

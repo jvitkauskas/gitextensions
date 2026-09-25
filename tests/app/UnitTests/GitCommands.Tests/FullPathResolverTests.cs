@@ -1,6 +1,8 @@
 ﻿using GitCommands;
 
 namespace GitCommandsTests;
+
+[Platform(Include = "Win")] // The paths of Windows; see FullPathResolverUnixTests.
 public class FullPathResolverTests
 {
     private readonly string _workingDir = @"c:\dev\repo";
@@ -65,5 +67,50 @@ public class FullPathResolverTests
     {
         FullPathResolver resolver = new(() => workingDir!);
         resolver.Resolve("file.txt").Should().Be(Path.Combine(Environment.CurrentDirectory, "file.txt").Replace("/", "\\"));
+    }
+}
+
+[Platform(Exclude = "Win")]
+public class FullPathResolverUnixTests
+{
+    private readonly FullPathResolver _resolver = new(() => "/home/user/repo");
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void Resolve_should_return_null_if_path_null_or_empty(string? path)
+    {
+        _resolver.Resolve(path).Should().BeNull();
+    }
+
+    [TestCase("/")]
+    [TestCase("/etc/gitconfig")]
+    public void Resolve_should_return_original_path_if_rooted(string path)
+    {
+        _resolver.Resolve(path).Should().Be(path);
+    }
+
+    [TestCase("file", "/home/user/repo/file")]
+    [TestCase("drivers/gpu/drm/nouveau/nvkm/subdev/i2c/aux.c", "/home/user/repo/drivers/gpu/drm/nouveau/nvkm/subdev/i2c/aux.c")]
+    [TestCase("folder/c#/file", "/home/user/repo/folder/c#/file")]
+    [TestCase(@"back\slash", @"/home/user/repo/back\slash")]
+    public void Resolve_should_return_full_path(string path, string expected)
+    {
+        _resolver.Resolve(path).Should().Be(expected);
+    }
+
+    [TestCase("/home/user/repo")]
+    [TestCase("/home/user/repo/")]
+    public void Resolve_combines_paths(string workingDir)
+    {
+        new FullPathResolver(() => workingDir).Resolve("file.txt").Should().Be("/home/user/repo/file.txt");
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase(" ")]
+    public void Resolve_does_not_throw_on_invalid_workingDir(string? workingDir)
+    {
+        new FullPathResolver(() => workingDir!).Resolve("file.txt").Should().Be(Path.Combine(Environment.CurrentDirectory, "file.txt"));
     }
 }

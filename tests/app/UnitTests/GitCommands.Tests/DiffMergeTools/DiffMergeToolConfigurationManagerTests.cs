@@ -129,6 +129,7 @@ public class DiffMergeToolConfigurationManagerTests
     }
 
     [Test]
+    [Platform(Include = "Win")] // A path of Windows, written with slashes for git.
     public void LoadDiffMergeToolConfig_should_create_tool_config_with_userSuppliedPath_if_tool_unregistered()
     {
         DiffMergeToolConfiguration config = _configurationManager.LoadDiffMergeToolConfig("bla", @"c:\some\path\to the tool\bla.exe");

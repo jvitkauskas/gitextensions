@@ -1,6 +1,8 @@
 ﻿using GitCommands.UserRepositoryHistory;
 
 namespace GitCommandsTests.UserRepositoryHistory;
+
+[Platform(Include = "Win")] // The captions of paths of Windows (drives, backslashes).
 public class RecentRepoSplitterTests
 {
     private const string _relativeLongRepoPath = @"this\is\a\very_very_very_very_very_very_very\long\repo_path";

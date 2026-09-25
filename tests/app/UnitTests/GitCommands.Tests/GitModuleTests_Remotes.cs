@@ -136,10 +136,12 @@ partial class GitModuleTests
             remotes[3].PushUrls.Count.Should().Be(1);
             remotes[3].PushUrls[0].Should().Be("https://github.com/gitextensions/push.git");
 
+            // A local path of Windows is written with slashes for git on Windows only.
+            string bareRepo = OperatingSystem.IsWindows() ? "c:/Bare Repo" : "c:\\Bare Repo";
             remotes[4].Name.Should().Be("with-space");
-            remotes[4].FetchUrl.Should().Be("c:/Bare Repo");
+            remotes[4].FetchUrl.Should().Be(bareRepo);
             remotes[4].PushUrls.Count.Should().Be(1);
-            remotes[4].PushUrls[0].Should().Be("c:/Bare Repo");
+            remotes[4].PushUrls[0].Should().Be(bareRepo);
 
             remotes[5].Name.Should().Be("multi");
             remotes[5].FetchUrl.Should().Be("git@github.com:drewnoakes/gitextensions.git");

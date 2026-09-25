@@ -21,6 +21,7 @@ public partial class CommandsTests
     }
 
     [Test, TestCaseSource(nameof(AddSubmoduleTestCases))]
+    [Platform(Include = "Win")] // Local paths of Windows, written with slashes for git.
     public void AddSubmoduleCmd(string config, IEnumerable<GitConfigItem> configs)
     {
         Commands.AddSubmodule("remotepath", "localpath", "branch", force: false, configs).Arguments.Should().Be($"{config}submodule add -b \"branch\" \"remotepath\" \"localpath\"");
@@ -33,6 +34,7 @@ public partial class CommandsTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void ApplyDiffPatchCmd()
     {
         Commands.ApplyDiffPatch(false, "hello\\world.patch", PathUtil.ToPosixPath).Arguments.Should().Be("apply \"hello/world.patch\"");
@@ -44,6 +46,7 @@ public partial class CommandsTests
     [TestCase(true, false, "hello\\world.patch", "am --3way --signoff \"hello/world.patch\"")]
     [TestCase(true, true, "hello\\world.patch", "am --3way --signoff --ignore-whitespace \"hello/world.patch\"")]
     [TestCase(true, true, null, "am --3way --signoff --ignore-whitespace")]
+    [Platform(Include = "Win")]
     public void ApplyMailboxPatchCmd(bool signOff, bool ignoreWhitespace, string? patchFile, string expected)
     {
         Commands.ApplyMailboxPatch(signOff, ignoreWhitespace, patchFile, PathUtil.ToPosixPath).Arguments.Should().Be(expected);
@@ -264,7 +267,7 @@ public partial class CommandsTests
     [TestCase(false, true, false, null, false, "\t", null, "merge --no-ff --squash --no-edit branch")]
     [TestCase(false, true, false, null, false, "\n", null, "merge --no-ff --squash --no-edit branch")]
     [TestCase(false, true, false, null, false, "foo", null, "merge --no-ff --squash -F \"foo\" --no-edit branch")]
-    [TestCase(false, true, false, null, false, "D:\\myrepo\\.git\\file", null, "merge --no-ff --squash -F \"D:/myrepo/.git/file\" --no-edit branch")]
+    [TestCase(false, true, false, null, false, "D:\\myrepo\\.git\\file", null, "merge --no-ff --squash -F \"D:/myrepo/.git/file\" --no-edit branch", IncludePlatform = "Win")]
 
     // log parameter
     [TestCase(true, true, false, null, false, null, -1, "merge --ff --squash --no-edit branch")]
@@ -317,6 +320,7 @@ public partial class CommandsTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void PushTagCmd()
     {
         Commands.PushTag("path", "tag", all: false).Arguments.Should().Be("push --progress \"path\" tag tag");
