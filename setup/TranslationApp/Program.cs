@@ -24,7 +24,10 @@ internal static class Program
         // Required for translation
         PluginRegistry.InitializeAll();
 
-        AppSettings.Font = SystemFonts.MessageBoxFont!.ToFontDescriptor();
+        if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+        {
+            AppSettings.Font = SystemFonts.MessageBoxFont!.ToFontDescriptor();
+        }
 
         IDictionary<string, List<TranslationItemWithCategory>> neutralItems = TranslationHelpers.LoadNeutralItems();
         string filename = Path.Combine(Translator.GetTranslationDir(), "English.xlf");

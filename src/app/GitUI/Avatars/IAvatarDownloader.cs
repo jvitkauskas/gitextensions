@@ -2,5 +2,5 @@
 
 public interface IAvatarDownloader
 {
-    Task<Image?> DownloadImageAsync(Uri? imageUrl);
+    Task<byte[]?> DownloadImageAsync(Uri? imageUrl);
 }

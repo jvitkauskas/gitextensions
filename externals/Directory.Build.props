@@ -15,6 +15,14 @@
     <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
   </PropertyGroup>
 
+  <!--
+    Git.hub (a submodule) hard-codes net10.0-windows; it targets net10.0 as the application does
+    (docs/avalonia-port/CROSS-PLATFORM.md, phase 2), set before the SDK infers the platform from it.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Git.hub'">
+    <BeforeTargetFrameworkInferenceTargets>$(MSBuildThisFileDirectory)Git.hub.TargetFramework.targets</BeforeTargetFrameworkInferenceTargets>
+  </PropertyGroup>
+
   <!-- https://learn.microsoft.com/nuget/consume-packages/Central-Package-Management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>

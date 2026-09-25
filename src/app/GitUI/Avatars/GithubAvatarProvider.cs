@@ -31,7 +31,7 @@ public sealed partial class GithubAvatarProvider : IAvatarProvider
 
     public bool PerformsIo => true;
 
-    public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public async Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         Uri? uri = await BuildAvatarUriAsync(email, imageSize);
 
@@ -40,7 +40,7 @@ public sealed partial class GithubAvatarProvider : IAvatarProvider
             return null;
         }
 
-        Image? image = await _downloader.DownloadImageAsync(uri);
+        byte[]? image = await _downloader.DownloadImageAsync(uri);
 
         // Sadly GitHub doesn't provide an option to return a 404 error for non-custom avatars
         // and always provides a fallback image (identicon). Using GitHubs fallback image would
@@ -50,7 +50,7 @@ public sealed partial class GithubAvatarProvider : IAvatarProvider
         // GitHub are never scaled and always 420 x 420 - even if a different size was requested.
 
         // We exploit that fact to filter out identicons.
-        bool isIdenticon = imageSize != 420 && image?.Size.Width is 420;
+        bool isIdenticon = imageSize != 420 && image is not null && PngImages.GetWidth(image) is 420;
 
         if (isIdenticon)
         {

@@ -1,4 +1,3 @@
-using System.Drawing.Imaging;
 using GitCommands;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
@@ -46,7 +45,10 @@ internal static partial class AvaloniaDialogs
                 {
                     // Fall back to the button without the status, and the taskbar without the overlay.
                     ReportStatus(status: null, showCount: false, countArtificial: false);
-                    UpdateStatusInTaskbar(RepoStateVisualiser.Unknown.Item1, brush: null);
+                    if (TaskbarProgress.IsPlatformSupported)
+                    {
+                        UpdateStatusInTaskbar(RepoStateVisualiser.Unknown.Item1, color: null);
+                    }
                 }
             };
             _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (_, e)
@@ -69,16 +71,14 @@ internal static partial class AvaloniaDialogs
         private void ReportStatus(IReadOnlyList<GitItemStatus>? status, bool showCount, bool countArtificial)
         {
             RepoStateVisualiser visualiser = new();
-            (Image statusImage, Brush brush) = visualiser.Invoke(status);
-            Image image = showCount ? statusImage : visualiser.Invoke([]).image;
-            if (status is not null && (showCount || countArtificial))
+            (string statusImage, Color color) = visualiser.Invoke(status);
+            string image = showCount ? statusImage : visualiser.Invoke([]).image;
+            if (status is not null && (showCount || countArtificial) && TaskbarProgress.IsPlatformSupported)
             {
-                UpdateStatusInTaskbar(statusImage, brush);
+                UpdateStatusInTaskbar(statusImage, color);
             }
 
-            using MemoryStream stream = new();
-            image.Save(stream, ImageFormat.Png);
-            _workingDirectoryStatusChanged?.Invoke(this, new BrowseWorkingDirectoryStatus(showCount ? status?.Count : null, stream.ToArray(), countArtificial ? status : null));
+            _workingDirectoryStatusChanged?.Invoke(this, new BrowseWorkingDirectoryStatus(showCount ? status?.Count : null, EmbeddedIcons.Get(image), countArtificial ? status : null));
         }
 
         /// <summary>The commands of this repository, which don't change (another repository gets another session).</summary>

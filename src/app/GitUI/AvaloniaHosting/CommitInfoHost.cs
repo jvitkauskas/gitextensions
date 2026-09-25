@@ -240,7 +240,7 @@ internal sealed class CommitInfoHost : ICommitInfoHost
     /// <summary>As <c>AvatarControl.UpdateAvatarAsync</c>: the avatar of the provider, or the default image.</summary>
     public async Task<byte[]?> GetAvatarAsync(string? email, string? name, CancellationToken cancellationToken)
     {
-        Image? image = null;
+        byte[]? image = null;
         if (!string.IsNullOrWhiteSpace(email))
         {
             int size = DpiUtil.Scale(AvatarSize);
@@ -248,10 +248,7 @@ internal sealed class CommitInfoHost : ICommitInfoHost
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        image ??= Properties.Images.User80;
-        using MemoryStream stream = new();
-        image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-        return stream.ToArray();
+        return image ?? GitUI.Avatars.AvatarService.UserImage;
     }
 
     public void EditNotes(ObjectId objectId) => Module.EditNotes(objectId);

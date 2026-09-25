@@ -23,9 +23,9 @@ public interface IShellDescriptor
     public bool HasExecutable { get; }
 
     /// <summary>
-    /// Gets the shell icon.
+    /// Gets the shell icon (PNG data).
     /// </summary>
-    public Image Icon { get; }
+    public byte[] Icon { get; }
 
     /// <summary>
     /// Gets the user visible shell name.

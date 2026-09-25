@@ -47,7 +47,7 @@ public sealed class GravatarProvider : IAvatarProvider, IDisposable
     }
 
     /// <inheritdoc/>
-    public Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         string hash = ComputeHash(email);
 
@@ -62,7 +62,7 @@ public sealed class GravatarProvider : IAvatarProvider, IDisposable
         // TODO NULLABLE UriBuilder.Uri doesn't appear to be nullable
         if (avatarUri is null)
         {
-            return Task.FromResult<Image?>(null);
+            return Task.FromResult<byte[]?>(null);
         }
 
         return _downloader.DownloadImageAsync(avatarUri);

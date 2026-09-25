@@ -29,7 +29,7 @@
     <ArtifactsToolsetDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'toolset'))</ArtifactsToolsetDir>
     <ArtifactsObjDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'obj'))</ArtifactsObjDir>
     <ArtifactsBinDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'bin'))</ArtifactsBinDir>
-    <ArtifactsPluginsDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsBinDir)', 'GitExtensions', '$(SolutionTargetFramework)', 'Plugins'))</ArtifactsPluginsDir>
+    <ArtifactsPluginsDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsBinDir)', 'GitExtensions', '$(PortableTargetFramework)', 'Plugins'))</ArtifactsPluginsDir>
     <ArtifactsTestsDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsBinDir)', 'tests'))</ArtifactsTestsDir>
     <ArtifactsLogDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'log'))</ArtifactsLogDir>
     <ArtifactsTmpDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'tmp'))</ArtifactsTmpDir>

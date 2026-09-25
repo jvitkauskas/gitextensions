@@ -6,9 +6,9 @@
 public interface IAvatarProvider
 {
     /// <summary>
-    /// Provides the avatar image for the associated email at the requested size.
+    /// Provides the avatar image (PNG data) for the associated email at the requested size.
     /// </summary>
-    Task<Image?> GetAvatarAsync(string email, string? name, int imageSize);
+    Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize);
 
     /// <summary>
     /// Provider doesn't perform any I/O and can generate an avatar quicker then getting it from a filesystem cache

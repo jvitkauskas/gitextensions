@@ -1,4 +1,3 @@
-using ConEmu.Inside;
 using GitCommands;
 using GitUI.Presentation.Services;
 using GitUI.Shells;
@@ -45,7 +44,7 @@ internal sealed class BuiltInTerminalShellRunner(IShellProvider shellProvider, C
         }
 
         string commandLine = shellProvider.GetShellCommandLine(AppSettings.ConEmuTerminal.Value);
-        if (commandLine == ConEmuConstants.DefaultConsoleCommandLine)
+        if (commandLine == ShellProvider.DefaultConsoleCommandLine)
         {
             // The fallback of the shell provider, in the syntax of ConEmu.
             commandLine = "cmd.exe";
@@ -57,7 +56,7 @@ internal sealed class BuiltInTerminalShellRunner(IShellProvider shellProvider, C
         if (!string.IsNullOrEmpty(AppSettings.GitCommandValue) && Path.GetDirectoryName(AppSettings.GitCommandValue) is { Length: > 0 } gitDirectory)
         {
             // As ConEmu: git of the settings first in the path of the shell.
-            environment["PATH"] = $"{gitDirectory};{Environment.GetEnvironmentVariable("PATH")}";
+            environment["PATH"] = $"{gitDirectory}{Path.PathSeparator}{Environment.GetEnvironmentVariable("PATH")}";
         }
 
         _terminal.Start(executable, arguments, workDir, environment);

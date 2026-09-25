@@ -7,7 +7,7 @@
   -->
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>ConEmu.Inside</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -18,6 +18,13 @@
     <PackageReference Include="ConEmu.Core" PrivateAssets="all" />
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ConEmu runs on Windows only: the platform analyzer checks the callers (docs/avalonia-port/CROSS-PLATFORM.md, phase 2). -->
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
+      <_Parameter1>windows</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>

@@ -8,14 +8,12 @@ public static class RevisionGraphLaneColor
 {
     public static int GetColorForLane(int seed)
     {
-        return Math.Abs(seed) % PresetGraphBrushes.Count;
+        return Math.Abs(seed) % PresetGraphColors.Count;
     }
 
     public static Color NonRelativeColor { get; } = AppColor.GraphNonRelativeBranch.GetThemeColor();
 
-    internal static Brush NonRelativeBrush { get; }
-
-    internal static readonly List<Brush> PresetGraphBrushes = [];
+    internal static readonly List<Color> PresetGraphColors = [];
 
     static RevisionGraphLaneColor()
     {
@@ -32,16 +30,6 @@ public static class RevisionGraphLaneColor
             branchColors = [Color.Cyan, Color.Magenta, Color.Yellow, Color.Lime];
         }
 
-        foreach (Color color in branchColors)
-        {
-            PresetGraphBrushes.Add(new SolidBrush(color));
-        }
-
-        NonRelativeBrush = new SolidBrush(NonRelativeColor);
-    }
-
-    public static Brush GetBrushForLane(int laneColor)
-    {
-        return PresetGraphBrushes[laneColor];
+        PresetGraphColors.AddRange(branchColors);
     }
 }

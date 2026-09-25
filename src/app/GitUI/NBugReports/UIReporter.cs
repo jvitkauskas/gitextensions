@@ -57,7 +57,7 @@ internal sealed class UIReporter : IBugReporter
 
     /// <summary>The active window of the application, which owns the reports (as <c>Form.ActiveForm</c>).</summary>
     private static IWin32Window? OwnerForm
-        => new WindowOwner(NativeMethods.GetActiveWindow()).ToWin32Window();
+        => new WindowOwner(OperatingSystem.IsWindows() ? NativeMethods.GetActiveWindow() : GitUI.Avalonia.Hosting.AvaloniaDialogHost.GetActiveWindowHandle()).ToWin32Window();
 
     private static IntPtr OwnerFormHandle
         => OwnerForm?.Handle ?? IntPtr.Zero;

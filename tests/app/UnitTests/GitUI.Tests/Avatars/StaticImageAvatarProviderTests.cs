@@ -1,4 +1,5 @@
-﻿using GitUI.Avatars;
+﻿using GitUI;
+using GitUI.Avatars;
 
 namespace GitUITests.Avatars;
 public class StaticImageAvatarProviderTests
@@ -8,17 +9,11 @@ public class StaticImageAvatarProviderTests
     private const string _email = "a@a.a";
     private const string _name = "John Lennon";
 
-    private readonly Image _img;
+    private readonly byte[] _img;
 
     public StaticImageAvatarProviderTests()
     {
-        _img = new Bitmap(_size, _size);
-    }
-
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        _img.Dispose();
+        _img = PngImages.Fill(Color.Red, _size);
     }
 
     [Test]
@@ -26,7 +21,7 @@ public class StaticImageAvatarProviderTests
     {
         StaticImageAvatarProvider provider = new(_img);
 
-        Image? result = await provider.GetAvatarAsync(_email, _name, _size);
+        byte[]? result = await provider.GetAvatarAsync(_email, _name, _size);
 
         result.Should().BeSameAs(_img);
     }
@@ -37,8 +32,8 @@ public class StaticImageAvatarProviderTests
         StaticImageAvatarProvider provider = new(_img);
         int otherSize = 32;
 
-        Image? result1 = await provider.GetAvatarAsync(_email, _name, otherSize);
-        Image? result2 = await provider.GetAvatarAsync(_email, _name, otherSize);
+        byte[]? result1 = await provider.GetAvatarAsync(_email, _name, otherSize);
+        byte[]? result2 = await provider.GetAvatarAsync(_email, _name, otherSize);
 
         result2.Should().BeSameAs(result1);
     }

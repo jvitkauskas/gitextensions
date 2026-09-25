@@ -11,5 +11,5 @@ internal static class RevisionGraphLanePaletteInitializer
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2255:The 'ModuleInitializer' attribute should not be used in libraries", Justification = "The palette must be set before GitUI builds any graph, from any entry point.")]
     [ModuleInitializer]
     internal static void Initialize()
-        => RevisionGraphLanePalette.ColorCountProvider = static () => RevisionGraphLaneColor.PresetGraphBrushes.Count;
+        => RevisionGraphLanePalette.ColorCountProvider = static () => RevisionGraphLaneColor.PresetGraphColors.Count;
 }

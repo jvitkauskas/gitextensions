@@ -70,6 +70,7 @@ public sealed class CommonLogic : Translate
     /// <param name="subkey">Registry subkey</param>
     /// <param name="key">Registry key, specify <see langword="null"/> to read default key</param>
     /// <returns>registry value or empty string in case of error</returns>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public static string GetRegistryValue(RegistryKey root, string subkey, string? key = null)
     {
         string? value = null;

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
@@ -50,6 +51,8 @@
     <!-- Resources -->
     <AdditionalFiles Include="Interops\NativeMethods.json" />
     <AdditionalFiles Include="Interops\NativeMethods.txt" />
+    <!-- Icons read as PNG data, without GDI+ (EmbeddedIcons). -->
+    <EmbeddedResource Include="Resources\Icons\*.png;Resources\Icons\*.ico" LogicalName="GitUI.Icons.%(Filename)%(Extension)" />
     <EmbeddedResource Update="Properties\Images.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Images.Designer.cs</LastGenOutput>

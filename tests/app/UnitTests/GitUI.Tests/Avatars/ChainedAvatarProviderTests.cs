@@ -1,4 +1,5 @@
-﻿using GitUI.Avatars;
+﻿using GitUI;
+using GitUI.Avatars;
 using NSubstitute;
 
 namespace GitUITests.Avatars;
@@ -16,32 +17,21 @@ public class ChainedAvatarProviderTests
     private const string _name3 = "George Harrison";
     private const string _name4 = "Ringo Starr";
 
-    private readonly Image _img1;
-    private readonly Image _img2;
-    private readonly Image _img3;
-    private readonly Image _img4;
-    private readonly Image _img5;
-    private readonly Image _img6;
+    private readonly byte[] _img1;
+    private readonly byte[] _img2;
+    private readonly byte[] _img3;
+    private readonly byte[] _img4;
+    private readonly byte[] _img5;
+    private readonly byte[] _img6;
 
     public ChainedAvatarProviderTests()
     {
-        _img1 = new Bitmap(_size, _size);
-        _img2 = new Bitmap(_size, _size);
-        _img3 = new Bitmap(_size, _size);
-        _img4 = new Bitmap(_size, _size);
-        _img5 = new Bitmap(_size, _size);
-        _img6 = new Bitmap(_size, _size);
-    }
-
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        _img1.Dispose();
-        _img2.Dispose();
-        _img3.Dispose();
-        _img4.Dispose();
-        _img5.Dispose();
-        _img6.Dispose();
+        _img1 = PngImages.Fill(Color.FromArgb(1 * 40, 0, 0), _size);
+        _img2 = PngImages.Fill(Color.FromArgb(2 * 40, 0, 0), _size);
+        _img3 = PngImages.Fill(Color.FromArgb(3 * 40, 0, 0), _size);
+        _img4 = PngImages.Fill(Color.FromArgb(4 * 40, 0, 0), _size);
+        _img5 = PngImages.Fill(Color.FromArgb(5 * 40, 0, 0), _size);
+        _img6 = PngImages.Fill(Color.FromArgb(6 * 40, 0, 0), _size);
     }
 
     [Test]
@@ -49,7 +39,7 @@ public class ChainedAvatarProviderTests
     {
         ChainedAvatarProvider provider = new();
 
-        Image? image = await provider.GetAvatarAsync(_email1, _name1, _size);
+        byte[]? image = await provider.GetAvatarAsync(_email1, _name1, _size);
         image.Should().BeNull();
     }
 
@@ -77,26 +67,26 @@ public class ChainedAvatarProviderTests
         provider3.GetAvatarAsync(_email1, _name1, _size).Returns(_img3);
 
         // Case 2: Second provider hit
-        provider1.GetAvatarAsync(_email2, _name2, _size).Returns((Image?)null);
+        provider1.GetAvatarAsync(_email2, _name2, _size).Returns((byte[]?)null);
         provider2.GetAvatarAsync(_email2, _name2, _size).Returns(_img4);
         provider3.GetAvatarAsync(_email2, _name2, _size).Returns(_img5);
 
         // Case 3: Third provider hit
-        provider1.GetAvatarAsync(_email3, _name3, _size).Returns((Image?)null);
-        provider2.GetAvatarAsync(_email3, _name3, _size).Returns((Image?)null);
+        provider1.GetAvatarAsync(_email3, _name3, _size).Returns((byte[]?)null);
+        provider2.GetAvatarAsync(_email3, _name3, _size).Returns((byte[]?)null);
         provider3.GetAvatarAsync(_email3, _name3, _size).Returns(_img6);
 
         // Case 4: No provider hit
-        provider1.GetAvatarAsync(_email4, _name4, _size).Returns((Image?)null);
-        provider2.GetAvatarAsync(_email4, _name4, _size).Returns((Image?)null);
-        provider3.GetAvatarAsync(_email4, _name4, _size).Returns((Image?)null);
+        provider1.GetAvatarAsync(_email4, _name4, _size).Returns((byte[]?)null);
+        provider2.GetAvatarAsync(_email4, _name4, _size).Returns((byte[]?)null);
+        provider3.GetAvatarAsync(_email4, _name4, _size).Returns((byte[]?)null);
 
         ChainedAvatarProvider chainedProvider = new(provider1, provider2, provider3);
 
-        Image? res1 = await chainedProvider.GetAvatarAsync(_email1, _name1, _size);
-        Image? res2 = await chainedProvider.GetAvatarAsync(_email2, _name2, _size);
-        Image? res3 = await chainedProvider.GetAvatarAsync(_email3, _name3, _size);
-        Image? res4 = await chainedProvider.GetAvatarAsync(_email4, _name4, _size);
+        byte[]? res1 = await chainedProvider.GetAvatarAsync(_email1, _name1, _size);
+        byte[]? res2 = await chainedProvider.GetAvatarAsync(_email2, _name2, _size);
+        byte[]? res3 = await chainedProvider.GetAvatarAsync(_email3, _name3, _size);
+        byte[]? res4 = await chainedProvider.GetAvatarAsync(_email4, _name4, _size);
 
         res1.Should().BeSameAs(_img1);
         res2.Should().BeSameAs(_img4);

@@ -10,7 +10,7 @@ public partial class ScriptInfo
     [GeneratedRegex("&(?!&)", RegexOptions.ExplicitCapture)]
     private static partial Regex MnemonicAmpersandRegex { get; }
 
-    private Bitmap? _icon;
+    private byte[]? _icon;
 
     public bool Enabled { get; set; } = true;
 
@@ -64,29 +64,32 @@ public partial class ScriptInfo
     public string GetDisplayName() => MnemonicAmpersandRegex.Replace(Name!, "");
 
     /// <summary>
-    /// Gets the associated bitmap.
+    ///  Gets the icon (PNG data): the image file <see cref="IconFilePath"/> (on Windows also the icon of an executable),
+    ///  else the icon of the resources named <see cref="Icon"/> (<see cref="EmbeddedIcons"/>).
     /// </summary>
-    /// <returns>Bitmap image.</returns>
-    public Bitmap? GetIcon()
+    public byte[]? GetIcon()
     {
         return _icon ??= GetIcon();
 
-        Bitmap? GetIcon()
+        byte[]? GetIcon()
         {
             if (File.Exists(IconFilePath))
             {
-                if (IconFilePath.EndsWith(".ico", StringComparison.OrdinalIgnoreCase))
-                {
-                    using Icon icon = new(IconFilePath);
-                    return icon.ToBitmap();
-                }
-
                 try
                 {
-                    using Icon? associatedIcon = System.Drawing.Icon.ExtractAssociatedIcon(IconFilePath);
-                    if (associatedIcon is not null)
+                    if (PngImages.ToPng(File.ReadAllBytes(IconFilePath)) is byte[] image)
                     {
-                        return associatedIcon.ToBitmap();
+                        return image;
+                    }
+
+                    if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+                    {
+                        using Icon? associatedIcon = System.Drawing.Icon.ExtractAssociatedIcon(IconFilePath);
+                        if (associatedIcon is not null)
+                        {
+                            using Bitmap bitmap = associatedIcon.ToBitmap();
+                            return bitmap.ToPngData();
+                        }
                     }
                 }
                 catch
@@ -99,20 +102,15 @@ public partial class ScriptInfo
                 return null;
             }
 
-            // Get all resources
-            System.Resources.ResourceManager rm
-                = new("GitUI.Properties.Images",
-                    System.Reflection.Assembly.GetExecutingAssembly());
-
-            Bitmap? bitmap = (Bitmap?)rm.GetObject(Icon);
-            if (bitmap is null)
+            byte[]? icon = EmbeddedIcons.TryGet(Icon);
+            if (icon is null)
             {
-                // Discard the invalid name in order to not search for it again, which takes long
+                // Discard the invalid name in order to not search for it again
                 Trace.WriteLine(@$"The icon ""{Icon}"" for user script ""{GetDisplayName()}"" does not exist.");
                 Icon = null;
             }
 
-            return bitmap;
+            return icon;
         }
     }
 }

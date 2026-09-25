@@ -5,7 +5,6 @@ using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Plugins;
 using GitExtensions.Extensibility.Settings;
 using GitExtUtils;
-using GitUI.Properties;
 
 namespace GitUI;
 
@@ -41,7 +40,8 @@ internal partial class FailedPluginWrapper : IGitPlugin
     public Guid Id { get; } = Guid.NewGuid();
     public string? Name { get; init; } = TranslatedStrings.FailedToLoadPlugin;
     public string? Description { get; } = TranslatedStrings.FailedToLoadPlugin;
-    public Image? Icon { get; } = Resources.bug;
+    public Image? Icon => null;
+    public PluginImage? IconImage { get; } = PluginImage.FromBytes(EmbeddedIcons.Get("Bug"));
     public IGitPluginSettingsContainer? SettingsContainer { get; set; }
     public bool HasSettings { get; } = false;
 

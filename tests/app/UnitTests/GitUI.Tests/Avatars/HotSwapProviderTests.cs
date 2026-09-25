@@ -1,4 +1,5 @@
-﻿using GitUI.Avatars;
+﻿using GitUI;
+using GitUI.Avatars;
 using NSubstitute;
 
 namespace GitUITests.Avatars;
@@ -8,24 +9,18 @@ public class HotSwapProviderTests
     private const string _email = "a@a.a";
     private const string _name = "John Lennon";
 
-    private readonly Image _img;
+    private readonly byte[] _img;
 
     public HotSwapProviderTests()
     {
-        _img = new Bitmap(_size, _size);
-    }
-
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        _img.Dispose();
+        _img = PngImages.Fill(Color.Red, _size);
     }
 
     [Test]
     public async Task Returns_null_if_no_provider_is_set()
     {
         HotSwapAvatarProvider provider = new();
-        Image? image = await provider.GetAvatarAsync(_email, _name, 16);
+        byte[]? image = await provider.GetAvatarAsync(_email, _name, 16);
         image.Should().BeNull();
     }
 
@@ -38,7 +33,7 @@ public class HotSwapProviderTests
 
         inner.GetAvatarAsync(_email, _name, _size).Returns(_img);
 
-        Image? result = await provider.GetAvatarAsync(_email, _name, _size);
+        byte[]? result = await provider.GetAvatarAsync(_email, _name, _size);
 
         result.Should().BeSameAs(_img);
     }

@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using GitCommands;
 using GitExtensions.Extensibility.Plugins;
 
 namespace GitUI.CommandsDialogs.RepoHosting;
@@ -81,8 +82,12 @@ internal static class DiscussionHtmlCreator
                 _systemInfoReplacement = [.. kvps];
 
                 // TODO: is it safe to rename the keys ('SF.DialogFont', 'SF.DialogFontSize') to 'SF.MessageBoxFont' or not?
-                _systemInfoReplacement.Add(new KeyValuePair<string, string>("SF.DialogFont", SystemFonts.MessageBoxFont!.Name));
-                _systemInfoReplacement.Add(new KeyValuePair<string, string>("SF.DialogFontSize", string.Format("{0}pt", SystemFonts.MessageBoxFont!.SizeInPoints)));
+                // The font of the dialogs: the one of Windows, elsewhere the one of the application.
+                (string dialogFont, float dialogFontSize) = OperatingSystem.IsWindowsVersionAtLeast(6, 1)
+                    ? (SystemFonts.MessageBoxFont!.Name, SystemFonts.MessageBoxFont!.SizeInPoints)
+                    : (AppSettings.Font.FamilyName, AppSettings.Font.SizeInPoints);
+                _systemInfoReplacement.Add(new KeyValuePair<string, string>("SF.DialogFont", dialogFont));
+                _systemInfoReplacement.Add(new KeyValuePair<string, string>("SF.DialogFontSize", string.Format("{0}pt", dialogFontSize)));
 
                 _systemInfoReplacement.Sort((p1, p2) => p2.Key.CompareTo(p1.Key)); // Required.
             }

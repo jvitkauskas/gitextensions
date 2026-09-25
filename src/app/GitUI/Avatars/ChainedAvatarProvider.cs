@@ -30,11 +30,11 @@ public sealed class ChainedAvatarProvider : IAvatarProvider
     /// Gets an avatar images from multiple avatar providers and returns the first hit.
     /// The providers are queried in the same order that was given during construction.
     /// </summary>
-    public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public async Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         foreach (IAvatarProvider provider in _avatarProviders)
         {
-            Image? avatar = null;
+            byte[]? avatar = null;
 
             try
             {

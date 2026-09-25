@@ -4,6 +4,7 @@ using Windows.Win32.Foundation;
 
 namespace GitUI.ConsoleEmulation.Mintty;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 internal sealed class MinttySession : IDisposable
 {
     private Action<string>? _lineCallback;

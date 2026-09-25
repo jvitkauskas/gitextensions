@@ -9,6 +9,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace GitUI.ConsoleEmulation.Mintty;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 internal sealed class MinttyControl : IDisposable
 {
     private readonly NativeHostWindow _host;

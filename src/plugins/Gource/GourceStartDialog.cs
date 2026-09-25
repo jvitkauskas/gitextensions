@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Drawing.Imaging;
 using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
@@ -96,7 +95,7 @@ internal static class GourceStartDialog
             {
                 try
                 {
-                    Image? image = await AvatarService.DefaultProvider.GetAvatarAsync(author.email, author.name, imageSize: 90);
+                    byte[]? image = await AvatarService.DefaultProvider.GetAvatarAsync(author.email, author.name, imageSize: 90);
                     string filename = author.name + ".png";
 
                     if (image is null || filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
@@ -105,7 +104,7 @@ internal static class GourceStartDialog
                     }
 
                     string filePath = Path.Join(gourceAvatarsDir, filename);
-                    image.Save(filePath, ImageFormat.Png);
+                    File.WriteAllBytes(filePath, image);
                 }
                 catch
                 {

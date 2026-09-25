@@ -15,7 +15,7 @@ public abstract class ShellDescriptor : IShellDescriptor
     public bool HasExecutable => ExecutablePath is not null;
 
     /// <inheritdoc/>
-    public Image Icon { get; protected set; } = null!;
+    public byte[] Icon { get; protected set; } = null!;
 
     /// <inheritdoc/>
     public string Name { get; protected set; } = null!;

@@ -6,6 +6,7 @@ using GitUI.Presentation.Services;
 
 namespace GitUI.ConsoleEmulation.Mintty;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 internal sealed partial class MinttyCommandRunner : IConsoleCommandRunner
 {
     private readonly string _minttyPath;

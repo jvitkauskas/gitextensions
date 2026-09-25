@@ -208,7 +208,7 @@ internal static partial class AvaloniaDialogs
         // As AvatarColumnProvider.GetAvatar: the image of the provider, or the placeholder (Images.User80).
         public async Task<byte[]?> GetAvatarAsync(string email, string? name, int size)
         {
-            Image? image = null;
+            byte[]? image = null;
             try
             {
                 image = await GitUI.Avatars.AvatarService.DefaultProvider.GetAvatarAsync(email, name, DpiUtil.Scale(size)).ConfigureAwait(false);
@@ -218,10 +218,7 @@ internal static partial class AvaloniaDialogs
                 // The placeholder, as the WinForms column when the avatar cannot be loaded.
             }
 
-            image ??= Properties.Images.User80;
-            using MemoryStream stream = new();
-            image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-            return stream.ToArray();
+            return image ?? GitUI.Avatars.AvatarService.UserImage;
         }
 
         // As RevisionGraphColumnProvider.SetHoverHighlightAsync (HoverHighlightCalculator, in the visible rows).

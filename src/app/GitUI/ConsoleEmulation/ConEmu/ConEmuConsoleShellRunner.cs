@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.Versioning;
 using ConEmu.Inside;
 using GitCommands;
 using GitUI.Presentation.Services;
@@ -10,6 +11,7 @@ namespace GitUI.ConsoleEmulation.ConEmu;
 /// <summary>
 ///  Wraps <c>ConEmuControl</c> for the repository browser's terminal tab.
 /// </summary>
+[SupportedOSPlatform("windows")]
 internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, ConsoleEmulatorSettings settings) : IConsoleShellRunner
 {
     private readonly NativeHostWindow _window = new();

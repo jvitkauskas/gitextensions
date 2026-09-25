@@ -61,36 +61,10 @@ internal static partial class AvaloniaDialogs
             AppSettings.OwnScripts = scriptsManager.SerializeIntoXml();
         }
 
-        // As OnPageShown: the images of GitUI.Properties.Images, by name.
+        // As OnPageShown: the icons of the resources (GitUI.Properties.Images), by name.
         public IReadOnlyList<ScriptIconChoice> LoadIcons()
-        {
-            System.Resources.ResourceManager resources = new("GitUI.Properties.Images", Assembly.GetExecutingAssembly());
+            => [.. EmbeddedIcons.Names.Select(name => new ScriptIconChoice(name, EmbeddedIcons.Get(name)))];
 
-            // A dummy request: the resource sets are not loaded before the first request.
-            resources.GetObject("dummy");
-            using System.Resources.ResourceSet? resourceSet = resources.GetResourceSet(CultureInfo.CurrentUICulture, createIfNotExists: true, tryParents: true);
-            if (resourceSet is null)
-            {
-                return [];
-            }
-
-            List<ScriptIconChoice> icons = [];
-            foreach (DictionaryEntry icon in resourceSet.Cast<DictionaryEntry>().OrderBy(icon => icon.Key))
-            {
-                if (icon.Value is Bitmap bitmap && ToPng(bitmap) is byte[] png)
-                {
-                    icons.Add(new ScriptIconChoice(icon.Key.ToString()!, png));
-                }
-            }
-
-            resources.ReleaseAllResources();
-            return icons;
-        }
-
-        public byte[]? GetFileIcon(string path)
-        {
-            using Bitmap? icon = new ScriptInfo { IconFilePath = path }.GetIcon();
-            return ToPng(icon);
-        }
+        public byte[]? GetFileIcon(string path) => new ScriptInfo { IconFilePath = path }.GetIcon();
     }
 }

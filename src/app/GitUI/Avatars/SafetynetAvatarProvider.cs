@@ -18,7 +18,7 @@ public sealed class SafetynetAvatarProvider : IAvatarProvider
     private const int _defaultSize = 64;
 
     private readonly IAvatarProvider _avatarProvider;
-    private readonly Lazy<Image> _safetyNetFallback = new(GenerateSafetynetFallback);
+    private readonly Lazy<byte[]> _safetyNetFallback = new(GenerateSafetynetFallback);
 
     public SafetynetAvatarProvider(IAvatarProvider avatarProvider)
     {
@@ -27,7 +27,7 @@ public sealed class SafetynetAvatarProvider : IAvatarProvider
 
     public bool PerformsIo => _avatarProvider.PerformsIo;
 
-    public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public async Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         if (imageSize < 1)
         {
@@ -41,7 +41,7 @@ public sealed class SafetynetAvatarProvider : IAvatarProvider
 
         try
         {
-            Image? image = await _avatarProvider.GetAvatarAsync(email, name, imageSize);
+            byte[]? image = await _avatarProvider.GetAvatarAsync(email, name, imageSize);
 
             if (image is not null)
             {
@@ -57,10 +57,5 @@ public sealed class SafetynetAvatarProvider : IAvatarProvider
         return _safetyNetFallback.Value;
     }
 
-    private static Image GenerateSafetynetFallback()
-    {
-        Bitmap bmp = new(1, 1);
-        bmp.SetPixel(0, 0, Color.Red.AdaptBackColor());
-        return bmp;
-    }
+    private static byte[] GenerateSafetynetFallback() => PngImages.Fill(Color.Red.AdaptBackColor());
 }

@@ -146,7 +146,7 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
         RecentRepoSplitter splitter = new()
         {
-            MeasureFont = SystemFonts.MenuFont?.ToFontDescriptor(),
+            MeasureFont = OperatingSystem.IsWindowsVersionAtLeast(6, 1) ? SystemFonts.MenuFont?.ToFontDescriptor() : AppSettings.Font,
         };
 
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);
@@ -189,7 +189,7 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
         RecentRepoSplitter splitter = new()
         {
-            MeasureFont = SystemFonts.MenuFont?.ToFontDescriptor(),
+            MeasureFont = OperatingSystem.IsWindowsVersionAtLeast(6, 1) ? SystemFonts.MenuFont?.ToFontDescriptor() : AppSettings.Font,
         };
 
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);

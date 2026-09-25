@@ -85,7 +85,7 @@ public class Theme : IThemeSerializationData
         Color result = GetColor(name);
         if (result == Color.Empty)
         {
-            return Color.FromKnownColor(name);
+            return SystemColorDefaults.Get(name);
         }
 
         return result;
@@ -110,7 +110,7 @@ public class Theme : IThemeSerializationData
     /// This method should only be called before our modifications to .Net system colors.
     /// </summary>
     private static Color GetFixedColor(KnownColor systemColor) =>
-        Color.FromArgb(Color.FromKnownColor(systemColor).ToArgb());
+        SystemColorDefaults.Get(systemColor);
 
     /// <summary>
     /// Whether <see cref="KnownColor"/> represents Windows theme - defined color,

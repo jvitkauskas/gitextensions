@@ -28,7 +28,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconCleanWhenThereIsNoChangedFiles()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke([]);
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke([]);
 
         commitIcon.Should().Be(RepoStateVisualiser.Clean);
     }
@@ -36,7 +36,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconDirtySubmodulesWhenThereAreOnlyWorkTreeSubmodules()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke(new[]
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke(new[]
         {
             CreateGitItemStatus(isSubmodule: true),
             CreateGitItemStatus(isSubmodule: true)
@@ -48,7 +48,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconDirtyWhenThereAreWorkTreeChanges()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke(new[]
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke(new[]
         {
             CreateGitItemStatus(isSubmodule: true),
             CreateGitItemStatus()
@@ -60,7 +60,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconMixedWhenThereAreIndexAndWorkTreeFiles()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke(new[]
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke(new[]
         {
             CreateGitItemStatus(isStaged: true),
             CreateGitItemStatus()
@@ -72,7 +72,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconStagedWhenThereAreOnlyIndexFiles()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke(new[]
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke(new[]
         {
             CreateGitItemStatus(isStaged: true),
             CreateGitItemStatus(isStaged: true)
@@ -84,7 +84,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconUntrackedOnlyWhenThereAreUntrackedFilesOnly()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke(new[]
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke(new[]
         {
             CreateGitItemStatus(isTracked: false),
             CreateGitItemStatus(isTracked: false)
@@ -96,7 +96,7 @@ public sealed class RepoStateVisualiserTests
     [Test]
     public void ReturnsIconUnknownWhenNull()
     {
-        (Image image, Brush brush) commitIcon = _repoStateVisualiser.Invoke(null);
+        (string image, Color color) commitIcon = _repoStateVisualiser.Invoke(null);
 
         commitIcon.Should().Be(RepoStateVisualiser.Unknown);
     }

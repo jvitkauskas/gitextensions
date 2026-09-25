@@ -686,7 +686,7 @@ internal static partial class AvaloniaDialogs
             List<MenuModelItem> others = [];
             foreach (ScriptInfo script in scripts)
             {
-                MenuModelItem item = new(script.Name ?? "", () => RunScript(script), ToPng(script.GetIcon()));
+                MenuModelItem item = new(script.Name ?? "", () => RunScript(script), script.GetIcon());
                 (script.AddToRevisionGridContextMenu ? direct : others).Add(item);
             }
 

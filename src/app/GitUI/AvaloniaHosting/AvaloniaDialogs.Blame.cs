@@ -97,17 +97,14 @@ internal static partial class AvaloniaDialogs
         // As BlameControl.ProcessBlame: the avatar of the provider, or the default image without an email.
         public async Task<byte[]?> GetAvatarAsync(string email, string? name, int size, CancellationToken cancellationToken)
         {
-            Image? image = null;
+            byte[]? image = null;
             if (!string.IsNullOrWhiteSpace(email))
             {
                 image = await GitUI.Avatars.AvatarService.DefaultProvider.GetAvatarAsync(email, name, DpiUtil.Scale(size));
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            image ??= Properties.Images.User80;
-            using MemoryStream stream = new();
-            image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-            return stream.ToArray();
+            return image ?? GitUI.Avatars.AvatarService.UserImage;
         }
 
         // As ConfigureContextMenu, for the repository host plugins of API v2 (IBlameContextMenuProvider): their items for the line.

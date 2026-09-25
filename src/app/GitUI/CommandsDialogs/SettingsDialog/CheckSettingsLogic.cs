@@ -106,9 +106,13 @@ public class CheckSettingsLogic
             yield return envVariable;
         }
 
-        yield return
-            CommonLogic.GetRegistryValue(Registry.LocalMachine,
-                             "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Git_is1", "InstallLocation");
+        if (OperatingSystem.IsWindows())
+        {
+            yield return
+                CommonLogic.GetRegistryValue(Registry.LocalMachine,
+                                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Git_is1", "InstallLocation");
+        }
+
         string? programFiles = Environment.GetEnvironmentVariable("ProgramFiles");
         string? programFilesX86 = null;
         if (IntPtr.Size == 8

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Drawing.Imaging;
 using System.IO.Abstractions;
 using GitCommands;
 
@@ -40,7 +39,7 @@ public sealed class FileSystemAvatarCache : IAvatarProvider, IAvatarCacheCleaner
     public bool PerformsIo => true;
 
     /// <inheritdoc />
-    public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public async Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         if (!_inner.PerformsIo)
         {
@@ -49,7 +48,7 @@ public sealed class FileSystemAvatarCache : IAvatarProvider, IAvatarCacheCleaner
 
         string path = Path.Join(_cacheDir, $"{email}.{imageSize}px.png");
 
-        Image? image = ReadImage();
+        byte[]? image = ReadImage();
 
         if (image is not null)
         {
@@ -69,25 +68,21 @@ public sealed class FileSystemAvatarCache : IAvatarProvider, IAvatarCacheCleaner
         {
             try
             {
-                // Workaround to avoid the "A generic error occurred in GDI+." exception when saving
-                // where copying the image in a new one allows the save on disk to be successful...
-                using Bitmap newImage = new(image);
-                using Stream output = _fileSystem.File.OpenWrite(path);
-                newImage.Save(output, ImageFormat.Png);
+                _fileSystem.File.WriteAllBytes(path, image);
             }
             catch
             {
             }
         }
 
-        Image? ReadImage()
+        byte[]? ReadImage()
         {
             if (!HasExpired())
             {
                 try
                 {
-                    using Stream stream = _fileSystem.File.OpenRead(path);
-                    return Image.FromStream(stream);
+                    byte[] data = _fileSystem.File.ReadAllBytes(path);
+                    return PngImages.GetWidth(data) is null ? null : data;
                 }
                 catch
                 {

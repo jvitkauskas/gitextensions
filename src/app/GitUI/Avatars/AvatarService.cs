@@ -1,5 +1,4 @@
 ﻿using GitCommands;
-using GitUI.Properties;
 
 namespace GitUI.Avatars;
 
@@ -13,13 +12,16 @@ public static class AvatarService
     static AvatarService()
     {
         InitialsAvatarProvider = new();
-        UserImageAvatarProvider = new(Images.User80);
+        UserImageAvatarProvider = new(UserImage);
 
         HotSwapProvider = new();
         (DefaultProvider, CacheCleaner) = SetupCachingAndFallback();
 
         UpdateAvatarProvider();
     }
+
+    /// <summary>The image of an unknown author (Resources\Icons\User80.png, 80 pixels), as PNG data.</summary>
+    public static byte[] UserImage => EmbeddedIcons.Get("User80");
 
     public static IAvatarProvider DefaultProvider { get; }
     public static IAvatarCacheCleaner CacheCleaner { get; }

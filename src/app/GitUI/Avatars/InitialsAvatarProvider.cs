@@ -1,9 +1,6 @@
-﻿using System.Drawing.Drawing2D;
-using System.Drawing.Text;
-using GitCommands;
+﻿using GitCommands;
 using GitExtensions.Extensibility;
 using GitExtUtils.GitUI.Theming;
-using Microsoft;
 
 namespace GitUI.Avatars;
 
@@ -12,11 +9,9 @@ namespace GitUI.Avatars;
 /// </summary>
 public class InitialsAvatarProvider : IAvatarProvider
 {
-    private const float _fontSizeEstimation = 20f;
     private int _unkownCounter = 0;
     private static readonly char[] _emailInitialSeparator = ['.', '-', '_'];
-    private FontFamily? _fontFamily;
-    private Font? _estimationFont;
+    private string _fontFamily = "";
 
     public InitialsAvatarProvider()
     {
@@ -24,14 +19,14 @@ public class InitialsAvatarProvider : IAvatarProvider
     }
 
     /// <inheritdoc/>
-    public Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         (string initials, int colorIndex) = GetInitialsAndColorIndex(email, name);
 
-        (Brush foregroundBrush, Color backgroundColor) = _avatarColors[colorIndex];
-        Image avatar = DrawText(initials, foregroundBrush, backgroundColor, imageSize);
+        (Color foregroundColor, Color backgroundColor) = _avatarColors[colorIndex];
+        byte[] avatar = PngImages.DrawText(initials, foregroundColor, backgroundColor, imageSize, _fontFamily);
 
-        return Task.FromResult<Image?>(avatar);
+        return Task.FromResult<byte[]?>(avatar);
     }
 
     public bool PerformsIo => false;
@@ -144,13 +139,13 @@ public class InitialsAvatarProvider : IAvatarProvider
         return $"{name[0]}{names[^1][0]}".ToUpper();
     }
 
-    private readonly (Brush foregroundBrush, Color backgroundColor)[] _avatarColors = [.. AppSettings.AvatarAuthorInitialsPalette.Split(',').Select(GetAvatarDrawingMaterial)];
+    private readonly (Color foregroundColor, Color backgroundColor)[] _avatarColors = [.. AppSettings.AvatarAuthorInitialsPalette.Split(',').Select(GetAvatarDrawingMaterial)];
 
-    private static (Brush foregroundBrush, Color backgroundColor) GetAvatarDrawingMaterial(string colorCode)
+    private static (Color foregroundColor, Color backgroundColor) GetAvatarDrawingMaterial(string colorCode)
     {
         Color backgroundColor = ConvertToColor(colorCode);
 
-        return (new SolidBrush(backgroundColor.GetContrastColor(AppSettings.AvatarAuthorInitialsLuminanceThreshold)), backgroundColor);
+        return (backgroundColor.GetContrastColor(AppSettings.AvatarAuthorInitialsLuminanceThreshold), backgroundColor);
 
         static Color ConvertToColor(string colorCode)
         {
@@ -165,47 +160,9 @@ public class InitialsAvatarProvider : IAvatarProvider
         }
     }
 
-    private Image DrawText(string? text, Brush foreColor, Color backColor, int avatarSize)
-    {
-        Validates.NotNull(_estimationFont);
-        Validates.NotNull(_fontFamily);
-
-        text ??= "?";
-
-        Bitmap bitmap = new(avatarSize, avatarSize);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.Clear(backColor);
-        graphics.SmoothingMode = SmoothingMode.HighSpeed;
-        graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-
-        SizeF estimatedSize = graphics.MeasureString(text, _estimationFont);
-
-        // Adjust font size based on the estimated measure of input text
-        int squareSize = Math.Max((int)estimatedSize.Width, (int)estimatedSize.Height);
-        float ratio = (float)avatarSize / squareSize;
-        using Font drawingFont = new(_fontFamily, _fontSizeEstimation * ratio);
-        SizeF displayedSize = estimatedSize * ratio;
-
-        // centering horizontally and vertically
-        float xOffset = Math.Max((avatarSize - displayedSize.Width) / 2, 0);
-        float yOffset = Math.Max((avatarSize - displayedSize.Height) / 2, 0);
-        graphics.DrawString(text, drawingFont, foreColor, xOffset, yOffset);
-        graphics.Save();
-
-        return bitmap;
-    }
-
     public void UpdateFontsSettings()
     {
-        Font? oldFont = _estimationFont;
-
-        // The family GDI+ resolves (another one if the system does not have the family of the settings).
-        using (Font font = AppSettings.Font.ToFont())
-        {
-            _fontFamily = new FontFamily(font.FontFamily.Name);
-        }
-
-        _estimationFont = new(_fontFamily, _fontSizeEstimation);
-        oldFont?.Dispose();
+        // SkiaSharp falls back to the default family of the system if it does not have the family of the settings.
+        _fontFamily = AppSettings.Font.FamilyName;
     }
 }

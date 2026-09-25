@@ -1,5 +1,4 @@
 ﻿using GitCommands;
-using GitUI.Properties;
 
 namespace GitUI.Shells;
 
@@ -8,7 +7,7 @@ public class CmdShell : ShellDescriptor
     public CmdShell()
     {
         Name = "cmd";
-        Icon = Images.cmd;
+        Icon = EmbeddedIcons.Get("cmd");
 
         ExecutableName = "cmd.exe";
         if (PathUtil.TryFindShellPath(ExecutableName, out string? exePath))

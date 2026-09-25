@@ -1,26 +1,24 @@
 ﻿using GitExtensions.Extensibility.Git;
-using GitUI.Properties;
 
 namespace GitUI.UserControls;
 
 internal interface IRepoStateVisualiser
 {
-    (Image image, Brush brush) Invoke(IReadOnlyList<GitItemStatus>? allChangedFiles);
+    /// <summary>The icon of the state of the working directory (an icon of <see cref="EmbeddedIcons"/>) and its color (the overlay of the taskbar).</summary>
+    (string image, Color color) Invoke(IReadOnlyList<GitItemStatus>? allChangedFiles);
 }
 
 internal sealed class RepoStateVisualiser : IRepoStateVisualiser
 {
-    // Images properties allocate on each call, so cache our images.
+    internal static readonly (string, Color) Clean = ("RepoStateClean", Color.Lime);
+    internal static readonly (string, Color) Dirty = ("RepoStateDirty", Color.LightSalmon);
+    internal static readonly (string, Color) DirtySubmodules = ("RepoStateDirtySubmodules", Color.Orange);
+    internal static readonly (string, Color) Mixed = ("RepoStateMixed", Color.Yellow);
+    internal static readonly (string, Color) Staged = ("RepoStateStaged", Color.LightSkyBlue);
+    internal static readonly (string, Color) Unknown = ("RepoStateUnknown", Color.Gray);
+    internal static readonly (string, Color) UntrackedOnly = ("RepoStateUntrackedOnly", Color.BlueViolet);
 
-    internal static readonly (Bitmap, Brush) Clean = (Images.RepoStateClean, Brushes.Lime);
-    internal static readonly (Bitmap, Brush) Dirty = (Images.RepoStateDirty, Brushes.LightSalmon);
-    internal static readonly (Bitmap, Brush) DirtySubmodules = (Images.RepoStateDirtySubmodules, Brushes.Orange);
-    internal static readonly (Bitmap, Brush) Mixed = (Images.RepoStateMixed, Brushes.Yellow);
-    internal static readonly (Bitmap, Brush) Staged = (Images.RepoStateStaged, Brushes.LightSkyBlue);
-    internal static readonly (Bitmap, Brush) Unknown = (Images.RepoStateUnknown, Brushes.Gray);
-    internal static readonly (Bitmap, Brush) UntrackedOnly = (Images.RepoStateUntrackedOnly, Brushes.BlueViolet);
-
-    public (Image image, Brush brush) Invoke(IReadOnlyList<GitItemStatus>? allChangedFiles)
+    public (string image, Color color) Invoke(IReadOnlyList<GitItemStatus>? allChangedFiles)
     {
         if (allChangedFiles is null)
         {

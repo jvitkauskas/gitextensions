@@ -109,7 +109,7 @@ internal static partial class AvaloniaDialogs
         {
             List<BrowseShell> shells = [.. _commands.GetRequiredService<IShellProvider>().GetShells()
                 .Where(shell => shell.HasExecutable)
-                .Select(shell => new BrowseShell(shell.Name, ToPng(shell.Icon), shell))];
+                .Select(shell => new BrowseShell(shell.Name, shell.Icon, shell))];
             int defaultShell = shells.FindIndex(shell => string.Equals(shell.Name, BashShell.ShellName, StringComparison.InvariantCultureIgnoreCase));
             if (defaultShell > 0)
             {
@@ -125,7 +125,7 @@ internal static partial class AvaloniaDialogs
         public IReadOnlyList<BrowseMenuItem> GetToolbarScripts()
             => [.. _commands.GetRequiredService<IScriptsManager>().GetScripts()
                 .Where(script => script.Enabled && script.OnEvent == ScriptEvent.ShowInUserMenuBar)
-                .Select(script => new BrowseMenuItem((script.Name ?? "").Replace("_", "__"), null, ToPng(script.GetIcon())) { Invoke = () => RunToolbarScript(script) })];
+                .Select(script => new BrowseMenuItem((script.Name ?? "").Replace("_", "__"), null, script.GetIcon()) { Invoke = () => RunToolbarScript(script) })];
 
         // As ExecuteCommand of a script: run with the owner of the window, the grid refreshed if the script asks for it.
         private void RunToolbarScript(ScriptInfo script, ScriptOptionsProvider? options = null) => AvaloniaUi.RunInHostContext(() =>

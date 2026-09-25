@@ -1,3 +1,4 @@
+using System.Text;
 using Avalonia.Controls;
 using Avalonia.Media;
 using GitUI.Presentation.Services;
@@ -80,11 +81,12 @@ internal sealed class BuiltInTerminal : IEmbeddedControlView, IDisposable
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             Stop();
 
+            // Windows takes the command line as it is; elsewhere the process gets the arguments one by one.
             PtyOptions options = new()
             {
                 Name = executable,
                 App = executable,
-                CommandLine = string.IsNullOrEmpty(arguments) ? [] : [arguments],
+                CommandLine = string.IsNullOrEmpty(arguments) ? [] : OperatingSystem.IsWindows() ? [arguments] : SplitArguments(arguments),
                 VerbatimCommandLine = true,
                 Cwd = workingDirectory,
                 Cols = Math.Max(_control.Terminal.Cols, 20),
@@ -192,5 +194,76 @@ internal sealed class BuiltInTerminal : IEmbeddedControlView, IDisposable
         {
             action();
         }
+    }
+
+    /// <summary>
+    ///  The arguments of a command line (quoted as on Windows, as the arguments of git commands are), split as .NET splits
+    ///  <c>ProcessStartInfo.Arguments</c> off Windows: white space separates the arguments outside double quotes; <c>""</c>
+    ///  in double quotes is a quote; 2n backslashes before a quote are n backslashes, 2n+1 are n and a literal quote.
+    /// </summary>
+    internal static string[] SplitArguments(string arguments)
+    {
+        List<string> result = [];
+        StringBuilder current = new();
+        bool inQuotes = false;
+        bool hasArgument = false;
+        for (int i = 0; i < arguments.Length; i++)
+        {
+            char c = arguments[i];
+            if (c == '\\')
+            {
+                int backslashes = 1;
+                while (i + backslashes < arguments.Length && arguments[i + backslashes] == '\\')
+                {
+                    backslashes++;
+                }
+
+                bool beforeQuote = i + backslashes < arguments.Length && arguments[i + backslashes] == '"';
+                current.Append('\\', beforeQuote ? backslashes / 2 : backslashes);
+                i += backslashes - 1;
+                if (beforeQuote && backslashes % 2 == 1)
+                {
+                    current.Append('"');
+                    i++;
+                }
+
+                hasArgument = true;
+            }
+            else if (c == '"')
+            {
+                if (inQuotes && i + 1 < arguments.Length && arguments[i + 1] == '"')
+                {
+                    current.Append('"');
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+
+                hasArgument = true;
+            }
+            else if (char.IsWhiteSpace(c) && !inQuotes)
+            {
+                if (hasArgument)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                    hasArgument = false;
+                }
+            }
+            else
+            {
+                current.Append(c);
+                hasArgument = true;
+            }
+        }
+
+        if (hasArgument)
+        {
+            result.Add(current.ToString());
+        }
+
+        return [.. result];
     }
 }

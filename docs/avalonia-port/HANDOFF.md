@@ -11,8 +11,12 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 - Phase 0 of `CROSS-PLATFORM.md` (guard rails and CI) is done: the solution builds on Linux, and CI has a Linux job.
 - Phase 1 (portable core libraries) is done: GitExtensions.Extensibility, GitExtUtils, GitUIPluginInterfaces,
   GitCommands, ResourceManager, GitUI.RevisionGraph and GitUI.Presentation target `net10.0`, and their tests run on Linux.
-  The "Platforms" section of the ledger says what runs where. Next: phase 2 (the application starts on Linux and
-  macOS), which the owner has not approved yet; the plan asks for a spike of the modal message boxes first.
+  The "Platforms" section of the ledger says what runs where.
+- Phase 2 (the application starts on Linux and macOS) is under way, approved by the owner. The spike of the modal
+  message boxes passed on X11 (WSLg) and Windows. Done: `Avalonia.Desktop`, owners, message boxes, task dialogs, common
+  dialogs, clipboard, system theme; all application projects target `net10.0`. Under WSLg the application starts,
+  browses, diffs and commits. Left: macOS (not checked: no Mac here), the headless tests on Linux (GitUI.Avalonia.Tests
+  and the other test projects still target `net10.0-windows`), and the Linux issues listed in the ledger.
 - Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
   a fast-forward of `avalonia` and a push of it.
 
@@ -43,8 +47,15 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 - Translations: a new or changed string of a strings class (`GitUI.Presentation/**/*Strings.cs`) needs English.xlf
   regenerated: `cd src/app/GitExtensions && dotnet msbuild -p:Configuration=Release -t:_UpdateEnglishTranslations
   -p:RunTranslationApp=true`. `ViewStringsTests` fails until then; new strings classes are added to its list.
-- A portable copy of the app for smoke tests: copy `artifacts/Release/bin/GitExtensions/net10.0-windows` to another
-  folder, keeping that folder's own `GitExtensions.settings` (portable mode) between copies.
+- A portable copy of the app for smoke tests: copy `artifacts/Release/bin/GitExtensions/net10.0` to another folder,
+  keeping that folder's own `GitExtensions.settings` (portable mode) between copies. Portable mode is `IsPortable` =
+  `True` in its `GitExtensions.dll.config`.
+- Linux smoke tests (WSLg): the same portable copy of the Linux build, started with `DISPLAY=:0` on a scratch repository
+  in the Linux file system, with a `GitExtensions.settings` that sets `translation`, `CheckForUpdates`=false and
+  `CheckSettings`=false (else the language dialog and the checklist come first) and `gitcommand` (`/usr/bin/git`).
+  Its windows cannot be captured from Windows (they are remote windows): `import -window <id>` (ImageMagick) with the
+  ids of `xwininfo -root -tree` (class `GitExtensions`); `xdotool mousemove <x> <y> click 1` (screen coordinates,
+  `--window` does not reach them) and `xdotool type` drive them. Kill the process afterwards.
 - Publish needs an existing `artifacts/Release/publish/GitExtensions.PluginManager` folder to skip the download. Its
   PowerShell steps run Windows PowerShell with `-ExecutionPolicy Bypass` on Windows, `pwsh` elsewhere.
 

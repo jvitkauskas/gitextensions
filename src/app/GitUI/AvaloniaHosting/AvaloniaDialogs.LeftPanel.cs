@@ -206,7 +206,7 @@ internal static partial class AvaloniaDialogs
         public IReadOnlyList<LeftPanelScript> GetScripts()
             => [.. _commands.GetRequiredService<IScriptsManager>().GetScripts()
                 .Where(script => script.Enabled)
-                .Select(script => new LeftPanelScript(script.HotkeyCommandIdentifier, script.Name ?? "", script.AddToRevisionGridContextMenu, ToPng(script.GetIcon())))];
+                .Select(script => new LeftPanelScript(script.HotkeyCommandIdentifier, script.Name ?? "", script.AddToRevisionGridContextMenu, script.GetIcon()))];
 
         // As the scriptInvoker of AddUserScripts (ExecuteCommand with the options of the main window).
         public void RunScript(int scriptId) => _runScript(scriptId);

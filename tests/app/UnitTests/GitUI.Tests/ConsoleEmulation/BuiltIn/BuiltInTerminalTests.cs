@@ -64,6 +64,21 @@ public sealed class BuiltInTerminalTests
         BuiltInTerminalShellRunner.SplitCommandLine(commandLine).Should().Be((executable, arguments));
     }
 
+    // Off Windows the pseudo console starts the process with the arguments one by one, split as .NET splits them.
+    [TestCase("commit -F \"/home/user/repo/.git/COMMITMESSAGE\"", new[] { "commit", "-F", "/home/user/repo/.git/COMMITMESSAGE" })]
+    [TestCase("  log   --format=\"%H %s\"  ", new[] { "log", "--format=%H %s" })]
+    [TestCase("add -- \"\"", new[] { "add", "--", "" })]
+    [TestCase("a\"b c\"d", new[] { "ab cd" })]
+    [TestCase("\"say \"\"hi\"\"\"", new[] { "say \"hi\"" })]
+    [TestCase(@"C:\dir\file", new[] { @"C:\dir\file" })]
+    [TestCase(@"""C:\dir\\"" next", new[] { @"C:\dir\", "next" })]
+    [TestCase(@"a\""b", new[] { "a\"b" })]
+    [TestCase(@"a\\\""b", new[] { "a\\\"b" })]
+    public void Arguments_are_split_as_dotnet_splits_them_off_Windows(string arguments, string[] expected)
+    {
+        BuiltInTerminal.SplitArguments(arguments).Should().Equal(expected);
+    }
+
     private static List<string> Process(string output)
     {
         List<string> lines = [];

@@ -5,6 +5,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace GitUI.ConsoleEmulation.Mintty;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 internal static class NativeMethods
 {
     internal const uint WM_CHAR = 0x0102;

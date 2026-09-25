@@ -28,7 +28,7 @@ public sealed partial class CustomAvatarProvider
             _templateResolver = BuildResolver(uriTemplate);
         }
 
-        public Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+        public Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
         {
             // see remarks for details why we do this.
             throw new InvalidOperationException($"UriTemplateResolvers can't be used as a regular IAvatarProvider, use '{nameof(ResolveTemplate)}'.");

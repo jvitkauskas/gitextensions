@@ -1,5 +1,4 @@
 ﻿using GitCommands;
-using GitUI.Properties;
 
 namespace GitUI.Shells;
 
@@ -13,7 +12,7 @@ public class BashShell : ShellDescriptor
     public BashShell()
     {
         Name = ShellName;
-        Icon = Images.GitForWindows;
+        Icon = EmbeddedIcons.Get("GitForWindows");
 
         if (PathUtil.TryFindShellPath(GitBashExe, out string? exePath))
         {

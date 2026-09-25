@@ -24,13 +24,13 @@ public sealed partial class CustomAvatarProvider : IAvatarProvider
     public bool PerformsIo => true;
 
     /// <inheritdoc/>
-    public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public async Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         UriTemplateData templateData = new(email, name, imageSize);
 
         foreach (IAvatarProvider provider in _subProvider)
         {
-            Image? avatar = provider switch
+            byte[]? avatar = provider switch
             {
                 UriTemplateResolver r => await _downloader.DownloadImageAsync(r.ResolveTemplate(templateData)),
                 _ => await provider.GetAvatarAsync(email, name, imageSize),

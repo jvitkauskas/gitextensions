@@ -216,7 +216,10 @@ internal static partial class AvaloniaDialogs
             // As LoadHotkeys(HotkeySettingsName): the "Browse" hotkeys, with the ones of the scripts.
             window.Hotkeys = LoadHotkeys(commands, HotkeyCommands.BrowseSettingsName);
             window.ShowViewModel(viewModel, selectedId, firstId);
-            AttachTaskbar(commands, isValid);
+            if (TaskbarProgress.IsPlatformSupported)
+            {
+                AttachTaskbar(commands, isValid);
+            }
         }
 
         /// <summary>As <c>FormBrowse.SetGitModule</c>, once the current event is handled (e.g. the click of a menu item).</summary>

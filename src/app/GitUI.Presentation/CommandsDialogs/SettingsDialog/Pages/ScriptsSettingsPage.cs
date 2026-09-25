@@ -195,10 +195,10 @@ public sealed partial class ScriptsSettingsPageViewModel(ScriptsSettingsPageStri
     /// <summary>The image chosen for the selected script.</summary>
     public ScriptIconChoice? SelectedIcon
     {
-        get => SelectedScript?.Icon is string name ? Icons.FirstOrDefault(icon => icon.Name == name) : null;
+        get => SelectedScript?.Icon is string name ? Icons.FirstOrDefault(icon => string.Equals(icon.Name, name, StringComparison.OrdinalIgnoreCase)) : null;
         set
         {
-            if (SelectedScript is ScriptItem script && script.Icon != value?.Name)
+            if (SelectedScript is ScriptItem script && !string.Equals(script.Icon, value?.Name, StringComparison.OrdinalIgnoreCase))
             {
                 script.Icon = value?.Name;
                 OnPropertyChanged();
@@ -343,7 +343,7 @@ public sealed partial class ScriptsSettingsPageViewModel(ScriptsSettingsPageStri
     // As BindScripts: an unknown image is cleared (once the images are known).
     private void ClearUnknownIcon(ScriptItem script)
     {
-        if (_icons is not null && script.Icon is string name && !_icons.Any(icon => icon.Name == name))
+        if (_icons is not null && script.Icon is string name && !_icons.Any(icon => string.Equals(icon.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
             script.Icon = null;
         }
@@ -353,7 +353,7 @@ public sealed partial class ScriptsSettingsPageViewModel(ScriptsSettingsPageStri
     private void UpdateImage(ScriptItem script)
     {
         script.Image = (!string.IsNullOrEmpty(script.IconFilePath) && File.Exists(script.IconFilePath) ? host.GetFileIcon(script.IconFilePath) : null)
-            ?? (script.Icon is string name ? _icons?.FirstOrDefault(icon => icon.Name == name)?.Image : null);
+            ?? (script.Icon is string name ? _icons?.FirstOrDefault(icon => string.Equals(icon.Name, name, StringComparison.OrdinalIgnoreCase))?.Image : null);
     }
 
     private static string? GetDirectory(string? path)

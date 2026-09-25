@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace GitUI;
 
@@ -13,6 +14,7 @@ public enum TaskbarProgressBarState
 }
 
 /// <summary>A button of the thumbnail toolbar of a window (below its preview on the taskbar).</summary>
+[SupportedOSPlatform("windows6.1")]
 public sealed class ThumbnailToolBarButton : IDisposable
 {
     private static uint _nextId = 0x4747;
@@ -83,8 +85,9 @@ public sealed class ThumbnailToolBarButton : IDisposable
 
 /// <summary>
 ///  The taskbar of Windows (the <c>ITaskbarList3</c> and the jump list of the shell), in place of the WindowsAPICodePack,
-///  whose taskbar needs WinForms.
+///  whose taskbar needs WinForms. Guarded by <see cref="TaskbarProgress.IsPlatformSupported"/>.
 /// </summary>
+[SupportedOSPlatform("windows6.1")]
 internal static class NativeTaskbar
 {
     internal const uint THB_ICON = 0x2;
@@ -100,9 +103,6 @@ internal static class NativeTaskbar
 
     private static readonly Lazy<ITaskbarList3?> _taskbar = new(CreateTaskbar);
     private static readonly List<ThumbnailToolBarButton> _buttons = [];
-
-    /// <summary>Whether the taskbar has progress, overlays, thumbnail toolbars and jump lists (Windows 7 and later).</summary>
-    public static bool IsPlatformSupported => OperatingSystem.IsWindowsVersionAtLeast(6, 1);
 
     /// <summary>The application id of the process, which groups its windows and its jump list on the taskbar.</summary>
     public static void SetApplicationId(string applicationId) => SetCurrentProcessExplicitAppUserModelID(applicationId);
@@ -200,7 +200,7 @@ internal static class NativeTaskbar
 
     private static ITaskbarList3? CreateTaskbar()
     {
-        if (!IsPlatformSupported)
+        if (!TaskbarProgress.IsPlatformSupported)
         {
             return null;
         }

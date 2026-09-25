@@ -1,4 +1,5 @@
 using System.Drawing.Drawing2D;
+using System.Runtime.Versioning;
 using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
@@ -11,11 +12,18 @@ namespace GitUI.AvaloniaHosting;
 /// <summary>
 ///  The taskbar of the Avalonia main window, as <c>FormBrowse</c>: the jump list with the thumbnail toolbar (commit, pull, push,
 ///  close all windows), the recent repositories of the jump list, and the overlay icon of the status of the working directory.
+///  Windows only (<see cref="TaskbarProgress.IsPlatformSupported"/>).
 /// </summary>
 internal static partial class AvaloniaDialogs
 {
-    private static readonly uint _closeAllMessage = global::System.NativeMethods.RegisterWindowMessageW("Global.GitExtensions.CloseAllInstances");
-    private static readonly Dictionary<Brush, Icon> _overlayIconByBrush = [];
+    private static uint _closeAllMessageId;
+    private static readonly Dictionary<Color, Icon> _overlayIconByColor = [];
+    private static readonly Dictionary<string, Image> _commitImageByName = [];
+
+    // The message that asks every instance to close its windows, registered once.
+    [SupportedOSPlatform("windows")]
+    private static uint CloseAllMessage
+        => _closeAllMessageId != 0 ? _closeAllMessageId : _closeAllMessageId = global::System.NativeMethods.RegisterWindowMessageW("Global.GitExtensions.CloseAllInstances");
 
     private sealed partial class BrowseSession
     {
@@ -23,6 +31,7 @@ internal static partial class AvaloniaDialogs
         private bool _isValidRepository;
 
         // As OnActivated, OnDeactivate and WndProc of FormBrowse, once for the window.
+        [SupportedOSPlatform("windows6.1")]
         private void AttachTaskbar(IGitUICommands commands, bool isValid)
         {
             _isValidRepository = isValid;
@@ -43,6 +52,7 @@ internal static partial class AvaloniaDialogs
             _jumpList.EnableThumbnailToolbar(isValid && window.IsActive);
         }
 
+        [SupportedOSPlatform("windows6.1")]
         private void OnActivated()
         {
             if (_jumpList is null)
@@ -60,7 +70,7 @@ internal static partial class AvaloniaDialogs
                         new WindowsThumbnailToolbarButton(strings.CommitButton.Text, Images.RepoStateClean, (_, _) => RunFromTaskbar(BrowseCommand.Commit)),
                         new WindowsThumbnailToolbarButton(strings.PullButton.Text, Images.Pull, (_, _) => RunFromTaskbar(BrowseCommand.Pull)),
                         new WindowsThumbnailToolbarButton(strings.PushButton.Text, Images.Push, (_, _) => RunFromTaskbar(BrowseCommand.Push)),
-                        new WindowsThumbnailToolbarButton(viewModel.ToolbarItemsStrings.CloseAllWindows.Text, Images.DeleteFile, (_, _) => global::System.NativeMethods.PostMessageW(global::System.NativeMethods.HWND_BROADCAST, _closeAllMessage))));
+                        new WindowsThumbnailToolbarButton(viewModel.ToolbarItemsStrings.CloseAllWindows.Text, Images.DeleteFile, (_, _) => global::System.NativeMethods.PostMessageW(global::System.NativeMethods.HWND_BROADCAST, CloseAllMessage))));
             }
 
             _jumpList.EnableThumbnailToolbar(_isValidRepository);
@@ -74,9 +84,10 @@ internal static partial class AvaloniaDialogs
         }
 
         // As WndProc: another instance asks all the windows to close ("Close all windows" of the thumbnail toolbar).
+        [SupportedOSPlatform("windows6.1")]
         private nint CloseAllHook(nint handle, uint message, nint wordParameter, nint longParameter, ref bool handled)
         {
-            if (message == _closeAllMessage)
+            if (message == CloseAllMessage)
             {
                 global::Avalonia.Threading.Dispatcher.UIThread.Post(window.Close);
             }
@@ -92,23 +103,25 @@ internal static partial class AvaloniaDialogs
 
     private sealed partial class BrowseHost
     {
-        // As UpdateStatusInTaskbar: a dot of the color of the state over the icon of the taskbar, and the image of the commit button.
-        private void UpdateStatusInTaskbar(Image image, Brush? brush)
+        // As UpdateStatusInTaskbar: a dot of the color of the state over the icon of the taskbar, and the image of the commit button
+        // (an image of the resources, named as the icon of RepoStateVisualiser).
+        [SupportedOSPlatform("windows6.1")]
+        private void UpdateStatusInTaskbar(string image, Color? color)
         {
-            if (!GitCommands.Utils.EnvUtils.RunningOnWindowsWithMainWindow() || !NativeTaskbar.IsPlatformSupported || _window.NativeHandle == 0)
+            if (!GitCommands.Utils.EnvUtils.RunningOnWindowsWithMainWindow() || !TaskbarProgress.IsPlatformSupported || _window.NativeHandle == 0)
             {
                 return;
             }
 
             try
             {
-                if (brush is null)
+                if (color is not { } dotColor)
                 {
                     NativeTaskbar.SetOverlayIcon(_window.NativeHandle, null, "");
                     return;
                 }
 
-                if (!_overlayIconByBrush.TryGetValue(brush, out Icon? overlay))
+                if (!_overlayIconByColor.TryGetValue(dotColor, out Icon? overlay))
                 {
                     const int imgDim = 32;
                     const int dotDim = 15;
@@ -118,15 +131,23 @@ internal static partial class AvaloniaDialogs
                     {
                         g.SmoothingMode = SmoothingMode.AntiAlias;
                         g.Clear(Color.Transparent);
+                        using SolidBrush brush = new(dotColor);
                         g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
                     }
 
                     overlay = bmp.ToIcon();
-                    _overlayIconByBrush.Add(brush, overlay);
+                    _overlayIconByColor.Add(dotColor, overlay);
                 }
 
                 NativeTaskbar.SetOverlayIcon(_window.NativeHandle, overlay, "");
-                _commands.GetRequiredService<IWindowsJumpListManager>().UpdateCommitIcon(image);
+                if (!_commitImageByName.TryGetValue(image, out Image? commitImage))
+                {
+                    // The images of the resources allocate on each call: the jump list keeps an icon per image.
+                    commitImage = (Image)Images.ResourceManager.GetObject(image)!;
+                    _commitImageByName.Add(image, commitImage);
+                }
+
+                _commands.GetRequiredService<IWindowsJumpListManager>().UpdateCommitIcon(commitImage);
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
             {

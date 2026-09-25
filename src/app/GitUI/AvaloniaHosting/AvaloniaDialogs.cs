@@ -114,6 +114,20 @@ internal static partial class AvaloniaDialogs
         => [.. commands.GetRequiredService<IHotkeySettingsLoader>().LoadHotkeys(hotkeySettingsName)
             .Select(hotkey => new HotkeyBinding(hotkey.CommandCode, (int)hotkey.KeyData))];
 
+    [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+    private static byte[]? LoadFileTypeIcon(string fileName)
+    {
+        // Not disposed: the provider keeps the icons of the extensions.
+        Icon? icon = new FileAssociatedIconProvider().Get(Path.GetTempPath(), Path.GetFileName(fileName));
+        if (icon is null)
+        {
+            return null;
+        }
+
+        using Bitmap bitmap = icon.ToBitmap();
+        return bitmap.ToPngData();
+    }
+
     internal static AvaloniaUiOptions GetOptions()
     {
         // The exceptions of Avalonia code are reported as those of WinForms code (Application.ThreadException).
@@ -122,21 +136,12 @@ internal static partial class AvaloniaDialogs
         // As GitExtensionsDialog.OnHelpButtonClicked: F1 opens the section of the user manual.
         DialogWindow.OpenManualSection ??= (subfolder, anchor) => OsShellUtil.OpenUrlInDefaultBrowser(UserManual.UserManual.UrlFor(subfolder, anchor));
 
-        // As FileStatusList.LoadFileIcons: the icon of the type of a file in the shell (for an extension, the files need not exist).
-        GitUI.Avalonia.Controls.FileStatusList.FileStatusIconImage.LoadFileTypeIcon ??= fileName =>
+        // As FileStatusList.LoadFileIcons: the icon of the type of a file in the shell of Windows (for an extension, the files need
+        // not exist); elsewhere the icons by extension of the file list.
+        if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
         {
-            // Not disposed: the provider keeps the icons of the extensions.
-            Icon? icon = new FileAssociatedIconProvider().Get(Path.GetTempPath(), Path.GetFileName(fileName));
-            if (icon is null)
-            {
-                return null;
-            }
-
-            using Bitmap bitmap = icon.ToBitmap();
-            using MemoryStream stream = new();
-            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-            return stream.ToArray();
-        };
+            GitUI.Avalonia.Controls.FileStatusList.FileStatusIconImage.LoadFileTypeIcon ??= LoadFileTypeIcon;
+        }
 
         FontDescriptor font = AppSettings.Font;
         return new AvaloniaUiOptions(

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 using GitCommands;
@@ -10,6 +11,8 @@ using Microsoft;
 
 namespace GitUI;
 
+/// <summary>The jump list and the thumbnail toolbar of the taskbar of Windows (only registered there).</summary>
+[SupportedOSPlatform("windows6.1")]
 public interface IWindowsJumpListManager : IDisposable
 {
     bool NeedsJumpListCreation { get; }
@@ -29,6 +32,7 @@ public interface IWindowsJumpListManager : IDisposable
 /// <seealso href="https://www.sevenforums.com/news/44368-developing-windows-7-taskbar-thumbnail-toolbars.html" />
 /// <seealso href="https://github.com/jlnewton87/Programming/blob/master/C%23/Windows%20API%20Code%20Pack%201.1/source/WindowsAPICodePack/Shell/Taskbar/JumpList.cs" />
 /// <inheritdoc />
+[SupportedOSPlatform("windows6.1")]
 public sealed class WindowsJumpListManager : IWindowsJumpListManager
 {
     private static readonly Dictionary<Image, Icon> _iconByImage = [];
@@ -42,7 +46,7 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
 
     static WindowsJumpListManager()
     {
-        if (NativeTaskbar.IsPlatformSupported)
+        if (TaskbarProgress.IsPlatformSupported)
         {
             string id = AppSettings.ApplicationId;
             NativeTaskbar.SetApplicationId(AppSettings.IsPortable()
@@ -74,8 +78,8 @@ public sealed class WindowsJumpListManager : IWindowsJumpListManager
         }
     }
 
-    private static bool IsSupported => OperatingSystem.IsWindows() && NativeTaskbar.IsPlatformSupported;
-    private static bool IsSupportedAndVisible => EnvUtils.RunningOnWindowsWithMainWindow() && NativeTaskbar.IsPlatformSupported;
+    private static bool IsSupported => OperatingSystem.IsWindows() && TaskbarProgress.IsPlatformSupported;
+    private static bool IsSupportedAndVisible => EnvUtils.RunningOnWindowsWithMainWindow() && TaskbarProgress.IsPlatformSupported;
 
     /// <summary>
     /// Adds the given working directory to the list of Recent for future quick access.

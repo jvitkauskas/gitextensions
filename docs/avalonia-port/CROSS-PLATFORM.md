@@ -104,6 +104,13 @@ Retarget bottom-up, one project per step, each only once CA1416 is clean for it:
   analyzers.
 
 ### Phase 2: The application starts on Linux and macOS (XL)
+**Under way (2026-09-25).** The spike passed on X11 (WSLg) and Windows. Done as planned, except: the owners stay native
+handles (mapped to the open Avalonia windows off Windows) rather than a new `IWindowOwner`; the common dialogs keep their
+API and ask `IDialogBoxHost` off Windows rather than moving every call site to `IFileDialogService`; `SystemTheme` asks
+the tools of the system (`gsettings`, `defaults`), since it is read before Avalonia starts. All application projects
+target `net10.0`; images that ran through GDI+ on every system are PNG data now (avatars with SkiaSharp, the icons of
+scripts, shells and states from embedded resources). Under WSLg the application starts, browses, diffs and commits.
+Left: macOS, the headless tests on Linux, and the Linux issues of the ledger.
 - **Avalonia desktop backends.** `Avalonia.Desktop` (Win32, X11, native macOS) instead of `Avalonia.Win32`, and
   `UsePlatformDetect()` instead of `UseWin32()`. `Project.Avalonia.targets` keeps the native assets of the published
   runtime identifier instead of always keeping the Windows ones.

@@ -18,16 +18,16 @@ public sealed class HotSwapAvatarProvider : IAvatarProvider
 
     public bool PerformsIo => Provider?.PerformsIo ?? false;
 
-    public Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         try
         {
-            return Provider?.GetAvatarAsync(email, name, imageSize) ?? Task.FromResult<Image?>(null);
+            return Provider?.GetAvatarAsync(email, name, imageSize) ?? Task.FromResult<byte[]?>(null);
         }
         catch (Exception ex)
         {
             Trace.WriteLine(ex.Message);
-            return Task.FromResult<Image?>(null);
+            return Task.FromResult<byte[]?>(null);
         }
     }
 }

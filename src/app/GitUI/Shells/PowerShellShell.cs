@@ -1,5 +1,4 @@
 ﻿using GitCommands;
-using GitUI.Properties;
 
 namespace GitUI.Shells;
 
@@ -8,7 +7,7 @@ public class PowerShellShell : ShellDescriptor
     public PowerShellShell()
     {
         Name = "powershell";
-        Icon = Images.powershell;
+        Icon = EmbeddedIcons.Get("powershell");
 
         ExecutableName = "powershell.exe";
         if (PathUtil.TryFindShellPath(ExecutableName, out string? exePath))

@@ -54,6 +54,11 @@ internal sealed class ConEmuConsoleEmulator(IShellProvider shellProvider) : ICon
 
     public IConsoleCommandRunner CreateCommandRunner(ConsoleEmulatorSettings settings)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException($"Check {nameof(IsSupportedInCurrentEnvironment)} before calling.");
+        }
+
         return new ConEmuConsoleCommandRunner(settings with
         {
             Theme = ResolveTheme(settings.Theme),
@@ -63,6 +68,11 @@ internal sealed class ConEmuConsoleEmulator(IShellProvider shellProvider) : ICon
 
     public IConsoleShellRunner CreateShellRunner(ConsoleEmulatorSettings settings)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException($"Check {nameof(IsSupportedInCurrentEnvironment)} before calling.");
+        }
+
         return new ConEmuConsoleShellRunner(shellProvider, settings with
         {
             Theme = ResolveTheme(settings.Theme),

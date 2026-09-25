@@ -245,7 +245,8 @@ internal static partial class AvaloniaDialogs
                 const string BearerTokenKey = "BearerToken";
                 using (IsolatedStorageFileStream stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Read, FileShare.Read))
                 {
-                    if (stream.Position < stream.Length)
+                    // Protected per user by Windows (DPAPI); elsewhere nothing is stored yet (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).
+                    if (OperatingSystem.IsWindows() && stream.Position < stream.Length)
                     {
                         byte[] protectedData = new byte[stream.Length];
 
@@ -308,6 +309,12 @@ internal static partial class AvaloniaDialogs
 
                     if (buildServerCredentials is not null)
                     {
+                        if (!OperatingSystem.IsWindows())
+                        {
+                            // Not stored in clear: asked again in the next session.
+                            return buildServerCredentials;
+                        }
+
                         ConfigFile credentialsConfig = new(fileName: "");
 
                         IConfigSection section = credentialsConfig.FindOrCreateConfigSection(CredentialsConfigName);

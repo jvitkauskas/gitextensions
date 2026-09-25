@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using ConEmu.Inside;
 using GitCommands;
@@ -12,6 +13,7 @@ namespace GitUI.ConsoleEmulation.ConEmu;
 /// <summary>
 ///  Embeds a ConEmu terminal in the output panel so command dialogs can host an interactive console.
 /// </summary>
+[SupportedOSPlatform("windows")]
 internal sealed class ConEmuConsoleCommandRunner : IConsoleCommandRunner
 {
     private readonly ConsoleEmulatorSettings _settings;
@@ -167,6 +169,7 @@ public partial class ConsoleCommandLineOutputProcessor
         return outputChunk;
     }
 
+    [SupportedOSPlatform("windows")]
     public void AnsiStreamChunkReceived(object? sender, AnsiStreamChunkEventArgs args)
     {
         string text = args.GetText(GitModule.SystemEncoding);

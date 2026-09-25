@@ -25,12 +25,22 @@ internal sealed class MinttyConsoleEmulator : IConsoleEmulator
 
     public IConsoleCommandRunner CreateCommandRunner(ConsoleEmulatorSettings settings)
     {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+        {
+            throw new PlatformNotSupportedException($"Check {nameof(IsSupportedInCurrentEnvironment)} before calling.");
+        }
+
         (string minttyPath, string bashPath) = ResolvePaths();
         return new MinttyCommandRunner(minttyPath, bashPath, settings);
     }
 
     public IConsoleShellRunner CreateShellRunner(ConsoleEmulatorSettings settings)
     {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+        {
+            throw new PlatformNotSupportedException($"Check {nameof(IsSupportedInCurrentEnvironment)} before calling.");
+        }
+
         (string minttyPath, string bashPath) = ResolvePaths();
         return new MinttyShellRunner(minttyPath, bashPath, settings);
     }

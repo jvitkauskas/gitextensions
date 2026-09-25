@@ -12,7 +12,7 @@ namespace GitUI.Avatars;
 public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
 {
     private readonly Lock _cacheLock = new();
-    private readonly MruCache<(string email, int imageSize), Image> _cache;
+    private readonly MruCache<(string email, int imageSize), byte[]> _cache;
     private readonly Lock _requestedLock = new();
     private HashSet<(string email, int imageSize)> _requested = new(6);
     private readonly IAvatarProvider _inner;
@@ -20,7 +20,7 @@ public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
     public AvatarMemoryCache(IAvatarProvider inner, int capacity = 30)
     {
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-        _cache = new MruCache<(string email, int imageSize), Image>(capacity);
+        _cache = new MruCache<(string email, int imageSize), byte[]>(capacity);
     }
 
     public bool PerformsIo => false;
@@ -29,12 +29,12 @@ public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
     public event EventHandler? CacheCleared;
 
     /// <inheritdoc />
-    public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
+    public async Task<byte[]?> GetAvatarAsync(string email, string? name, int imageSize)
     {
         (string email, int imageSize) key = (email, imageSize);
         lock (_cacheLock)
         {
-            if (_cache.TryGetValue(key, out Image? cachedImage))
+            if (_cache.TryGetValue(key, out byte[]? cachedImage))
             {
                 return cachedImage;
             }
@@ -48,7 +48,7 @@ public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
             {
                 lock (_cacheLock)
                 {
-                    if (_cache.TryGetValue(key, out Image? cachedImage))
+                    if (_cache.TryGetValue(key, out byte[]? cachedImage))
                     {
                         return cachedImage;
                     }
@@ -72,7 +72,7 @@ public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
                 _requested.Add(key);
             }
 
-            Image? image = await _inner.GetAvatarAsync(email, name, imageSize);
+            byte[]? image = await _inner.GetAvatarAsync(email, name, imageSize);
 
             if (image is not null)
             {
@@ -106,10 +106,6 @@ public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
     {
         lock (_cacheLock)
         {
-            // The cached images must not be disposed here: GetAvatarAsync hands out the cached
-            // instance itself, so a consumer may still be painting it - the picture box of an
-            // AvatarControl, the avatar column of the revision grid or the blame author margin.
-            // They do not keep their file open either, so nothing here has to be released eagerly.
             _cache.Clear();
         }
 

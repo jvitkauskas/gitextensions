@@ -67,25 +67,24 @@ public sealed class AvatarPersistentCacheTests : AvatarCacheTestBase
     {
         _fileInfo.Exists.Returns(true);
         _fileInfo.LastWriteTime.Returns(new DateTime(2010, 1, 1));
-        _fileSystem.File.OpenWrite(Arg.Any<string>()).Returns(_ => (Stream)new MemoryStream());
         _fileSystem.File.Delete(Arg.Any<string>());
 
         await MissAsync(_email1, _name1);
 
         _fileSystem.File.Received(1).Delete(_email1AvatarPath);
 
-        _file.OpenRead(Arg.Any<string>()).Returns(c => GetPngStream());
+        _file.ReadAllBytes(Arg.Any<string>()).Returns(_img1);
         _fileInfo.LastWriteTime.Returns(DateTime.Now);
         _fileSystem.ClearReceivedCalls();
         _fileInfo.ClearReceivedCalls();
         _file.ClearReceivedCalls();
 
-        Image? image = await _cache.GetAvatarAsync(_email1, _name1, 16);
+        byte[]? image = await _cache.GetAvatarAsync(_email1, _name1, 16);
 
         image.Should().NotBeNull();
         _ = _fileInfo.Received(1).LastWriteTime;
 
-        _fileSystem.File.Received(1).OpenRead(_email1AvatarPath);
+        _fileSystem.File.Received(1).ReadAllBytes(_email1AvatarPath);
     }
 
     [Test]

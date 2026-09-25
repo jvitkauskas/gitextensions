@@ -160,17 +160,5 @@ internal static partial class AvaloniaDialogs
         }
 
         private void OnPluginsLoaded(object? sender, EventArgs e) => _pluginsChanged?.Invoke(this, EventArgs.Empty);
-
-        private static byte[]? ToPng(Image? image)
-        {
-            if (image is null)
-            {
-                return null;
-            }
-
-            using MemoryStream stream = new();
-            image.Save(stream, ImageFormat.Png);
-            return stream.ToArray();
-        }
     }
 }

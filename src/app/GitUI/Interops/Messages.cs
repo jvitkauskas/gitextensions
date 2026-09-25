@@ -1,5 +1,7 @@
 ﻿namespace System;
 
+// The Win32 calls and messages of GitUI (Interops): Windows only.
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 internal static partial class NativeMethods
 {
     public const int WM_USER = 0x0400;

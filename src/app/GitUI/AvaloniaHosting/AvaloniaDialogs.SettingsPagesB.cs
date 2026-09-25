@@ -141,7 +141,10 @@ internal static partial class AvaloniaDialogs
             }
 
             // Old(?) uninstaller
-            yield return CommonLogic.GetRegistryValue(Registry.LocalMachine, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\PuTTY_is1", "InstallLocation");
+            if (OperatingSystem.IsWindows())
+            {
+                yield return CommonLogic.GetRegistryValue(Registry.LocalMachine, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\PuTTY_is1", "InstallLocation");
+            }
         }
 
         public void SetGitSshEnvironmentVariable(string path) => GitSshHelpers.SetGitSshEnvironmentVariable(path);

@@ -93,15 +93,6 @@ internal static partial class AvaloniaDialogs
     /// <summary>The icon of a plugin as PNG: its image of plugin API v3, else its GDI+ icon.</summary>
     private static byte[]? GetPluginIconPng(IGitPlugin plugin) => plugin.IconImage?.ToArray() ?? ToPng(plugin.Icon);
 
-    private static byte[]? ToPng(Image? image)
-    {
-        if (image is null)
-        {
-            return null;
-        }
-
-        using MemoryStream stream = new();
-        image.Save(stream, ImageFormat.Png);
-        return stream.ToArray();
-    }
+    /// <summary>The PNG data of a GDI+ image (the icons of the plugins of API v1 and v2, of the shells), only on Windows.</summary>
+    private static byte[]? ToPng(Image? image) => OperatingSystem.IsWindowsVersionAtLeast(6, 1) ? image?.ToPngData() : null;
 }

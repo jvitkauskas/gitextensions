@@ -16,18 +16,18 @@ public sealed class AvatarDownloader : IAvatarDownloader
     private static TimeSpan _requestCacheTimeSpan = TimeSpan.FromSeconds(_requestCacheDurationInSeconds);
 
     private static readonly SemaphoreSlim _downloadSemaphore = new(initialCount: _maxConcurrentDownloads);
-    private static readonly ConcurrentDictionary<Uri, (DateTime, Task<Image?>)> _downloads = new();
+    private static readonly ConcurrentDictionary<Uri, (DateTime, Task<byte[]?>)> _downloads = new();
     private static readonly HttpClient _client = new(new HttpClientHandler() { UseProxy = true, DefaultProxyCredentials = CredentialCache.DefaultCredentials });
 
-    public async Task<Image?> DownloadImageAsync(Uri? imageUrl)
+    public async Task<byte[]?> DownloadImageAsync(Uri? imageUrl)
     {
         if (imageUrl is null)
         {
             return null;
         }
 
-        // check network connectivity
-        if (!NativeMethods.InternetGetConnectedState(out _, 0))
+        // check network connectivity (Windows tells it; elsewhere the download fails without a network)
+        if (OperatingSystem.IsWindows() && !NativeMethods.InternetGetConnectedState(out _, 0))
         {
             return null;
         }
@@ -38,7 +38,7 @@ public sealed class AvatarDownloader : IAvatarDownloader
 
         while (true)
         {
-            (DateTime _, Task<Image?> task) = _downloads.GetOrAdd(imageUrl, _ => (DateTime.UtcNow, DownloadAsync(imageUrl)));
+            (DateTime _, Task<byte[]?> task) = _downloads.GetOrAdd(imageUrl, _ => (DateTime.UtcNow, DownloadAsync(imageUrl)));
 
             // If we discover a faulted task, remove it and try again
             if (task.IsFaulted || task.IsCanceled)
@@ -53,19 +53,11 @@ public sealed class AvatarDownloader : IAvatarDownloader
                 continue;
             }
 
-            Image? image = await task;
-            if (image?.PixelFormat == System.Drawing.Imaging.PixelFormat.DontCare)
-            {
-                // Image from cached download has been disposed (in all probability during a cache cleanup)
-                _downloads.TryRemove(imageUrl, out _);
-                continue;
-            }
-
-            return image;
+            return await task;
         }
     }
 
-    private static async Task<Image?> DownloadAsync(Uri imageUrl)
+    private static async Task<byte[]?> DownloadAsync(Uri imageUrl)
     {
         // Get onto background thread
         await TaskScheduler.Default;
@@ -81,8 +73,8 @@ public sealed class AvatarDownloader : IAvatarDownloader
                 return null;
             }
 
-            using Stream imageStream = await response.Content.ReadAsStreamAsync();
-            return Image.FromStream(imageStream);
+            // As PNG data (the cache files are PNG files); null if the response is not an image.
+            return PngImages.ToPng(await response.Content.ReadAsByteArrayAsync());
         }
         catch (Exception ex)
         {
@@ -101,7 +93,7 @@ public sealed class AvatarDownloader : IAvatarDownloader
     {
         DateTime now = DateTime.UtcNow;
 
-        foreach ((Uri key, (DateTime time, Task<Image?> _)) in _downloads)
+        foreach ((Uri key, (DateTime time, Task<byte[]?> _)) in _downloads)
         {
             if (now - time > _requestCacheTimeSpan)
             {
