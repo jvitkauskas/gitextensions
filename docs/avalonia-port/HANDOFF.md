@@ -25,6 +25,36 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 - Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
   a fast-forward of `avalonia` and a push of it.
 
+## Next: macOS
+
+Nothing has run on macOS yet; the macOS branches of phases 2-4 are written but untested (the ledger's "Platforms"
+section says which). Windows and Linux are checked separately by the owner: keep their behavior unchanged, put
+macOS-only changes behind `OperatingSystem.IsMacOS()` where shared code would otherwise change, and say in each commit
+what could not be verified. In batches:
+
+1. **Build and test.** The .NET SDK of `global.json`, the build and every test suite (below). `UI.IntegrationTests`
+   is Windows-only (NUnit skips it). The headless tests measure text with the system fonts.
+2. **Smoke test** a portable copy (below) on scratch repositories:
+   - startup with the native backend (Avalonia.Native), browse, diff, blame, commit, push and pull, stash;
+   - message boxes, task dialogs and dialogs (synchronous modality with Avalonia owners), the file, folder, color and
+     font pickers, the clipboard;
+   - dark mode (`SystemTheme`: `defaults read -g AppleInterfaceStyle`);
+   - the terminal tab (`$SHELL`, zsh);
+   - git discovery (`/opt/homebrew/bin`, `/opt/local/bin`; `/usr/bin/git` is the Xcode shim);
+   - editors (TextEdit with `open -W -n -e`, `code --wait`, `subl --wait`);
+   - diff and merge tools (Araxis is offered on macOS; add FileMerge / `opendiff`; search
+     `/Applications/*.app/Contents/MacOS` in `PathUtil.FindInFolders`, as the plan says);
+   - `open` and `open -R` (`OsShellUtil`: folders, Show in folder);
+   - the askpass prompt (`SSH_ASKPASS` is the script of `AskPassScript`, which runs `GitExtensions askpass`) with a
+     passphrase-protected key.
+3. **Keychain.** An `ICredentialStore` for the macOS Keychain in
+   `src/app/GitExtensions.Extensibility/Settings/CredentialStore.cs` (macOS has `NoCredentialStore` today: the
+   credentials are kept for the session only). Tests that write to the Keychain are opt-in, as the Secret Service one is.
+4. **Phase 5 of `CROSS-PLATFORM.md`:** Cmd instead of Ctrl (hotkeys stay stored as `Control`), the application menu
+   (`NativeMenu`: About, Settings with Cmd+,, Quit), the order of dialog buttons, file dialog filters, fixed widths that
+   clip with the macOS fonts.
+5. Later: phase 6, the `.app` bundle, signing and notarization.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the
@@ -53,6 +83,8 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 - Translations: a new or changed string of a strings class (`GitUI.Presentation/**/*Strings.cs`) needs English.xlf
   regenerated: `cd src/app/GitExtensions && dotnet msbuild -p:Configuration=Release -t:_UpdateEnglishTranslations
   -p:RunTranslationApp=true`. `ViewStringsTests` fails until then; new strings classes are added to its list.
+- CI has not run on this branch: `app-build.yml` builds `master`, `release*` and `experimental/**` pushes and pull
+  requests only (add the branch, or use `workflow_dispatch`, to get the Linux job and the Windows publish with the MSI).
 - A portable copy of the app for smoke tests: copy `artifacts/Release/bin/GitExtensions/net10.0` to another folder,
   keeping that folder's own `GitExtensions.settings` (portable mode) between copies. Portable mode is `IsPortable` =
   `True` in its `GitExtensions.dll.config`.
