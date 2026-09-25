@@ -37,7 +37,7 @@ file and font pickers (native open panel as a sheet), the clipboard; the dark th
 terminal tab (zsh); git from Homebrew; editors (TextEdit with `open -W -n -e` waits); diff and merge tools (bundles of
 `/Applications`, FileMerge / `opendiff`, Beyond Compare's `bcomp`); `open` and `open -R`; the askpass prompt with
 macOS's OpenSSH (`ssh-add` of a key with a passphrase); the Keychain (opt-in test); Cmd for the shortcuts; the
-application menu (About, Settings with Cmd+,, Quit that closes the windows); the order of the dialog buttons; the
+application menu (About, Settings with Cmd+,, Quit that closes the windows) and the main menu in the menu bar; the order of the dialog buttons; the
 default UI font (13 pixels, it was 17); the scaling of Retina displays (`DpiUtil`).
 
 Left for macOS, in batches:
@@ -47,8 +47,8 @@ Left for macOS, in batches:
    UI font) to 9.8 / 10, and saving from the picker stores the rounded size.
 2. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), merges in each tool, a push over
    SSH to a server, the credentials from the plugin settings, the color picker.
-3. **Phase 5, rest**: the main menu stays in the window (moving it to the menu bar of macOS is open), file dialog
-   filters, fixed widths that still clip with the macOS fonts.
+3. **Phase 5, rest**: file dialog filters, fixed widths that still clip with the macOS fonts, the shortcuts shown in
+   the menu bar (its items have no gestures), a menu bar for the other windows (they show the application menu only).
 4. **Phase 6**: the `.app` bundle, signing and notarization. The application cannot start while the display sleeps
    or the screen is locked (Avalonia.Native: "not able to start the RenderTimer", -6661).
 

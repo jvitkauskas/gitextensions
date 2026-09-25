@@ -56,6 +56,16 @@ public sealed class InfrastructureTests
         KeyMapping.ToPlatformGesture(KeyGesture.Parse("F3"), KeyModifiers.Meta).Should().Be(new KeyGesture(Key.F3));
     }
 
+    // The menu bar of macOS has no access keys; the text on the right (the branch of a recent repository) follows.
+    [TestCase("_Start", null, "Start")]
+    [TestCase("Commit && _push", null, "Commit && push")]
+    [TestCase("a__b", null, "a_b")]
+    [TestCase("1: /repo", "main", "1: /repo    main")]
+    public void The_texts_of_the_macOS_menu_bar_have_no_access_keys(string header, string? shortcut, string expected)
+    {
+        GitUI.Avalonia.CommandsDialogs.BrowseDialog.BrowseWindow.ToNativeHeader(header, shortcut).Should().Be(expected);
+    }
+
     [Test]
     public void HotkeyBinding_modifier_flags_match_WinForms()
     {

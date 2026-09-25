@@ -38,6 +38,8 @@ public partial class BrowseWindow : DialogWindow
             Activated += (_, _) => AttachMacOSApplicationMenu();
         }
 
+        InitializeMacOSMenu();
+
         // As OnRuntimeLoad: the revisions are loaded once the window is shown.
         Opened += (_, _) =>
         {
@@ -492,6 +494,7 @@ public partial class BrowseWindow : DialogWindow
         _modelSubmenus.Clear();
         mainMenu.ItemsSource = _viewModel!.Menus.Select(CreateItem).ToList();
         RefreshModelSubmenus();
+        BuildMacOSMenu();
     }
 
     private void RefreshModelSubmenus()
