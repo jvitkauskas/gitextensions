@@ -1,3 +1,4 @@
+using CommonTestUtils;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.ScriptsEngine;
 using GitUI.Presentation.Services;
@@ -114,7 +115,7 @@ public sealed class SmallDialogViewModelTests
     [TestCase("C:\\repos\\new", true)]
     public void Init_accepts_only_absolute_directories(string path, bool expected)
     {
-        InitViewModel.IsRootedDirectoryPath(path).Should().Be(expected);
+        InitViewModel.IsRootedDirectoryPath(TestPaths.Native(path)).Should().Be(expected);
     }
 
     [Test]
@@ -133,9 +134,9 @@ public sealed class SmallDialogViewModelTests
     [Test]
     public void Init_rejects_a_file()
     {
-        FakeInitHost host = new() { ExistingFile = "C:\\repos\\file.txt" };
+        FakeInitHost host = new() { ExistingFile = TestPaths.Native("C:\\repos\\file.txt") };
         ProcessViewModelTests.FakeMessageBoxes messageBoxes = new();
-        InitViewModel viewModel = CreateInitViewModel(host, messageBoxes, "C:\\repos\\file.txt");
+        InitViewModel viewModel = CreateInitViewModel(host, messageBoxes, TestPaths.Native("C:\\repos\\file.txt"));
 
         viewModel.CreateCommand.Execute(null);
 
@@ -147,15 +148,15 @@ public sealed class SmallDialogViewModelTests
     {
         FakeInitHost host = new();
         ProcessViewModelTests.FakeMessageBoxes messageBoxes = new();
-        InitViewModel viewModel = CreateInitViewModel(host, messageBoxes, "C:\\repos\\new");
+        InitViewModel viewModel = CreateInitViewModel(host, messageBoxes, TestPaths.Native("C:\\repos\\new"));
         bool? closed = null;
         viewModel.CloseRequested += (_, accepted) => closed = accepted;
 
         viewModel.IsCentral = true;
         viewModel.CreateCommand.Execute(null);
 
-        host.Initialized.Should().Be(("C:\\repos\\new", true));
-        host.Created.Should().Be("C:\\repos\\new");
+        host.Initialized.Should().Be((TestPaths.Native("C:\\repos\\new"), true));
+        host.Created.Should().Be(TestPaths.Native("C:\\repos\\new"));
         messageBoxes.Informations.Should().Equal("Initialized empty Git repository");
         closed.Should().BeTrue();
     }
@@ -163,13 +164,13 @@ public sealed class SmallDialogViewModelTests
     [Test]
     public async Task Init_browse_picks_a_folder()
     {
-        FakeFileDialogs fileDialogs = new() { Folder = "D:\\picked" };
-        InitViewModel viewModel = new(new InitStrings(), [], "C:\\start", "Error", new FakeInitHost(), new ProcessViewModelTests.FakeMessageBoxes(), fileDialogs);
+        FakeFileDialogs fileDialogs = new() { Folder = TestPaths.Native("D:\\picked") };
+        InitViewModel viewModel = new(new InitStrings(), [], TestPaths.Native("C:\\start"), "Error", new FakeInitHost(), new ProcessViewModelTests.FakeMessageBoxes(), fileDialogs);
 
         await viewModel.BrowseCommand.ExecuteAsync(null);
 
-        viewModel.Directory.Should().Be("D:\\picked");
-        fileDialogs.StartDirectories.Should().Equal("C:\\start");
+        viewModel.Directory.Should().Be(TestPaths.Native("D:\\picked"));
+        fileDialogs.StartDirectories.Should().Equal(TestPaths.Native("C:\\start"));
     }
 
     [Test]
@@ -200,7 +201,7 @@ public sealed class SmallDialogViewModelTests
     [Test]
     public async Task FilePrompt_quotes_picked_files()
     {
-        FakeFileDialogs fileDialogs = new() { Files = ["C:\\a b.txt", "C:\\c.txt"] };
+        FakeFileDialogs fileDialogs = new() { Files = [TestPaths.Native("C:\\a b.txt"), TestPaths.Native("C:\\c.txt")] };
         FilePromptViewModel viewModel = new(new FilePromptStrings(), fileDialogs);
         bool? closed = null;
         viewModel.CloseRequested += (_, accepted) => closed = accepted;
@@ -208,7 +209,7 @@ public sealed class SmallDialogViewModelTests
         await viewModel.BrowseCommand.ExecuteAsync(null);
         viewModel.OkCommand.Execute(null);
 
-        viewModel.UserInput.Should().Be("\"C:\\a b.txt\" \"C:\\c.txt\"");
+        viewModel.UserInput.Should().Be($"\"{TestPaths.Native("C:\\a b.txt")}\" \"{TestPaths.Native("C:\\c.txt")}\"");
         closed.Should().BeTrue();
     }
 

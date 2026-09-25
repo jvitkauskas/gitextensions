@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
       <!-- Disable C#13+ keyword "field" -->
     <LangVersion>13</LangVersion>
   </PropertyGroup>

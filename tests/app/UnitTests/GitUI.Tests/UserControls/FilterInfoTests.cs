@@ -937,7 +937,11 @@ public class FilterInfoTests
             BranchFilter = branchFilter
         };
 
-        filterInfo.GetSummary().Should().Be(expectedSummary);
+        // The dates as the culture writes them (ICU puts a narrow no-break space before AM).
+        string expected = expectedSummary.Replace("\r\n", Environment.NewLine)
+            .Replace("10/1/2021 1:30:34 AM", dateFrom.ToString())
+            .Replace("11/1/2021 1:30:34 AM", dateTo.ToString());
+        filterInfo.GetSummary().Should().Be(expected);
         filterInfo.GetRevisionFilter(new Lazy<ObjectId>(() => ObjectId.Random())).ToString().Should().Be(expectedArgs);
     }
 

@@ -25,11 +25,15 @@ public class GitConfigSettingsPageControllerTests
     [Test]
     public void GetInitialDirectory_CalculateInitialDirectory_should_return_directory_for_supplied_path()
     {
-        string tempFolder = @"c:\";
-        _controller.GetInitialDirectory(tempFolder, null!).Should().Be(@"c:\");
+        string tempFolder;
+        if (OperatingSystem.IsWindows())
+        {
+            tempFolder = @"c:\";
+            _controller.GetInitialDirectory(tempFolder, null!).Should().Be(@"c:\");
 
-        tempFolder = @"c:";
-        _controller.GetInitialDirectory(tempFolder, null!).Should().Be(@"c:\");
+            tempFolder = @"c:";
+            _controller.GetInitialDirectory(tempFolder, null!).Should().Be(@"c:\");
+        }
 
         tempFolder = Path.GetTempPath(); // something like: C:\Users\user\AppData\Local\Temp\
         _controller.GetInitialDirectory(tempFolder, null!).Should().Be(tempFolder);

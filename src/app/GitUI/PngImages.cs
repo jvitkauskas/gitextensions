@@ -8,6 +8,9 @@ namespace GitUI;
 /// </summary>
 internal static class PngImages
 {
+    /// <summary>The part of an avatar that its initials fill at most.</summary>
+    private const float TextExtent = 0.9f;
+
     /// <summary>The PNG data of an encoded image (PNG, JPEG, GIF, BMP, ICO, WebP), or <see langword="null"/> if it is not an image.</summary>
     public static byte[]? ToPng(byte[] data)
     {
@@ -53,16 +56,15 @@ internal static class PngImages
         using SKFont font = new(typeface, size) { Edging = SKFontEdging.Antialias, Subpixel = true };
         using SKPaint paint = new() { Color = ToSkColor(foreColor), IsAntialias = true };
 
-        // As the GDI+ drawing did: the text in a square of its advance and line height, scaled to the avatar.
+        // As the GDI+ drawing did: the text in a square of its advance and line height (and its ink, which some fonts
+        // draw beyond the advance), scaled to the avatar with a margin.
         float advance = font.MeasureText(text, out SKRect bounds);
-        float lineHeight = font.Spacing;
-        float scale = size / Math.Max(Math.Max(advance, lineHeight), 1);
-        font.Size = size * scale;
-        advance *= scale;
-        bounds = new SKRect(bounds.Left * scale, bounds.Top * scale, bounds.Right * scale, bounds.Bottom * scale);
+        float extent = Math.Max(Math.Max(advance, bounds.Width), font.Spacing);
+        font.Size *= size * TextExtent / Math.Max(extent, 1);
+        font.MeasureText(text, out bounds);
 
-        // Centered on the ink of the glyphs vertically (initials have no descenders to keep room for).
-        float x = (size - advance) / 2;
+        // Centered on the ink of the glyphs (initials have no descenders to keep room for).
+        float x = ((size - bounds.Width) / 2) - bounds.Left;
         float y = ((size - bounds.Height) / 2) - bounds.Top;
         canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
         canvas.Flush();

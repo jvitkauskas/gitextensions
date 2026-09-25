@@ -1,4 +1,5 @@
 using System.Text;
+using CommonTestUtils;
 using GitCommands;
 using GitCommands.Git;
 using GitUI.Presentation.CommandsDialogs;
@@ -14,7 +15,7 @@ public sealed class Batch2ViewModelTests
     [Test]
     public void PuttyError_loading_a_key_retries_with_it()
     {
-        PuttyErrorViewModel viewModel = new(new PuttyErrorStrings(), () => @"C:\keys\id.ppk");
+        PuttyErrorViewModel viewModel = new(new PuttyErrorStrings(), () => TestPaths.Native(@"C:\keys\id.ppk"));
         bool? closed = null;
         viewModel.CloseRequested += (_, accepted) => closed = accepted;
 
@@ -22,7 +23,7 @@ public sealed class Batch2ViewModelTests
 
         closed.Should().BeTrue();
         viewModel.ShouldRetry.Should().BeTrue();
-        viewModel.KeyPath.Should().Be(@"C:\keys\id.ppk");
+        viewModel.KeyPath.Should().Be(TestPaths.Native(@"C:\keys\id.ppk"));
     }
 
     [Test]
@@ -74,11 +75,11 @@ public sealed class Batch2ViewModelTests
     {
         IReadOnlyList<TranslationChoice> choices = ChooseTranslationViewModel.CreateChoices(
             ["German", "Dutch"],
-            @"C:\translations",
+            TestPaths.Native(@"C:\translations"),
             path => path.EndsWith("German.gif"));
 
         choices.Select(c => c.Name).Should().Equal("English", "Dutch", "German");
-        choices.Single(c => c.Name == "German").ImagePath.Should().Be(Path.Join(@"C:\translations", "German.gif"));
+        choices.Single(c => c.Name == "German").ImagePath.Should().Be(Path.Join(TestPaths.Native(@"C:\translations"), "German.gif"));
         choices.Single(c => c.Name == "Dutch").ImagePath.Should().BeNull();
     }
 
@@ -153,7 +154,7 @@ public sealed class Batch2ViewModelTests
     {
         List<string> runs = [];
         CleanupRepositoryViewModel viewModel = new(
-            new CleanupRepositoryStrings(), @"C:\repo\", @"C:\repo\.git\", path: null,
+            new CleanupRepositoryStrings(), TestPaths.Native(@"C:\repo\"), TestPaths.Native(@"C:\repo\.git\"), path: null,
             arguments =>
             {
                 runs.Add(arguments.ToString());
@@ -165,7 +166,7 @@ public sealed class Batch2ViewModelTests
         viewModel.IsIncludeFilterEnabled = true;
         viewModel.IncludePaths = "src\r\n\r\nmy docs";
         viewModel.IsExcludeFilterEnabled = true;
-        viewModel.ExcludePaths = @"bin\my file.txt";
+        viewModel.ExcludePaths = TestPaths.Native(@"bin\my file.txt");
         viewModel.CleanSubmodules = true;
 
         viewModel.GetIncludePathArgument().Should().Be("\"src\" \"my docs\"");
@@ -186,7 +187,7 @@ public sealed class Batch2ViewModelTests
         int runs = 0;
         ProcessViewModelTests.FakeMessageBoxes messageBoxes = new() { ConfirmResult = confirm };
         CleanupRepositoryViewModel viewModel = new(
-            new CleanupRepositoryStrings(), @"C:\repo\", @"C:\repo\.git\", path: null,
+            new CleanupRepositoryStrings(), TestPaths.Native(@"C:\repo\"), TestPaths.Native(@"C:\repo\.git\"), path: null,
             _ =>
             {
                 runs++;
@@ -204,7 +205,7 @@ public sealed class Batch2ViewModelTests
     public void CleanupRepository_path_argument_sets_both_filters()
     {
         CleanupRepositoryViewModel viewModel = new(
-            new CleanupRepositoryStrings(), @"C:\repo\", @"C:\repo\.git\", path: "sub", _ => "",
+            new CleanupRepositoryStrings(), TestPaths.Native(@"C:\repo\"), TestPaths.Native(@"C:\repo\.git\"), path: "sub", _ => "",
             new ProcessViewModelTests.FakeMessageBoxes(), new SmallDialogViewModelTests.FakeFileDialogs());
 
         viewModel.IsIncludeFilterEnabled.Should().BeTrue();
@@ -219,14 +220,15 @@ public sealed class Batch2ViewModelTests
     public async Task CleanupRepository_adds_exclude_paths_relative_to_the_working_directory()
     {
         CleanupRepositoryViewModel viewModel = new(
-            new CleanupRepositoryStrings(), @"C:\repo\", @"C:\repo\.git\", path: null, _ => "",
-            new ProcessViewModelTests.FakeMessageBoxes(), new SmallDialogViewModelTests.FakeFileDialogs { Files = [@"C:\repo\bin\a.dll"] });
+            new CleanupRepositoryStrings(), TestPaths.Native(@"C:\repo\"), TestPaths.Native(@"C:\repo\.git\"), path: null, _ => "",
+            new ProcessViewModelTests.FakeMessageBoxes(), new SmallDialogViewModelTests.FakeFileDialogs { Files = [TestPaths.Native(@"C:\repo\bin\a.dll")] });
 
         await viewModel.AddExcludePathCommand.ExecuteAsync(null);
         await viewModel.AddExcludePathCommand.ExecuteAsync(null);
 
         viewModel.IsExcludeFilterEnabled.Should().BeTrue();
-        viewModel.ExcludePaths.Should().Be($"bin\\a.dll{Environment.NewLine}bin\\a.dll");
+        string excludePath = TestPaths.Native(@"bin\a.dll");
+        viewModel.ExcludePaths.Should().Be($"{excludePath}{Environment.NewLine}{excludePath}");
     }
 
     [Test]
@@ -332,11 +334,11 @@ public sealed class Batch2ViewModelTests
         string parent = Path.GetTempPath();
         string workingDir = Path.Join(parent, "repo");
 
-        OpenDirectoryViewModel.GetDirectories(@"C:\clones", workingDir, [@"C:\a\", @"C:\clones\"], @"C:\recent", @"C:\home")
-            .Should().Equal(@"C:\clones\", parent.EnsureTrailingPathSeparator(), @"C:\a\");
+        OpenDirectoryViewModel.GetDirectories(TestPaths.Native(@"C:\clones"), workingDir, [TestPaths.Native(@"C:\a\"), TestPaths.Native(@"C:\clones\")], TestPaths.Native(@"C:\recent"), TestPaths.Native(@"C:\home"))
+            .Should().Equal(TestPaths.Native(@"C:\clones\"), parent.EnsureTrailingPathSeparator(), TestPaths.Native(@"C:\a\"));
 
-        OpenDirectoryViewModel.GetDirectories(null, null, [], @"C:\recent", @"C:\home")
-            .Should().Equal(@"C:\recent\", @"C:\home\");
+        OpenDirectoryViewModel.GetDirectories(null, null, [], TestPaths.Native(@"C:\recent"), TestPaths.Native(@"C:\home"))
+            .Should().Equal(TestPaths.Native(@"C:\recent\"), TestPaths.Native(@"C:\home\"));
     }
 
     [Test]
@@ -345,24 +347,24 @@ public sealed class Batch2ViewModelTests
         ProcessViewModelTests.FakeMessageBoxes messageBoxes = new();
         List<string> opened = [];
         OpenDirectoryViewModel viewModel = new(
-            new OpenDirectoryStrings(), [@"C:\first\", @"C:\second\"], "Error",
+            new OpenDirectoryStrings(), [TestPaths.Native(@"C:\first\"), TestPaths.Native(@"C:\second\")], "Error",
             path =>
             {
                 opened.Add(path);
-                return path == @"C:\repo";
+                return path == TestPaths.Native(@"C:\repo");
             },
             messageBoxes, new SmallDialogViewModelTests.FakeFileDialogs());
         bool? closed = null;
         viewModel.CloseRequested += (_, accepted) => closed = accepted;
 
-        viewModel.Directory.Should().Be(@"C:\first\");
+        viewModel.Directory.Should().Be(TestPaths.Native(@"C:\first\"));
         viewModel.OpenCommand.Execute(null);
         messageBoxes.Errors.Should().Equal(viewModel.Strings.OpenFailed.Text);
         closed.Should().BeNull();
 
-        viewModel.Directory = @"  C:\repo ";
+        viewModel.Directory = $"  {TestPaths.Native(@"C:\repo")} ";
         viewModel.OpenCommand.Execute(null);
-        opened.Should().Equal(@"C:\first\", @"C:\repo");
+        opened.Should().Equal(TestPaths.Native(@"C:\first\"), TestPaths.Native(@"C:\repo"));
         closed.Should().BeTrue();
     }
 

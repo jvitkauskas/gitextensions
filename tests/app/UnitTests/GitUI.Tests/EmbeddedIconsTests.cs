@@ -19,6 +19,8 @@ public sealed class EmbeddedIconsTests
     ];
 
     [Test]
+    [Platform(Include = "Win")]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
     public void Every_icon_of_the_resources_is_embedded_as_the_same_image()
     {
         ResourceSet resources = Images.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, createIfNotExists: true, tryParents: true)!;

@@ -21,7 +21,11 @@ public class ApiClientTests
         // Prompting for an ssh passphrase is forced deliberately for interactive git operations
         ProcessStartInfo startInfo = ApiClient.CreateCredentialFillStartInfo(gitExecutable: null);
 
-        startInfo.Environment.Keys.Should().NotContain(["SSH_ASKPASS", "SSH_ASKPASS_REQUIRE", "DISPLAY"]);
+        // As they are in the environment of the process (a Linux desktop has DISPLAY).
+        foreach (string variable in (string[])["SSH_ASKPASS", "SSH_ASKPASS_REQUIRE", "DISPLAY"])
+        {
+            (startInfo.Environment.TryGetValue(variable, out string? value) ? value : null).Should().Be(Environment.GetEnvironmentVariable(variable), variable);
+        }
     }
 
     [TestCase(null, "git")]

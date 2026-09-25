@@ -110,7 +110,8 @@ API and ask `IDialogBoxHost` off Windows rather than moving every call site to `
 the tools of the system (`gsettings`, `defaults`), since it is read before Avalonia starts. All application projects
 target `net10.0`; images that ran through GDI+ on every system are PNG data now (avatars with SkiaSharp, the icons of
 scripts, shells and states from embedded resources). Under WSLg the application starts, browses, diffs and commits.
-Left: macOS, the headless tests on Linux, and the Linux issues of the ledger.
+The plugins and the tests target `net10.0` too, and CI's Linux job runs the headless test suite (the part of phase 7
+about test paths is done: `TestPaths.Native`). Left: macOS and the Linux issues of the ledger.
 - **Avalonia desktop backends.** `Avalonia.Desktop` (Win32, X11, native macOS) instead of `Avalonia.Win32`, and
   `UsePlatformDetect()` instead of `UseWin32()`. `Project.Avalonia.targets` keeps the native assets of the published
   runtime identifier instead of always keeping the Windows ones.

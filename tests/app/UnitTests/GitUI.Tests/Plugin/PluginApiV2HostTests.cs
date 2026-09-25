@@ -43,6 +43,8 @@ public sealed class PluginApiV2HostTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
     public void Plugin_menu_items_are_a_menu_model_for_the_Avalonia_menus()
     {
         int clicks = 0;

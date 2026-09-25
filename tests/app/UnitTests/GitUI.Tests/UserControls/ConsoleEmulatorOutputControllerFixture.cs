@@ -4,6 +4,9 @@ using GitUI.ConsoleEmulation;
 using GitUI.ConsoleEmulation.ConEmu;
 
 namespace GitUITests.UserControls;
+
+[Platform(Include = "Win")]
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 public class ConsoleEmulatorOutputControllerFixture
 {
     [Test]

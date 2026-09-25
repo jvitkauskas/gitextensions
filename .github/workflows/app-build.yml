@@ -52,13 +52,13 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
-  # Linux leg (docs/avalonia-port/CROSS-PLATFORM.md, phase 0): the whole solution must build on Linux, and the tests of the
-  # portable projects (those targeting net10.0 rather than net10.0-windows) run there. NUnit skips the assemblies of the
-  # Windows-only projects ("Only supported on windows"), so the leg covers more as projects become portable.
+  # Linux leg (docs/avalonia-port/CROSS-PLATFORM.md): the whole solution must build on Linux, and its tests run there, the
+  # headless Avalonia tests included (phase 2). NUnit skips the Windows-only assemblies (UI.IntegrationTests) and tests
+  # ([Platform(Include = "Win")]).
   build-linux:
     name: ubuntu-latest
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
     env:
@@ -84,6 +84,10 @@ jobs:
         key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props') }}
         restore-keys: |
           nuget-${{ runner.os }}-
+
+    - name: Install fonts
+      # The headless Avalonia tests measure text with the fonts of the system.
+      run: sudo apt-get install -y -q fonts-dejavu-core fontconfig
 
     - name: Build .NET
       run: dotnet build -c Release --verbosity q --nologo /p:ContinuousIntegrationBuild=true /bl:artifacts/log/build.binlog

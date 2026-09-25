@@ -1,13 +1,14 @@
-﻿using GitExtensions.Extensibility.Git;
+﻿using CommonTestUtils;
+using GitExtensions.Extensibility.Git;
 using GitUI.CommandsDialogs;
 using NSubstitute;
 
 namespace GitUITests.CommandsDialogs;
 public sealed class FormDeleteBranchTests
 {
-    private const string MainWorktreePath = @"C:\repos\main";
-    private const string LinkedWorktreePath = @"C:\repos\feature";
-    private const string SecondLinkedWorktreePath = @"C:\repos\hotfix";
+    private static readonly string MainWorktreePath = TestPaths.Native(@"C:\repos\main");
+    private static readonly string LinkedWorktreePath = TestPaths.Native(@"C:\repos\feature");
+    private static readonly string SecondLinkedWorktreePath = TestPaths.Native(@"C:\repos\hotfix");
 
     [Test]
     public void ClassifyWorktreeBranches_should_return_empty_when_no_branches_match()
@@ -166,6 +167,7 @@ public sealed class FormDeleteBranchTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void ClassifyWorktreeBranches_should_be_case_insensitive_on_paths()
     {
         IGitRef featureRef = CreateBranch("feature");

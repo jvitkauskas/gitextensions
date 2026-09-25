@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\app\GitUI\GitUI.csproj" />
     <ProjectReference Include="..\..\..\..\src\app\ResourceManager\ResourceManager.csproj" />

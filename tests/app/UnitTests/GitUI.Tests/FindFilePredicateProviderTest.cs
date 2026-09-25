@@ -45,7 +45,7 @@ public class FindFilePredicateProviderTest
     }
 
     [TestCase(@"test2/t", "test1/test2/test3")]
-    [TestCase(@"\test2\t", "test1/test2/test3")]
+    [TestCase(@"\test2\t", "test1/test2/test3", IncludePlatform = "Win")]
     public void Get_should_correct_work_with_slashes_and_backslashes_in_pattern(string? pattern, string? filePath)
     {
         Func<string?, bool> predicate = _provider.Get(pattern!, workingDirDefault);
@@ -59,11 +59,11 @@ public class FindFilePredicateProviderTest
         predicate.Should().NotThrow<ArgumentNullException>();
     }
 
-    [TestCase(@"D:\test1", @"D:/", "test1/test2/test3/")]
+    [TestCase(@"D:\test1", @"D:/", "test1/test2/test3/", IncludePlatform = "Win")]
     [TestCase(@"D:/test1", @"D:/", "test1/test2/test3/")]
-    [TestCase(@"D:\test1", @"D:\", "test1/test2/test3/")]
-    [TestCase(@"D:/test1", @"D:\", "test1/test2/test3/")]
-    [TestCase(@"D:\test1", @"D:", "test1/test2/test3/")]
+    [TestCase(@"D:\test1", @"D:\", "test1/test2/test3/", IncludePlatform = "Win")]
+    [TestCase(@"D:/test1", @"D:\", "test1/test2/test3/", IncludePlatform = "Win")]
+    [TestCase(@"D:\test1", @"D:", "test1/test2/test3/", IncludePlatform = "Win")]
     [TestCase(@"D:/test1", @"D:", "test1/test2/test3/")]
     public void Get_should_work_correct_when_workingDir_end_with_slash_or_not(string? pattern, string? workingDir, string? filePath)
     {
@@ -72,7 +72,7 @@ public class FindFilePredicateProviderTest
     }
 
     [TestCase(@"tEsT2", @"D:/", "Test1/teST2/test3/")]
-    [TestCase(@"D:\Test\test1", @"D:/TEST", "teSt1/test2/test3/")]
+    [TestCase(@"D:\Test\test1", @"D:/TEST", "teSt1/test2/test3/", IncludePlatform = "Win")]
     public void Get_should_work_with_different_cases(string? pattern, string? workingDir, string? filePath)
     {
         Func<string?, bool> predicate = _provider.Get(pattern!, workingDir!);
@@ -82,7 +82,7 @@ public class FindFilePredicateProviderTest
     [TestCase(@"D:/test1", @"D:/", "test1/test2/test3/", ExpectedResult = true)]
     [TestCase(@"D:/test2", @"D:/", "test1/test2/test3/", ExpectedResult = false)]
     [TestCase(@"D:/test/test1", @"D:/test", "test1/test2/test3/", ExpectedResult = true)]
-    [TestCase(@"//d/test/test1", @"//d/test\", "test1/test2/test3/", ExpectedResult = true)]
+    [TestCase(@"//d/test/test1", @"//d/test\", "test1/test2/test3/", ExpectedResult = true, IncludePlatform = "Win")]
     public bool Get_should_use_startwith_when_pattern_started_with_workingDir(string? pattern, string? workingDir, string? filePath)
     {
         Func<string?, bool> predicate = _provider.Get(pattern!, workingDir!);

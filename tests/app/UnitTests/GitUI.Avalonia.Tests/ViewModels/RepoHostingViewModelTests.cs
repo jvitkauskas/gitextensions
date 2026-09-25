@@ -1,3 +1,4 @@
+using CommonTestUtils;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Plugins;
 using GitUI.Presentation.CommandsDialogs.RepoHosting;
@@ -24,13 +25,13 @@ public sealed class RepoHostingViewModelTests
         IHostedRepository tool = Repository("a-tool");
         IRepositoryHostPlugin hoster = Hoster();
         hoster.GetMyRepos().Returns([fork, tool]);
-        ForkAndCloneHost host = new() { DefaultDestination = @"C:\repos" };
+        ForkAndCloneHost host = new() { DefaultDestination = TestPaths.Native(@"C:\repos") };
         ForkAndCloneViewModel viewModel = CreateForkAndClone(hoster, host, new FakeMessageBoxes());
 
         viewModel.Title.Should().Be("GitHub: Remote repository fork and clone");
         viewModel.Load();
 
-        viewModel.Destination.Should().Be(@"C:\repos");
+        viewModel.Destination.Should().Be(TestPaths.Native(@"C:\repos"));
         viewModel.MyRepositories.Select(r => (r.Name, r.IsFork, r.Forks, r.IsPrivate)).Should().Equal(("a-tool", "No", "0", "No"), ("gitextensions", "Yes", "0", "No"));
         viewModel.CanClone.Should().BeFalse();
 
@@ -43,10 +44,10 @@ public sealed class RepoHostingViewModelTests
         viewModel.ShowProtocols.Should().BeTrue();
         viewModel.Protocols.Should().Equal(GitProtocol.Https, GitProtocol.Ssh);
         viewModel.CanClone.Should().BeTrue();
-        viewModel.CloneInfoText.Should().Be("Will clone https://example.org/gitextensions.git into C:\\repos\\gitextensions.\nYou will have push access. \"upstream-owner\" will be added as a remote.");
+        viewModel.CloneInfoText.Should().Be($"Will clone https://example.org/gitextensions.git into {TestPaths.Native(@"C:\repos\gitextensions")}.\nYou will have push access. \"upstream-owner\" will be added as a remote.");
 
         viewModel.CreateDirectory = "ge";
-        viewModel.CloneInfoText.Should().StartWith("Will clone https://example.org/gitextensions.git into C:\\repos\\ge.");
+        viewModel.CloneInfoText.Should().StartWith($"Will clone https://example.org/gitextensions.git into {TestPaths.Native(@"C:\repos\ge")}.");
     }
 
     [Test]
@@ -55,7 +56,7 @@ public sealed class RepoHostingViewModelTests
         IHostedRepository fork = Repository("gitextensions", isFork: true, parentOwner: "upstream-owner");
         IRepositoryHostPlugin hoster = Hoster();
         hoster.GetMyRepos().Returns([fork]);
-        ForkAndCloneHost host = new() { DefaultDestination = @"C:\repos" };
+        ForkAndCloneHost host = new() { DefaultDestination = TestPaths.Native(@"C:\repos") };
         ForkAndCloneViewModel viewModel = CreateForkAndClone(hoster, host, new FakeMessageBoxes());
         bool? closed = null;
         viewModel.CloseRequested += (_, accepted) => closed = accepted;
@@ -65,9 +66,9 @@ public sealed class RepoHostingViewModelTests
 
         viewModel.CloneCommand.Execute(null);
 
-        host.Clones.Should().Equal(("https://example.org/gitextensions.git", @"C:\repos\gitextensions", 5));
-        host.Remotes.Should().Equal((@"C:\repos\gitextensions", "upstream-owner", "https://example.org/upstream/gitextensions.git"));
-        host.Opened.Should().Equal(@"C:\repos\gitextensions");
+        host.Clones.Should().Equal(("https://example.org/gitextensions.git", TestPaths.Native(@"C:\repos\gitextensions"), 5));
+        host.Remotes.Should().Equal((TestPaths.Native(@"C:\repos\gitextensions"), "upstream-owner", "https://example.org/upstream/gitextensions.git"));
+        host.Opened.Should().Equal(TestPaths.Native(@"C:\repos\gitextensions"));
         closed.Should().BeTrue();
     }
 
@@ -394,7 +395,7 @@ public sealed class RepoHostingViewModelTests
     }
 
     private static ForkAndCloneViewModel CreateForkAndClone(IRepositoryHostPlugin hoster, ForkAndCloneHost host, FakeMessageBoxes messageBoxes)
-        => new(new ForkAndCloneStrings(), hoster, host, new SynchronousBackgroundRunner(), messageBoxes, new FakeFileDialogs { Folder = @"D:\clones" });
+        => new(new ForkAndCloneStrings(), hoster, host, new SynchronousBackgroundRunner(), messageBoxes, new FakeFileDialogs { Folder = TestPaths.Native(@"D:\clones") });
 
     internal static ViewPullRequestsViewModel CreateViewPullRequests(IRepositoryHostPlugin hoster, IViewPullRequestsHost host, FakeViewerHost viewerHost, FakeMessageBoxes messageBoxes)
         => new(

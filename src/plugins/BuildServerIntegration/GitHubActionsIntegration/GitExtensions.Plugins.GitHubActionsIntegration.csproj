@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\..\..\app\GitExtUtils\Validates.cs" Link="Validates.cs" />
   </ItemGroup>

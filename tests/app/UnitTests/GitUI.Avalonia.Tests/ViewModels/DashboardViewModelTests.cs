@@ -1,3 +1,4 @@
+using CommonTestUtils;
 using GitCommands.UserRepositoryHistory;
 using GitUI.Presentation.CommandsDialogs.BrowseDialog;
 
@@ -17,7 +18,7 @@ public sealed class DashboardViewModelTests
         viewModel.Groups[0].IsRecent.Should().BeTrue();
         viewModel.Groups[0].Items.Select(i => i.Caption).Should().Equal("gitextensions", "missing", "tools");
         viewModel.Groups[1].Items.Select(i => i.Caption).Should().Equal("dotfiles");
-        viewModel.Groups[2].Items.Select(i => i.Path).Should().Equal(@"C:\work\api", @"C:\work\web");
+        viewModel.Groups[2].Items.Select(i => i.Path).Should().Equal(TestPaths.Native(@"C:\work\api"), TestPaths.Native(@"C:\work\web"));
         viewModel.Groups[2].Items.Should().OnlyContain(i => i.IsFavourite && i.HasCategory);
         viewModel.TileWidth.Should().Be(240);
 
@@ -52,17 +53,17 @@ public sealed class DashboardViewModelTests
         DashboardViewModel viewModel = Create(host);
 
         viewModel.OpenCommand.Execute(viewModel.Groups[0].Items[0]);
-        host.Opened.Should().Equal(@"C:\src\gitextensions");
+        host.Opened.Should().Equal(TestPaths.Native(@"C:\src\gitextensions"));
 
         viewModel.OpenCommand.Execute(viewModel.Groups[0].Items[1]);
-        host.InvalidRemoved.Should().Equal(@"C:\gone\missing");
+        host.InvalidRemoved.Should().Equal(TestPaths.Native(@"C:\gone\missing"));
         host.Opened.Should().HaveCount(1);
         host.Loads.Should().HaveCount(2, "the list is read again once the missing repository is removed");
 
         // Enter in the search box opens the first repository listed.
         viewModel.SearchText = "tools";
         viewModel.OpenFirst();
-        host.Opened.Should().Equal(@"C:\src\gitextensions", @"C:\src\tools");
+        host.Opened.Should().Equal(TestPaths.Native(@"C:\src\gitextensions"), TestPaths.Native(@"C:\src\tools"));
     }
 
     [Test]
@@ -83,18 +84,18 @@ public sealed class DashboardViewModelTests
         categories[1].IsEnabled.Should().BeTrue();
 
         categories[2].Execute!();
-        host.Assigned.Should().Equal((@"C:\src\gitextensions", "Work"));
+        host.Assigned.Should().Equal((TestPaths.Native(@"C:\src\gitextensions"), "Work"));
 
         categories[4].Execute!();
         host.Prompts.Should().ContainSingle().Which.Original.Should().BeNull();
         host.Prompts[0].Categories.Should().Equal("Personal", "Work");
-        host.Assigned[^1].Should().Be((@"C:\src\gitextensions", "New"));
+        host.Assigned[^1].Should().Be((TestPaths.Native(@"C:\src\gitextensions"), "New"));
 
         menu[0].Execute!();
-        host.ShownInFolder.Should().Equal(@"C:\src\gitextensions");
+        host.ShownInFolder.Should().Equal(TestPaths.Native(@"C:\src\gitextensions"));
 
         menu[4].Execute!();
-        host.RemovedRecent.Should().Equal(@"C:\src\gitextensions");
+        host.RemovedRecent.Should().Equal(TestPaths.Native(@"C:\src\gitextensions"));
 
         // A favourite is removed from the favourites, and its own category is disabled.
         DashboardRepositoryItem favourite = viewModel.Groups.Single(g => g.Category == "Work").Items[0];
@@ -102,7 +103,7 @@ public sealed class DashboardViewModelTests
         favouriteMenu[2].Children!.Where(m => !m.IsSeparator).Select(m => (m.Header, m.IsEnabled)).Should().Equal(
             ("(none)", true), ("Personal", true), ("Work", false), ("Add new...", true));
         favouriteMenu[4].Execute!();
-        host.RemovedFavourite.Should().Equal(@"C:\work\api");
+        host.RemovedFavourite.Should().Equal(TestPaths.Native(@"C:\work\api"));
 
         favouriteMenu[5].Execute!();
         host.MissingRemoved.Should().Be(1);
@@ -130,12 +131,12 @@ public sealed class DashboardViewModelTests
         categoryMenu[0].Execute!();
         host.Prompts[^1].Original.Should().Be("Work");
         host.Prompts[^1].Categories.Should().Equal("Personal");
-        host.Assigned.Should().Equal((@"C:\work\api", "Office"), (@"C:\work\web", "Office"));
+        host.Assigned.Should().Equal((TestPaths.Native(@"C:\work\api"), "Office"), (TestPaths.Native(@"C:\work\web"), "Office"));
 
         host.Assigned.Clear();
         categoryMenu[1].Execute!();
         host.Confirmations[^1].Should().Be(("Do you want to delete category \"Work\" with 2 repositories?\n\nThe action cannot be undone.", "Delete Category"));
-        host.Assigned.Should().Equal((@"C:\work\api", null), (@"C:\work\web", null));
+        host.Assigned.Should().Equal((TestPaths.Native(@"C:\work\api"), null), (TestPaths.Native(@"C:\work\web"), null));
     }
 
     [Test]
@@ -197,16 +198,16 @@ public sealed class DashboardViewModelTests
     {
         private readonly List<Repository> _recent =
         [
-            new(@"C:\src\gitextensions"),
-            new(@"C:\gone\missing"),
-            new(@"C:\src\tools"),
+            new(TestPaths.Native(@"C:\src\gitextensions")),
+            new(TestPaths.Native(@"C:\gone\missing")),
+            new(TestPaths.Native(@"C:\src\tools")),
         ];
 
         private readonly List<Repository> _favourites =
         [
-            new(@"C:\work\web") { Category = "Work" },
-            new(@"C:\home\dotfiles") { Category = "Personal" },
-            new(@"C:\work\api") { Category = "Work" },
+            new(TestPaths.Native(@"C:\work\web")) { Category = "Work" },
+            new(TestPaths.Native(@"C:\home\dotfiles")) { Category = "Personal" },
+            new(TestPaths.Native(@"C:\work\api")) { Category = "Work" },
         ];
 
         public FakeDashboardHost()

@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CommonTestUtils;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs;
@@ -56,7 +57,7 @@ public sealed class DashboardViewTests : HeadlessTest
         items.Select(i => i.Header).Should().Equal("Show in folder", "Categories", "Remove project from the list", "Remove missing projects from the list");
         items[1].Items.OfType<MenuItem>().Select(i => (i.Header, i.IsEnabled)).Should().Equal(("(none)", false), ("Personal", true), ("Work", true), ("Add new...", true));
         items[0].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        dashboardHost.ShownInFolder.Should().Equal(@"C:\src\gitextensions");
+        dashboardHost.ShownInFolder.Should().Equal(TestPaths.Native(@"C:\src\gitextensions"));
         dashboard.RepositoryMenu.Close();
 
         Button actions = dashboard.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("groupActions"));
@@ -82,7 +83,7 @@ public sealed class DashboardViewTests : HeadlessTest
 
         window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
         Dispatcher.UIThread.RunJobs();
-        dashboardHost.Opened.Should().Equal(@"C:\work\api");
+        dashboardHost.Opened.Should().Equal(TestPaths.Native(@"C:\work\api"));
         window.Close();
     });
 
@@ -127,7 +128,7 @@ public sealed class DashboardViewTests : HeadlessTest
         window.MouseUp(point, MouseButton.Left);
         Dispatcher.UIThread.RunJobs();
 
-        dashboardHost.Opened.Should().Equal(@"C:\work\web");
+        dashboardHost.Opened.Should().Equal(TestPaths.Native(@"C:\work\web"));
         window.Close();
     });
 

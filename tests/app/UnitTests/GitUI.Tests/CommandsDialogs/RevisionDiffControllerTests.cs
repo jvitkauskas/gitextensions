@@ -1,4 +1,5 @@
-﻿using GitExtensions.Extensibility;
+﻿using CommonTestUtils;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.CommandsDialogs;
 using GitUI.UserControls;
@@ -79,12 +80,12 @@ public class RevisionDiffControllerTests
             item
         ];
 
-        Func<string, string?> userSelection = (_) => "c:\\temp\\file.txt";
+        Func<string, string?> userSelection = (_) => TestPaths.Native("c:\\temp\\file.txt");
 
         _controller.SaveFiles(files, userSelection);
 
         _fullPathResolver.Received(1).Resolve(item.Item.Name);
-        _module.Received(1).SaveBlobAs("c:\\temp\\file.txt", Arg.Any<string>());
+        _module.Received(1).SaveBlobAs(TestPaths.Native("c:\\temp\\file.txt"), Arg.Any<string>());
     }
 
     [Test]
@@ -109,57 +110,62 @@ public class RevisionDiffControllerTests
         _module.Received(0).SaveBlobAs(Arg.Any<string>(), Arg.Any<string>());
     }
 
-    [TestCase("c:\\temp")]
-    [TestCase("c:\\temp\\")]
-    public void SaveFiles_should_save_multi_files_same_folder(string targetFolder)
+    // The files are saved for real (the folders are created): in a temporary folder, deleted afterwards.
+    [TestCase(false)]
+    [TestCase(true)]
+    public void SaveFiles_should_save_multi_files_same_folder(bool trailingSeparator)
     {
-        FileStatusItem item1 = new(default, new(ObjectId.Random()), new("item1"));
-        FileStatusItem item2 = new(default, new(ObjectId.Random()), new("item2"));
-        FileStatusItem item3 = new(default, new(ObjectId.Random()), new("item3"));
-        List<FileStatusItem> files =
-        [
-            item3,
-            item1,
-            item2,
-        ];
-
-        _fullPathResolver.Resolve(".").Returns(x => "c:\\temp\\");
-        _fullPathResolver.Resolve(item1.Item.Name).Returns(x => "c:\\temp\\item1.txt");
-        _fullPathResolver.Resolve(item2.Item.Name).Returns(x => "c:\\temp\\folder1\\item2.txt");
-        _fullPathResolver.Resolve(item3.Item.Name).Returns(x => "c:\\temp\\folder1\\folder2\\item3.txt");
-
-        Func<string, string?> userSelection = (_) => targetFolder;
-
-        _controller.SaveFiles(files, userSelection);
-
-        _fullPathResolver.Received(1).Resolve(".");
-        _fullPathResolver.Received(1).Resolve(item1.Item.Name);
-        _fullPathResolver.Received(1).Resolve(item2.Item.Name);
-        _fullPathResolver.Received(1).Resolve(item3.Item.Name);
-        _module.ReceivedWithAnyArgs(3).SaveBlobAs(default!, default!);
-        _module.Received(1).SaveBlobAs("c:\\temp\\item1.txt", Arg.Any<string>());
-        _module.Received(1).SaveBlobAs("c:\\temp\\folder1\\item2.txt", Arg.Any<string>());
-        _module.Received(1).SaveBlobAs("c:\\temp\\folder1\\folder2\\item3.txt", Arg.Any<string>());
+        string root = CreateTemporaryFolder();
+        try
+        {
+            string source = Path.Combine(root, "temp");
+            SaveFilesAndCheckTargets(source, trailingSeparator ? source + Path.DirectorySeparatorChar : source, expectedTarget: source);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
-    [TestCase("c:\\myproject\\src")]
-    [TestCase("c:\\myproject\\src\\")]
-    public void SaveFiles_should_save_multi_files_different_folder(string targetFolder)
+    [TestCase(false)]
+    [TestCase(true)]
+    public void SaveFiles_should_save_multi_files_different_folder(bool trailingSeparator)
+    {
+        string root = CreateTemporaryFolder();
+        try
+        {
+            string target = Path.Combine(root, "myproject", "src");
+            SaveFilesAndCheckTargets(Path.Combine(root, "temp"), trailingSeparator ? target + Path.DirectorySeparatorChar : target, expectedTarget: target);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private static string CreateTemporaryFolder()
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"RevisionDiffControllerTests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    private void SaveFilesAndCheckTargets(string source, string targetFolder, string expectedTarget)
     {
         FileStatusItem item1 = new(default, new(ObjectId.Random()), new("item1"));
         FileStatusItem item2 = new(default, new(ObjectId.Random()), new("item2"));
         FileStatusItem item3 = new(default, new(ObjectId.Random()), new("item3"));
         List<FileStatusItem> files =
         [
+            item3,
             item1,
             item2,
-            item3,
         ];
 
-        _fullPathResolver.Resolve(".").Returns(x => "c:\\temp\\");
-        _fullPathResolver.Resolve(item1.Item.Name).Returns(x => "c:\\temp\\item1.txt");
-        _fullPathResolver.Resolve(item2.Item.Name).Returns(x => "c:\\temp\\folder1\\item2.txt");
-        _fullPathResolver.Resolve(item3.Item.Name).Returns(x => "c:\\temp\\folder1\\folder2\\item3.txt");
+        _fullPathResolver.Resolve(".").Returns(x => source + Path.DirectorySeparatorChar);
+        _fullPathResolver.Resolve(item1.Item.Name).Returns(x => Path.Combine(source, "item1.txt"));
+        _fullPathResolver.Resolve(item2.Item.Name).Returns(x => Path.Combine(source, "folder1", "item2.txt"));
+        _fullPathResolver.Resolve(item3.Item.Name).Returns(x => Path.Combine(source, "folder1", "folder2", "item3.txt"));
 
         Func<string, string?> userSelection = (_) => targetFolder;
 
@@ -170,9 +176,9 @@ public class RevisionDiffControllerTests
         _fullPathResolver.Received(1).Resolve(item2.Item.Name);
         _fullPathResolver.Received(1).Resolve(item3.Item.Name);
         _module.ReceivedWithAnyArgs(3).SaveBlobAs(default!, default!);
-        _module.Received(1).SaveBlobAs("c:\\myproject\\src\\item1.txt", Arg.Any<string>());
-        _module.Received(1).SaveBlobAs("c:\\myproject\\src\\folder1\\item2.txt", Arg.Any<string>());
-        _module.Received(1).SaveBlobAs("c:\\myproject\\src\\folder1\\folder2\\item3.txt", Arg.Any<string>());
+        _module.Received(1).SaveBlobAs(Path.Combine(expectedTarget, "item1.txt"), Arg.Any<string>());
+        _module.Received(1).SaveBlobAs(Path.Combine(expectedTarget, "folder1", "item2.txt"), Arg.Any<string>());
+        _module.Received(1).SaveBlobAs(Path.Combine(expectedTarget, "folder1", "folder2", "item3.txt"), Arg.Any<string>());
     }
 
     private static ContextMenuSelectionInfo CreateContextMenuSelectionInfo(

@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
   <Import Project="$(RepoRoot)\src\plugins\AvaloniaPort.props" />
 
   <ItemGroup>

@@ -36,7 +36,7 @@ public class FormAddSubmoduleTests
 
     [TestCase("git@github.com:gitextensions/gitextensions.git", "\"git@github.com:gitextensions/gitextensions.git\"")]
     [TestCase("https://github.com/gitextensions/gitextensions.git", "\"https://github.com/gitextensions/gitextensions.git\"")]
-    [TestCase("C:\\Repo", "\"C:/Repo\"")]
+    [TestCase("C:\\Repo", "\"C:/Repo\"", IncludePlatform = "Win")]
     public void LoadRemoteRepoBranches_Url(string? url, string encodedUrl)
     {
         using IDisposable _ = MockupGitOutput(Heads, encodedUrl);

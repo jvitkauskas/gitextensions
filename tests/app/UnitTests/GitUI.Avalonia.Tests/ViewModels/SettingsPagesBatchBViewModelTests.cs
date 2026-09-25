@@ -147,6 +147,7 @@ public sealed class SettingsPagesBatchBViewModelTests
     });
 
     [Test]
+    [Platform(Include = "Win")] // PuTTY is found in the folders of Windows (docs/avalonia-port/CROSS-PLATFORM.md, phase 4).
     public void The_ssh_page_selects_the_client_and_finds_PuTTY() => WithAppSettings(() =>
     {
         string puttyDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());

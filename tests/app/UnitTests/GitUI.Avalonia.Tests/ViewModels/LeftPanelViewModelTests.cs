@@ -1,3 +1,4 @@
+using CommonTestUtils;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Submodules;
@@ -412,14 +413,14 @@ public sealed class LeftPanelViewModelTests
         host.SubmodulesRequested.Should().Be(1);
         DetailedSubmoduleInfo dirty = new() { IsDirty = true };
         host.RaiseSubmodules(new LeftPanelSubmodules(
-            new SubmoduleInfo("repo [main]", @"C:\src\repo\", bold: true),
+            new SubmoduleInfo("repo [main]", TestPaths.Native(@"C:\src\repo\"), bold: true),
             [
-                new SubmoduleInfo("ext/lib/a [no branch]", @"C:\src\repo\ext\lib\a\", bold: false) { Detailed = dirty },
-                new SubmoduleInfo("ext/lib/b", @"C:\src\repo\ext\lib\b\", bold: false),
-                new SubmoduleInfo("docs [main]", @"C:\src\repo\docs\", bold: false),
+                new SubmoduleInfo("ext/lib/a [no branch]", TestPaths.Native(@"C:\src\repo\ext\lib\a\"), bold: false) { Detailed = dirty },
+                new SubmoduleInfo("ext/lib/b", TestPaths.Native(@"C:\src\repo\ext\lib\b\"), bold: false),
+                new SubmoduleInfo("docs [main]", TestPaths.Native(@"C:\src\repo\docs\"), bold: false),
             ],
-            [@"C:\src\repo\"],
-            @"C:\src\repo\",
+            [TestPaths.Native(@"C:\src\repo\")],
+            TestPaths.Native(@"C:\src\repo\"),
             CurrentSubmoduleStatus: null,
             StructureUpdated: true));
 
@@ -434,7 +435,7 @@ public sealed class LeftPanelViewModelTests
         SubmoduleNode a = (SubmoduleNode)folder.Children[0];
         a.IconKey.Should().Be(LeftPanelIcons.SubmoduleDirty);
         a.LocalPath.Should().Be("ext/lib/a");
-        a.SuperPath.Should().Be(@"C:\src\repo\");
+        a.SuperPath.Should().Be(TestPaths.Native(@"C:\src\repo\"));
         a.ToolTip.Should().Be("tooltip of ext/lib/a [no branch]");
 
         // The current module opens in a new instance, another one in the main window.
@@ -446,14 +447,14 @@ public sealed class LeftPanelViewModelTests
 
         // A status update keeps the nodes.
         host.RaiseSubmodules(new LeftPanelSubmodules(
-            new SubmoduleInfo("repo [main]", @"C:\src\repo\", bold: true),
+            new SubmoduleInfo("repo [main]", TestPaths.Native(@"C:\src\repo\"), bold: true),
             [
-                new SubmoduleInfo("ext/lib/a [no branch]", @"C:\src\repo\ext\lib\a\", bold: false),
-                new SubmoduleInfo("ext/lib/b", @"C:\src\repo\ext\lib\b\", bold: false),
-                new SubmoduleInfo("docs [main]", @"C:\src\repo\docs\", bold: false),
+                new SubmoduleInfo("ext/lib/a [no branch]", TestPaths.Native(@"C:\src\repo\ext\lib\a\"), bold: false),
+                new SubmoduleInfo("ext/lib/b", TestPaths.Native(@"C:\src\repo\ext\lib\b\"), bold: false),
+                new SubmoduleInfo("docs [main]", TestPaths.Native(@"C:\src\repo\docs\"), bold: false),
             ],
-            [@"C:\src\repo\"],
-            @"C:\src\repo\",
+            [TestPaths.Native(@"C:\src\repo\")],
+            TestPaths.Native(@"C:\src\repo\"),
             CurrentSubmoduleStatus: null,
             StructureUpdated: false));
         panel.SubmodulesTree.Children.Single().Should().BeSameAs(top);
@@ -465,7 +466,7 @@ public sealed class LeftPanelViewModelTests
     {
         WorktreeTree.GetCommonPrefix(["repo_dev", "repo_test"]).Should().Be("repo_");
         WorktreeTree.GetCommonPrefix(["apricot", "apple"]).Should().Be("");
-        WorktreeTree.GetCommonPrefix([@"repo.worktrees\a", @"repo.worktrees\b"]).Should().Be(@"repo.worktrees\");
+        WorktreeTree.GetCommonPrefix([TestPaths.Native(@"repo.worktrees\a"), TestPaths.Native(@"repo.worktrees\b")]).Should().Be(TestPaths.Native(@"repo.worktrees\"));
         WorktreeTree.GetCommonPrefix(["only"]).Should().Be("");
     }
 
@@ -595,7 +596,7 @@ public sealed class LeftPanelViewModelTests
 
         public bool IsBareRepository => false;
 
-        public string WorkingDir => @"C:\src\repo\";
+        public string WorkingDir => TestPaths.Native(@"C:\src\repo\");
 
         public IReadOnlyList<HotkeyBinding> Hotkeys { get; } =
         [
@@ -637,9 +638,9 @@ public sealed class LeftPanelViewModelTests
         public IReadOnlyList<GitWorktree> GetWorktrees()
             =>
             [
-                new(@"C:\src\repo", GitWorktreeHeadType.Branch, "abcdef1234567890", "main", IsDeleted: false) { IsMain = true },
-                new(@"C:\src\repo.worktrees\feature-a", GitWorktreeHeadType.Branch, null, "feature-a", IsDeleted: false),
-                new(@"C:\src\repo.worktrees\feature-b", GitWorktreeHeadType.Detached, "1234567890abcdef1234567890abcdef12345678", null, IsDeleted: true),
+                new(TestPaths.Native(@"C:\src\repo"), GitWorktreeHeadType.Branch, "abcdef1234567890", "main", IsDeleted: false) { IsMain = true },
+                new(TestPaths.Native(@"C:\src\repo.worktrees\feature-a"), GitWorktreeHeadType.Branch, null, "feature-a", IsDeleted: false),
+                new(TestPaths.Native(@"C:\src\repo.worktrees\feature-b"), GitWorktreeHeadType.Detached, "1234567890abcdef1234567890abcdef12345678", null, IsDeleted: true),
             ];
 
         public bool DirectoryExists(string path) => true;

@@ -10,6 +10,8 @@ namespace GitUITests;
 public class ResourcesTests
 {
     [Test]
+    [Platform(Include = "Win")]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
     public void PngResources_ShouldNotContainDPIInformation()
     {
         // arrange

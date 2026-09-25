@@ -25,6 +25,7 @@ public sealed class FormFileHistoryControllerTests
     }
 
     [Test]
+    [Platform(Include = "Win")]
     public void TryGetExactPathName_Should_handle_network_path()
     {
         string path = @"\\" + Environment.MachineName.ToLower() + @"\c$\Windows\System32";
@@ -37,9 +38,9 @@ public sealed class FormFileHistoryControllerTests
         exactPath.Should().Be(path);
     }
 
-    [TestCase("Folder1\\file1.txt", true, true)]
-    [TestCase("FOLDER1\\file1.txt", true, false)]
-    [TestCase("fOLDER1\\file1.txt", true, false)]
+    [TestCase("Folder1\\file1.txt", true, true, IncludePlatform = "Win")]
+    [TestCase("FOLDER1\\file1.txt", true, false, IncludePlatform = "Win")]
+    [TestCase("fOLDER1\\file1.txt", true, false, IncludePlatform = "Win")]
     [TestCase("Folder2\\file1.txt", false, false)]
     public void TryGetExactPathName_should_check_if_path_matches_case(string relativePath, bool isResolved, bool doesMatch)
     {
