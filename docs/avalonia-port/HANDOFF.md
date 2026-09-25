@@ -16,7 +16,10 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
   message boxes passed on X11 (WSLg) and Windows. Done: `Avalonia.Desktop`, owners, message boxes, task dialogs, common
   dialogs, clipboard, system theme; all application projects target `net10.0`. Under WSLg the application starts,
   browses, diffs and commits. Every project, plugins and tests included, targets `net10.0`, and the tests run on Linux
-  (all but `UI.IntegrationTests`). Left: macOS (not checked: no Mac here) and the Linux issues listed in the ledger.
+  (all but `UI.IntegrationTests`). Left: macOS (not checked: no Mac here).
+- Phase 3 (git, tools and processes on each system) is done for Linux: the file manager, git discovery, editors, diff
+  and merge tools, shells, scripts and plugins. The owner checks macOS afterwards; the macOS branches exist (`open`,
+  TextEdit, Homebrew folders, Araxis) but were not run.
 - Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
   a fast-forward of `avalonia` and a push of it.
 

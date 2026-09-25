@@ -136,6 +136,8 @@ internal static partial class AvaloniaDialogs
             }
         });
 
+        public bool ShellsRunInConsole => !OperatingSystem.IsWindows();
+
         /// <summary>As <c>userShell_Click</c>.</summary>
         public void RunShell(BrowseShell shell) => AvaloniaUi.RunInHostContext(() =>
         {

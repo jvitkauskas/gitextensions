@@ -69,6 +69,19 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
 
         string pathToGource = _gourcePath.ValueOrDefault(Settings);
 
+        // Off Windows the Gource of the system (the download is the zip of Windows): a program on the PATH is fine too.
+        if (!OperatingSystem.IsWindows())
+        {
+            if (string.IsNullOrEmpty(pathToGource) && PathUtil.TryFindFullPath("gource", out string? systemGource))
+            {
+                pathToGource = systemGource;
+            }
+            else if (!string.IsNullOrEmpty(pathToGource) && !File.Exists(pathToGource) && PathUtil.TryFindFullPath(pathToGource, out string? onPath))
+            {
+                pathToGource = onPath;
+            }
+        }
+
         if (!string.IsNullOrEmpty(pathToGource) && !File.Exists(pathToGource))
         {
             PluginMessageBoxResult result = PluginMessageBoxes.Show(
@@ -80,6 +93,12 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
                 Settings.SetValue(_gourcePath.Name, _gourcePath.DefaultValue);
                 pathToGource = _gourcePath.DefaultValue;
             }
+        }
+
+        if (string.IsNullOrEmpty(pathToGource) && !OperatingSystem.IsWindows())
+        {
+            PluginMessageBoxes.ShowError(args.Owner, _cannotFindGource.Text);
+            return false;
         }
 
         if (string.IsNullOrEmpty(pathToGource))
@@ -105,7 +124,7 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
                     Directory.CreateDirectory(Path.Join(downloadDir, "gource"));
                     UnZipFiles(args.Owner, fileName, Path.Join(downloadDir, "gource"), true);
 
-                    string newGourcePath = Path.Join(downloadDir, "gource\\gource.exe");
+                    string newGourcePath = Path.Join(downloadDir, "gource", "gource.exe");
                     if (File.Exists(newGourcePath))
                     {
                         PluginMessageBoxes.ShowInformation(args.Owner, _gourceDownloadedAndUnzipped.Text, "Information");

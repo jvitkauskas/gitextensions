@@ -1,5 +1,6 @@
 using GitCommands;
 using GitCommands.Config;
+using GitCommands.DiffMergeTools;
 using GitCommands.Git;
 using GitCommands.Settings;
 using GitExtensions.Extensibility;
@@ -82,6 +83,12 @@ internal static partial class AvaloniaDialogs
         public string? GetEffectiveSetting(string name) => NativeSettings.GetValue(name);
 
         public string? FindFullPath(string? path) => PathUtil.TryFindFullPath(path!, out string? fullPath) ? fullPath : null;
+
+        public (string Path, string Command)? GetKnownMergeTool(string tool)
+        {
+            DiffMergeToolConfiguration config = new DiffMergeToolConfigurationManager(() => NativeSettings).LoadDiffMergeToolConfig(tool, null);
+            return string.IsNullOrEmpty(config.MergeCommand) ? null : (config.Path, config.MergeCommand);
+        }
 
         public async Task<IReadOnlyList<string>> GetCustomMergeToolsAsync(CancellationToken cancellationToken)
             => [.. await CustomDiffMergeToolCache.MergeToolCache.GetToolsAsync(Module, CustomMergeToolsDelay, cancellationToken)];
@@ -212,6 +219,8 @@ internal static partial class AvaloniaDialogs
         public void Open(string path) => OsShellUtil.Open(path);
 
         public void OpenWith(string path) => OsShellUtil.OpenAs(path);
+
+        public bool CanOpenWith => OsShellUtil.CanOpenAs;
 
         public void ShowInFolder(string path) => OsShellUtil.SelectPathInFileExplorer(path.ToNativePath());
 

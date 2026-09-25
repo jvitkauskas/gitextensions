@@ -142,7 +142,7 @@ public sealed class DiffMergeToolConfigurationManager
         DiffMergeTool? diffTool = RegisteredDiffMergeTools.Get(toolName);
         if (diffTool is null)
         {
-            string exeName = toolName + ".exe";
+            string exeName = OperatingSystem.IsWindows() ? toolName + ".exe" : toolName;
             if (!string.IsNullOrWhiteSpace(userSuppliedPath))
             {
                 fullPath = userSuppliedPath;

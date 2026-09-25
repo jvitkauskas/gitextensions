@@ -202,6 +202,13 @@ partial class ScriptsManager
                 return true;
             }
 
+            // Off Windows there is no explorer to open the URL with: the default browser opens it.
+            if (!OperatingSystem.IsWindows() && originalCommand.Equals("{openurl}", StringComparison.CurrentCultureIgnoreCase))
+            {
+                OsShellUtil.OpenUrlInDefaultBrowser(argument);
+                return true;
+            }
+
             if (!script.RunInBackground)
             {
                 bool success = ProcessDialogs.ShowProcess(owner, uiCommands, argument, uiCommands.Module.WorkingDir, null, true, process: command);

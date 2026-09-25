@@ -57,7 +57,7 @@ internal static class GourceStartDialog
         public void StartDetached(string command, string arguments, string workingDirectory)
             => Process.Start(new ProcessStartInfo
             {
-                FileName = "\"" + command + "\"",
+                FileName = OperatingSystem.IsWindows() ? "\"" + command + "\"" : command,
                 Arguments = arguments,
                 WorkingDirectory = workingDirectory
             });

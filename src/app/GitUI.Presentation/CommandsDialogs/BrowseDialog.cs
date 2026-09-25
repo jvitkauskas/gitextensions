@@ -683,6 +683,11 @@ public sealed partial class BrowseViewModel : DialogViewModel
             return;
         }
 
+        if (command == BrowseCommand.GitBash && ShowShellInConsole())
+        {
+            return;
+        }
+
         _host.Run(command, new BrowseSelection(Grid.GetSelectedRevisionsLatestSelectedFirst(), Grid.GetSelectedRevisions(descending: true)));
     }
 

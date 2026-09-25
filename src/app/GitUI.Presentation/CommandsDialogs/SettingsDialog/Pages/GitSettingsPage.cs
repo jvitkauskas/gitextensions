@@ -104,6 +104,9 @@ public sealed partial class GitSettingsPageViewModel(GitSettingsPageStrings stri
     [ObservableProperty]
     public partial string GitPath { get; set; } = "";
 
+    /// <summary>Whether the directory of the linux tools is shown: the tools of Git for Windows (docs/avalonia-port/CROSS-PLATFORM.md, phase 3).</summary>
+    public bool ShowLinuxToolsDir { get; } = OperatingSystem.IsWindows();
+
     /// <summary>As <c>LinuxToolsDir</c>.</summary>
     [ObservableProperty]
     public partial string LinuxToolsDir { get; set; } = "";

@@ -160,8 +160,10 @@ internal sealed partial class ScriptsManager : IScriptsManager, IScriptsRunner
             {
                 HotkeyCommandIdentifier = 9002,
                 Name = "&Example",
-                Command = @"c:\windows\system32\calc.exe",
-                Arguments = "",
+
+                // Off Windows: the working directory in the file manager.
+                Command = OperatingSystem.IsWindows() ? @"c:\windows\system32\calc.exe" : OperatingSystem.IsMacOS() ? "open" : "xdg-open",
+                Arguments = OperatingSystem.IsWindows() ? "" : ".",
                 RunInBackground = false,
                 AskConfirmation = false,
                 OnEvent = ScriptEvent.ShowInUserMenuBar,
@@ -196,8 +198,8 @@ internal sealed partial class ScriptsManager : IScriptsManager, IScriptsRunner
             {
                 HotkeyCommandIdentifier = 9006,
                 Name = "Convert workspace file to LF",
-                Command = "bash.exe",
-                Arguments = "-c 'dos2unix.exe {{SelectedRelativePaths}}'",
+                Command = OperatingSystem.IsWindows() ? "bash.exe" : "sh",
+                Arguments = OperatingSystem.IsWindows() ? "-c 'dos2unix.exe {{SelectedRelativePaths}}'" : "-c 'dos2unix {{SelectedRelativePaths}}'",
                 RunInBackground = true,
                 AskConfirmation = false,
                 OnEvent = 0,
@@ -208,8 +210,8 @@ internal sealed partial class ScriptsManager : IScriptsManager, IScriptsRunner
             {
                 HotkeyCommandIdentifier = 9007,
                 Name = "Convert workspace file to CRLF",
-                Command = "bash.exe",
-                Arguments = "-c 'unix2dos.exe {{SelectedRelativePaths}}'",
+                Command = OperatingSystem.IsWindows() ? "bash.exe" : "sh",
+                Arguments = OperatingSystem.IsWindows() ? "-c 'unix2dos.exe {{SelectedRelativePaths}}'" : "-c 'unix2dos {{SelectedRelativePaths}}'",
                 RunInBackground = true,
                 AskConfirmation = false,
                 OnEvent = 0,

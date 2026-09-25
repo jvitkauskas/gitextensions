@@ -26,6 +26,11 @@ public class OsShellUtilTests
             .Returns(_process);
 
         OsShellUtil.TestAccessor.MockExecutable = _executable;
+        OsShellUtil.TestAccessor.Commands.Clear();
+
+        // The tests are of Windows unless they say otherwise.
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.Windows;
+        OsShellUtil.TestAccessor.Synchronous = true;
     }
 
     [TearDown]
@@ -33,6 +38,8 @@ public class OsShellUtilTests
     {
         _process?.Dispose();
         OsShellUtil.TestAccessor.MockExecutable = null;
+        OsShellUtil.TestAccessor.Platform = null;
+        OsShellUtil.TestAccessor.Synchronous = false;
     }
 
     [Test]
@@ -184,5 +191,85 @@ public class OsShellUtilTests
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public void Off_Windows_Open_does_not_fall_back_to_OpenAs()
+    {
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.FreeDesktop;
+        _executable.Start(Arg.Any<ArgumentString>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<Encoding?>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(_ => throw new InvalidOperationException("test"));
+
+        OsShellUtil.Open("test.txt");
+
+        OsShellUtil.TestAccessor.Commands.Should().Equal("test.txt");
+        OsShellUtil.CanOpenAs.Should().BeFalse();
+    }
+
+    [Test]
+    public void Off_Windows_OpenAs_opens_the_file_with_its_default_application()
+    {
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.FreeDesktop;
+
+        OsShellUtil.OpenAs("test.txt");
+
+        OsShellUtil.TestAccessor.Commands.Should().Equal("test.txt");
+        _executable.Received(1).Start(Arg.Any<ArgumentString>(), createWindow: false, redirectInput: false, redirectOutput: false, outputEncoding: null, useShellExecute: true, throwOnErrorExit: false, Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public void On_Linux_a_folder_opens_with_xdg_open()
+    {
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.FreeDesktop;
+
+        OsShellUtil.OpenWithFileExplorer("/home/user/my repo");
+
+        OsShellUtil.TestAccessor.Commands.Should().Equal("xdg-open");
+        _executable.Received(1).Start(Arg.Is<ArgumentString>(a => (string)a == "\"/home/user/my repo\""), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<Encoding?>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public void On_Linux_the_file_manager_shows_the_file_selected()
+    {
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.FreeDesktop;
+        _process.WaitForExitAsync().Returns(0);
+
+        OsShellUtil.SelectPathInFileExplorer("/home/user/repo/a file.txt");
+
+        OsShellUtil.TestAccessor.Commands.Should().Equal("dbus-send");
+    }
+
+    [Test]
+    public void On_Linux_the_folder_opens_when_the_file_manager_cannot_select_the_file()
+    {
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.FreeDesktop;
+        _process.WaitForExitAsync().Returns(1);
+
+        OsShellUtil.SelectPathInFileExplorer("/home/user/repo/a.txt");
+
+        OsShellUtil.TestAccessor.Commands.Should().Equal("dbus-send", "xdg-open");
+        string folder = $"\"{Path.GetDirectoryName("/home/user/repo/a.txt")}\"";
+        _executable.Received(1).Start(Arg.Is<ArgumentString>(a => (string)a == folder), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<Encoding?>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    [Platform(Exclude = "Win")]
+    public void The_file_manager_is_asked_for_the_file_as_a_uri()
+    {
+        OsShellUtil.GetShowItemsArguments("/home/user/a, b.txt").Should().Be(
+            "--session --print-reply --dest=org.freedesktop.FileManager1 --type=method_call /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems \"array:string:file:///home/user/a%2C%20b.txt\" string:\"\"");
+    }
+
+    [Test]
+    public void On_macOS_the_Finder_reveals_the_file_and_opens_folders()
+    {
+        OsShellUtil.TestAccessor.Platform = OsShellUtil.ShellPlatform.MacOS;
+
+        OsShellUtil.SelectPathInFileExplorer("/Users/user/a.txt");
+        OsShellUtil.OpenWithFileExplorer("/Users/user");
+
+        OsShellUtil.TestAccessor.Commands.Should().Equal("open", "open");
+        _executable.Received(1).Start(Arg.Is<ArgumentString>(a => (string)a == "-R \"/Users/user/a.txt\""), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<Encoding?>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+        _executable.Received(1).Start(Arg.Is<ArgumentString>(a => (string)a == "\"/Users/user\""), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<Encoding?>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 }

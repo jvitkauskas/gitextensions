@@ -114,6 +114,14 @@ internal static partial class AvaloniaDialogs
 
         public void DownloadAndInstall(string updateUrl, Action<string> reportDownloadFailure)
         {
+            // The installer is the MSI of Windows; elsewhere the releases page shows what to download (the packages of other
+            // systems come with docs/avalonia-port/CROSS-PLATFORM.md, phase 6).
+            if (!OperatingSystem.IsWindows())
+            {
+                OpenUrl("https://github.com/gitextensions/gitextensions/releases/latest");
+                return;
+            }
+
             // As FormUpdates.btnUpdateNow_Click.
             ThreadHelper.FileAndForget(async () =>
             {

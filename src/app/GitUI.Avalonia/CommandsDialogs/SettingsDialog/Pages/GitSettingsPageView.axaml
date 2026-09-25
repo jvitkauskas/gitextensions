@@ -11,9 +11,10 @@
         <Label Grid.Row="1" Content="{Binding Strings.GitCommand.AccessKeyText}" Target="gitPath" />
         <TextBox Name="gitPath" Grid.Row="1" Grid.Column="1" MaxLength="300" Text="{Binding GitPath}" />
         <Button Name="browseGitPath" Grid.Row="1" Grid.Column="2" Content="{Binding Strings.BrowseGitPath.AccessKeyText}" Command="{Binding BrowseGitPathCommand}" />
-        <Label Grid.Row="2" Content="{Binding Strings.ShPath.AccessKeyText}" Target="linuxToolsDir" />
-        <TextBox Name="linuxToolsDir" Grid.Row="2" Grid.Column="1" MaxLength="300" Text="{Binding LinuxToolsDir}" />
-        <Button Name="browseLinuxToolsDir" Grid.Row="2" Grid.Column="2" Content="{Binding Strings.BrowseLinuxToolsDir.AccessKeyText}" Command="{Binding BrowseLinuxToolsDirCommand}" />
+        <Label Grid.Row="2" Content="{Binding Strings.ShPath.AccessKeyText}" Target="linuxToolsDir" IsVisible="{Binding ShowLinuxToolsDir}" />
+        <TextBox Name="linuxToolsDir" Grid.Row="2" Grid.Column="1" MaxLength="300" Text="{Binding LinuxToolsDir}" IsVisible="{Binding ShowLinuxToolsDir}" />
+        <Button Name="browseLinuxToolsDir" Grid.Row="2" Grid.Column="2" Content="{Binding Strings.BrowseLinuxToolsDir.AccessKeyText}" Command="{Binding BrowseLinuxToolsDirCommand}"
+                IsVisible="{Binding ShowLinuxToolsDir}" />
         <!-- Equivalent of downloadGitForWindows, right-aligned below the labels. -->
         <Button Name="downloadGit" Grid.Row="3" Classes="link" HorizontalAlignment="Right"
                 Content="{Binding Strings.DownloadGit.PlainText}" Command="{Binding DownloadGitCommand}" />

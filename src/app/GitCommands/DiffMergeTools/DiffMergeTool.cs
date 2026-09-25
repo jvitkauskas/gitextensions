@@ -47,4 +47,7 @@ internal abstract class DiffMergeTool
     /// These location will be used to help the user to automatically locate the tool.
     /// </summary>
     public abstract IEnumerable<string> SearchPaths { get; }
+
+    /// <summary>Whether the tool exists on this system (the tools of Windows only are not offered elsewhere).</summary>
+    public virtual bool IsAvailable => true;
 }

@@ -133,6 +133,12 @@ about test paths is done: `TestPaths.Native`). Left: macOS and the Linux issues 
   browses, diffs and commits.
 
 ### Phase 3: Git, tools and processes on each system (L)
+**Linux done (2026-09-25); macOS to check.** As planned, with these differences: the shells of each system come from
+`$SHELL` and bash, zsh and fish on the `PATH` (not a new provider); "Show in folder" falls back to opening the folder
+when no file manager implements `FileManager1`; the conflicts dialog also uses the definition of a known tool that git
+knows by its name only. Found on the way: `TERM=msys` and a fake `DISPLAY` were set for every child process, the
+superproject of a submodule was never found off Windows, and the configured git path was reset at each start. The
+ledger's "Platforms" section has the details, including what was checked under WSLg.
 - **Git discovery.** `CheckSettingsLogic`: `git` on the `PATH`, then `/usr/bin`, `/usr/local/bin`, `/opt/homebrew/bin`
   (and Xcode's `git` on macOS). The "Linux tools" (`sh.exe`) setting and its checks are Windows-only.
 - **Diff and merge tools.** `PathUtil.FindInFolders` searches `/usr/bin`, `/usr/local/bin`, `/opt/homebrew/bin`,

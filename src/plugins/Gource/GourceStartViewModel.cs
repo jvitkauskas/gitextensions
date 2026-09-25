@@ -140,7 +140,7 @@ public sealed partial class GourceStartViewModel : DialogViewModel
     private async Task BrowseGourceAsync()
     {
         string? startDirectory = string.IsNullOrEmpty(GourcePath) ? null : Path.GetDirectoryName(GourcePath);
-        if (await _fileDialogs.PickFileAsync(Strings.PathToGource.PlainText, "Gource (gource.exe)", "gource.exe", startDirectory) is { } path)
+        if (await _fileDialogs.PickFileAsync(Strings.PathToGource.PlainText, OperatingSystem.IsWindows() ? "Gource (gource.exe)" : "Gource (gource)", OperatingSystem.IsWindows() ? "gource.exe" : "gource", startDirectory) is { } path)
         {
             GourcePath = path;
         }

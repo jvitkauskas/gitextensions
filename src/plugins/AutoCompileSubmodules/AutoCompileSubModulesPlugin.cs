@@ -34,8 +34,23 @@ public class AutoCompileSubModulesPlugin : GitPluginBase, IGitPluginForRepositor
 
     private static string FindMsBuild()
     {
-        return File.Exists(DefaultMsBuildPath) ? DefaultMsBuildPath : "";
+        if (OperatingSystem.IsWindows())
+        {
+            return File.Exists(DefaultMsBuildPath) ? DefaultMsBuildPath : "";
+        }
+
+        // Off Windows: msbuild (Mono) or dotnet (dotnet msbuild) on the PATH (docs/avalonia-port/CROSS-PLATFORM.md, phase 3).
+        return PathUtil.TryFindFullPath("msbuild", out string? msbuild) ? msbuild
+            : PathUtil.TryFindFullPath("dotnet", out string? dotnet) ? dotnet
+            : "";
     }
+
+    /// <summary>The msbuild of the settings: a path, or a program on the PATH.</summary>
+    private static string? ResolveMsBuild(string? msbuildPath)
+        => string.IsNullOrEmpty(msbuildPath) ? null
+            : File.Exists(msbuildPath) ? msbuildPath
+            : PathUtil.TryFindFullPath(msbuildPath, out string? onPath) ? onPath
+            : null;
 
     #region IGitPlugin Members
 
@@ -94,13 +109,15 @@ public class AutoCompileSubModulesPlugin : GitPluginBase, IGitPluginForRepositor
                 continue;
             }
 
-            if (string.IsNullOrEmpty(msbuildPath) || !File.Exists(msbuildPath))
+            if (ResolveMsBuild(msbuildPath) is not string msbuild)
             {
                 PluginMessageBoxes.ShowError(args.Owner, _enterCorrectMsBuildPath.Text);
             }
             else
             {
-                args.GitUICommands.StartCommandLineProcessDialog(args.Owner, msbuildPath, solutionFile.FullName + " " + _msBuildArguments.ValueOrDefault(Settings));
+                // dotnet builds with its msbuild command.
+                string command = Path.GetFileNameWithoutExtension(msbuild).Equals("dotnet", StringComparison.OrdinalIgnoreCase) ? "msbuild " : "";
+                args.GitUICommands.StartCommandLineProcessDialog(args.Owner, msbuild, command + solutionFile.FullName.Quote() + " " + _msBuildArguments.ValueOrDefault(Settings));
             }
         }
 

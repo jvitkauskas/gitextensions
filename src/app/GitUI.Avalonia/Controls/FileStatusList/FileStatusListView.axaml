@@ -263,13 +263,13 @@
                       IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFile}"
                       Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:False}" />
             <MenuItem Name="openWorkingDirectoryFileWithMenuItem" Header="{Binding MenuStrings.OpenWorkingDirectoryFileWith.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFile}"
+                      IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFileWith}"
                       Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:True}" />
             <MenuItem Name="openRevisionFileMenuItem" Header="{Binding MenuStrings.OpenRevisionFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowOpenRevisionFile}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
                       Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:False}" />
             <MenuItem Name="openRevisionFileWithMenuItem" Header="{Binding MenuStrings.OpenRevisionFileWith.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowOpenRevisionFile}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
+                      IsVisible="{Binding MenuState.ShowOpenRevisionFileWith}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
                       Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:True}" />
             <MenuItem Name="editWorkingDirectoryFileMenuItem" Header="{Binding MenuStrings.EditWorkingDirectoryFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowEditWorkingDirectoryFile}" Command="{Binding EditWorkingDirectoryFileCommand}" />

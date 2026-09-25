@@ -540,6 +540,28 @@ public static partial class PathUtil
         }
     }
 
+    /// <summary>The folders of the programs of Linux and macOS searched after the PATH (Snap, pipx and Homebrew included).</summary>
+    internal static IEnumerable<string> UnixProgramFolders
+        =>
+        [
+            "/usr/local/bin",
+            "/usr/bin",
+            "/snap/bin",
+            Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin"),
+            "/opt/homebrew/bin",
+        ];
+
+    /// <summary>A program of Linux or macOS: on the PATH, else in <see cref="UnixProgramFolders"/>.</summary>
+    internal static string? FindInUnixProgramFolders(string fileName, Func<string, bool> fileExists)
+    {
+        if (TryFindFullPath(fileName, out string? onPath))
+        {
+            return onPath;
+        }
+
+        return UnixProgramFolders.Select(folder => Path.Join(folder, fileName)).FirstOrDefault(fileExists);
+    }
+
     public static string FindInFolders(this string fileName, IEnumerable<string?> folders)
     {
         foreach (string? location in folders)
@@ -577,6 +599,13 @@ public static partial class PathUtil
                     return fullName;
                 }
             }
+        }
+
+        // Off Windows the relative folders are those of the programs of Windows: the program is on the PATH or in the
+        // folders of the programs of the system (docs/avalonia-port/CROSS-PLATFORM.md, phase 3).
+        if (!OperatingSystem.IsWindows())
+        {
+            return FindInUnixProgramFolders(fileName, File.Exists) ?? string.Empty;
         }
 
         return string.Empty;

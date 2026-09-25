@@ -76,6 +76,12 @@ public interface IBrowseToolbarHost
     /// <summary>As <c>userShell_Click</c>: the shell in the working directory.</summary>
     void RunShell(BrowseShell shell);
 
+    /// <summary>
+    ///  Whether the shells run in the console tab rather than in windows of their own: off Windows the built-in terminal is
+    ///  the only console (docs/avalonia-port/CROSS-PLATFORM.md, phase 3).
+    /// </summary>
+    bool ShellsRunInConsole => false;
+
     /// <summary>As <c>LoadUserMenu</c>: the enabled scripts shown in the user menu bar, which run when clicked.</summary>
     IReadOnlyList<BrowseMenuItem> GetToolbarScripts();
 
@@ -149,7 +155,25 @@ public sealed partial class BrowseViewModel
         }
     }
 
-    private void RunShell(BrowseShell shell) => (_host as IBrowseToolbarHost)?.RunShell(shell);
+    private void RunShell(BrowseShell shell)
+    {
+        if (!ShowShellInConsole())
+        {
+            (_host as IBrowseToolbarHost)?.RunShell(shell);
+        }
+    }
+
+    /// <summary>Shows the console tab if the shells run there (<see cref="IBrowseToolbarHost.ShellsRunInConsole"/>).</summary>
+    private bool ShowShellInConsole()
+    {
+        if (_host is IBrowseToolbarHost { ShellsRunInConsole: true } && HasConsole)
+        {
+            SelectedTab = BrowseTab.Console;
+            return true;
+        }
+
+        return false;
+    }
 
     /// <summary>The items of the submodules button (<c>toolStripButtonLevelUp</c>).</summary>
     [ObservableProperty]

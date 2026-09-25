@@ -235,7 +235,7 @@ public sealed class PluginViewModelTests
         viewModel.DeleteCommand.Execute(null);
 
         messageBoxes.Confirmations.Should().Equal("Are you sure to delete the selected files?");
-        batchFiles.Should().ContainSingle().Which.Should().Contain("'big.bin'").And.NotContain("kept.bin").And.StartWith("SET gitexe=\"C:\\git.exe\"");
+        batchFiles.Should().ContainSingle().Which.Should().Contain("'big.bin'").And.NotContain("kept.bin").And.StartWith(OperatingSystem.IsWindows() ? "SET gitexe=\"C:\\git.exe\"" : "gitexe='C:\\git.exe'"); // a sh script off Windows
         closed.Should().BeFalse();
     }
 
@@ -293,7 +293,7 @@ public sealed class PluginViewModelTests
 
         viewModel.GourcePath.Should().Be(@"C:\tools\gource.exe");
         viewModel.WorkingDirectory.Should().Be(@"C:\repo2");
-        fileDialogs.FilePickers.Should().Equal(("Path to Gource", "Gource (gource.exe)", "gource.exe"));
+        fileDialogs.FilePickers.Should().Equal(OperatingSystem.IsWindows() ? ("Path to Gource", "Gource (gource.exe)", "gource.exe") : ("Path to Gource", "Gource (gource)", "gource"));
         host.Urls.Should().Equal(GourceStartViewModel.GourceProjectUrl);
     }
 

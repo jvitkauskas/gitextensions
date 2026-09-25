@@ -24,7 +24,7 @@ internal sealed class VsCode : DiffMergeTool
         string folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return
         [
-            Path.Join(folder, @"Programs\Microsoft VS Code"),
+            Path.Join(folder, "Programs", "Microsoft VS Code"),
             @"Microsoft VS Code\",
         ];
     }

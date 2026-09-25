@@ -34,9 +34,9 @@ public static class RegisteredDiffMergeTools
     /// </summary>
     public static IEnumerable<string> All(DiffMergeToolType toolType)
     {
-        return RegisteredTools.Where(t =>
+        return RegisteredTools.Where(t => t.Value.IsAvailable && (
                 (t.Value.IsDiffTool && toolType == DiffMergeToolType.Diff) ||
-                (t.Value.IsMergeTool && toolType == DiffMergeToolType.Merge))
+                (t.Value.IsMergeTool && toolType == DiffMergeToolType.Merge)))
             .Select(t => t.Key);
     }
 

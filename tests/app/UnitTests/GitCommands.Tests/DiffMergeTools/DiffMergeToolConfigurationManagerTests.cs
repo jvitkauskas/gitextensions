@@ -135,7 +135,7 @@ public class DiffMergeToolConfigurationManagerTests
         DiffMergeToolConfiguration config = _configurationManager.LoadDiffMergeToolConfig("bla", @"c:\some\path\to the tool\bla.exe");
 
         config.Should().NotBeNull();
-        config.ExeFileName.Should().Be("bla.exe");
+        config.ExeFileName.Should().Be(OperatingSystem.IsWindows() ? "bla.exe" : "bla");
         config.Path.Should().Be("c:/some/path/to the tool/bla.exe");
         config.DiffCommand.Should().BeEmpty();
         config.MergeCommand.Should().BeEmpty();
@@ -149,13 +149,14 @@ public class DiffMergeToolConfigurationManagerTests
         DiffMergeToolConfiguration config = _configurationManager.LoadDiffMergeToolConfig("bla", userSuppliedPath);
 
         config.Should().NotBeNull();
-        config.ExeFileName.Should().Be("bla.exe");
+        config.ExeFileName.Should().Be(OperatingSystem.IsWindows() ? "bla.exe" : "bla");
         config.Path.Should().Be(string.Empty);
         config.DiffCommand.Should().BeEmpty();
         config.MergeCommand.Should().BeEmpty();
     }
 
     [Test]
+    [Platform(Include = "Win")] // notepad.exe
     public void LoadDiffMergeToolConfig_should_create_tool_config_if_tool_unregistered_but_exists_path()
     {
         DiffMergeToolConfiguration config = _configurationManager.LoadDiffMergeToolConfig("notepad", null);

@@ -39,15 +39,18 @@ public static class EnvironmentConfiguration
         // HOME variable
         Env.SetEnvironmentVariable("HOME", ComputeHomeLocation());
 
-        // TERM variable
-
-        // to prevent from leaking processes see issue #1092 for details
-        Env.SetEnvironmentVariable("TERM", "msys");
-
-        // Force a non-empty DISPLAY so ssh uses SSH_ASKPASS if it has no terminal
-        if (string.IsNullOrEmpty(Env.GetEnvironmentVariable("DISPLAY")))
+        // TERM and DISPLAY, for the programs of Git for Windows. Elsewhere they would reach every child process: a fake
+        // DISPLAY breaks X11 programs (gitk, git gui, merge tools) on a desktop without X (docs/avalonia-port/CROSS-PLATFORM.md).
+        if (OperatingSystem.IsWindows())
         {
-            Env.SetEnvironmentVariable("DISPLAY", ":");
+            // to prevent from leaking processes see issue #1092 for details
+            Env.SetEnvironmentVariable("TERM", "msys");
+
+            // Force a non-empty DISPLAY so ssh uses SSH_ASKPASS if it has no terminal
+            if (string.IsNullOrEmpty(Env.GetEnvironmentVariable("DISPLAY")))
+            {
+                Env.SetEnvironmentVariable("DISPLAY", ":");
+            }
         }
 
         // SSH_ASKPASS variable
@@ -80,7 +83,8 @@ public static class EnvironmentConfiguration
                 return AppSettings.CustomHomeDir;
             }
 
-            if (AppSettings.UserProfileHomeDir)
+            // The user profile folder of Windows (the setting has no meaning elsewhere).
+            if (AppSettings.UserProfileHomeDir && OperatingSystem.IsWindows())
             {
                 return Env.GetEnvironmentVariable("USERPROFILE");
             }

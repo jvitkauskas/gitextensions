@@ -174,8 +174,33 @@ public sealed partial class FindLargeFilesViewModel : DialogViewModel
     [RelayCommand]
     private void Cancel() => Close(accepted: false);
 
-    /// <summary>As <c>FindLargeFilesForm.GenerateCommand</c> (compared with it by <c>FindLargeFilesViewModelTests</c>).</summary>
+    /// <summary>
+    ///  As <c>FindLargeFilesForm.GenerateCommand</c> (compared with it by <c>FindLargeFilesViewModelTests</c>): a batch file
+    ///  of cmd on Windows, a sh script elsewhere (<c>StartBatchFileProcessDialog</c> runs it with sh there).
+    /// </summary>
     public static string GenerateCommand(string gitCommand, IEnumerable<GitObject> gitObjects)
+        => OperatingSystem.IsWindows() ? GenerateBatchFile(gitCommand, gitObjects) : GenerateShellScript(gitCommand, gitObjects);
+
+    /// <summary>The commands as a sh script (docs/avalonia-port/CROSS-PLATFORM.md, phase 3).</summary>
+    public static string GenerateShellScript(string gitCommand, IEnumerable<GitObject> gitObjects)
+    {
+        StringBuilder sb = new();
+        sb.Append($"gitexe='{gitCommand.Replace("'", "'\\''")}'\n");
+
+        foreach (GitObject gitObject in gitObjects.Where(gitObject => gitObject.Delete))
+        {
+            sb.Append($"\"$gitexe\" filter-branch --index-filter \"git rm -r -f --cached --ignore-unmatch '{gitObject.Path}'\" --prune-empty -- --all\n");
+        }
+
+        sb.Append("\"$gitexe\" for-each-ref --format='%(refname)' refs/original/ | while read -r ref; do \"$gitexe\" update-ref -d \"$ref\"; done\n");
+        sb.Append("\"$gitexe\" reflog expire --expire=now --all\n");
+        sb.Append("\"$gitexe\" gc --aggressive --prune=now\n");
+
+        return sb.ToString();
+    }
+
+    /// <summary>The commands as a batch file of cmd.</summary>
+    public static string GenerateBatchFile(string gitCommand, IEnumerable<GitObject> gitObjects)
     {
         StringBuilder sb = new();
         sb.AppendLine($"SET gitexe=\"{gitCommand}\"");

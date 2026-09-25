@@ -377,6 +377,12 @@ public interface IResolveConflictsHost
     /// <summary><c>PathUtil.TryFindFullPath</c>: the full path of an executable, or <see langword="null"/> if not found.</summary>
     string? FindFullPath(string? path);
 
+    /// <summary>
+    ///  The path and the merge command of a tool Git Extensions knows (<c>DiffMergeToolConfigurationManager</c>), for a tool
+    ///  git knows by its name only (<c>merge.tool</c> without <c>mergetool.&lt;tool&gt;.path</c>); <see langword="null"/> otherwise.
+    /// </summary>
+    (string Path, string Command)? GetKnownMergeTool(string tool) => null;
+
     /// <summary>The custom merge tools, for the "Open in mergetool" sub menu (<c>CustomDiffMergeToolProvider</c>).</summary>
     Task<IReadOnlyList<string>> GetCustomMergeToolsAsync(CancellationToken cancellationToken);
 
@@ -436,6 +442,9 @@ public interface IResolveConflictsHost
 
     /// <summary><c>OsShellUtil.OpenAs</c>.</summary>
     void OpenWith(string path);
+
+    /// <summary>Whether <see cref="OpenWith"/> lets the user choose the application (<c>OsShellUtil.CanOpenAs</c>, Windows only).</summary>
+    bool CanOpenWith => true;
 
     /// <summary><c>OsShellUtil.SelectPathInFileExplorer</c>.</summary>
     void ShowInFolder(string path);
@@ -627,6 +636,9 @@ public sealed partial class ResolveConflictsViewModel : DialogViewModel
     public bool HasSelection => SelectedConflicts.Count > 0;
 
     /// <summary>As <c>DisableInvalidEntriesInConflictedFilesContextMenu</c>: open / save the local side if there is one.</summary>
+    /// <summary>Whether "Open With" is offered (<see cref="IResolveConflictsHost.CanOpenWith"/>).</summary>
+    public bool CanOpenWith => _host.CanOpenWith;
+
     public bool CanOpenLocal => IsSingleFileSelected && !string.IsNullOrEmpty(SelectedConflicts[0].Data.Local.Filename);
 
     public bool CanOpenRemote => IsSingleFileSelected && !string.IsNullOrEmpty(SelectedConflicts[0].Data.Remote.Filename);
@@ -1020,6 +1032,13 @@ public sealed partial class ResolveConflictsViewModel : DialogViewModel
 
         _mergeToolCommand = _host.GetEffectiveSetting($"mergetool.{MergeTool}.cmd");
         _mergeToolPath = _host.GetEffectiveSetting($"mergetool.{MergeTool}.path");
+
+        // A tool configured by its name only, which Git Extensions knows (e.g. merge.tool=meld of git on Linux).
+        if (string.IsNullOrEmpty(_mergeToolPath) && string.IsNullOrEmpty(_mergeToolCommand) && _host.GetKnownMergeTool(MergeTool) is { } knownTool)
+        {
+            _mergeToolPath = knownTool.Path;
+            _mergeToolCommand = knownTool.Command;
+        }
 
         // Temporary compatibility with GE <3.3
         if (MergeTool == "kdiff3")

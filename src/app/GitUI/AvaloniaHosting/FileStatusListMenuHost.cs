@@ -79,6 +79,7 @@ internal sealed class FileStatusListMenuHost(IGitUICommands commands, DialogWind
             ShowOpenWorkingDirectoryFile = canOpenFile,
             ShowEditWorkingDirectoryFile = controller.ShouldShowMenuEditWorkingDirectoryFile(selectionInfo),
             ShowOpenRevisionFile = controller.ShouldShowMenuOpenRevision(selectionInfo),
+            CanOpenWith = OsShellUtil.CanOpenAs,
             CanOpenRevisionFile = controller.ShouldShowMenuShowInFileTree(selectionInfo),
             ShowSaveAs = controller.ShouldShowMenuSaveAs(selectionInfo),
             CanCopyPaths = controller.ShouldShowMenuCopyFileName(selectionInfo),

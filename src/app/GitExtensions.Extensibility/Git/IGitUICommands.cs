@@ -56,7 +56,10 @@ public interface IGitUICommands : IServiceProvider
     bool StartAmendCommitDialog(IWin32Window? owner, GitRevision revision);
     bool StartApplyPatchDialog(IWin32Window? owner, string? patchFile = null);
     bool StartArchiveDialog(IWin32Window? owner = null, GitRevision? revision = null, GitRevision? revision2 = null, string? path = null);
+
+    /// <summary>Runs a batch file of cmd (on Windows) or a sh script (elsewhere) in the progress dialog.</summary>
     void StartBatchFileProcessDialog(string batchFile);
+
     bool StartBrowseDialog(IWin32Window? owner, BrowseArguments? args = null);
     bool StartCheckoutBranch(IWin32Window? owner, IReadOnlyList<ObjectId>? containObjectIds);
     bool StartCheckoutBranch(IWin32Window? owner, string branch = "", bool remote = false, IReadOnlyList<ObjectId>? containObjectIds = null);

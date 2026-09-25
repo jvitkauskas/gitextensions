@@ -8,7 +8,12 @@ public class RegisteredDiffMergeToolsTests
     {
         IEnumerable<string> tools = RegisteredDiffMergeTools.All(DiffMergeToolType.Diff);
 
-        tools.Should().BeEquivalentTo("araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "TortoiseGitIDiff", "vscode", "vsdiffmerge", "winmerge");
+        // The tools of Windows only are offered there; Araxis on Windows and macOS.
+        tools.Should().BeEquivalentTo(OperatingSystem.IsWindows()
+            ? ["araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "TortoiseGitIDiff", "vscode", "vsdiffmerge", "winmerge"]
+            : OperatingSystem.IsMacOS()
+                ? ["araxis", "bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]
+                : (string[])["bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]);
     }
 
     [Test]
@@ -16,6 +21,10 @@ public class RegisteredDiffMergeToolsTests
     {
         IEnumerable<string> tools = RegisteredDiffMergeTools.All(DiffMergeToolType.Merge);
 
-        tools.Should().BeEquivalentTo("araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "tortoisemerge", "vscode", "vsdiffmerge", "winmerge");
+        tools.Should().BeEquivalentTo(OperatingSystem.IsWindows()
+            ? ["araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "tortoisemerge", "vscode", "vsdiffmerge", "winmerge"]
+            : OperatingSystem.IsMacOS()
+                ? ["araxis", "bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]
+                : (string[])["bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]);
     }
 }

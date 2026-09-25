@@ -422,7 +422,8 @@ public sealed partial class ForkAndCloneViewModel : DialogViewModel
     [RelayCommand]
     private async Task BrowseAsync()
     {
-        string initialDirectory = Destination.Length > 0 ? Destination : "C:\\";
+        string initialDirectory = Destination.Length > 0 ? Destination
+            : OperatingSystem.IsWindows() ? "C:\\" : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         if (await _fileDialogs.PickFolderAsync(initialDirectory) is { } folder)
         {
             Destination = folder;

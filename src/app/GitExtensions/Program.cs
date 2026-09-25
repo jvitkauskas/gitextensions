@@ -257,7 +257,9 @@ internal static class Program
                             if (DialogResult.OK.Equals(MessageBoxes.Show(string.Format("Files have been deleted.{0}{0}Would you like to attempt to restart Git Extensions?", Environment.NewLine), "Configuration Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Question)))
                             {
                                 string[] args = Environment.GetCommandLineArgs();
-                                Process p = new() { StartInfo = { FileName = args[0] } };
+
+                                // The executable of the process (the first argument is the dll of the application).
+                                Process p = new() { StartInfo = { FileName = Environment.ProcessPath ?? args[0] } };
                                 if (args.Length > 1)
                                 {
                                     args[0] = "";
@@ -314,10 +316,11 @@ internal static class Program
         TaskDialogButton result = TaskDialog.ShowDialog(page);
         if (result == btnFindGitExecutable)
         {
-            using OpenFileDialog dialog = new() { Filter = @"git.exe|git.exe|git.cmd|git.cmd" };
+            using OpenFileDialog dialog = new() { Filter = OperatingSystem.IsWindows() ? @"git.exe|git.exe|git.cmd|git.cmd" : "git|git" };
             if (dialog.ShowDialog(null) == DialogResult.OK)
             {
                 AppSettings.GitCommandValue = dialog.FileName;
+                return CheckSettingsLogic.SolveGitCommand(dialog.FileName);
             }
 
             return CheckSettingsLogic.SolveGitCommand();

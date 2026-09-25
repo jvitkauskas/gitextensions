@@ -12,6 +12,9 @@ internal sealed class WinMerge : DiffMergeTool
     public override string MergeCommand => "-e -u  -wl -wr -fm -dl \"Mine: $LOCAL\" -dm \"Merged: $BASE\" -dr \"Theirs: $REMOTE\" \"$LOCAL\" \"$BASE\" \"$REMOTE\" -o \"$MERGED\"";
 
     /// <inheritdoc />
+    public override bool IsAvailable => OperatingSystem.IsWindows();
+
+    /// <inheritdoc />
     public override string Name => "winmerge";
 
     /// <inheritdoc />

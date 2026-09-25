@@ -12,6 +12,9 @@ internal class TortoiseGitMerge : DiffMergeTool
     public override string MergeCommand => "-base:\"$BASE\" -mine:\"$LOCAL\" -theirs:\"$REMOTE\" -merged:\"$MERGED\"";
 
     /// <inheritdoc />
+    public override bool IsAvailable => OperatingSystem.IsWindows();
+
+    /// <inheritdoc />
     public override string Name => "tortoisemerge";
 
     /// <inheritdoc />

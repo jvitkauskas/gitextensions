@@ -290,6 +290,13 @@ public sealed record FileStatusMenuState
 
     public bool CanOpenRevisionFile { get; init; }
 
+    /// <summary>Whether the system lets the user choose the application of a file ("Open ... with", Windows only).</summary>
+    public bool CanOpenWith { get; init; }
+
+    public bool ShowOpenWorkingDirectoryFileWith => ShowOpenWorkingDirectoryFile && CanOpenWith;
+
+    public bool ShowOpenRevisionFileWith => ShowOpenRevisionFile && CanOpenWith;
+
     public bool ShowSaveAs { get; init; }
 
     public bool CanCopyPaths { get; init; }

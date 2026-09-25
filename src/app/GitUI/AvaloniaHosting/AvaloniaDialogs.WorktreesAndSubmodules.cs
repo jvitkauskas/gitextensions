@@ -70,7 +70,7 @@ internal static partial class AvaloniaDialogs
         public IReadOnlyList<GitWorktree> LoadWorktrees() => commands.Module.GetWorktrees();
 
         public bool IsCurrentWorktree(string path)
-            => new DirectoryInfo(commands.Module.WorkingDir).FullName.TrimEnd('\\') == new DirectoryInfo(path).FullName.TrimEnd('\\');
+            => new DirectoryInfo(commands.Module.WorkingDir).FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) == new DirectoryInfo(path).FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
         public void Prune() => AvaloniaUi.RunInHostContext(() => commands.StartCommandLineProcessDialog(Owner, command: null, "worktree prune"));
 

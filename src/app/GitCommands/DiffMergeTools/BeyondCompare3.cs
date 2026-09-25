@@ -6,6 +6,9 @@ internal sealed class BeyondCompare3 : DiffMergeTool
     public override string ExeFileName => "bcomp.exe";
 
     /// <inheritdoc />
+    public override bool IsAvailable => OperatingSystem.IsWindows();
+
+    /// <inheritdoc />
     public override string Name => "bc3";
 
     /// <inheritdoc />

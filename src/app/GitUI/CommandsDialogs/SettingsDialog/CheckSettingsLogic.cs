@@ -19,7 +19,9 @@ public class CheckSettingsLogic
     {
         if (!OperatingSystem.IsWindows())
         {
-            return SolveGitCommand();
+            // Git and the editor (the file editor of Git Extensions if git has none): the Linux tools and the shell
+            // extension are Windows-only.
+            return SolveGitCommand() && SolveEditor(CommonLogic);
         }
 
         bool valid = SolveGitCommand();
@@ -177,8 +179,15 @@ public class CheckSettingsLogic
             return false;
         }
 
-        AppSettings.GitCommandValue = "git";
-        return TestGitCommand(AppSettings.GitCommandValue);
+        foreach (string command in GetUnixGitCandidates(possibleNewPath, AppSettings.GitCommandValue, File.Exists))
+        {
+            if (TestGitCommand(command))
+            {
+                return true;
+            }
+        }
+
+        return false;
 
         bool TestGitCommand(string command)
         {
@@ -239,6 +248,37 @@ public class CheckSettingsLogic
 
             yield return "git";
             yield return "git.cmd";
+        }
+    }
+
+    /// <summary>The folders where git is installed on Linux and macOS (Homebrew, MacPorts), after the PATH.</summary>
+    private static readonly string[] _unixGitFolders = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin", "/opt/local/bin"];
+
+    /// <summary>
+    ///  The git commands to try off Windows (docs/avalonia-port/CROSS-PLATFORM.md, phase 3): the path just chosen, the
+    ///  configured path (kept if it exists), git on the PATH, then git in the usual folders.
+    /// </summary>
+    internal static IEnumerable<string> GetUnixGitCandidates(string? possibleNewPath, string configured, Func<string, bool> fileExists)
+    {
+        if (!string.IsNullOrEmpty(possibleNewPath) && fileExists(possibleNewPath))
+        {
+            yield return possibleNewPath;
+        }
+
+        if (Path.IsPathRooted(configured) && fileExists(configured))
+        {
+            yield return configured;
+        }
+
+        yield return "git";
+
+        foreach (string folder in _unixGitFolders)
+        {
+            string git = Path.Join(folder, "git");
+            if (fileExists(git))
+            {
+                yield return git;
+            }
         }
     }
 

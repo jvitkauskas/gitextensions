@@ -127,7 +127,10 @@ public static class BugReportInvoker
             SerializableException serializableException = new(exception);
             string xml = serializableException.ToXmlString();
             string encoded = Base64Encode(xml);
-            Process.Start("BugReporter.exe", encoded);
+
+            // The bug reporter next to the application (BugReporter.exe on Windows, BugReporter elsewhere).
+            string bugReporter = Path.Join(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "BugReporter.exe" : "BugReporter");
+            Process.Start(bugReporter, encoded);
 
             return;
         }

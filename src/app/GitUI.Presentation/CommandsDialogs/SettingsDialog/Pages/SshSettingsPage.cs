@@ -234,7 +234,7 @@ public sealed partial class SshSettingsPageViewModel(SshSettingsPageStrings stri
     /// <summary>As <c>OtherSshBrowse_Click</c>.</summary>
     [RelayCommand]
     private async Task BrowseOtherSshAsync()
-        => OtherSsh = await SelectFileAsync("Executable file (*.exe)|*.exe", OtherSsh);
+        => OtherSsh = await SelectFileAsync(OperatingSystem.IsWindows() ? "Executable file (*.exe)|*.exe" : "ssh|*", OtherSsh);
 
     /// <summary>As <c>PuttyBrowse_Click</c>.</summary>
     [RelayCommand]

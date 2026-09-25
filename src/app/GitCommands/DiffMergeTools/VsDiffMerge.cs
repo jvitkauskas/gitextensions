@@ -13,6 +13,9 @@ internal sealed class VsDiffMerge : DiffMergeTool
     public override string ExeFileName => ExeName;
 
     /// <inheritdoc />
+    public override bool IsAvailable => OperatingSystem.IsWindows();
+
+    /// <inheritdoc />
     public override string Name => "vsdiffmerge";
 
     /// <inheritdoc />

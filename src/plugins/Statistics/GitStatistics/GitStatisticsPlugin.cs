@@ -43,7 +43,7 @@ public class GitStatisticsPlugin : GitPluginBase, IGitPluginForRepository
 
         bool countSubmodule = !_ignoreSubmodules.ValueOrDefault(Settings);
 
-        GitStatisticsDialog.TryShow(args, _codeFiles.ValueOrDefault(Settings), countSubmodule, _ignoreDirectories.ValueOrDefault(Settings).Replace("/", "\\"));
+        GitStatisticsDialog.TryShow(args, _codeFiles.ValueOrDefault(Settings), countSubmodule, _ignoreDirectories.ValueOrDefault(Settings).Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar));
         return false;
     }
 }

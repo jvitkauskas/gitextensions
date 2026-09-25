@@ -61,7 +61,7 @@
             <MenuItem Name="openMenuItem" Header="{Binding Strings.Open.PlainText}" Command="{Binding OpenCommand}"
                       IsEnabled="{Binding IsSingleFileSelected}" />
             <MenuItem Name="openWithMenuItem" Header="{Binding Strings.OpenWith.PlainText}" Command="{Binding OpenWithCommand}"
-                      IsEnabled="{Binding IsSingleFileSelected}" />
+                      IsEnabled="{Binding IsSingleFileSelected}" IsVisible="{Binding CanOpenWith}" />
             <MenuItem Name="showInFolderMenuItem" Header="{Binding Strings.ShowInFolder.PlainText}" Command="{Binding ShowInFolderCommand}"
                       IsEnabled="{Binding IsSingleFileSelected}">
               <MenuItem.Icon>

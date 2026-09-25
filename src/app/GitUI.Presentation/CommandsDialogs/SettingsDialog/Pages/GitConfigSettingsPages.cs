@@ -601,7 +601,7 @@ public sealed partial class GitConfigSettingsPageViewModel : GitConfigSettingsPa
 
         string filter = !string.IsNullOrWhiteSpace(diffMergeToolConfig.ExeFileName)
             ? $"{toolName}|{diffMergeToolConfig.ExeFileName}"
-            : "*.exe;*.cmd;*.bat|*.exe;*.cmd;*.bat";
+            : OperatingSystem.IsWindows() ? "*.exe;*.cmd;*.bat|*.exe;*.cmd;*.bat" : "*|*"; // programs have no extension elsewhere
 
         return await _fileDialogs.PickFileAsync(Strings.SelectFile.Text, FileDialogFilter.Parse(filter), initialDirectory) ?? path;
     }

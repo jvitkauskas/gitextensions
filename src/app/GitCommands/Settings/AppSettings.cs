@@ -516,7 +516,9 @@ public static partial class AppSettings
 
     public static ISetting<string> ConEmuStyle { get; } = Setting.Create(DetailedSettingsPath, nameof(ConEmuStyle), "Default");
 
-    public static ISetting<string> ConEmuTerminal { get; } = Setting.Create(DetailedSettingsPath, nameof(ConEmuTerminal), "bash");
+    // The shell of the terminal tab: Git bash on Windows, the shell of the user elsewhere.
+    public static ISetting<string> ConEmuTerminal { get; } = Setting.Create(DetailedSettingsPath, nameof(ConEmuTerminal),
+        OperatingSystem.IsWindows() ? "bash" : Path.GetFileName(Environment.GetEnvironmentVariable("SHELL")) is { Length: > 0 } shell ? shell : "bash");
     public static ISetting<int> OutputHistoryDepth { get; } = Setting.Create(DetailedSettingsPath, nameof(OutputHistoryDepth), 20);
     public static ISetting<bool> OutputHistoryPanelVisible { get; } = Setting.Create(DetailedSettingsPath, nameof(OutputHistoryPanelVisible), false);
     public static ISetting<bool> ShowOutputHistoryAsTab { get; } = Setting.Create(DetailedSettingsPath, nameof(ShowOutputHistoryAsTab), true);
@@ -1924,8 +1926,9 @@ public static partial class AppSettings
         {
             bool isExpectedExe =
 
-                // The app's entry point is GitExtensions.exe
+                // The app's entry point is GitExtensions.exe (GitExtensions off Windows)
                 _applicationExecutablePath.EndsWith("GitExtensions.exe", StringComparison.InvariantCultureIgnoreCase) ||
+                (!OperatingSystem.IsWindows() && Path.GetFileName(_applicationExecutablePath) is "GitExtensions" or "testhost" or "dotnet" or "TranslationApp") ||
 
                 // Tests are run by testhost.exe
                 _applicationExecutablePath.EndsWith("testhost.exe", StringComparison.InvariantCultureIgnoreCase) ||

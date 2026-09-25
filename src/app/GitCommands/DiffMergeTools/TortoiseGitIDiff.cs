@@ -12,6 +12,9 @@ internal sealed class TortoiseGitIDiff : DiffMergeTool
     public override string DiffCommand => "/left:\"$LOCAL\" /right:\"$REMOTE\" /fit /overlay";
 
     /// <inheritdoc />
+    public override bool IsAvailable => OperatingSystem.IsWindows();
+
+    /// <inheritdoc />
     public override string Name => "TortoiseGitIDiff";
 
     /// <inheritdoc />

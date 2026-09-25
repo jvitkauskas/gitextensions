@@ -130,7 +130,7 @@ public sealed partial class GitModule : IGitModule
                         int pos = gitPath.IndexOf("/.git/modules/", StringComparison.Ordinal);
                         if (pos != -1)
                         {
-                            gitPath = gitPath[..(pos + 1)].Replace('/', '\\');
+                            gitPath = gitPath[..(pos + 1)].Replace('/', Path.DirectorySeparatorChar);
                             gitPath = Path.GetFullPath(Path.Combine(WorkingDir, gitPath));
                             if (HasGitModulesFile(gitPath))
                             {
@@ -889,7 +889,8 @@ public sealed partial class GitModule : IGitModule
     {
         if (!OperatingSystem.IsWindows())
         {
-            new Executable("gitk", WorkingDir).Start(createWindow: true);
+            // As on Windows: all the branches, tags and remotes.
+            new Executable("gitk", WorkingDir).Start("--branches --tags --remotes", createWindow: true);
         }
         else
         {
