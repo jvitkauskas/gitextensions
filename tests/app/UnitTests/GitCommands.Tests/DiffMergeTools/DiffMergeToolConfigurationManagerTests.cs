@@ -194,6 +194,57 @@ public class DiffMergeToolConfigurationManagerTests
         }
     }
 
+    [Test]
+    [Platform(Include = "MacOsX")]
+    public void LoadDiffMergeToolConfig_should_prefer_the_application_bundle_on_macOS()
+    {
+        Kdiff3 tool = new();
+        const string bundleProgram = "/Applications/kdiff3.app/Contents/MacOS/kdiff3";
+        _configurationManager = new DiffMergeToolConfigurationManager(() => _fileSettings, (_, _) => "/opt/homebrew/bin/kdiff3", FindInApplicationBundles);
+
+        _configurationManager.LoadDiffMergeToolConfig(tool.Name, null).Path.Should().Be(bundleProgram);
+
+        return;
+
+        string? FindInApplicationBundles(IEnumerable<string> bundlePaths)
+        {
+            bundlePaths.Should().BeEquivalentTo(tool.MacOSBundlePaths);
+            return bundleProgram;
+        }
+    }
+
+    [Test]
+    [Platform(Include = "MacOsX")]
+    public void LoadDiffMergeToolConfig_should_search_the_folders_if_the_application_bundle_is_missing_on_macOS()
+    {
+        _configurationManager = new DiffMergeToolConfigurationManager(() => _fileSettings, (_, _) => "/opt/homebrew/bin/kdiff3", _ => null);
+
+        _configurationManager.LoadDiffMergeToolConfig(new Kdiff3().Name, null).Path.Should().Be("/opt/homebrew/bin/kdiff3");
+    }
+
+    [Test]
+    [Platform(Exclude = "MacOsX")]
+    public void LoadDiffMergeToolConfig_should_not_look_in_application_bundles_off_macOS()
+    {
+        _configurationManager = new DiffMergeToolConfigurationManager(() => _fileSettings, (_, _) => "kdiff3-of-the-folders",
+            _ => throw new InvalidOperationException("Application bundles are a macOS thing"));
+
+        _configurationManager.LoadDiffMergeToolConfig(new Kdiff3().Name, null).Path.Should().Be("kdiff3-of-the-folders");
+    }
+
+    [Test]
+    public void LoadDiffMergeToolConfig_should_pipe_the_full_commands_of_opendiff_through_cat()
+    {
+        _configurationManager = new DiffMergeToolConfigurationManager(() => _fileSettings, (_, _) => "/usr/bin/opendiff", _ => null);
+
+        DiffMergeToolConfiguration config = _configurationManager.LoadDiffMergeToolConfig("opendiff", null);
+
+        // git runs the full commands through a shell; opendiff waits for FileMerge only when its output is a pipe
+        config.FullDiffCommand.Should().Be("\"/usr/bin/opendiff\" \"$LOCAL\" \"$REMOTE\" | cat");
+        config.FullMergeCommand.Should().Be("\"/usr/bin/opendiff\" \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\" | cat");
+        config.MergeCommand.Should().Be("\"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"");
+    }
+
     [TestCase(null)]
     [TestCase("")]
     [TestCase("\t")]

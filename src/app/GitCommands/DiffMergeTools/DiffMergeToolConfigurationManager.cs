@@ -10,6 +10,7 @@ public sealed class DiffMergeToolConfigurationManager
 {
     private readonly Func<IConfigValueStore?> _getFileSettings;
     private readonly Func<string, IEnumerable<string?>, string> _findFileInFolders;
+    private readonly Func<IEnumerable<string>, string?> _findInApplicationBundles;
 
     public DiffMergeToolConfigurationManager(Func<IConfigValueStore?> getFileSettings)
         : this(getFileSettings, PathUtil.FindInFolders)
@@ -17,10 +18,13 @@ public sealed class DiffMergeToolConfigurationManager
         _getFileSettings = getFileSettings;
     }
 
-    internal DiffMergeToolConfigurationManager(Func<IConfigValueStore?> getFileSettings, Func<string, IEnumerable<string?>, string> findFileInFolders)
+    /// <param name="findInApplicationBundles">Finds a program of <see cref="DiffMergeTool.MacOSBundlePaths"/> (on macOS only).</param>
+    internal DiffMergeToolConfigurationManager(Func<IConfigValueStore?> getFileSettings, Func<string, IEnumerable<string?>, string> findFileInFolders,
+        Func<IEnumerable<string>, string?>? findInApplicationBundles = null)
     {
         _getFileSettings = getFileSettings;
         _findFileInFolders = findFileInFolders;
+        _findInApplicationBundles = findInApplicationBundles ?? (bundlePaths => PathUtil.FindInMacOSApplications(bundlePaths, File.Exists));
     }
 
     /// <summary>
@@ -169,8 +173,10 @@ public sealed class DiffMergeToolConfigurationManager
             }
             else
             {
-                // look for executable in (default) search paths
-                fullPath = _findFileInFolders(diffTool.ExeFileName, diffTool.SearchPaths);
+                // look for executable in (default) search paths; on macOS first in the application bundle of the tool,
+                // since the program of the PATH may have the same name as another one (Araxis' compare, ImageMagick's)
+                fullPath = (OperatingSystem.IsMacOS() ? _findInApplicationBundles(diffTool.MacOSBundlePaths) : null)
+                    ?? _findFileInFolders(diffTool.ExeFileName, diffTool.SearchPaths);
             }
         }
 
@@ -180,7 +186,7 @@ public sealed class DiffMergeToolConfigurationManager
             fullPath = diffTool.ExeFileName;
         }
 
-        return new DiffMergeToolConfiguration(diffTool.ExeFileName, fullPath, diffTool.DiffCommand, diffTool.MergeCommand);
+        return new DiffMergeToolConfiguration(diffTool.ExeFileName, fullPath, diffTool.DiffCommand, diffTool.MergeCommand, diffTool.WaitsOnlyWhenPiped);
     }
 
     /// <summary>

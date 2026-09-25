@@ -146,6 +146,42 @@ public sealed class ResolveConflictsViewModelTests
     }
 
     [Test]
+    [Platform(Exclude = "Win")]
+    public void The_merge_tool_path_is_taken_from_the_command_off_Windows()
+    {
+        FakeResolveConflictsHost host = new()
+        {
+            MergeTool = "meld",
+            Settings =
+            {
+                ["mergetool.meld.path"] = "/usr/bin/meld",
+                ["mergetool.meld.cmd"] = "\"/usr/bin/meld\" \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output \"$MERGED\"",
+            },
+            Conflicts = [Conflict("a.txt")],
+            ExitCode = 0,
+            ModifyOnMerge = true,
+        };
+        ResolveConflictsViewModel viewModel = Create(host);
+        viewModel.InitializeView();
+
+        viewModel.MergeCommand.Execute(null);
+
+        // The path that Git Extensions writes at the start of the command is the program, not an argument.
+        host.Calls.Should().Contain("run /usr/bin/meld:\"local/a.txt\" \"base/a.txt\" \"remote/a.txt\" --output \"a.txt\"");
+    }
+
+    [TestCase(null, "\"/usr/bin/opendiff\" \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\" | cat",
+        "/usr/bin/opendiff", "\"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"")]
+    [TestCase("/usr/bin/meld", "\"/usr/bin/meld\" \"$LOCAL\" --output \"$MERGED\"", "/usr/bin/meld", "\"$LOCAL\" --output \"$MERGED\"")]
+    [TestCase("/opt/tool", "\"$LOCAL\" \"$MERGED\"", "/opt/tool", "\"$LOCAL\" \"$MERGED\"")]
+    [TestCase("/opt/tool", "\"/usr/bin/other\" \"$MERGED\"", "/opt/tool", "\"/usr/bin/other\" \"$MERGED\"")]
+    [TestCase(null, "meld \"$MERGED\"", null, "meld \"$MERGED\"")]
+    public void The_command_of_a_merge_tool_is_split_off_Windows(string? path, string command, string? expectedPath, string expectedCommand)
+    {
+        ResolveConflictsViewModel.SplitUnixMergeToolCommand(path, command).Should().Be((expectedPath, expectedCommand));
+    }
+
+    [Test]
     public async Task Merge_runs_the_merge_tool_and_stages_the_merged_file()
     {
         FakeResolveConflictsHost host = new() { Conflicts = [Conflict("a.txt")], ExitCode = 0, ModifyOnMerge = true };

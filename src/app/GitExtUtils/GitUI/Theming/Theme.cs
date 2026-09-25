@@ -85,7 +85,7 @@ public class Theme : IThemeSerializationData
         Color result = GetColor(name);
         if (result == Color.Empty)
         {
-            return SystemColorDefaults.Get(name);
+            return SystemColorDefaults.Get(name, OperatingSystem.IsWindows(), IsDark);
         }
 
         return result;

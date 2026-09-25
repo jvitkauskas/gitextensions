@@ -8,11 +8,11 @@ public class RegisteredDiffMergeToolsTests
     {
         IEnumerable<string> tools = RegisteredDiffMergeTools.All(DiffMergeToolType.Diff);
 
-        // The tools of Windows only are offered there; Araxis on Windows and macOS.
+        // The tools of Windows only are offered there; Araxis on Windows and macOS, FileMerge (opendiff) on macOS.
         tools.Should().BeEquivalentTo(OperatingSystem.IsWindows()
             ? ["araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "TortoiseGitIDiff", "vscode", "vsdiffmerge", "winmerge"]
             : OperatingSystem.IsMacOS()
-                ? ["araxis", "bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]
+                ? ["araxis", "bc", "diffmerge", "kdiff3", "meld", "opendiff", "p4merge", "semanticmerge", "smerge", "vscode"]
                 : (string[])["bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]);
     }
 
@@ -24,7 +24,7 @@ public class RegisteredDiffMergeToolsTests
         tools.Should().BeEquivalentTo(OperatingSystem.IsWindows()
             ? ["araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "tortoisemerge", "vscode", "vsdiffmerge", "winmerge"]
             : OperatingSystem.IsMacOS()
-                ? ["araxis", "bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]
+                ? ["araxis", "bc", "diffmerge", "kdiff3", "meld", "opendiff", "p4merge", "semanticmerge", "smerge", "vscode"]
                 : (string[])["bc", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "vscode"]);
     }
 }

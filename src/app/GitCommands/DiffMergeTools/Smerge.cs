@@ -19,4 +19,10 @@ internal sealed class Smerge : DiffMergeTool
     {
         @"Sublime Merge\"
     };
+
+    /// <inheritdoc />
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "Sublime Merge.app/Contents/SharedSupport/bin/smerge",
+    ];
 }

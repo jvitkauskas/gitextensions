@@ -17,4 +17,10 @@ internal sealed class Kdiff3 : DiffMergeTool
         // regkdiff3path
         @"KDiff3"
     };
+
+    /// <inheritdoc />
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "kdiff3.app/Contents/MacOS/kdiff3",
+    ];
 }

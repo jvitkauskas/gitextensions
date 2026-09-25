@@ -50,4 +50,16 @@ internal abstract class DiffMergeTool
 
     /// <summary>Whether the tool exists on this system (the tools of Windows only are not offered elsewhere).</summary>
     public virtual bool IsAvailable => true;
+
+    /// <summary>
+    ///  Gets the paths of the program of the tool inside its application bundle on macOS, relative to an Applications
+    ///  folder (<c>/Applications</c>, <c>~/Applications</c>), e.g. <c>kdiff3.app/Contents/MacOS/kdiff3</c>.
+    /// </summary>
+    public virtual IEnumerable<string> MacOSBundlePaths => [];
+
+    /// <summary>
+    ///  Whether the program returns at once unless its output is a pipe (FileMerge's <c>opendiff</c>): the command that
+    ///  git runs then ends with <c>| cat</c>, as git's own definition of the tool, so that git waits for the tool.
+    /// </summary>
+    public virtual bool WaitsOnlyWhenPiped => false;
 }

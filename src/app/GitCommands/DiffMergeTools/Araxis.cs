@@ -6,7 +6,10 @@ internal sealed class Araxis : DiffMergeTool
     public override string ExeFileName => OperatingSystem.IsWindows() ? "Compare.exe" : "compare";
 
     /// <inheritdoc />
-    public override string MergeCommand => "/merge /wait /a2 /3 \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\"";
+    /// <remarks>The command line tools of macOS take their options with <c>-</c>.</remarks>
+    public override string MergeCommand => OperatingSystem.IsMacOS()
+        ? "-merge -wait -a2 -3 \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\""
+        : "/merge /wait /a2 /3 \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\"";
 
     /// <inheritdoc />
     /// <remarks>Araxis Merge exists for Windows and macOS (on Linux, <c>compare</c> is the one of ImageMagick).</remarks>
@@ -20,4 +23,11 @@ internal sealed class Araxis : DiffMergeTool
     {
         @"Araxis\"
     };
+
+    /// <inheritdoc />
+    /// <remarks>Its command line tools are in <c>Utilities</c>; the <c>compare</c> of the PATH may be the one of ImageMagick.</remarks>
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "Araxis Merge.app/Contents/Utilities/compare",
+    ];
 }

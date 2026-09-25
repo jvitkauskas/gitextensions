@@ -16,4 +16,11 @@ internal sealed class P4Merge : DiffMergeTool
     {
         @"Perforce\"
     };
+
+    /// <inheritdoc />
+    /// <remarks>The launcher that Perforce documents for the command line, rather than <c>Contents/MacOS/p4merge</c>.</remarks>
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "p4merge.app/Contents/Resources/launchp4merge",
+    ];
 }

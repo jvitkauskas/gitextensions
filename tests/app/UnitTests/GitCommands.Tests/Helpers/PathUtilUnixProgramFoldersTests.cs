@@ -21,4 +21,16 @@ public sealed class PathUtilUnixProgramFoldersTests
         PathUtil.FindInUnixProgramFolders(Program, _ => true).Should().Be(Path.Join("/usr/local/bin", Program));
         PathUtil.FindInUnixProgramFolders(Program, _ => false).Should().BeNull();
     }
+
+    [Test]
+    public void A_program_of_an_application_bundle_is_found_in_the_Applications_folders_in_order()
+    {
+        string[] bundlePaths = ["Tool.app/Contents/MacOS/tool", "Tool.app/Contents/Resources/launch"];
+        string userBundle = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Applications", bundlePaths[1]);
+
+        PathUtil.FindInMacOSApplications(bundlePaths, _ => true).Should().Be(Path.Join("/Applications", bundlePaths[0]));
+        PathUtil.FindInMacOSApplications(bundlePaths, path => path == userBundle).Should().Be(userBundle);
+        PathUtil.FindInMacOSApplications(bundlePaths, _ => false).Should().BeNull();
+        PathUtil.FindInMacOSApplications([], _ => true).Should().BeNull();
+    }
 }

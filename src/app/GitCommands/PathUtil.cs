@@ -551,6 +551,23 @@ public static partial class PathUtil
             "/opt/homebrew/bin",
         ];
 
+    /// <summary>The folders of the applications of macOS: the system's, then the user's.</summary>
+    internal static IEnumerable<string> MacOSApplicationFolders
+        =>
+        [
+            "/Applications",
+            Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Applications"),
+        ];
+
+    /// <summary>
+    ///  The first program of <paramref name="bundlePaths"/> (paths inside application bundles, e.g.
+    ///  <c>kdiff3.app/Contents/MacOS/kdiff3</c>) that exists in one of the <see cref="MacOSApplicationFolders"/>.
+    /// </summary>
+    internal static string? FindInMacOSApplications(IEnumerable<string> bundlePaths, Func<string, bool> fileExists)
+        => MacOSApplicationFolders
+            .SelectMany(folder => bundlePaths.Select(bundlePath => Path.Join(folder, bundlePath)))
+            .FirstOrDefault(fileExists);
+
     /// <summary>A program of Linux or macOS: on the PATH, else in <see cref="UnixProgramFolders"/>.</summary>
     internal static string? FindInUnixProgramFolders(string fileName, Func<string, bool> fileExists)
     {

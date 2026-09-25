@@ -17,4 +17,10 @@ internal sealed class Meld : DiffMergeTool
         @"Meld\",
         @"Meld (x86)\"
     };
+
+    /// <inheritdoc />
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "Meld.app/Contents/MacOS/Meld",
+    ];
 }

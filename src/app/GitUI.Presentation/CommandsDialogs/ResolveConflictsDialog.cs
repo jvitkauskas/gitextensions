@@ -1065,6 +1065,10 @@ public sealed partial class ResolveConflictsViewModel : DialogViewModel
                 _mergeToolCommand = _mergeToolCommand[(idx + executablePattern.Length + 1)..];
             }
         }
+        else if (_mergeToolCommand is not null)
+        {
+            (_mergeToolPath, _mergeToolCommand) = SplitUnixMergeToolCommand(_mergeToolPath, _mergeToolCommand);
+        }
 
         if (_host.FindFullPath(_mergeToolPath) is not { } fullPath)
         {
@@ -1074,6 +1078,34 @@ public sealed partial class ResolveConflictsViewModel : DialogViewModel
 
         _mergeToolPath = fullPath;
         return true;
+    }
+
+    /// <summary>
+    ///  Off Windows, the program and the arguments of the command of a merge tool of git's config (the Windows code above
+    ///  finds the program by its <c>.exe</c>): the command that Git Extensions configures starts with the quoted path of the
+    ///  tool (<c>"/usr/bin/meld" "$LOCAL" …</c>), which is then the program rather than the first argument; a pipe
+    ///  through <c>cat</c> at its end (for <c>opendiff</c>, which waits only when its output is a pipe) is left out,
+    ///  since the program is run with its output read, which is a pipe too.
+    /// </summary>
+    internal static (string? Path, string Command) SplitUnixMergeToolCommand(string? path, string command)
+    {
+        const string pipeThroughCat = "| cat";
+        string arguments = command.Trim();
+        if (arguments.EndsWith(pipeThroughCat, StringComparison.Ordinal))
+        {
+            arguments = arguments[..^pipeThroughCat.Length].TrimEnd();
+        }
+
+        if (arguments.StartsWith('"') && arguments.IndexOf('"', 1) is int end and > 1)
+        {
+            string program = arguments[1..end];
+            if (string.IsNullOrEmpty(path) || program == path)
+            {
+                return (program, arguments[(end + 1)..].TrimStart());
+            }
+        }
+
+        return (path, arguments);
     }
 
     /// <summary>As <c>LoadCustomMergetools</c>: the custom merge tools of the sub menu.</summary>

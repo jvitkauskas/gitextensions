@@ -239,7 +239,7 @@ internal sealed class AppSettingsTests
 
             yield return (properties[nameof(AppSettings.ShowConEmuTab)], true, false, true);
             yield return (properties[nameof(AppSettings.ConEmuStyle)], "Default", isNotNullable, true);
-            yield return (properties[nameof(AppSettings.ConEmuTerminal)], "bash", isNotNullable, true);
+            yield return (properties[nameof(AppSettings.ConEmuTerminal)], OperatingSystem.IsWindows() ? "bash" : Path.GetFileName(Environment.GetEnvironmentVariable("SHELL")) is { Length: > 0 } shell ? shell : "bash", isNotNullable, true);
             yield return (properties[nameof(AppSettings.OutputHistoryDepth)], 20, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.OutputHistoryPanelVisible)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowOutputHistoryAsTab)], true, isNotNullable, isISetting);

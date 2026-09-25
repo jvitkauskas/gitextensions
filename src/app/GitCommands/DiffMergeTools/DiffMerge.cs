@@ -17,4 +17,10 @@ internal sealed class DiffMerge : DiffMergeTool
         @"SourceGear\Common\DiffMerge\",
         @"SourceGear\DiffMerge\"
     };
+
+    /// <inheritdoc />
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "DiffMerge.app/Contents/MacOS/DiffMerge",
+    ];
 }

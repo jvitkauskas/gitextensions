@@ -28,4 +28,11 @@ internal sealed class VsCode : DiffMergeTool
             @"Microsoft VS Code\",
         ];
     }
+
+    /// <inheritdoc />
+    /// <remarks>The command line tool, which waits; <c>Contents/MacOS/Code</c> is the application.</remarks>
+    public override IEnumerable<string> MacOSBundlePaths =>
+    [
+        "Visual Studio Code.app/Contents/Resources/app/bin/code",
+    ];
 }
