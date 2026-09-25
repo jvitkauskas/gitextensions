@@ -113,6 +113,7 @@ public sealed class BrowseStrings : ViewStrings
         // Tools
         ToolsMenu = Add("toolsToolStripMenuItem", "Text", "&Tools");
         GitBash = Add("gitBashToolStripMenuItem", "Text", "Git &bash");
+        Terminal = Add("terminalToolStripMenuItem", "Text", "Open in &Terminal");
         GitGui = Add("gitGUIToolStripMenuItem", "Text", "Git &GUI");
         GitK = Add("kGitToolStripMenuItem", "Text", "Git&K");
         GitCommandLog = Add("gitcommandLogToolStripMenuItem", "Text", "Git &command log");
@@ -292,6 +293,9 @@ public sealed class BrowseStrings : ViewStrings
     public TranslatedText ToolsMenu { get; }
 
     public TranslatedText GitBash { get; }
+
+    /// <summary>On macOS instead of <see cref="GitBash"/>: the repository in Terminal.</summary>
+    public TranslatedText Terminal { get; }
 
     public TranslatedText GitGui { get; }
 
@@ -683,7 +687,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
             return;
         }
 
-        if (command == BrowseCommand.GitBash && ShowShellInConsole())
+        // On macOS the command opens Terminal (the console tab has its own button).
+        if (command == BrowseCommand.GitBash && !OperatingSystem.IsMacOS() && ShowShellInConsole())
         {
             return;
         }
@@ -840,7 +845,9 @@ public sealed partial class BrowseViewModel : DialogViewModel
         ]),
         new(s.ToolsMenu.AccessKeyText, null, Children:
         [
-            new(s.GitBash.AccessKeyText, BrowseCommand.GitBash, "GitForWindows"),
+            OperatingSystem.IsMacOS()
+                ? new(s.Terminal.AccessKeyText, BrowseCommand.GitBash, "Console")
+                : new(s.GitBash.AccessKeyText, BrowseCommand.GitBash, "GitForWindows"),
             new(s.GitGui.AccessKeyText, BrowseCommand.GitGui),
             new(s.GitK.AccessKeyText, BrowseCommand.GitK),
             BrowseMenuItem.Separator,

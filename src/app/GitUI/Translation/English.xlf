@@ -3060,6 +3060,10 @@ Right click starts the "Open repository" dialog.</source>
         <source>Create &amp;tag...</source>
         <target />
       </trans-unit>
+      <trans-unit id="terminalToolStripMenuItem.Text">
+        <source>Open in &amp;Terminal</source>
+        <target />
+      </trans-unit>
       <trans-unit id="toggleLeftPanel.ToolTipText">
         <source>Toggle left panel</source>
         <target />
@@ -8203,6 +8207,22 @@ help</source>
       </trans-unit>
       <trans-unit id="_failedToRunShell.Text">
         <source>Failed to run shell</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_gitToolInstallLinux.Text">
+        <source>Install it with the package manager of your system (the package is often named gitk or git-gui).</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_gitToolInstallMacOS.Text">
+        <source>Install it with Homebrew: brew install git-gui</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_gitToolNotFound.Text">
+        <source>"{0}" is not installed, or is not on your path.</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_gitToolNotFoundCaption.Text">
+        <source>Program not found</source>
         <target />
       </trans-unit>
       <trans-unit id="_middleOfPatchApply.Text">

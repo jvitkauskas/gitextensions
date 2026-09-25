@@ -44,6 +44,11 @@ public class MessageBoxes : Translate
     private readonly TranslationString _shellNotFoundCaption = new("Shell not found");
     private readonly TranslationString _shellNotFound = new("The selected shell is not installed, or is not on your path.");
 
+    private readonly TranslationString _gitToolNotFoundCaption = new("Program not found");
+    private readonly TranslationString _gitToolNotFound = new(@"""{0}"" is not installed, or is not on your path.");
+    private readonly TranslationString _gitToolInstallMacOS = new("Install it with Homebrew: brew install git-gui");
+    private readonly TranslationString _gitToolInstallLinux = new("Install it with the package manager of your system (the package is often named gitk or git-gui).");
+
     private readonly TranslationString _submoduleDirectoryDoesNotExist = new(@"The directory ""{0}"" does not exist for submodule ""{1}"".");
     private readonly TranslationString _directoryDoesNotExist = new(@"The directory ""{0}"" does not exist.");
     private readonly TranslationString _cannotOpenSubmoduleCaption = new("Cannot open submodule");
@@ -202,6 +207,14 @@ public class MessageBoxes : Translate
 
     public static void ShellNotFound(IWin32Window? owner)
         => ShowError(owner, Instance._shellNotFound.Text, Instance._shellNotFoundCaption.Text);
+
+    /// <summary>gitk or git gui is not installed (off Windows, where git does not always include them).</summary>
+    public static void GitToolNotFound(IWin32Window? owner, string program)
+        => ShowError(
+            owner,
+            string.Format(Instance._gitToolNotFound.Text, program) + Environment.NewLine
+                + (OperatingSystem.IsMacOS() ? Instance._gitToolInstallMacOS.Text : Instance._gitToolInstallLinux.Text),
+            Instance._gitToolNotFoundCaption.Text);
 
     public static void ShowError(IWin32Window? owner, string text, string? caption = null)
         => Show(owner, text, caption ?? TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);

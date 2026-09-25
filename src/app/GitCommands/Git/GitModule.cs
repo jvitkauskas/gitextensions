@@ -890,7 +890,7 @@ public sealed partial class GitModule : IGitModule
         if (!OperatingSystem.IsWindows())
         {
             // As on Windows: all the branches, tags and remotes.
-            new Executable("gitk", WorkingDir).Start("--branches --tags --remotes", createWindow: true);
+            new Executable(GitGuiTools.Find(GitGuiTools.GitK, GitExecutable) ?? GitGuiTools.GitK, WorkingDir).Start("--branches --tags --remotes", createWindow: true);
         }
         else
         {
@@ -910,6 +910,13 @@ public sealed partial class GitModule : IGitModule
         ArgumentBuilder args;
         if (!OperatingSystem.IsWindows())
         {
+            // git-gui itself when found: "git gui" finds it only in the exec path and on the PATH of git.
+            if (GitGuiTools.Find(GitGuiTools.GitGui, GitExecutable) is { } gitGui)
+            {
+                new Executable(gitGui, WorkingDir).Start(createWindow: true);
+                return;
+            }
+
             args = new GitArgumentBuilder("gui");
             _ = GitExecutable.Start(args, createWindow: true);
         }

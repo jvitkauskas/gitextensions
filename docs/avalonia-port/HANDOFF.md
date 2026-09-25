@@ -66,6 +66,8 @@ rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`), and the t
 Also: Sublime Merge's output option (`-o "$MERGED"`; it asked where to save), the icons of the tabs of the color picker
 (Avalonia 12.1 draws no stretched `PathGeometry`, as Fluent's `ColorView` icons are: they are drawn inside a
 `GeometryGroup`), and the buttons of the conflicts dialog grow with their text ("Rescan merge conflicts" was cut).
+The Tools menu: gitk and Git GUI are found where Homebrew and the distributions install them and say how to install
+them when missing (`GitGuiTools`); on macOS "Git bash" is "Open in Terminal".
 
 The subsequent QA click-through (2026-09-25) fixed first-run stack overflow in the plugin assembly resolver and
 checkout error dialogs while typing partial branch names. Both have regression tests and were rechecked in the
@@ -105,7 +107,7 @@ limitation. `QA.md` now also covers the click-through on Windows and under WSLg.
   case is checked as on a real Linux machine). NUnit skips the Windows-only tests there (`UI.IntegrationTests`, and the
   tests marked `[Platform(Include = "Win")]`). Test data written as Windows paths goes through `TestPaths.Native`.
 - macOS: `brew install --cask dotnet-sdk` (Microsoft's; the `dotnet` formula that `powershell` pulls in must not shadow
-  it), Xcode for FileMerge, `git submodule update --init` before the first build. The opt-in Keychain test:
+  it), Xcode for FileMerge, `brew install git-gui` for gitk and Git GUI, `git submodule update --init` before the first build. The opt-in Keychain test:
   `GE_TEST_KEYCHAIN=1`. Smoke tests: the portable copy started with `HOME` set to a scratch folder (git's global config
   then is a scratch `.gitconfig`: the Repair buttons and the diff tool settings write to it) and without `GIT_EDITOR`
   (agent shells set it to `true`, which overrides `core.editor`). Windows are captured with `screencapture -l <id>`

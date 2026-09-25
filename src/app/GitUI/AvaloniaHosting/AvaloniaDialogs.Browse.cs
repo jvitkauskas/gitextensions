@@ -589,10 +589,10 @@ internal static partial class AvaloniaDialogs
                     StartGitBash(owner);
                     break;
                 case BrowseCommand.GitGui:
-                    Module.RunGui();
+                    RunGitTool(owner, GitGuiTools.GitGui, Module.RunGui);
                     break;
                 case BrowseCommand.GitK:
-                    Module.RunGitK();
+                    RunGitTool(owner, GitGuiTools.GitK, Module.RunGitK);
                     break;
                 case BrowseCommand.GitCommandLog:
                     TryShowGitCommandLog(owner);
@@ -654,8 +654,42 @@ internal static partial class AvaloniaDialogs
         }
 
         // As gitBashToolStripMenuItem_Click.
+        // Off Windows gitk and git gui are not always installed with git: say how to install them rather than fail.
+        private void RunGitTool(IWin32Window owner, string program, Action run)
+        {
+            if (!OperatingSystem.IsWindows() && GitGuiTools.Find(program, Module.GitExecutable) is null)
+            {
+                MessageBoxes.GitToolNotFound(owner, program);
+                return;
+            }
+
+            try
+            {
+                run();
+            }
+            catch (Exception exception)
+            {
+                MessageBoxes.FailedToRunShell(owner, program, exception);
+            }
+        }
+
         private void StartGitBash(IWin32Window owner)
         {
+            if (OperatingSystem.IsMacOS())
+            {
+                // "Open in Terminal": the repository in the Terminal application.
+                try
+                {
+                    new Executable("/usr/bin/open", Module.WorkingDir).Start(new ArgumentBuilder { "-a", "Terminal", Module.WorkingDir.Quote() }, throwOnErrorExit: false);
+                }
+                catch (Exception exception)
+                {
+                    MessageBoxes.FailedToRunShell(owner, "Terminal", exception);
+                }
+
+                return;
+            }
+
             IShellDescriptor? shell = _commands.GetRequiredService<IShellProvider>().GetShell(BashShell.ShellName);
             if (shell?.ExecutablePath is null)
             {
