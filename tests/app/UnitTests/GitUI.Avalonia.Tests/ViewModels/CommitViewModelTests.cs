@@ -163,6 +163,34 @@ public sealed class CommitViewModelTests
     }
 
     [Test]
+    public async Task The_first_load_asks_for_the_focus_on_the_unstaged_files_once()
+    {
+        (CommitViewModel viewModel, _) = Create(new FakeHost());
+        List<CommitInitialFocus> requests = [];
+        viewModel.InitialFocusRequested += (_, target) => requests.Add(target);
+
+        await viewModel.InitializeAsync();
+        await viewModel.InitializeAsync();
+
+        requests.Should().Equal(CommitInitialFocus.UnstagedFiles);
+    }
+
+    [Test]
+    public async Task Without_changes_the_first_load_asks_for_the_focus_on_amend()
+    {
+        FakeHost host = new();
+        host.WorkTree.Clear();
+        host.Index.Clear();
+        (CommitViewModel viewModel, _) = Create(host);
+        List<CommitInitialFocus> requests = [];
+        viewModel.InitialFocusRequested += (_, target) => requests.Add(target);
+
+        await viewModel.InitializeAsync();
+
+        requests.Should().Equal(CommitInitialFocus.Amend);
+    }
+
+    [Test]
     public async Task Without_changes_the_commit_and_push_button_pushes_only()
     {
         FakeHost host = new();

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -66,6 +67,23 @@ public sealed class RevisionGridViewTests : HeadlessTest
 
         activated.Should().NotBeNull();
         activated!.ObjectId.Should().Be(history[5].ObjectId);
+        window.Close();
+    });
+
+    [Test]
+    public Task Copy_puts_the_hash_of_the_selected_revision_on_the_clipboard() => OnUiThreadAsync(() =>
+    {
+        List<GitRevision> history = CreateHistory();
+        (Window window, RevisionGridViewModel viewModel) = Show(history, toBeSelected: history[1].ObjectId);
+        viewModel.SelectedRow!.ObjectId.Should().Be(history[1].ObjectId);
+        window.GetVisualDescendants().OfType<DataGrid>().Single().Focus();
+
+        // As RevisionDataGridView: Ctrl+C (Cmd+C on macOS) copies the hashes of the selection, one per line.
+        window.KeyPressQwerty(PhysicalKey.C, TestKeys.Command);
+        Dispatcher.UIThread.RunJobs();
+
+        string? text = window.Clipboard!.TryGetTextAsync().GetAwaiter().GetResult();
+        text.Should().Be(history[1].ObjectId.ToString());
         window.Close();
     });
 

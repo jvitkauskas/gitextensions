@@ -11,6 +11,19 @@ using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.CommandsDialogs.CommitDialog;
 
+/// <summary>The control that gets the focus when the commit dialog has loaded its files (as <c>LoadUnstagedOutput</c>).</summary>
+public enum CommitInitialFocus
+{
+    /// <summary>There are unstaged files.</summary>
+    UnstagedFiles,
+
+    /// <summary>All the changes are staged: the message is written.</summary>
+    Message,
+
+    /// <summary>No changes: the Amend check box.</summary>
+    Amend,
+}
+
 /// <summary>
 ///  View model of the commit dialog (port of <c>FormCommit</c>; docs/avalonia-port/PLAN.md, phase 5): the unstaged and
 ///  staged files with the diff of the selected one, staging, the commit message and the commit (and push).
@@ -435,7 +448,22 @@ public sealed partial class CommitViewModel : DialogViewModel
         }
 
         RestoreSelectedFiles(lastSelection);
+
+        // As the first LoadUnstagedOutput (_loadUnstagedOutputFirstTime): the control that gets the focus once the files are
+        // known, unless the user moved it (the view decides).
+        if (!_initialFocusRequested)
+        {
+            _initialFocusRequested = true;
+            InitialFocusRequested?.Invoke(this, Unstaged.AllEntries.Any() ? CommitInitialFocus.UnstagedFiles
+                : Staged.AllEntries.Any() ? CommitInitialFocus.Message
+                : CommitInitialFocus.Amend);
+        }
     }
+
+    /// <summary>Raised once, after the files are loaded the first time: the control that should get the focus.</summary>
+    public event EventHandler<CommitInitialFocus>? InitialFocusRequested;
+
+    private bool _initialFocusRequested;
 
     private void SetFiles(IReadOnlyList<GitItemStatus> unstagedFiles, IReadOnlyList<GitItemStatus> stagedFiles)
     {

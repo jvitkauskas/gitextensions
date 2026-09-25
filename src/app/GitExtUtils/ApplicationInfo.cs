@@ -9,11 +9,32 @@ namespace GitExtUtils;
 /// </summary>
 public static class ApplicationInfo
 {
-    private static readonly Lazy<string> _executablePath = new(() => Path.GetFullPath(Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0]));
+    private static readonly Lazy<string> _executablePath = new(() => GetExecutablePath(
+        Path.GetFullPath(Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0]),
+        Assembly.GetEntryAssembly()?.Location,
+        File.Exists));
     private static readonly Lazy<FileVersionInfo> _fileVersionInfo = new(() => FileVersionInfo.GetVersionInfo(ExecutablePath));
     private static readonly Lazy<string> _productVersion = new(GetProductVersion);
     private static readonly Lazy<string> _productName = new(GetProductName);
     private static readonly Lazy<string> _companyName = new(GetCompanyName);
+
+    /// <summary>
+    ///  The executable of the application: the one of the process, except when the process is the host of .NET (the application
+    ///  started as <c>dotnet GitExtensions.dll</c>), whose folder is not the one of the application (the portable settings, the
+    ///  plugins, the version): then the executable next to the entry assembly (<c>GitExtensions</c>, <c>GitExtensions.exe</c>),
+    ///  else the entry assembly.
+    /// </summary>
+    internal static string GetExecutablePath(string processPath, string? entryAssemblyPath, Func<string, bool> fileExists)
+    {
+        if (!Path.GetFileNameWithoutExtension(processPath).Equals("dotnet", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrEmpty(entryAssemblyPath))
+        {
+            return processPath;
+        }
+
+        string appHost = Path.ChangeExtension(entryAssemblyPath, OperatingSystem.IsWindows() ? ".exe" : null);
+        return fileExists(appHost) ? appHost : entryAssemblyPath;
+    }
 
     /// <summary>The path of the executable of the process (<c>Application.ExecutablePath</c>).</summary>
     public static string ExecutablePath => _executablePath.Value;

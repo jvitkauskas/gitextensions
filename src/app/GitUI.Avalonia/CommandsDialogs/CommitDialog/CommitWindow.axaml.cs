@@ -111,7 +111,9 @@ public partial class CommitWindow : DialogWindow
         _viewModel?.Message.TextLoaded -= OnMessageLoaded;
         _viewModel?.Unstaged.PropertyChanged -= OnListPropertyChanged;
         _viewModel?.Staged.PropertyChanged -= OnListPropertyChanged;
+        _viewModel?.InitialFocusRequested -= OnInitialFocusRequested;
         _viewModel = DataContext as CommitViewModel;
+        _viewModel?.InitialFocusRequested += OnInitialFocusRequested;
         _viewModel?.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel?.Message.TextLoaded += OnMessageLoaded;
         _viewModel?.Unstaged.PropertyChanged += OnListPropertyChanged;
@@ -176,6 +178,30 @@ public partial class CommitWindow : DialogWindow
                 return base.ExecuteHotkeyCommand(commandCode);
         }
     }
+
+    // As the end of the first LoadUnstagedOutput: only if the focus is nowhere yet, or on the commit button.
+    private void OnInitialFocusRequested(object? sender, CommitInitialFocus target)
+        => Dispatcher.UIThread.Post(() =>
+        {
+            object? focused = FocusManager?.GetFocusedElement();
+            if (focused is not null && focused != commitButton)
+            {
+                return;
+            }
+
+            switch (target)
+            {
+                case CommitInitialFocus.UnstagedFiles:
+                    FocusFiles(unstagedFiles);
+                    break;
+                case CommitInitialFocus.Message:
+                    message.Editor.TextArea.Focus();
+                    break;
+                default:
+                    amend.Focus();
+                    break;
+            }
+        });
 
     private static bool FocusFiles(FileStatusListView list)
     {

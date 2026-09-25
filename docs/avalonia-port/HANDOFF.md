@@ -56,9 +56,10 @@ such keys are moved at load), the menu of the main window in the menu bar of the
 disabled while modal), the default extension of the save dialogs (`*..txt` in the filter of the file history). Checked
 with the macOS fonts: the stash, commit, push, create branch and settings dialogs fit.
 
-Seen on macOS but not specific to it: Cmd/Ctrl+C in the revision grid copies the built-in DataGrid text of the row
-(empty cells), there is no hotkey for it; the commit dialog puts no focus in the message when it opens; `dotnet
-GitExtensions.dll` in portable mode takes the folder of `dotnet` as the application folder.
+Seen on macOS and fixed on every system: Cmd/Ctrl+C in the revision grid copies the hashes of the selection again (the
+DataGrid copied its empty template cells), the commit dialog gives the focus to the unstaged files, the message or Amend
+once its files are loaded (as `LoadUnstagedOutput`), and `dotnet GitExtensions.dll` takes the folder of the application
+rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`).
 
 ## Rules
 

@@ -15,6 +15,7 @@ using GitExtUtils.GitUI.Theming;
 using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid.Graph;
+using GitUIPluginInterfaces;
 
 namespace GitUI.Avalonia.Controls.RevisionGrid;
 
@@ -437,6 +438,22 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
                 e.Handled = true;
                 _ = PasteIntoQuickSearchAsync(_viewModel);
                 break;
+
+            // As RevisionDataGridView.OnKeyDown: Ctrl+C copies the hashes of the selected commits (the DataGrid would copy
+            // the text of its template cells, which is empty).
+            case (Key.C, var modifiers) when modifiers == KeyMapping.CommandModifier && _viewModel is not null:
+                e.Handled = true;
+                _ = CopySelectedHashesAsync(_viewModel);
+                break;
+        }
+    }
+
+    private async Task CopySelectedHashesAsync(RevisionGridViewModel viewModel)
+    {
+        IReadOnlyList<GitRevision> selected = viewModel.GetSelectedRevisions(descending: true);
+        if (selected.Count > 0 && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(string.Join(Environment.NewLine, selected.Select(revision => revision.ObjectId)));
         }
     }
 
