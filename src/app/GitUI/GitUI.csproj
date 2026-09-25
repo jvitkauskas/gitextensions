@@ -47,10 +47,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GitExtensions.Analyzers.CSharp\GitExtensions.Analyzers.CSharp.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Resources -->
     <AdditionalFiles Include="Interops\NativeMethods.json" />
     <AdditionalFiles Include="Interops\NativeMethods.txt" />

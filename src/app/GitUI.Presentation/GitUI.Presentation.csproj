@@ -4,6 +4,7 @@
     (docs/avalonia-port/PLAN.md). Must not reference Avalonia or use WinForms types.
   -->
   <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
     <UseSystemDrawing>false</UseSystemDrawing>
   </PropertyGroup>
 

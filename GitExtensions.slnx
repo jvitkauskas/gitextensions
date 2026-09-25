@@ -1,7 +1,4 @@
 <Solution>
-  <Folder Name="/analyzers/">
-    <Project Path="src/app/GitExtensions.Analyzers.CSharp/GitExtensions.Analyzers.CSharp.csproj" />
-  </Folder>
   <Folder Name="/externals/">
     <File Path="externals/Directory.Build.props" />
     <File Path="externals/Directory.Build.targets" />
