@@ -1,16 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\GitUI\Interops\BOOL.cs" Link="GitUI\Interops\BOOL.cs" />
-    <Compile Include="..\GitUI\Interops\RECT.cs" Link="GitUI\Interops\RECT.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AdysTech.CredentialManager" />
     <PackageReference Include="Ben.Demystifier" />
     <PackageReference Include="JetBrains.Annotations" />
   </ItemGroup>

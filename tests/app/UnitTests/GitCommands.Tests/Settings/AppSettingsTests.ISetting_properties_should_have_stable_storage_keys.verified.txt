@@ -25,6 +25,7 @@ GitGrepUserArguments = Dialogs.GitGrepUserArguments
 HideTopRepositoriesFromRecentList = RecentRepositories.HideTopRepositoriesFromRecentList
 IgnoreWhitespaceKind = IgnoreWhitespaceKind
 IsEditorSettingsMigrated = Hidden.Migration.IsEditorSettingsMigrated
+IsRegistrySettingsMigrated = Hidden.Migration.IsRegistrySettingsMigrated
 MergeGraphLanesHavingCommonParent = Appearance.RevisionGraph.MergeGraphLanesHavingCommonParent
 MessageEditorWordWrap = Detailed.MessageEditorWordWrap
 OutputHistoryDepth = Detailed.OutputHistoryDepth

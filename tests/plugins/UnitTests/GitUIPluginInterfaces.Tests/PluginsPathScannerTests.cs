@@ -1,7 +1,7 @@
 ﻿namespace GitUIPluginInterfaces.Tests;
 public class PluginsPathScannerTests
 {
-    [TestCase(@".\PathScanningData", "PluginInRootDir.dll", "PluginInOwnDir.dll")]
+    [TestCase("PathScanningData", "PluginInRootDir.dll", "PluginInOwnDir.dll")]
     public void PathScanning(string userPluginsPath, params string[] expectedFileNames)
     {
         IEnumerable<FileInfo> pluginFiles = PluginsPathScanner.GetFiles(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, userPluginsPath));

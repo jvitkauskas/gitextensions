@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using GitCommands.Git;
@@ -78,7 +79,7 @@ public static partial class AppSettings
                 return GetGitExtensionsDirectory();
             }
 
-            string path = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ApplicationId);
+            string path = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationId);
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
@@ -91,11 +92,12 @@ public static partial class AppSettings
 
         SettingsContainer = new DistributedSettings(lowerPriority: null, GitExtSettingsCache.FromCache(SettingsFilePath), SettingLevel.Unknown);
 
-        if (newFile || !File.Exists(SettingsFilePath))
+        if (OperatingSystem.IsWindows() && (newFile || !File.Exists(SettingsFilePath)))
         {
             ImportFromRegistry();
         }
 
+        MigrateRegistrySettings();
         MigrateAvatarSettings();
         MigrateSshSettings();
 
@@ -223,7 +225,7 @@ public static partial class AppSettings
             return GetGitExtensionsDirectory();
         }
 
-        string dir = ReadStringRegValue("InstallDir", string.Empty);
+        string dir = GetWindowsRegistryString("InstallDir", string.Empty);
         if (string.IsNullOrEmpty(dir))
         {
             return GetGitExtensionsDirectory();
@@ -255,11 +257,45 @@ public static partial class AppSettings
     // for repair only
     public static void SetInstallDir(string dir)
     {
-        WriteStringRegValue("InstallDir", dir);
+        SetWindowsRegistryString("InstallDir", dir);
     }
 
     #region Registry helpers
 
+    // The settings that other Windows components read from HKCU\Software\GitExtensions: the installer (InstallDir,
+    // CheckSettings), the Explorer shell extension (CascadeShellMenuItems, AlwaysShowAllCommands) and the Visual Studio
+    // extension (ShowCurrentBranchInVS). They stay in the registry on Windows and are kept in the settings file elsewhere.
+    private static bool GetWindowsRegistryBool(string key, bool defaultValue)
+        => OperatingSystem.IsWindows() ? ReadBoolRegKey(key, defaultValue) : GetBool(key, defaultValue);
+
+    private static void SetWindowsRegistryBool(string key, bool value)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            WriteBoolRegKey(key, value);
+        }
+        else
+        {
+            SetBool(key, value);
+        }
+    }
+
+    private static string GetWindowsRegistryString(string key, string defaultValue)
+        => OperatingSystem.IsWindows() ? ReadStringRegValue(key, defaultValue) : GetString(key, defaultValue);
+
+    private static void SetWindowsRegistryString(string key, string value)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            WriteStringRegValue(key, value);
+        }
+        else
+        {
+            SetString(key, value);
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
     private static bool ReadBoolRegKey(string key, bool defaultValue)
     {
         object? obj = VersionIndependentRegKey.GetValue(key);
@@ -276,17 +312,20 @@ public static partial class AppSettings
         return ((string)obj).Equals("true", StringComparison.CurrentCultureIgnoreCase);
     }
 
+    [SupportedOSPlatform("windows")]
     private static void WriteBoolRegKey(string key, bool value)
     {
         VersionIndependentRegKey.SetValue(key, value ? "true" : "false");
     }
 
+    [SupportedOSPlatform("windows")]
     [return: NotNullIfNotNull(nameof(defaultValue))]
     private static string? ReadStringRegValue(string key, string? defaultValue)
     {
         return (string?)VersionIndependentRegKey.GetValue(key, defaultValue);
     }
 
+    [SupportedOSPlatform("windows")]
     private static void WriteStringRegValue(string key, string value)
     {
         VersionIndependentRegKey.SetValue(key, value);
@@ -296,14 +335,14 @@ public static partial class AppSettings
 
     public static bool CheckSettings
     {
-        get => ReadBoolRegKey("CheckSettings", true);
-        set => WriteBoolRegKey("CheckSettings", value);
+        get => GetWindowsRegistryBool("CheckSettings", true);
+        set => SetWindowsRegistryBool("CheckSettings", value);
     }
 
     public static string CascadeShellMenuItems
     {
-        get => ReadStringRegValue("CascadeShellMenuItems", "110111000111111111");
-        set => WriteStringRegValue("CascadeShellMenuItems", value);
+        get => GetWindowsRegistryString("CascadeShellMenuItems", "110111000111111111");
+        set => SetWindowsRegistryString("CascadeShellMenuItems", value);
     }
 
     public static ISetting<int> FileStatusFindInFilesGitGrepTypeIndex { get; } = Setting.Create(FileStatusSettingsPath, nameof(FileStatusFindInFilesGitGrepTypeIndex), 1);
@@ -314,37 +353,27 @@ public static partial class AppSettings
 
     public static string SshPath
     {
-        get => ReadStringRegValue("gitssh", "");
-        set => WriteStringRegValue("gitssh", value);
+        get => GetString("gitssh", "");
+        set => SetString("gitssh", value);
     }
 
     public static bool AlwaysShowAllCommands
     {
-        get => ReadBoolRegKey("AlwaysShowAllCommands", false);
-        set => WriteBoolRegKey("AlwaysShowAllCommands", value);
+        get => GetWindowsRegistryBool("AlwaysShowAllCommands", false);
+        set => SetWindowsRegistryBool("AlwaysShowAllCommands", value);
     }
 
     public static bool ShowCurrentBranchInVisualStudio
     {
         // This setting MUST be set to false by default, otherwise it will not work in Visual Studio without
         // other changes in the Visual Studio plugin itself.
-        get => ReadBoolRegKey("ShowCurrentBranchInVS", true);
-        set => WriteBoolRegKey("ShowCurrentBranchInVS", value);
+        get => GetWindowsRegistryBool("ShowCurrentBranchInVS", true);
+        set => SetWindowsRegistryBool("ShowCurrentBranchInVS", value);
     }
 
     public static string GitCommandValue
     {
-        get
-        {
-            if (IsPortable())
-            {
-                return GetString("gitcommand", "");
-            }
-            else
-            {
-                return ReadStringRegValue("gitcommand", "");
-            }
-        }
+        get => GetString("gitcommand", "");
         set
         {
             if (GitCommandValue == value)
@@ -352,15 +381,7 @@ public static partial class AppSettings
                 return;
             }
 
-            if (IsPortable())
-            {
-                SetString("gitcommand", value);
-            }
-            else
-            {
-                WriteStringRegValue("gitcommand", value);
-            }
-
+            SetString("gitcommand", value);
             GitVersion.ResetVersion();
         }
     }
@@ -734,6 +755,28 @@ public static partial class AppSettings
         {
             SaveSettings();
         }
+    }
+
+    /// <summary>
+    ///  Once: the paths of git and SSH, which were kept in the registry (HKCU\Software\GitExtensions) when not portable,
+    ///  copied to the settings file (docs/avalonia-port/CROSS-PLATFORM.md, phase 1). The registry values are left as they were.
+    /// </summary>
+    private static void MigrateRegistrySettings()
+    {
+        if (!OperatingSystem.IsWindows() || IsPortable() || IsRegistrySettingsMigrated.Value)
+        {
+            return;
+        }
+
+        foreach (string name in (string[])["gitcommand", "gitssh"])
+        {
+            if (string.IsNullOrEmpty(GetString(name, null)) && ReadStringRegValue(name, null) is { Length: > 0 } value)
+            {
+                SetString(name, value);
+            }
+        }
+
+        IsRegistrySettingsMigrated.Value = true;
     }
 
     private static void MigrateSshSettings()
@@ -1386,7 +1429,7 @@ public static partial class AppSettings
 
     public static string Plink
     {
-        get => GetString("plink", Environment.GetEnvironmentVariable("GITEXT_PLINK") ?? ReadStringRegValue("plink", ""));
+        get => GetString("plink", Environment.GetEnvironmentVariable("GITEXT_PLINK") ?? GetWindowsRegistryString("plink", ""));
         set
         {
             if (value != Environment.GetEnvironmentVariable("GITEXT_PLINK"))
@@ -1398,7 +1441,7 @@ public static partial class AppSettings
 
     public static string Puttygen
     {
-        get => GetString("puttygen", Environment.GetEnvironmentVariable("GITEXT_PUTTYGEN") ?? ReadStringRegValue("puttygen", ""));
+        get => GetString("puttygen", Environment.GetEnvironmentVariable("GITEXT_PUTTYGEN") ?? GetWindowsRegistryString("puttygen", ""));
         set
         {
             if (value != Environment.GetEnvironmentVariable("GITEXT_PUTTYGEN"))
@@ -1411,7 +1454,7 @@ public static partial class AppSettings
     /// <summary>Gets the path to Pageant (SSH auth agent).</summary>
     public static string Pageant
     {
-        get => GetString("pageant", Environment.GetEnvironmentVariable("GITEXT_PAGEANT") ?? ReadStringRegValue("pageant", ""));
+        get => GetString("pageant", Environment.GetEnvironmentVariable("GITEXT_PAGEANT") ?? GetWindowsRegistryString("pageant", ""));
         set
         {
             if (value != Environment.GetEnvironmentVariable("GITEXT_PAGEANT"))
@@ -1893,6 +1936,7 @@ public static partial class AppSettings
 
     private static RegistryKey? _versionIndependentRegKey;
 
+    [SupportedOSPlatform("windows")]
     private static RegistryKey VersionIndependentRegKey
     {
         get
@@ -2089,8 +2133,11 @@ public static partial class AppSettings
 
     public static ISetting<bool> IsEditorSettingsMigrated { get; } = Setting.Create(MigrationSettingsPath, nameof(IsEditorSettingsMigrated), false);
 
+    public static ISetting<bool> IsRegistrySettingsMigrated { get; } = Setting.Create(MigrationSettingsPath, nameof(IsRegistrySettingsMigrated), false);
+
     public static ISetting<string> UninformativeRepoNameRegex { get; } = Setting.Create(DetailedSettingsPath, nameof(UninformativeRepoNameRegex), "app|(repo(sitory)?)");
 
+    [SupportedOSPlatform("windows")]
     private static IEnumerable<(string name, string? value)> GetSettingsFromRegistry()
     {
         RegistryKey? oldSettings = VersionIndependentRegKey.OpenSubKey("GitExtensions");
@@ -2111,6 +2158,7 @@ public static partial class AppSettings
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private static void ImportFromRegistry()
     {
         SettingsContainer.SettingsCache.Import(GetSettingsFromRegistry());

@@ -1,5 +1,4 @@
-﻿using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Microsoft.Win32.SafeHandles;
 
@@ -18,6 +17,17 @@ public static class DpiUtil
 
     static DpiUtil()
     {
+        // The DPI of the screen is read from GDI; elsewhere the Avalonia render scaling applies (phase 2).
+        if (!OperatingSystem.IsWindows())
+        {
+            DpiX = 96;
+            DpiY = 96;
+
+            ScaleX = 1.0f;
+            ScaleY = 1.0f;
+            return;
+        }
+
         using DeviceContextSafeHandle hdc = GetDC(IntPtr.Zero);
         try
         {
@@ -159,35 +169,6 @@ public static class DpiUtil
         return new Point(
             (int)(point.X * scale),
             (int)(point.Y * scale));
-    }
-
-    [NotNull]
-    public static Image Scale([NotNull] Image image)
-    {
-        const string dpiScaled = "__DPI_SCALED__";
-
-        if (!IsNonStandard || image.Tag as string == dpiScaled)
-        {
-            return image;
-        }
-
-        Size size = Scale(new Size(image.Width, image.Height));
-        Bitmap bitmap = new(size.Width, size.Height);
-
-        using Graphics g = Graphics.FromImage(bitmap);
-
-        // NearestNeighbor is better for 200% and above
-        // https://devblogs.microsoft.com/visualstudio/improving-high-dpi-support-for-visual-studio-2013/
-
-        g.InterpolationMode = ScaleX >= 2
-            ? InterpolationMode.NearestNeighbor
-            : InterpolationMode.HighQualityBicubic;
-
-        g.DrawImage(image, new Rectangle(Point.Empty, size));
-
-        bitmap.Tag = dpiScaled;
-
-        return bitmap;
     }
 
     [DllImport("gdi32.dll")]

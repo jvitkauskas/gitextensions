@@ -5,13 +5,15 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 
 ## State (2026-09-25)
 
-- Branch `avalonia` (and `avalonia-3rdparty`, the same commit) of the fork `jvitkauskas/gitextensions`: the Avalonia port
-  is complete on Windows, WinForms is removed, and the parity gaps of the ledger are closed or recorded as deliberate.
+- Branch `avalonia` of the fork `jvitkauskas/gitextensions`: the Avalonia port is complete on Windows, WinForms is
+  removed, and the parity gaps of the ledger are closed or recorded as deliberate. (`avalonia-3rdparty` stayed at the
+  commit before the cross-platform work.)
 - Phase 0 of `CROSS-PLATFORM.md` (guard rails and CI) is done: the solution builds on Linux, and CI has a Linux job.
-  Next: phase 1 (portable core libraries), approved by the owner. The dependency order of its projects is
-  GitExtensions.Extensibility, GitExtUtils, GitUIPluginInterfaces, GitCommands, ResourceManager, GitUI.RevisionGraph,
-  GitUI.Presentation; no test runs on Linux until GitCommands is portable, since CommonTestUtils references it.
-- Work in batches: each ends with a build, the full test suites, a commit, and a push of the branch.
+- Phase 1 (portable core libraries) is under way, in the dependency order GitExtensions.Extensibility, GitExtUtils,
+  GitUIPluginInterfaces, GitCommands, ResourceManager, GitUI.RevisionGraph, GitUI.Presentation. The "Platforms"
+  section of the ledger says which projects target `net10.0` and which tests run on Linux.
+- Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
+  a fast-forward of `avalonia` and a push of it.
 
 ## Rules
 

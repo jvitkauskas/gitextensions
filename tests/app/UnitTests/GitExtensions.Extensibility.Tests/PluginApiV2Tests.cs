@@ -9,6 +9,7 @@ namespace GitExtensions.ExtensibilityTests;
 /// <summary>The types of plugin API v2 and their bridging to plugin API v1 (docs/avalonia-port/PLAN.md, phase 7).</summary>
 [TestFixture]
 [Apartment(ApartmentState.STA)]
+[Platform(Include = "Win")] // The native message boxes and task dialogs, and STA.
 public sealed class PluginApiV2Tests
 {
     [Test]

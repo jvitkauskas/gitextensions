@@ -10,6 +10,12 @@ public static class SystemTheme
     {
         get
         {
+            // Off Windows the theme of the system comes from Avalonia (docs/avalonia-port/CROSS-PLATFORM.md, phase 2).
+            if (!OperatingSystem.IsWindows())
+            {
+                return false;
+            }
+
             try
             {
                 using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");

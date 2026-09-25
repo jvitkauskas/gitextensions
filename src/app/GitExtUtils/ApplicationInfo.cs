@@ -32,13 +32,14 @@ public static class ApplicationInfo
 
     /// <summary>
     ///  The roaming data folder of this version of the application, created if missing: <c>%APPDATA%\company\product\version</c>
-    ///  (<c>Application.UserAppDataPath</c>).
+    ///  (<c>Application.UserAppDataPath</c>); on Linux in <c>$XDG_CONFIG_HOME</c> (or <c>~/.config</c>), on macOS in
+    ///  <c>~/Library/Application Support</c>.
     /// </summary>
     public static string UserAppDataPath
     {
         get
         {
-            string path = $@"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\{CompanyName}\{ProductName}\{ProductVersion}";
+            string path = Path.Join(UserDataRoot, CompanyName, ProductName, ProductVersion);
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
@@ -47,6 +48,12 @@ public static class ApplicationInfo
             return path;
         }
     }
+
+    /// <summary>The folder of the data of the user's applications (not checked for existence: it may not exist yet off Windows).</summary>
+    private static string UserDataRoot
+        => Environment.GetFolderPath(
+            OperatingSystem.IsMacOS() ? Environment.SpecialFolder.LocalApplicationData : Environment.SpecialFolder.ApplicationData,
+            Environment.SpecialFolderOption.DoNotVerify);
 
     private static string GetProductVersion()
     {

@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace GitExtUtils.GitUI;
 
 /// <summary>The monitors of the desktop (as the WinForms <c>Screen.AllScreens</c>).</summary>
+[SupportedOSPlatform("windows")]
 public static class Screens
 {
     private const uint MONITORINFOF_PRIMARY = 1;

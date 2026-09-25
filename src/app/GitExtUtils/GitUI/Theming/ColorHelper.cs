@@ -91,23 +91,6 @@ public static class ColorHelper
     public static Color MakeDarkerBy(this Color color, double amount) =>
         color.TransformHsl(l: l => l - amount);
 
-    public static Bitmap AdaptLightness(this Bitmap original)
-    {
-        if (IsDefaultTheme)
-        {
-            return original;
-        }
-
-        // Not Bitmap.Clone(): that is a shallow GDI+ clone which inherits the lazy stream backing of
-        // its source. Icon.ToBitmap() returns a bitmap over a MemoryStream it has already disposed
-        // when the selected icon frame is PNG compressed, and locking the bits of such a clone fails
-        // with "A generic error occurred in GDI+.". The copy constructor rasterises eagerly into a
-        // fresh Format32bppArgb bitmap, which is the format the transformation asks for anyway.
-        Bitmap clone = new(original);
-        new LightnessCorrection(clone).Execute();
-        return clone;
-    }
-
     /// <summary>
     /// Transform the invariant color to be related to the known colors
     /// in the same way in the current theme as in the invariant theme.

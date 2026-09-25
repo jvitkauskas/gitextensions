@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace GitExtUtils;
 
 /// <summary>The text of the Windows clipboard (without WinForms: docs/avalonia-port/PLAN.md, phase 8).</summary>
+[SupportedOSPlatform("windows")]
 public static class ClipboardUtil
 {
     private const uint CF_UNICODETEXT = 13;

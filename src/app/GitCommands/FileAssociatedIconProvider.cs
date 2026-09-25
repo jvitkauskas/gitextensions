@@ -1,11 +1,13 @@
 using System.Collections.Concurrent;
 using System.IO.Abstractions;
+using System.Runtime.Versioning;
 
 namespace GitCommands;
 
 /// <summary>
 /// Provides the ability to extract icons associated with file types.
 /// </summary>
+[SupportedOSPlatform("windows6.1")]
 public interface IFileAssociatedIconProvider
 {
     /// <summary>
@@ -17,6 +19,7 @@ public interface IFileAssociatedIconProvider
     Icon? Get(string workingDirectory, string relativeFilePath);
 }
 
+[SupportedOSPlatform("windows6.1")]
 public sealed class FileAssociatedIconProvider : IFileAssociatedIconProvider
 {
     private readonly IFileSystem _fileSystem;
