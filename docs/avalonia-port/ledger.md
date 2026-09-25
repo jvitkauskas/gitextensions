@@ -247,23 +247,6 @@ Each view's strings class (`GitUI.Presentation/**/*Strings.cs`) declares the XLI
 
 ## Platforms
 
-### QA follow-up (2026-09-25, in progress)
-
-The click-through in `QA.md` found two general bugs, fixed with regression tests:
-
-- First-run startup could overflow the stack after the telemetry dialog: the plugin assembly resolver inspected
-  every adjacent file with `FileVersionInfo`, which could recursively request localized exception resources.
-  It now resolves the exact assembly file name, with the culture subdirectory for satellite assemblies.
-- Typing a branch name in Checkout requested commit counts for incomplete names (for example `f`, `fe`, `fea`),
-  opening git error dialogs. Counts are requested only for names in the available branch list.
-
-Both fixes were reproduced and checked again in the macOS app. Two headless assertions/input values now use the
-current culture for decimal numbers; their hard-coded decimal points failed on this Mac's locale. Release build
-passed, and all 18 sequential suite invocations passed with `--blame-hang-timeout 3m` (25,277 tests passed;
-Windows-only and other excluded tests skipped). The opt-in Keychain round trip passed and removed its test item.
-Windows and Linux were not rerun on this machine. Manual QA is continuing; this is not a complete checklist sign-off.
-
-
 The cross-platform phase (`CROSS-PLATFORM.md`) records here which parts run on which system. **Builds** means that
 `dotnet build` of the solution succeeds there; **runs** that the code is used there, with its tests passing there.
 
@@ -317,3 +300,22 @@ The cross-platform phase (`CROSS-PLATFORM.md`) records here which parts run on w
 | Application menu of macOS (`MacOSApplicationMenu`) | - | - | About, Settings (Cmd+,), Quit | Phase 5: `Application.Name` is "Git Extensions" (it was "Avalonia Application" in the menu bar); a `NativeMenu` of the application with "About Git Extensions" and "Settings" of the main window activated last, before the items Avalonia adds (Services, Hide, Hide Others, Show All, Quit). The main menu of the main window is in the menu bar on macOS (`BrowseWindow.MacOSMenu.cs`): a `NativeMenu` of the window built from `BrowseViewModel.Menus`, the menu of the window hidden once `NativeMenu.IsNativeMenuExported` (it stays in the headless tests). One menu per window whose items are replaced (Avalonia.Native fails with "The menu being updated does not match" when another menu is set); the submenus read when they open (recent and favourite repositories, Navigate, View) are updated in place when the system asks (`NeedsUpdate`), after they closed and after a command, since the system shows the items it had when the menu opened. The items show the shortcuts of their hotkeys (the commands through `BrowseViewModel.GetHotkeyCommand`, the grid items through their gesture texts), only those with Cmd: the system runs an item for its key wherever the focus is, so a shortcut without Cmd (Alt+Left moves by word in a text box) stays a hotkey of the window only. The system runs the item and the key does not reach the window (checked: Cmd+B opens one dialog, Cmd+P moves to the parent once); it asks to update the menu first, so the actions are current. Cmd+Space (Commit) is taken by Spotlight. Checked: Start with the recent repositories, Tools → Settings, View → Show stashes (the check mark follows). The menu is installed in `Initialize` (macOS only): Avalonia.Native builds the application menu from the menu the application has at its setup, and keeps "About Avalonia" otherwise. Quit (Cmd+Q, the Dock, logging out) reaches a lifetime only; without one the system ended the process at once. On macOS `AvaloniaUi` sets up with a `ClassicDesktopStyleApplicationLifetime` (explicit shutdown) whose `Start` runs the first main loop, and its `ShutdownRequested` closes the main windows instead (`AvaloniaUi.QuitRequested`), which ends the loop as closing the last one. Checked in the app: the menu, About, Settings, Cmd+Q (the window positions are saved). The other windows show the menu of their main window (the owner, else the one activated last) in the menu bar (`BrowseWindow.AttachMacOSMenu` from `DialogWindow.OnOpened`): a copy without shortcuts (the keys belong to the window: Cmd+Return commits in the commit dialog), its items disabled while the window is modal, as the About and Settings items of the application menu. Checked: the commit dialog (modal) shows the disabled menu, Cmd+Return commits in it, the items come back once it closes. |
 | Order of the dialog buttons (`DialogButtonOrder`) | OK, Cancel | OK, Cancel | Cancel, OK | Phase 5: the dialogs are written in the order of Windows; on macOS, when a dialog opens, a row of buttons aligned right in a `Border.dialogFooter` is reversed (the affirmative button rightmost), rows with other controls (check boxes are toggle buttons) keep their order. This covers the message boxes, the task dialogs and the XAML footers. Checked in the app: the confirmation of the branch deletion ([No] [Yes]). A row marked `StackPanel.dialogButtons` is reversed too: the footer of the settings ([Apply] [Cancel] [OK] on macOS). The askpass prompt has a dialog footer ([Cancel] [OK]) and the theme of the settings (`ThemeModule.Load` in the askpass mode). Checked in the app. |
 | Name of the theme of the system color mode | "Windows app color mode" | "System color mode" | "System color mode" | The theme id stays `Windows app color mode` (saved in the settings); off Windows the list names it `SystemColorModeThemeName`. |
+
+### QA follow-up (2026-09-25, in progress)
+
+The click-through in `QA.md` found two general bugs, fixed with regression tests:
+
+- First-run startup could overflow the stack after the telemetry dialog: the plugin assembly resolver inspected
+  every adjacent file with `FileVersionInfo`, which could recursively request localized exception resources.
+  It now resolves the exact assembly file name, with the culture subdirectory for satellite assemblies.
+- Typing a branch name in Checkout requested commit counts for incomplete names (for example `f`, `fe`, `fea`),
+  opening git error dialogs. Counts are requested only for names in the available branch list.
+
+Both fixes were reproduced and checked again in the macOS app. Two headless assertions/input values now use the
+current culture for decimal numbers; their hard-coded decimal points failed on this Mac's locale. Release build
+passed, and all 18 sequential suite invocations passed with `--blame-hang-timeout 3m` (25,277 tests passed;
+Windows-only and other excluded tests skipped). The opt-in Keychain round trip passed and removed its test item.
+Windows and Linux were not rerun on this machine. Manual QA is continuing; this is not a complete checklist sign-off.
+Rerun afterwards on Windows and in WSL (at `57e71ce9e`): the Release builds, all 18 Windows suites and the portable
+suites on Linux pass, and a portable copy browses a scratch repository with its plugins on both. `QA.md` now covers
+the click-through on Windows and under WSLg too.

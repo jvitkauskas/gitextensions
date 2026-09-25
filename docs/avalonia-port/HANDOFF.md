@@ -70,9 +70,10 @@ Also: Sublime Merge's output option (`-o "$MERGED"`; it asked where to save), th
 The subsequent QA click-through (2026-09-25) fixed first-run stack overflow in the plugin assembly resolver and
 checkout error dialogs while typing partial branch names. Both have regression tests and were rechecked in the
 macOS app; the Release build and all 18 suite invocations pass. Culture-dependent decimal expectations in two
-headless tests were corrected too. Windows/Linux verification remains with the owner. The manual pass is still
-in progress: investigate the automated Cmd+C selection anomaly and retry merge tools after the user-approved
-Gatekeeper prompt before treating either as an application defect.
+headless tests were corrected too. Windows and WSL were rerun afterwards (builds, suites, a portable smoke test).
+The manual pass is still in progress: investigate the automated Cmd+C selection anomaly and retry merge tools after
+the user-approved Gatekeeper prompt before treating either as an application defect. `QA.md` now also covers the
+click-through on Windows and under WSLg.
 
 ## Rules
 
