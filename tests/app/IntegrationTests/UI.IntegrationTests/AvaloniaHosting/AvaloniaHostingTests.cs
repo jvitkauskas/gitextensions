@@ -39,6 +39,10 @@ public sealed partial class AvaloniaHostingTests
     private Exception? _driveFailure;
     private LocalRepositoryManager _history = null!;
 
+    // The driven dialogs that are open, and how long a driven dialog may stay open (less than the hang timeout of the test run).
+    private readonly List<DialogWindow> _openDrivenDialogs = [];
+    private static readonly TimeSpan _drivenDialogTimeout = TimeSpan.FromMinutes(2);
+
     // The positions of the windows, instead of the user's WindowPositions.xml; shared by the tests, as the file would be.
     private static readonly InMemoryPositionStore _positions = new();
 
@@ -70,6 +74,7 @@ public sealed partial class AvaloniaHostingTests
     {
         Exception? driveFailure = _driveFailure;
         _driveFailure = null;
+        _openDrivenDialogs.Clear();
         AvaloniaDialogHost.DialogShowingForTests = null;
         AvaloniaDialogs.RepositoryHistoryForTests = null;
         BrowseWebViews.UserDataFolderForTests = null;
@@ -492,6 +497,22 @@ public sealed partial class AvaloniaHostingTests
                 AvaloniaDialogHost.DialogShowingForTests = null;
             }
 
+            _openDrivenDialogs.Add(window);
+            window.Closed += (_, _) => _openDrivenDialogs.Remove(window);
+
+            // The dialog is modal: a driver that never closes it (e.g. a condition that never holds) would block the test
+            // forever. Fail the test instead, before the hang timeout of the test run aborts the whole test host.
+            window.Opened += (_, _) => DispatcherTimer.RunOnce(
+                () =>
+                {
+                    if (_openDrivenDialogs.Contains(window))
+                    {
+                        _driveFailure ??= new TimeoutException($"{window.GetType().Name} was still open after {_drivenDialogTimeout}.");
+                        window.Close();
+                    }
+                },
+                _drivenDialogTimeout);
+
             window.Opened += (_, _) => DispatcherTimer.RunOnce(
                 () =>
                 {
@@ -507,6 +528,15 @@ public sealed partial class AvaloniaHostingTests
                 },
                 TimeSpan.FromMilliseconds(500));
         };
+    }
+
+    /// <summary>Closes the driven dialogs that are still open, the last opened first, after a step of a driver failed.</summary>
+    private void CloseDrivenDialogs()
+    {
+        foreach (DialogWindow window in Enumerable.Reverse(_openDrivenDialogs.ToList()))
+        {
+            window.Close();
+        }
     }
 
     private static void Capture(DialogWindow window, string name)

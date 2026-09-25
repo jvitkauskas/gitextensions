@@ -244,3 +244,17 @@ and the file is saved in it; the WinForms combo box of the editor only changed l
 Each view's strings class (`GitUI.Presentation/**/*Strings.cs`) declares the XLIFF ids of the form it replaces.
 `GitUI.Avalonia.Tests/ViewModels/ViewStringsTests.cs` fails if an id or its English text no longer matches
 `English.xlf`. So when an upstream merge changes a form's strings, that test points at what to update.
+
+## Platforms
+
+The cross-platform phase (`CROSS-PLATFORM.md`) records here which parts run on which system. **Builds** means that
+`dotnet build` of the solution succeeds there; **runs** that the code is used there, with its tests passing there.
+
+| Area | Windows | Linux | macOS | Notes |
+|---|---|---|---|---|
+| Build of the solution | builds | builds (CI: `build-linux` of `app-build.yml`) | not checked | Phase 0. Linux needed exact file name case in the project files and `.resx` (`plugin.png`, `puttygen.png`, `..\..\plugins\`), and `DisableTransitiveFrameworkReferences` for `externals/` too (the WPF framework reference of Microsoft.VisualStudio.Threading does not resolve off Windows). |
+| Native components (`src/native`), MSI (`setup/installer`) | builds | skipped | skipped | Windows-only by nature: `build.proj` does nothing elsewhere, and `dotnet build` of the solution does not build the WiX project. |
+| Publish (`Project.Publish.targets`) | runs | not checked | not checked | Windows PowerShell on Windows, `pwsh` elsewhere; the bundle check against `Product.wxs` and the MSI only on Windows. |
+| Test serialization (`TestAppSettingsAttribute`) | runs | builds | not checked | A lock file instead of a named semaphore (not supported on Unix); it is released when a test host is killed. |
+| Projects targeting `net10.0` (portable, checked by CA1416) | runs | builds | not checked | None yet. `CommonAssemblyInfo.cs` declares Windows only for the `net10.0-windows` projects (`#if WINDOWS`). NUnit skips a test assembly that declares Windows only, so the tests of a project run on Linux once the project and its test project target `net10.0`. |
+| Projects targeting `net10.0-windows` | runs | builds, tests skipped | not checked | All the other projects. |

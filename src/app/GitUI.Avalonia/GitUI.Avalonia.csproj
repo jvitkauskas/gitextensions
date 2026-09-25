@@ -148,7 +148,7 @@
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Key.png" Link="Assets\Key.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Push.png" Link="Assets\Push.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GitLogo16.png" Link="Assets\GitLogo16.png" />
-    <AvaloniaResource Include="..\GitUI\Resources\Icons\Plugin.png" Link="Assets\Plugin.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\plugin.png" Link="Assets\Plugin.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Hotkey.png" Link="Assets\Hotkey.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\PullMerge.png" Link="Assets\PullMerge.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\PullRebase.png" Link="Assets\PullRebase.png" />

@@ -48,12 +48,17 @@
     -->
   <PropertyGroup>
     <_PluginManagerPath>$([MSBuild]::NormalizePath('$(ArtifactsPublishDir)', 'GitExtensions.PluginManager'))</_PluginManagerPath>
+
+    <!-- The PowerShell of each system: Windows PowerShell is always installed on Windows, elsewhere PowerShell 7 (pwsh) is
+         required. The script and its arguments follow (-Command for powershell.exe, -File for pwsh). -->
+    <_PowerShell Condition="$([MSBuild]::IsOSPlatform('Windows'))">powershell.exe -NoProfile -ExecutionPolicy Bypass</_PowerShell>
+    <_PowerShell Condition="!$([MSBuild]::IsOSPlatform('Windows'))">pwsh -NoProfile</_PowerShell>
   </PropertyGroup>
 
   <Target Name="_DownloadPluginManager">
     <Exec 
       Condition="!Exists('$(_PluginManagerPath)')"
-      Command="powershell.exe $(RepoRoot)\eng\Download-PluginManager.ps1 -ExtractRootPath '$(_PluginManagerPath)'" />
+      Command="$(_PowerShell) $(RepoRoot)eng/Download-PluginManager.ps1 -ExtractRootPath '$(_PluginManagerPath)'" />
   </Target>
 
   <!--
@@ -180,11 +185,13 @@
                        _CheckBundlesConsistent
 
     Checks whether all files that are present in $(PublishDir) are delcared in Setup/Product.wxs.
+    Product.wxs describes the MSI, so the check only runs on Windows.
     ============================================================
     -->
   <Target Name="_CheckBundlesConsistent" AfterTargets="Publish" DependsOnTargets="_PublishTranslations;_DownloadPluginManager;_EnsureBundleContent;_CleanupBeforePack">
     <Exec
-        Command="powershell.exe .\setup\installer\Check-BundlesConsistent.ps1 '$(PublishDir)'"
+        Condition="$([MSBuild]::IsOSPlatform('Windows'))"
+        Command="$(_PowerShell) setup/installer/Check-BundlesConsistent.ps1 '$(PublishDir)'"
         WorkingDirectory="$(RepoRoot)"
         EchoOff="true"
         ConsoleToMsBuild="true"
@@ -253,10 +260,10 @@
     ============================================================
                        CreateMsi
 
-    Creates an MSI.
+    Creates an MSI (on Windows only).
     ============================================================
     -->
-  <Target Name="CreateMsi" AfterTargets="CreatePortable">
+  <Target Name="CreateMsi" AfterTargets="CreatePortable" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <PropertyGroup>
       <_AppVeyorSuffix>$(ARTIFACT_BUILD_SUFFIX)</_AppVeyorSuffix>
       <_PublishMsiVersionSuffix>-$(CurrentBuildVersion.ToString())$(_AppVeyorSuffix)</_PublishMsiVersionSuffix>

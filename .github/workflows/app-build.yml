@@ -52,6 +52,67 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
+  # Linux leg (docs/avalonia-port/CROSS-PLATFORM.md, phase 0): the whole solution must build on Linux, and the tests of the
+  # portable projects (those targeting net10.0 rather than net10.0-windows) run there. NUnit skips the assemblies of the
+  # Windows-only projects ("Only supported on windows"), so the leg covers more as projects become portable.
+  build-linux:
+    name: ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    steps:
+    - name: Checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+      with:
+        global-json-file: global.json
+
+    - name: Cache NuGet packages
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      with:
+        path: ~/.nuget/packages
+        key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props') }}
+        restore-keys: |
+          nuget-${{ runner.os }}-
+
+    - name: Build .NET
+      run: dotnet build -c Release --verbosity q --nologo /p:ContinuousIntegrationBuild=true /bl:artifacts/log/build.binlog
+
+    - name: Run tests
+      # As on Windows: one test host at a time, and a per-test hang timeout.
+      run: dotnet test -c Release -m:1 --no-restore --no-build --nologo --verbosity q --logger:trx --blame-hang-timeout 3m --blame-hang-dump-type mini /bl:artifacts/log/tests.binlog
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: test-results-linux
+        path: 'artifacts/Release/TestsResults/**/*.trx'
+        retention-days: 7
+        if-no-files-found: ignore
+
+    - name: Upload build logs on failure
+      if: failure() || cancelled()
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: build-logs-ubuntu-latest
+        path: |
+          artifacts/**/log/**/*.binlog
+          **/Sequence_*.xml
+          **/*.dmp
+        retention-days: 7
+        if-no-files-found: ignore
+
   # Single aggregate status that branch protection can require instead of the per-architecture matrix legs. The build matrix is dynamic
   # (pull requests build only 'windows-latest' while release branches also build 'windows-11-arm'), so requiring individual legs would
   # either miss coverage or block on a check that never runs. This gate always runs and passes only when every matrix leg succeeded.
@@ -59,23 +120,24 @@ jobs:
   build-gate:
     name: Build gate
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [build-and-test, build-linux]
     if: always()
     steps:
     - name: Verify build matrix succeeded
       shell: bash
       run: |
         result="${{ needs.build-and-test.result }}"
-        echo "build-and-test result: $result"
-        if [ "$result" != "success" ]; then
-          echo "::error::One or more build/test legs did not succeed (result: $result)."
+        linux="${{ needs.build-linux.result }}"
+        echo "build-and-test result: $result, build-linux result: $linux"
+        if [ "$result" != "success" ] || [ "$linux" != "success" ]; then
+          echo "::error::One or more build/test legs did not succeed (Windows: $result, Linux: $linux)."
           exit 1
         fi
 
   test-report:
     name: Test Report
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [build-and-test, build-linux]
     if: always() && needs.build-and-test.outputs.has-test-results == 'true'
     permissions:
       actions: read

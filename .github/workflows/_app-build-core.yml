@@ -193,8 +193,8 @@ jobs:
     - name: Run tests
       if: ${{ !inputs.release }}
       # -m:1 runs the test projects sequentially (one test host at a time). The suite already serializes assemblies
-      # via a machine-wide named semaphore (CommonTestUtils.TestAppSettingsAttribute), so parallel hosts gain nothing
-      # and merely sit idle waiting for that semaphore; --blame-hang-timeout then kills those idle waiters as if hung.
+      # via a machine-wide lock file (CommonTestUtils.TestAppSettingsAttribute), so parallel hosts gain nothing
+      # and merely sit idle waiting for that lock; --blame-hang-timeout then kills those idle waiters as if hung.
       # Sequential execution removes the idle waiters so the hang timeout only ever fires on a genuinely stuck test.
       #
       # --blame-hang-timeout is a per-test cap: any single test running longer than this is treated as hung, then

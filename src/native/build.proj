@@ -12,7 +12,8 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
-  <Target Name="Build">
+  <!-- The native components (the Explorer shell extension and the SSH askpass helper) are Windows-only C++ projects. -->
+  <Target Name="Build" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <PropertyGroup>
       <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
       <VSWherePath>$([MSBuild]::NormalizePath('$(Pkgvswhere)', 'tools'))</VSWherePath>

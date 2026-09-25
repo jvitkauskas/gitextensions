@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-#if NET6_0_OR_GREATER
+// Only the projects that target net10.0-windows (WINDOWS is defined for them) are Windows-only; the portable projects
+// (net10.0, docs/avalonia-port/CROSS-PLATFORM.md) are checked by the platform analyzer (CA1416) instead.
+#if WINDOWS
 [assembly: System.Runtime.Versioning.SupportedOSPlatform("windows7.0")]
 #endif
 

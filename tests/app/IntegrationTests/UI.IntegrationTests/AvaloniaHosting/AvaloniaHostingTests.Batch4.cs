@@ -167,7 +167,9 @@ public sealed partial class AvaloniaHostingTests
             }
             catch (Exception ex)
             {
+                // Close the dialogs, or the modal loop that shows them (and so the test) would not end.
                 _driveFailure = ex;
+                CloseDrivenDialogs();
             }
         }
 

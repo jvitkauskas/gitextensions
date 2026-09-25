@@ -7,6 +7,12 @@
     <_SuppressSdkImports>true</_SuppressSdkImports>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
     <IsPublishable>false</IsPublishable>
+
+    <!--
+      As in the root Directory.Build.props: the WPF framework reference of the Windows build of
+      Microsoft.VisualStudio.Threading does not flow to the projects (it cannot be resolved off Windows).
+    -->
+    <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
   </PropertyGroup>
 
   <!-- https://learn.microsoft.com/nuget/consume-packages/Central-Package-Management -->

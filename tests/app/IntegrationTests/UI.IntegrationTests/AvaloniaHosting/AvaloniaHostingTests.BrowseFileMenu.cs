@@ -37,7 +37,9 @@ public sealed partial class AvaloniaHostingTests
                 () =>
                 {
                     viewModel.Grid.SelectRevision(ObjectId.WorkTreeId).Should().BeTrue();
-                    WaitUntil(() => files.AllEntries.Any(e => e.Item.Name == "file.txt"), StageAndUnstage);
+
+                    // The files of the working directory, not those of HEAD (shown first), which also changed file.txt.
+                    WaitUntil(() => files.AllEntries.Any(e => e.Item.Name == "file.txt" && e.SecondRevision.ObjectId == ObjectId.WorkTreeId), StageAndUnstage);
                 });
 
             void StageAndUnstage()
