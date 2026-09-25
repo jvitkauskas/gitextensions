@@ -95,6 +95,29 @@ public sealed class StashViewModelTests
         host.Settings.Should().Be((true, true));
     }
 
+    [Test]
+    public void The_hotkeys_select_the_next_and_previous_stash_and_refresh()
+    {
+        FakeHost host = new() { Stashes = [new(0, "first"), new(1, "second")] };
+        StashViewModel viewModel = Create(host, manageStashes: false);
+        viewModel.InitializeView();
+        viewModel.SelectedStash = viewModel.Stashes[0];
+
+        // As FormStash.ExecuteCommand: newer stashes first in the list.
+        viewModel.ExecuteHotkeyCommand((int)StashHotkeyCommand.PreviousStash).Should().BeTrue();
+        viewModel.SelectedStash.Should().BeSameAs(viewModel.Stashes[1]);
+        viewModel.ExecuteHotkeyCommand((int)StashHotkeyCommand.NextStash).Should().BeTrue();
+        viewModel.SelectedStash.Should().BeSameAs(viewModel.Stashes[0]);
+        viewModel.ExecuteHotkeyCommand((int)StashHotkeyCommand.NextStash).Should().BeFalse("it is the newest");
+
+        viewModel.ExecuteHotkeyCommand((int)StashHotkeyCommand.Refresh).Should().BeTrue();
+        viewModel.Stashes.Should().NotBeEmpty();
+        viewModel.ExecuteHotkeyCommand(99).Should().BeFalse();
+
+        // As Stashed.BindContextMenu(View.CherryPickAllChanges): the files can cherry-pick.
+        viewModel.Files.CherryPickChangesAction.Should().NotBeNull();
+    }
+
     private static StashViewModel Create(FakeHost host, bool manageStashes, string? initialStash = null)
         => new(new StashStrings(), host, new DiffViewModelTests.FakeViewerHost(), new FileStatusListStrings(), new FileStatusTreeOptions(), manageStashes, initialStash);
 

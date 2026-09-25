@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using GitCommands;
 using GitUI.Avalonia.Controls.FlatTree;
+using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.UserControls.FileStatusList;
 
 namespace GitUI.Avalonia.Controls.FileStatusList;
@@ -57,18 +58,12 @@ public partial class FileStatusListView : UserControl
             global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
         // The expressions searched before, searched again when chosen.
-        ((MenuFlyout)gitGrepHistoryButton.Flyout!).Opening += (sender, _) =>
-        {
-            MenuFlyout flyout = (MenuFlyout)sender!;
-            flyout.Items.Clear();
-            if (DataContext is FileStatusListViewModel viewModel)
-            {
-                foreach (string expression in viewModel.GitGrepHistory)
-                {
-                    flyout.Items.Add(new MenuItem { Header = expression, Command = viewModel.SearchGitGrepCommand, CommandParameter = expression });
-                }
-            }
-        };
+        FreshMenuFlyout.ShowOnClick(
+            gitGrepHistoryButton,
+            () => DataContext is FileStatusListViewModel viewModel
+                ? [.. viewModel.GitGrepHistory.Select(expression => new MenuItem { Header = expression, Command = viewModel.SearchGitGrepCommand, CommandParameter = expression })]
+                : [],
+            PlacementMode.BottomEdgeAlignedRight);
 
         // As SetFindInCommitFilesGitGrepVisibilityImpl: the box has the focus when it is shown.
         gitGrepBox.PropertyChanged += (_, e) =>

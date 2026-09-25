@@ -31,6 +31,13 @@ public interface IBrowseWebView : IDisposable
 
     /// <summary>Stops loading and empties the page (as <c>FillBuildReport</c> when the tab is removed).</summary>
     void Clear();
+
+    /// <summary>Raised with the icon of the page shown (PNG), or none, as the favicon of <c>BuildReportWebBrowserOnNavigated</c>.</summary>
+    event EventHandler<byte[]?>? IconChanged
+    {
+        add { }
+        remove { }
+    }
 }
 
 /// <summary>What the build report tab needs from the application.</summary>
@@ -47,126 +54,62 @@ public interface IBrowseBuildReportHost
 }
 
 /// <summary>
-///  The build report tab of the main window (<c>BuildReportTabPageExtension</c>, <c>FormBrowse.FillBuildReport</c>): shown when
-///  the selected revision has a build status with a report; the report in a web browser, or a link to open it in the
-///  default browser when the build server does not show it in the tab (<c>ShowInBuildReportTab</c>).
+///  The build report tab of the main window (<c>BuildReportTabPageExtension</c>, <c>FormBrowse.FillBuildReport</c>), for the
+///  latest selected revision (<see cref="BuildReportViewModel"/>, whose properties the window binds as its own).
 /// </summary>
 public sealed partial class BrowseViewModel
 {
-    private IBrowseBuildReportHost? _buildReportHost;
-    private IBrowseWebView? _buildReportWebView;
-    private GitRevision? _buildReportRevision;
-    private string? _navigatedBuildReportUrl;
+    private BuildReportViewModel _buildReport = null!;
 
-    public BuildReportStrings BuildReportStrings { get; } = ViewStrings.Load<BuildReportStrings>();
+    /// <summary>The build report tab.</summary>
+    public BuildReportViewModel BuildReport => _buildReport;
 
-    /// <summary>Whether the build report tab is shown.</summary>
-    [ObservableProperty]
-    public partial bool HasBuildReport { get; private set; }
+    public BuildReportStrings BuildReportStrings => _buildReport.Strings;
 
-    /// <summary>Whether the report is shown in the tab (else the "Open report" link).</summary>
-    [ObservableProperty]
-    public partial bool IsBuildReportInTab { get; private set; }
+    /// <inheritdoc cref="BuildReportViewModel.HasBuildReport"/>
+    public bool HasBuildReport => _buildReport.HasBuildReport;
 
-    /// <summary>The URL of the report of the selected revision.</summary>
-    [ObservableProperty]
-    public partial string? BuildReportUrl { get; private set; }
+    /// <inheritdoc cref="BuildReportViewModel.IsBuildReportInTab"/>
+    public bool IsBuildReportInTab => _buildReport.IsBuildReportInTab;
 
-    /// <summary>The web browser of the report, created when a report is first shown in the tab.</summary>
-    [ObservableProperty]
-    public partial IEmbeddedNativeView? BuildReportView { get; private set; }
+    /// <inheritdoc cref="BuildReportViewModel.BuildReportUrl"/>
+    public string? BuildReportUrl => _buildReport.BuildReportUrl;
+
+    /// <inheritdoc cref="BuildReportViewModel.BuildReportIcon"/>
+    public byte[]? BuildReportIcon => _buildReport.BuildReportIcon;
+
+    /// <inheritdoc cref="BuildReportViewModel.BuildReportView"/>
+    public IEmbeddedNativeView? BuildReportView => _buildReport.BuildReportView;
 
     /// <summary>The "Open report" link: the report in the default browser.</summary>
-    [RelayCommand]
-    private void OpenBuildReport()
+    public IRelayCommand OpenBuildReportCommand => _buildReport.OpenBuildReportCommand;
+
+    private void InitializeBuildReport()
     {
-        if (!string.IsNullOrWhiteSpace(BuildReportUrl))
-        {
-            _buildReportHost?.OpenUrl(BuildReportUrl);
-        }
+        _buildReport = new BuildReportViewModel(_host as IBrowseBuildReportHost);
+
+        // Its properties are the window's (the same names).
+        _buildReport.PropertyChanged += (_, e) => OnPropertyChanged(e.PropertyName);
     }
 
-    private void InitializeBuildReport() => _buildReportHost = _host as IBrowseBuildReportHost;
+    private void DisposeBuildReport() => _buildReport.Dispose();
 
-    private void DisposeBuildReport()
-    {
-        _buildReportRevision?.PropertyChanged -= OnBuildReportRevisionPropertyChanged;
-        _buildReportRevision = null;
-        _buildReportWebView?.Dispose();
-        _buildReportWebView = null;
-        BuildReportView = null;
-    }
-
-    // As FormBrowse.FillBuildReport and BuildReportTabPageExtension.SetSelectedRevision: the tab follows the build status
-    // of the selected revision, which the build server may report later.
+    // As FormBrowse.FillBuildReport and BuildReportTabPageExtension.SetSelectedRevision: the latest selected revision; the
+    // report loaded when the tab is shown.
     private void UpdateBuildReport(bool revisionChanged)
     {
-        if (revisionChanged)
+        if (_buildReport is null)
         {
-            IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
-            GitRevision? revision = selected.Count == 0 ? null : selected[0];
-            if (revision != _buildReportRevision)
-            {
-                _buildReportRevision?.PropertyChanged -= OnBuildReportRevisionPropertyChanged;
-                _buildReportRevision = revision;
-                _buildReportRevision?.PropertyChanged += OnBuildReportRevisionPropertyChanged;
-            }
-        }
-
-        FillBuildReport();
-    }
-
-    private void OnBuildReportRevisionPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(GitRevision.BuildStatus))
-        {
-            // Refresh the selected Git revision.
-            FillBuildReport();
-        }
-    }
-
-    // As BuildReportTabPageExtension.FillBuildReport.
-    private void FillBuildReport()
-    {
-        GitRevision? revision = _buildReportRevision;
-        bool buildResultPageEnabled = revision is not null && _buildReportHost?.IsBuildReportEnabled is true;
-        string? url = revision?.BuildStatus?.Url;
-        if (!buildResultPageEnabled || string.IsNullOrEmpty(url))
-        {
-            if (HasBuildReport)
-            {
-                _buildReportWebView?.Clear();
-                _navigatedBuildReportUrl = null;
-            }
-
-            HasBuildReport = false;
-            BuildReportUrl = null;
+            // In the constructor, before InitializeBuildReport.
             return;
         }
 
-        // As SetTabPageContent: the web browser, or the link to the report.
-        IsBuildReportInTab = revision!.BuildStatus!.ShowInBuildReportTab;
-        BuildReportUrl = url;
-        if (IsBuildReportInTab && _buildReportWebView is null)
+        if (revisionChanged)
         {
-            _buildReportWebView = _buildReportHost!.CreateWebView();
-            BuildReportView = _buildReportWebView?.View;
+            IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
+            _buildReport.SetRevision(selected.Count == 0 ? null : selected[0]);
         }
 
-        HasBuildReport = true;
-
-        // As LoadReportContent: the report is loaded when the tab is shown (the favicon of the tab is not shown).
-        if (IsBuildReportInTab && SelectedTab == BrowseTab.BuildReport && _navigatedBuildReportUrl != url && _buildReportWebView is { } webView)
-        {
-            try
-            {
-                _navigatedBuildReportUrl = url;
-                webView.Navigate(url);
-            }
-            catch (Exception)
-            {
-                // No propagation to the user if the report fails.
-            }
-        }
+        _buildReport.IsTabShown = SelectedTab == BrowseTab.BuildReport;
     }
 }

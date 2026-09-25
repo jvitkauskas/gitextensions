@@ -2,6 +2,7 @@
                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                 xmlns:h="using:GitUI.Avalonia.Hosting"
                 xmlns:c="using:GitUI.Avalonia.Controls"
+                xmlns:b="using:GitUI.Avalonia.Controls.Blame"
                 xmlns:bd="using:GitUI.Avalonia.CommandsDialogs.BrowseDialog"
                 xmlns:ed="using:GitUI.Avalonia.Editor"
                 xmlns:fs="using:GitUI.Avalonia.Controls.FileStatusList"
@@ -182,7 +183,15 @@
             <fs:FileStatusListView Name="diffFiles" DataContext="{Binding Files}" />
             <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
             <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-              <ed:FileViewerView Name="diffViewer" DataContext="{Binding Viewer}" />
+              <!-- As the BlameControl of RevisionDiffControl: the blame instead of the viewer while "Blame" is checked. -->
+              <Panel>
+                <Panel IsVisible="{Binding !IsDiffBlameVisible}">
+                  <ed:FileViewerView Name="diffViewer" DataContext="{Binding Viewer}" />
+                </Panel>
+                <Panel IsVisible="{Binding IsDiffBlameVisible}">
+                  <b:BlameView Name="diffBlame" DataContext="{Binding DiffBlame}" />
+                </Panel>
+              </Panel>
             </Border>
           </h:HotkeyGrid>
         </TabItem>
@@ -197,7 +206,15 @@
             <fs:FileStatusListView Name="treeFiles" DataContext="{Binding FileTree}" />
             <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns" Background="Transparent" />
             <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-              <ed:FileViewerView Name="treeViewer" DataContext="{Binding TreeViewer}" />
+              <!-- As the BlameControl of RevisionDiffControl: the blame instead of the viewer while "Blame" is checked. -->
+              <Panel>
+                <Panel IsVisible="{Binding !IsTreeBlameVisible}">
+                  <ed:FileViewerView Name="treeViewer" DataContext="{Binding TreeViewer}" />
+                </Panel>
+                <Panel IsVisible="{Binding IsTreeBlameVisible}">
+                  <b:BlameView Name="treeBlame" DataContext="{Binding TreeBlame}" />
+                </Panel>
+              </Panel>
             </Border>
           </h:HotkeyGrid>
         </TabItem>
@@ -254,7 +271,12 @@
         <TabItem Name="buildReportTab" IsVisible="{Binding HasBuildReport}" PropertyChanged="OnBuildReportTabPropertyChanged">
           <TabItem.Header>
             <StackPanel Orientation="Horizontal" Spacing="4">
-              <Image Source="avares://GitUI.Avalonia/Assets/Integration.png" Width="16" Height="16" />
+              <!-- The favicon of the report, once shown (the image of BuildReportTabPageExtension). -->
+              <Panel Width="16" Height="16">
+                <Image Source="avares://GitUI.Avalonia/Assets/Integration.png" IsVisible="{Binding BuildReportIcon, Converter={x:Static ObjectConverters.IsNull}}" />
+                <Image Name="buildReportIcon" Source="{Binding BuildReportIcon, Converter={x:Static rg:AvatarConverter.Instance}}"
+                       IsVisible="{Binding BuildReportIcon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              </Panel>
               <TextBlock Text="{Binding BuildReportStrings.BuildReportTab.PlainText}" />
             </StackPanel>
           </TabItem.Header>

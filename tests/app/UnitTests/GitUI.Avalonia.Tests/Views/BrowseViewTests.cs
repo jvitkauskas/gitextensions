@@ -13,6 +13,7 @@ using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Editor;
 using GitUI.Presentation.Services;
+using GitUI.Presentation.UserControls.Blame;
 using GitUI.Presentation.UserControls.FileStatusList;
 using GitUI.Presentation.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
@@ -217,6 +218,20 @@ public sealed class BrowseViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         viewModel.SelectedTab.Should().Be(BrowseTab.BuildReport);
         webView.Calls.Should().Equal("navigate https://ci.example.com/1");
+
+        // As BuildReportWebBrowserOnNavigated: the favicon of the page in the header of the tab, kept for a page without one.
+        using (Stream asset = global::Avalonia.Platform.AssetLoader.Open(new Uri("avares://GitUI.Avalonia/Assets/Settings.png")))
+        using (MemoryStream png = new())
+        {
+            asset.CopyTo(png);
+            webView.RaiseIconChanged(png.ToArray());
+        }
+
+        Dispatcher.UIThread.RunJobs();
+        viewModel.BuildReportIcon.Should().NotBeNull();
+        window.BuildReportTab.GetVisualDescendants().OfType<Image>().Single(i => i.Name == "buildReportIcon").IsVisible.Should().BeTrue();
+        webView.RaiseIconChanged(null);
+        viewModel.BuildReportIcon.Should().NotBeNull();
 
         // A build server that does not show its report in the tab: the link opens it in the browser.
         selected.BuildStatus = new BuildInfo { Status = BuildStatus.Failure, Url = "https://ci.example.com/2", ShowInBuildReportTab = false };
@@ -626,6 +641,59 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task Blame_is_shown_instead_of_the_viewer_in_the_file_tree_and_the_diff_tab() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show(configure: h =>
+        {
+            h.TreeFiles = ["README.md", "src/file.cs"];
+            h.DiffFiles = ["a.txt", "src/file.cs"];
+        });
+        FileStatusListMenuTests.FakeMenuHost menu = new() { State = new() { CanBlame = true, CanShowFileHistory = true, ShowShowInFileTree = true } };
+        viewModel.Files.MenuHost = menu;
+        viewModel.FileTree!.MenuHost = menu;
+        window.Tabs.SelectedIndex = (int)BrowseTab.Diff;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Files.Select(entry => entry.Item.Name == "src/file.cs");
+        Dispatcher.UIThread.RunJobs();
+
+        // As BlameFile without UseDiffViewerForBlame: the blame in the file tree tab, not the dialog.
+        viewModel.Files.ShowFileHistoryCommand.Execute(true);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.FileTree);
+        viewModel.FileTree.SelectedEntry!.Item.Name.Should().Be("src/file.cs");
+        viewModel.FileTree.IsBlameShown.Should().BeTrue();
+        viewModel.Files.IsBlameShown.Should().BeFalse();
+        viewModel.IsTreeBlameVisible.Should().BeTrue();
+        window.FindControl<Control>("treeBlame")!.IsEffectivelyVisible.Should().BeTrue();
+        window.FindControl<Control>("treeViewer")!.IsEffectivelyVisible.Should().BeFalse();
+        host.Blame.Blamed.Select(b => b.FileName).Should().Equal("src/file.cs");
+        menu.Log.Should().NotContain(l => l.StartsWith("history"));
+
+        // Kept for the next files of the tree, toggled back by the item.
+        viewModel.FileTree.Select(entry => entry.Item.Name == "README.md");
+        Dispatcher.UIThread.RunJobs();
+        host.Blame.Blamed.Select(b => b.FileName).Should().Equal("src/file.cs", "README.md");
+        viewModel.FileTree.ShowFileHistoryCommand.Execute(true);
+        viewModel.IsTreeBlameVisible.Should().BeFalse();
+        viewModel.FileTree.IsBlameShown.Should().BeFalse();
+
+        // With UseDiffViewerForBlame: in the diff tab, until another file is selected.
+        host.UseDiffViewerForBlame = true;
+        window.Tabs.SelectedIndex = (int)BrowseTab.Diff;
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Files.ShowFileHistoryCommand.Execute(true);
+        Dispatcher.UIThread.RunJobs();
+        viewModel.SelectedTab.Should().Be(BrowseTab.Diff);
+        viewModel.IsDiffBlameVisible.Should().BeTrue();
+        window.FindControl<Control>("diffBlame")!.IsEffectivelyVisible.Should().BeTrue();
+        viewModel.Files.Select(entry => entry.Item.Name == "a.txt");
+        Dispatcher.UIThread.RunJobs();
+        viewModel.IsDiffBlameVisible.Should().BeFalse();
+        viewModel.Files.IsBlameShown.Should().BeFalse();
+        window.Close();
+    });
+
+    [Test]
     public Task The_diff_tab_menu_changes_the_files_of_the_working_directory_and_refreshes_its_diff() => OnUiThreadAsync(() =>
     {
         List<GitRevision> history = RevisionGridViewTests.CreateHistory();
@@ -782,6 +850,17 @@ public sealed class BrowseViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task The_window_opens_with_the_commit_info_beside_the_grid() => OnUiThreadAsync(() =>
+    {
+        // The layout selects another tab than the commit info in the constructor, before which the build report is ready.
+        (BrowseWindow window, BrowseViewModel viewModel, _) = Show(configure: host => host.CommitInfoPosition = GitCommands.CommitInfoPosition.RightwardFromList);
+
+        viewModel.SelectedTab.Should().NotBe(BrowseTab.Commit);
+        viewModel.HasBuildReport.Should().BeFalse();
+        window.Close();
+    });
+
     private static (BrowseWindow Window, BrowseViewModel ViewModel, FakeBrowseHost Host) Show(Func<IReadOnlyList<MenuModelItem>>? navigate = null, Action<FakeBrowseHost>? configure = null, IReadOnlyList<HotkeyBinding>? revisionDiffHotkeys = null, bool withFilters = false, List<GitRevision>? history = null, FilterToolBarViewTests.FakeFilterHost? filterHost = null)
     {
         FakeBrowseHost host = new();
@@ -844,6 +923,10 @@ public sealed class BrowseViewTests : HeadlessTest
 
         public void Clear() => Calls.Add("clear");
 
+        public event EventHandler<byte[]?>? IconChanged;
+
+        public void RaiseIconChanged(byte[]? icon) => IconChanged?.Invoke(this, icon);
+
         public void Dispose() => Calls.Add("dispose");
 
         public nint Attach(nint parentWindow) => 0;
@@ -853,9 +936,22 @@ public sealed class BrowseViewTests : HeadlessTest
         }
     }
 
-    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost, IBrowseLayoutHost, IBrowseToolbarItemsHost
+    internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost, IBrowseLayoutHost, IBrowseToolbarItemsHost, IBrowseBlameHost
     {
         public GitPullAction DefaultPullAction { get; set; }
+
+        /// <summary>The host of the blames of the diff and file tree tabs.</summary>
+        public BlameViewModelTests.FakeHost Blame { get; } = new();
+
+        public bool UseDiffViewerForBlame { get; set; }
+
+        public BlameViewModel CreateBlame() => BlameViewModelTests.Create(Blame);
+
+        public GitRevision GetActualRevision(GitRevision revision) => revision;
+
+        public ObjectId? GetCurrentCheckout() => null;
+
+        GitRevision? IBrowseBlameHost.GetRevision(ObjectId objectId) => null;
 
         /// <summary>The saved visibility of the toolbar items, with their default.</summary>
         public Dictionary<string, (bool Visible, bool Default)> ToolbarVisibility { get; } = [];

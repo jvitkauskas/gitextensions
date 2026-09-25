@@ -207,7 +207,8 @@ public sealed class FileHistoryViewModelTests
         List<GitRevision>? history = null,
         FakeSettings? settings = null,
         BlameViewModelTests.FakeHost? blameHost = null,
-        bool showBlame = false)
+        bool showBlame = false,
+        BuildReportViewModel? buildReport = null)
     {
         FakeHost host = new() { Settings = settings ?? new FakeSettings() };
         DiffViewModelTests.FakeViewerHost viewer = new();
@@ -229,8 +230,41 @@ public sealed class FileHistoryViewModelTests
             viewer,
             BlameViewModelTests.Create(blameHost ?? new BlameViewModelTests.FakeHost()),
             "\"src\\file.cs\"",
-            showBlame: showBlame);
+            showBlame: showBlame)
+        {
+            BuildReport = buildReport,
+        };
         return (viewModel, host, viewer);
+    }
+
+    [Test]
+    public void The_build_report_tab_shows_the_report_of_a_single_selected_revision()
+    {
+        BrowseViewTests.FakeBrowseHost reportHost = new();
+        BuildReportViewModel buildReport = new(reportHost);
+        (FileHistoryViewModel viewModel, _, _) = Create(buildReport: buildReport);
+        viewModel.Initialize();
+        Changed.BuildStatus = new GitExtensions.Extensibility.BuildServerIntegration.BuildInfo { Status = GitExtensions.Extensibility.BuildServerIntegration.BuildStatus.Success, Url = "https://ci.example.com/7" };
+        try
+        {
+            Select(viewModel, Changed);
+            buildReport.HasBuildReport.Should().BeTrue();
+
+            // As LoadReportContent: loaded when the tab is shown.
+            BrowseViewTests.FakeWebView webView = reportHost.WebViews.Single();
+            webView.Calls.Should().BeEmpty();
+            viewModel.SelectedTab = FileHistoryTab.BuildReport;
+            webView.Calls.Should().Equal("navigate https://ci.example.com/7");
+
+            // As FillBuildReport: none for several revisions, the tab not left selected.
+            Select(viewModel, Changed, Renamed);
+            buildReport.HasBuildReport.Should().BeFalse();
+            viewModel.SelectedTab.Should().Be(FileHistoryTab.Commit);
+        }
+        finally
+        {
+            Changed.BuildStatus = null;
+        }
     }
 
     /// <summary>Selects the revisions, the first one latest (as the WinForms grid lists them).</summary>

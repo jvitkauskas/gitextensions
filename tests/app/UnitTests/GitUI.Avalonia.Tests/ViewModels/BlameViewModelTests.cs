@@ -83,6 +83,25 @@ public sealed class BlameViewModelTests
     }
 
     [Test]
+    public async Task The_avatars_of_the_authors_are_shown_at_the_first_line_of_each_commit()
+    {
+        FakeHost host = new() { Options = new(ShowAuthorTime: false, ShowAuthorAvatar: true) };
+        BlameViewModel viewModel = Create(host);
+
+        await viewModel.LoadAsync(Revision, children: null, "src/file.cs");
+
+        viewModel.Avatars.Select(a => a is not null).Should().Equal(viewModel.AuthorLines.Select(l => l is not null));
+        host.Avatars.Should().BeEquivalentTo(["alice@example.org", "bob@example.org"], "one request per author, without <>");
+        viewModel.Avatars[0].Should().BeSameAs(viewModel.Avatars[4], "the same author");
+
+        // Not with the avatars hidden.
+        host.Avatars.Clear();
+        BlameViewModel hidden = Create(new FakeHost { Options = new(ShowAuthorTime: false, ShowAuthorAvatar: false) });
+        await hidden.LoadAsync(Revision, children: null, "src/file.cs");
+        hidden.Avatars.Should().BeEmpty();
+    }
+
+    [Test]
     public async Task Is_not_reloaded_unless_something_changed()
     {
         FakeHost host = new();
@@ -235,6 +254,14 @@ public sealed class BlameViewModelTests
         public void ShowRevisionFiltered(ObjectId objectId) => Filtered.Add(objectId);
 
         public void CopyToClipboard(string text) => Copied.Add(text);
+
+        public List<string> Avatars { get; } = [];
+
+        public Task<byte[]?> GetAvatarAsync(string email, string? name, int size, CancellationToken cancellationToken)
+        {
+            Avatars.Add(email);
+            return Task.FromResult<byte[]?>(System.Text.Encoding.UTF8.GetBytes(email));
+        }
 
         /// <summary>The items of a repository host plugin (plugin API v2), by default none.</summary>
         public IReadOnlyList<MenuModelItem> HostMenuItems { get; init; } = [];

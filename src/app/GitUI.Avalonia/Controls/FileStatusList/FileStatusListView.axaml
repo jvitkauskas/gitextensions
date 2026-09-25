@@ -150,11 +150,8 @@
         <StackPanel Orientation="Horizontal">
           <Button Name="clearGitGrepButton" Classes="toolbar" Content="✕" Command="{Binding ClearGitGrepCommand}" IsVisible="{Binding IsGitGrepActive}" />
           <!-- The expressions searched before (the items of cboFindInCommitFilesGitGrep). -->
-          <DropDownButton Name="gitGrepHistoryButton" Classes="toolbar" Padding="2,0" MinHeight="0" Height="22" VerticalAlignment="Center" IsVisible="{Binding HasGitGrepHistory}">
-            <DropDownButton.Flyout>
-              <MenuFlyout Placement="BottomEdgeAlignedRight" />
-            </DropDownButton.Flyout>
-          </DropDownButton>
+          <!-- The expressions searched before, in a menu read when it opens (FreshMenuFlyout). -->
+          <DropDownButton Name="gitGrepHistoryButton" Classes="toolbar" Padding="2,0" MinHeight="0" Height="22" VerticalAlignment="Center" IsVisible="{Binding HasGitGrepHistory}" />
         </StackPanel>
       </TextBox.InnerRightContent>
     </TextBox>
@@ -310,6 +307,7 @@
                       Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:False}" />
             <MenuItem Name="blameMenuItem" Header="{Binding MenuStrings.Blame.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanBlame}"
+                      ToggleType="CheckBox" IsChecked="{Binding IsBlameShown, Mode=OneWay}"
                       Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:True}" />
             <MenuItem Name="findFileMenuItem" Header="{Binding MenuStrings.FindFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowFindFile}" Command="{Binding FindFileCommand}" />

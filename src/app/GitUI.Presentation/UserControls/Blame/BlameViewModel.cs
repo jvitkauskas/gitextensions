@@ -75,6 +75,12 @@ public interface IBlameHost
     /// <param name="lineIndex">The 0-based index of the line of the menu.</param>
     /// <param name="blameId">The blamed revision.</param>
     IReadOnlyList<MenuModelItem> GetRepositoryHostMenuItems(string fileName, int lineIndex, ObjectId blameId) => [];
+
+    /// <summary>
+    ///  The avatar (PNG) of an author, or the placeholder (as <c>BlameControl</c> with <c>BlameShowAuthorAvatar</c>: the avatar
+    ///  provider, <c>Images.User80</c> without an email); none by default.
+    /// </summary>
+    Task<byte[]?> GetAvatarAsync(string email, string? name, int size, CancellationToken cancellationToken) => Task.FromResult<byte[]?>(null);
 }
 
 /// <summary>The revision grid that shows the blamed revision (<c>IRevisionGridInfo</c> and <c>IRevisionGridFileUpdate</c>).</summary>
@@ -141,6 +147,13 @@ public sealed partial class BlameViewModel : ObservableObject
     [ObservableProperty]
     public partial IReadOnlyList<int> AgeBuckets { get; private set; } = [];
 
+    /// <summary>
+    ///  The avatar (PNG) of the author at the first line of each commit, loaded after the blame (empty unless the avatars are
+    ///  shown); the same array for the lines of an author.
+    /// </summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<byte[]?> Avatars { get; private set; } = [];
+
     /// <summary>The commit whose lines are highlighted (the one under the mouse).</summary>
     [ObservableProperty]
     public partial GitBlameCommit? HighlightedCommit { get; private set; }
@@ -181,6 +194,7 @@ public sealed partial class BlameViewModel : ObservableObject
         Blame = null;
         AuthorLines = [];
         AgeBuckets = [];
+        Avatars = [];
         HighlightedCommit = null;
         File.Load("", fileName);
 
@@ -233,6 +247,59 @@ public sealed partial class BlameViewModel : ObservableObject
         }
 
         IsLoading = false;
+        if (options.ShowAuthorAvatar)
+        {
+            await LoadAvatarsAsync(blame, cancellationToken);
+        }
+    }
+
+    // The size of the avatars requested, scaled down to the height of a line in the gutter.
+    private const int AvatarSize = 32;
+
+    // As BlameControl.ProcessBlame: the avatar of the author of the first line of each commit, one request per email.
+    private async Task LoadAvatarsAsync(GitBlame blame, CancellationToken cancellationToken)
+    {
+        Dictionary<string, Task<byte[]?>> byEmail = [];
+        Task<byte[]?>?[] requests = new Task<byte[]?>?[blame.Lines.Count];
+        GitBlameCommit? lastCommit = null;
+        for (int i = 0; i < blame.Lines.Count; i++)
+        {
+            GitBlameCommit commit = blame.Lines[i].Commit;
+            if (commit != lastCommit)
+            {
+                string email = commit.AuthorMail?.Trim('<', '>') ?? "";
+                if (!byEmail.TryGetValue(email, out Task<byte[]?>? request))
+                {
+                    request = GetAvatarAsync(email, commit.Author, cancellationToken);
+                    byEmail[email] = request;
+                }
+
+                requests[i] = request;
+            }
+
+            lastCommit = commit;
+        }
+
+        await Task.WhenAll(byEmail.Values);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+#pragma warning disable VSTHRD103 // The tasks are complete.
+            Avatars = [.. requests.Select(request => request?.Result)];
+#pragma warning restore VSTHRD103
+        }
+    }
+
+    private async Task<byte[]?> GetAvatarAsync(string email, string? name, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _host.GetAvatarAsync(email, name, AvatarSize, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // No avatar, as the WinForms blame when the provider fails.
+            return null;
+        }
     }
 
     /// <summary>The line of the caret (1-based), which the view reports.</summary>

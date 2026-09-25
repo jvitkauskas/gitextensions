@@ -8,6 +8,14 @@ using GitUIPluginInterfaces;
 
 namespace GitUI.Presentation.CommandsDialogs;
 
+/// <summary>The "Stash" hotkey commands (the codes of <c>FormStash.Command</c>).</summary>
+public enum StashHotkeyCommand
+{
+    NextStash = 0,
+    PreviousStash = 1,
+    Refresh = 2,
+}
+
 /// <summary>Strings of the stash dialog; ids match <c>FormStash</c>.</summary>
 public sealed class StashStrings : ViewStrings
 {
@@ -134,6 +142,9 @@ public sealed partial class StashViewModel : DialogViewModel
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions);
         Viewer = new FileViewerViewModel(fileViewerHost);
 
+        // As Stashed.BindContextMenu(View.CherryPickAllChanges, ...).
+        Files.CherryPickChangesAction = CherryPickAllChanges;
+
         // As FileViewer_TopScrollReached and FileViewer_BottomScrollReached.
         Viewer.ScrollOnThrough(() => Files);
         Files.SelectionChanged += (_, _) =>
@@ -225,6 +236,31 @@ public sealed partial class StashViewModel : DialogViewModel
         {
             _host.Apply(stash.Name);
             Initialize();
+        }
+    }
+
+    /// <summary>As <c>FormStash.ExecuteCommand</c>: the "Stash" hotkeys.</summary>
+    public override bool ExecuteHotkeyCommand(int commandCode)
+    {
+        switch ((StashHotkeyCommand)commandCode)
+        {
+            case StashHotkeyCommand.NextStash: return SelectNextStash(next: true);
+            case StashHotkeyCommand.PreviousStash: return SelectNextStash(next: false);
+            case StashHotkeyCommand.Refresh:
+                Refresh();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>As the "Cherry pick changes" of the files (<c>View.CherryPickAllChanges</c>): all the changes of the file shown are applied.</summary>
+    private void CherryPickAllChanges()
+    {
+        int length = Viewer.Editor.Text.Length;
+        if (length > 0)
+        {
+            Viewer.ApplyLinePatch(LinePatchOperation.Stage, selectionStart: 0, selectionLength: length);
         }
     }
 

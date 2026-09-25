@@ -4,6 +4,7 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
@@ -30,6 +31,7 @@ internal static partial class AvaloniaDialogs
                     manageStashes,
                     initialStash);
                 UseFileStatusListMenu(viewModel.Files, commands, window);
+                window.Hotkeys = LoadHotkeys(commands, HotkeyCommands.StashSettingsName);
                 window.DataContext = viewModel;
                 return window;
             },

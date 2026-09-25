@@ -132,6 +132,7 @@ public enum FileHistoryTab
     Diff,
     View,
     Blame,
+    BuildReport,
 }
 
 /// <summary>The settings of the file history (the <c>AppSettings</c> it toggles).</summary>
@@ -304,7 +305,14 @@ public sealed partial class FileHistoryViewModel : DialogViewModel
         SelectedTab = IsBlameTabVisible && showBlame ? FileHistoryTab.Blame : FileHistoryTab.Diff;
         _initializing = false;
 
-        Grid.SelectionChanged += (_, _) => UpdateSelectedFileViewers();
+        Grid.SelectionChanged += (_, _) =>
+        {
+            UpdateSelectedFileViewers();
+
+            // As FillBuildReport: the report of a single selected revision.
+            IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
+            BuildReport?.SetRevision(selected.Count == 1 ? selected[0] : null);
+        };
 
         // As the WinForms grid without a revision to select: the first real revision is selected.
         Grid.Loaded += (_, _) =>
@@ -322,6 +330,37 @@ public sealed partial class FileHistoryViewModel : DialogViewModel
     public string FileName { get; }
 
     public RevisionGridViewModel Grid { get; }
+
+    /// <summary>The build report tab (<c>BuildReportTabPageExtension</c>), if any.</summary>
+    public BuildReportViewModel? BuildReport
+    {
+        get;
+        init
+        {
+            field = value;
+
+            // A hidden tab is not left selected.
+            value?.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(BuildReportViewModel.HasBuildReport) && !value.HasBuildReport && SelectedTab == FileHistoryTab.BuildReport)
+                {
+                    SelectedTab = FileHistoryTab.Commit;
+                }
+            };
+        }
+    }
+
+    /// <summary>The filters of the grid (the <c>ToolStripFilters</c> of the window, bound to its grid), if any.</summary>
+    public FilterToolBarViewModel? Filters { get; init; }
+
+    /// <summary>The strings of the Navigate and View menus (<c>FormBrowseMenus</c>).</summary>
+    public BrowsePluginStrings MenuStrings { get; } = ViewStrings.Load<BrowsePluginStrings>();
+
+    /// <summary>The items of the Navigate menu of the grid (<c>RevisionGrid.MenuCommands.NavigateMenuCommands</c>), if any.</summary>
+    public Func<IReadOnlyList<Services.MenuModelItem>>? NavigateMenuProvider { get; init; }
+
+    /// <summary>The items of the View menu of the grid (<c>RevisionGrid.MenuCommands.ViewMenuCommands</c>), if any.</summary>
+    public Func<IReadOnlyList<Services.MenuModelItem>>? ViewMenuProvider { get; init; }
 
     public CommitDiffViewModel CommitDiff { get; }
 
@@ -442,6 +481,7 @@ public sealed partial class FileHistoryViewModel : DialogViewModel
 
     partial void OnSelectedTabChanged(FileHistoryTab value)
     {
+        BuildReport?.IsTabShown = value == FileHistoryTab.BuildReport;
         if (!_initializing)
         {
             UpdateSelectedFileViewers();

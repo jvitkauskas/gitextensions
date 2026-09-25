@@ -320,6 +320,16 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     /// <summary>"Unstage selected" of the dialog instead of the one of the host (the <c>unstage</c> of <c>BindContextMenu</c>).</summary>
     public Action? UnstageSelectedAction { get; set; }
 
+    /// <summary>
+    ///  "Blame" of the main window (the <c>blame</c> of <c>BindContextMenu</c>): the blame shown in the tab (checked) instead of
+    ///  the dialog, if any.
+    /// </summary>
+    public Action? BlameAction { get; set; }
+
+    /// <summary>Whether the blame of the selected file is shown instead of its diff (<c>tsmiBlame.Checked</c>).</summary>
+    [ObservableProperty]
+    public partial bool IsBlameShown { get; set; }
+
     /// <summary>"Show in file tree" of the main window (the <c>openInFileTreeTab_AsBlame</c> of <c>BindContextMenu</c>), if any.</summary>
     public Action? ShowInFileTreeAction { get; set; }
 
@@ -626,7 +636,19 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     private void ShowInFolder() => MenuHost?.ShowInFolder(SelectedEntries, SelectedFolder);
 
     [RelayCommand]
-    private void ShowFileHistory(bool blame) => MenuHost?.ShowFileHistory(SelectedEntry, SelectedFolder, blame);
+    private void ShowFileHistory(bool blame)
+    {
+        if (blame && BlameAction is not null)
+        {
+            BlameAction();
+
+            // The check mark of the item as the action left it (a menu item toggles itself when clicked).
+            OnPropertyChanged(nameof(IsBlameShown));
+            return;
+        }
+
+        MenuHost?.ShowFileHistory(SelectedEntry, SelectedFolder, blame);
+    }
 
     [RelayCommand]
     private void ResetFiles(bool toParent)

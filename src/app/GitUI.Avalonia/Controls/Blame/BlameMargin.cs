@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls.Documents;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
 using GitExtensions.Extensibility.Git;
@@ -10,7 +11,7 @@ namespace GitUI.Avalonia.Controls.Blame;
 
 /// <summary>
 ///  The author gutter of the blame (the author viewer of <c>BlameControl</c> with its <c>BlameAuthorMargin</c>): the age of
-///  each line as a colored bar, and the author line where the commit changes.
+///  each line as a colored bar, the avatar of the author and the author line where the commit changes.
 /// </summary>
 internal sealed class BlameMargin : AbstractMargin
 {
@@ -21,6 +22,7 @@ internal sealed class BlameMargin : AbstractMargin
 
     private IReadOnlyList<string?> _authorLines = [];
     private IReadOnlyList<int> _ageBuckets = [];
+    private Bitmap?[] _avatars = [];
     private double _textWidth;
 
     /// <summary>The colors of the age buckets, oldest first.</summary>
@@ -53,7 +55,39 @@ internal sealed class BlameMargin : AbstractMargin
         InvalidateVisual();
     }
 
-    private double BarWidth => _ageBuckets.Count > 0 ? AgeBarWidth + Padding : 0;
+    /// <summary>The avatar (PNG) at the first line of each commit; decoded once per author.</summary>
+    public void SetAvatars(IReadOnlyList<byte[]?> avatars)
+    {
+        foreach (Bitmap? bitmap in _avatars.Distinct())
+        {
+            bitmap?.Dispose();
+        }
+
+        Dictionary<byte[], Bitmap?> decoded = new(ReferenceEqualityComparer.Instance);
+        _avatars = [.. avatars.Select(avatar => avatar is null ? null : decoded.TryGetValue(avatar, out Bitmap? bitmap) ? bitmap : decoded[avatar] = Decode(avatar))];
+        InvalidateVisual();
+    }
+
+    /// <summary>The avatars shown (for the tests).</summary>
+    internal IReadOnlyList<Bitmap?> ShownAvatars => _avatars;
+
+    private static Bitmap? Decode(byte[] png)
+    {
+        try
+        {
+            using MemoryStream stream = new(png);
+            return new Bitmap(stream);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    // As BlameAuthorMargin: the age bars and the avatars are shown together (BlameShowAuthorAvatar).
+    private double BarWidth => _ageBuckets.Count > 0 ? AgeBarWidth + Padding + AvatarWidth : 0;
+
+    private double AvatarWidth => TextView?.DefaultLineHeight is > 0 and double height ? height + TextGap : 0;
 
     protected override Size MeasureOverride(Size availableSize)
         => new(_authorLines.Count == 0 ? 0 : Math.Min(MaxGutterWidth, BarWidth + _textWidth + (2 * Padding) + TextGap), 0);
@@ -100,6 +134,12 @@ internal sealed class BlameMargin : AbstractMargin
             if (index < _ageBuckets.Count && _ageBuckets[index] < AgeBrushes.Count)
             {
                 context.FillRectangle(AgeBrushes[_ageBuckets[index]], new Rect(0, top, AgeBarWidth, visualLine.Height));
+            }
+
+            if (index < _avatars.Length && _avatars[index] is { } avatar)
+            {
+                double size = textView.DefaultLineHeight;
+                context.DrawImage(avatar, new Rect(AgeBarWidth + Padding, top, size, size));
             }
 
             if (_authorLines[index] is { } authorLine)

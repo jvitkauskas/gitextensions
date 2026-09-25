@@ -149,6 +149,10 @@ public partial class BlameView : UserControl
                 UpdateBlame();
                 break;
 
+            case nameof(BlameViewModel.Avatars):
+                _margin.SetAvatars(_viewModel!.Avatars);
+                break;
+
             case nameof(BlameViewModel.HighlightedCommit):
                 _margin.HighlightedCommit = _viewModel!.HighlightedCommit;
                 _highlight.HighlightedCommit = _viewModel.HighlightedCommit;
@@ -162,6 +166,7 @@ public partial class BlameView : UserControl
         BlameViewModel viewModel = _viewModel!;
         IReadOnlyList<GitExtensions.Extensibility.Git.GitBlameLine> lines = viewModel.Blame?.Lines ?? [];
         _margin.Update(lines, viewModel.AuthorLines, viewModel.AgeBuckets);
+        _margin.SetAvatars(viewModel.Avatars);
         _highlight.Lines = lines;
         _highlight.HighlightedCommit = null;
         _margin.HighlightedCommit = null;

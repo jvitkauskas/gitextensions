@@ -5,6 +5,7 @@ using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtensions.Extensibility.Plugins;
 using GitExtUtils;
+using GitExtUtils.GitUI;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
@@ -92,6 +93,22 @@ internal static partial class AvaloniaDialogs
         public void ShowRevisionFiltered(ObjectId objectId) => AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(Owner, objectId));
 
         public void CopyToClipboard(string text) => ClipboardUtil.TrySetText(text);
+
+        // As BlameControl.ProcessBlame: the avatar of the provider, or the default image without an email.
+        public async Task<byte[]?> GetAvatarAsync(string email, string? name, int size, CancellationToken cancellationToken)
+        {
+            Image? image = null;
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                image = await GitUI.Avatars.AvatarService.DefaultProvider.GetAvatarAsync(email, name, DpiUtil.Scale(size));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            image ??= Properties.Images.User80;
+            using MemoryStream stream = new();
+            image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            return stream.ToArray();
+        }
 
         // As ConfigureContextMenu, for the repository host plugins of API v2 (IBlameContextMenuProvider): their items for the line.
         public IReadOnlyList<MenuModelItem> GetRepositoryHostMenuItems(string fileName, int lineIndex, ObjectId blameId)

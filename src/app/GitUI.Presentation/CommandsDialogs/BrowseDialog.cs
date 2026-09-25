@@ -523,18 +523,21 @@ public sealed partial class BrowseViewModel : DialogViewModel
 
         // As the additionalCommandInfo of ShowSelectedFileDiffAsync: a range diff of the paths the grid is filtered by.
         Viewer.RangeDiffPathFilter = () => Filters?.State.PathFilter ?? "";
-        Files.SelectionChanged += (_, _) => _ = Viewer.ShowChangesAsync(Files.SelectedEntry);
+        Files.SelectionChanged += (_, _) => ShowDiffFile();
         Grid.SelectionChanged += (_, _) => ShowSelectedRevisions();
         InitializeFileTree(fileViewerHost, fileStatusListStrings, fileStatusTreeOptions);
+        InitializeBlame();
         InitializeFileMenus();
         InitializeGpg();
         InitializeConsole();
         InitializeWorkingDirectoryStatus();
         InitializeToolbar();
         InitializeOutputHistory();
+
+        // Before the layout, which may select another tab (UpdateBuildReport).
+        InitializeBuildReport();
         InitializeLayout();
         InitializeToolbarItems();
-        InitializeBuildReport();
 
         // As the WinForms grid without a revision to select: the current checkout (else the first revision) is selected.
         Grid.Loaded += (_, _) =>

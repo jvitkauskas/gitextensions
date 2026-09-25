@@ -227,6 +227,7 @@ internal sealed class WebView2BrowseWebView : IBrowseWebView, IEmbeddedNativeVie
             _controller = null;
             controller.CoreWebView2.NewWindowRequested -= OnNewWindowRequested;
             controller.CoreWebView2.NavigationCompleted -= OnNavigationCompleted;
+            controller.CoreWebView2.FaviconChanged -= OnFaviconChanged;
             controller.Close();
         }
 
@@ -263,6 +264,7 @@ internal sealed class WebView2BrowseWebView : IBrowseWebView, IEmbeddedNativeVie
             CoreWebView2 webView = controller.CoreWebView2;
             webView.NewWindowRequested += OnNewWindowRequested;
             webView.NavigationCompleted += OnNavigationCompleted;
+            webView.FaviconChanged += OnFaviconChanged;
             _navigation.SetReady(new Navigation(webView));
         }
         catch (Exception ex)
@@ -283,6 +285,43 @@ internal sealed class WebView2BrowseWebView : IBrowseWebView, IEmbeddedNativeVie
         {
             LastCompletedNavigationUrl = controller.CoreWebView2.Source;
         }
+    }
+
+    public event EventHandler<byte[]?>? IconChanged;
+
+    // As BuildReportWebBrowserOnNavigated: the favicon of the page, which WebView2 reads (no download of its own).
+    private void OnFaviconChanged(object? sender, object e)
+    {
+        if (_controller is not { } controller)
+        {
+            return;
+        }
+
+        CoreWebView2 webView = controller.CoreWebView2;
+        ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+        {
+            byte[]? icon = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(webView.FaviconUri))
+                {
+                    using Stream stream = await webView.GetFaviconAsync(CoreWebView2FaviconImageFormat.Png);
+                    using MemoryStream png = new();
+                    await stream.CopyToAsync(png);
+                    icon = png.Length > 0 ? png.ToArray() : null;
+                }
+            }
+            catch (Exception ex)
+            {
+                // As the WinForms tab: no propagation to the user if the icon cannot be read.
+                Trace.WriteLine($"The favicon of the build report could not be read: {ex.Message}");
+            }
+
+            if (!_disposed)
+            {
+                IconChanged?.Invoke(this, icon);
+            }
+        }).FileAndForget();
     }
 
     // The links that open a new window are opened in the default browser, not in a WebView2 popup window.

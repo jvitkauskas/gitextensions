@@ -110,18 +110,30 @@ public sealed partial class BrowseViewModel
 
         if (fileTree.SelectedEntry is null)
         {
-            _ = TreeViewer!.ShowChangesAsync(null);
+            ShowTreeFile();
         }
     }
 
+    // As ShowSelectedFile in file tree mode: the file, or its blame while "Blame" is checked (kept for the next files).
     private void ShowTreeFile()
     {
+        int? line = _pendingTreeLine;
+        _pendingTreeLine = null;
         if (FileTree!.SelectedEntry is { } entry && !entry.Item.IsStatusOnly)
         {
+            if (FileTree.IsBlameShown && TreeBlame is not null && FileTree.SelectedFolder is null)
+            {
+                IsTreeBlameVisible = true;
+                _ = LoadBlameAsync(TreeBlame, entry, line);
+                return;
+            }
+
+            IsTreeBlameVisible = false;
             _ = TreeViewer!.ShowFileAsync(entry.Item, entry.SecondRevision.ObjectId);
         }
         else
         {
+            IsTreeBlameVisible = false;
             _ = TreeViewer!.ShowChangesAsync(null);
         }
     }

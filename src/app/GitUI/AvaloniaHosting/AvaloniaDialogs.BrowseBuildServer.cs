@@ -56,6 +56,20 @@ internal static partial class AvaloniaDialogs
         public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
     }
 
+    /// <summary>The build report tab of the other windows (the file history), as the main window's.</summary>
+    private sealed class BuildReportHost(IGitUICommands commands) : IBrowseBuildReportHost
+    {
+        public bool IsBuildReportEnabled
+            => ShowBuildResultPageForTests ?? BuildServerSettings.ShowBuildResultPage.ValueOrDefault(commands.Module.GetEffectiveSettings());
+
+        public IBrowseWebView? CreateWebView()
+            => BrowseWebViews.Create(
+                BrowseWebViews.GetAvailableBrowserVersion,
+                () => new WebView2BrowseWebView(BrowseWebViews.UserDataFolder, OpenUrl));
+
+        public void OpenUrl(string url) => OsShellUtil.OpenUrlInDefaultBrowser(url);
+    }
+
     /// <summary>
     ///  Port of <c>BuildServerWatcher</c> for the Avalonia grid: after each load of the revisions, the build statuses of the
     ///  build server integration plugin (the configured or detected one) are set on the revisions shown

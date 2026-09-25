@@ -48,7 +48,20 @@ internal static partial class AvaloniaDialogs
         {
             MultiSelect = true,
         };
-        window.Closed += (_, _) => grid.Dispose();
+
+        // As the BuildServerWatcher of its RevisionGridControl: the build statuses of the revisions, for the build report tab.
+        ApplyColumns(grid);
+        GridBuildServerWatcher buildServerWatcher = new(commands, grid, () => new NativeWindowOwner(window));
+        window.Closed += (_, _) =>
+        {
+            buildServerWatcher.Dispose();
+            grid.Dispose();
+        };
+        BrowseGridFilter gridFilter = new(commands, () => new NativeWindowOwner(window), filter) { Grid = grid };
+        RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => grid.Load(grid.SelectedRow?.ObjectId))
+        {
+            Filter = gridFilter,
+        };
         FileViewerHost fileViewerHost = new(commands);
         CommitDiffViewModel commitDiff = new(
             ViewStrings.Load<CommitDiffStrings>(),
@@ -69,7 +82,14 @@ internal static partial class AvaloniaDialogs
             blame,
             host.FileName,
             revision?.ObjectId,
-            showBlame);
+            showBlame)
+        {
+            // As ToolStripFilters.Bind and the menus of FormBrowseMenus in the toolbar: the filters, Navigate and View of the grid.
+            Filters = new FilterToolBarViewModel(ViewStrings.Load<FilterToolBarStrings>(), gridFilter),
+            BuildReport = new BuildReportViewModel(new BuildReportHost(commands)),
+            NavigateMenuProvider = gridMenu.CreateNavigateItems,
+            ViewMenuProvider = gridMenu.CreateViewItems,
+        };
         window.DataContext = viewModel;
 
         // As FormFileHistory.LoadCustomDifftools: the difftools of the submenus of the grid.

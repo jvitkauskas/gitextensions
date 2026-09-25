@@ -21,6 +21,10 @@ public partial class FileHistoryWindow : DialogWindow
 
         // As OnRuntimeLoad: the history is loaded once the window is shown.
         Opened += (_, _) => Dispatcher.UIThread.Post(() => _viewModel?.Initialize());
+
+        // The Navigate and View menus of the grid, built when opened (as the menus of FormBrowseMenus).
+        FillMenuOnOpening(navigateMenuButton, () => _viewModel?.NavigateMenuProvider?.Invoke());
+        FillMenuOnOpening(viewMenuButton, () => _viewModel?.ViewMenuProvider?.Invoke());
         tabs.SelectionChanged += (_, _) =>
         {
             if (!_updatingTab && _viewModel is not null && GetTab(tabs.SelectedItem) is { } tab)
@@ -91,6 +95,7 @@ public partial class FileHistoryWindow : DialogWindow
                 FileHistoryTab.Commit => commitTab,
                 FileHistoryTab.Diff => diffTab,
                 FileHistoryTab.View => viewTab,
+                FileHistoryTab.BuildReport => buildReportTab,
                 _ => blameTab,
             };
         }
@@ -105,9 +110,13 @@ public partial class FileHistoryWindow : DialogWindow
             : item == diffTab ? FileHistoryTab.Diff
             : item == viewTab ? FileHistoryTab.View
             : item == blameTab ? FileHistoryTab.Blame
+            : item == buildReportTab ? FileHistoryTab.BuildReport
             : null;
 
     /// <summary>As <c>FileHistoryContextMenuOpening</c>, with the copy menu of the selected revisions.</summary>
+    private static void FillMenuOnOpening(DropDownButton button, Func<IReadOnlyList<Presentation.Services.MenuModelItem>?> getItems)
+        => FreshMenuFlyout.ShowOnClick(button, () => MenuModelRenderer.CreateItems(getItems() ?? []));
+
     private void FillCustomDiffTools(MenuItem item, bool toLocal)
     {
         item.Items.Clear();

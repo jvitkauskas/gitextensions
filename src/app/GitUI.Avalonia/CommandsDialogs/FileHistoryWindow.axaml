@@ -26,7 +26,7 @@
     </Style>
   </Window.Styles>
   <DockPanel Margin="4">
-    <!-- Equivalent of ToolStripFilters with the items of FormFileHistory (the filters of the grid are not ported yet). -->
+    <!-- Equivalent of ToolStripFilters with the items of FormFileHistory: the filters of the grid, Navigate and View. -->
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="0,0,0,4">
       <!-- Equivalent of the ToolStripSplitButton: loads the history, its drop down holds the "on show" options -->
       <SplitButton Name="loadButton" Classes="toolbar" Command="{Binding LoadFileHistoryCommand}" ToolTip.Tip="{Binding Strings.LoadFileHistory.Text}">
@@ -74,6 +74,12 @@
       <Button Name="gitCommandLogButton" Classes="toolbar" Command="{Binding ShowGitCommandLogCommand}" ToolTip.Tip="{Binding Strings.GitCommandLog.Text}">
         <Image Source="avares://GitUI.Avalonia/Assets/GitCommandLog.png" Width="16" Height="16" />
       </Button>
+      <!-- As InsertRevisionGridMainMenuItems: the Navigate and View menus of the grid. -->
+      <DropDownButton Name="navigateMenuButton" Classes="toolbar" Content="{Binding MenuStrings.NavigateMenu.PlainText}"
+                      IsVisible="{Binding NavigateMenuProvider, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <DropDownButton Name="viewMenuButton" Classes="toolbar" Content="{Binding MenuStrings.ViewMenu.PlainText}"
+                      IsVisible="{Binding ViewMenuProvider, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <rg:FilterToolBarView Name="filterToolBar" DataContext="{Binding Filters}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </StackPanel>
     <Grid RowDefinitions="220,Auto,*">
       <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding IsGridVisible}">
@@ -172,6 +178,28 @@
             </StackPanel>
           </TabItem.Header>
           <b:BlameView Name="blame" DataContext="{Binding Blame}" />
+        </TabItem>
+        <!-- BuildReportTabPageExtension: the report of the build status of the selected revision, or a link to it. -->
+        <TabItem Name="buildReportTab" x:DataType="vm:BuildReportViewModel" DataContext="{Binding $parent[Window].((vm:FileHistoryViewModel)DataContext).BuildReport}"
+                 IsVisible="{Binding HasBuildReport, FallbackValue=False}">
+          <TabItem.Header>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Panel Width="16" Height="16">
+                <Image Source="avares://GitUI.Avalonia/Assets/Integration.png" IsVisible="{Binding BuildReportIcon, Converter={x:Static ObjectConverters.IsNull}}" />
+                <Image Name="buildReportIcon" Source="{Binding BuildReportIcon, Converter={x:Static rg:AvatarConverter.Instance}}"
+                       IsVisible="{Binding BuildReportIcon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              </Panel>
+              <TextBlock Text="{Binding Strings.BuildReportTab.PlainText}" />
+            </StackPanel>
+          </TabItem.Header>
+          <Panel>
+            <c:EmbeddedNativeViewPresenter Name="buildReportView" View="{Binding BuildReportView}" IsVisible="{Binding IsBuildReportInTab}" />
+            <Button Name="openBuildReport" Classes="link" Command="{Binding OpenBuildReportCommand}" IsVisible="{Binding !IsBuildReportInTab}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand">
+              <TextBlock Text="{Binding Strings.OpenReport.Text}" FontSize="21" TextDecorations="Underline"
+                         Foreground="{DynamicResource SystemControlHighlightAccentBrush}" />
+            </Button>
+          </Panel>
         </TabItem>
       </TabControl>
     </Grid>

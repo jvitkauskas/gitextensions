@@ -4,6 +4,7 @@ using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
+using GitUI.Hotkey;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.FileStatusList;
@@ -26,10 +27,17 @@ internal static partial class AvaloniaDialogs
 
         // As the RevisionGridControl of FormLog: its default filter, the artificial commits and a multiple selection.
         RevisionGridHost gridHost = new(commands, GetRevisionFilterFactory(showCurrentBranchOnly: false, lastRevisionToDisplayHash: null), showArtificial: true);
-        RevisionGridViewModel grid = new(gridHost, new RevisionGridDisplayOptions(AppSettings.RelativeDate, AppSettings.ShowAuthorDate, TranslatedStrings.SearchingFor, AppSettings.RevisionGridQuickSearchTimeout))
+        RevisionGridViewModel grid = new(gridHost, GetDisplayOptions())
         {
             MultiSelect = true,
         };
+
+        // As the RevisionGridControl of FormLog: the columns, the menu and the hotkeys of the grid (as in the main window).
+        ApplyColumns(grid);
+        RevisionGridMenuBuilder gridMenu = new((GitUICommands)commands, () => new NativeWindowOwner(window), grid, () => grid.Load(grid.SelectedRow?.ObjectId));
+        grid.ContextMenuProvider = gridMenu.Build;
+        grid.Hotkeys = LoadHotkeys(commands, HotkeyCommands.RevisionGridSettingsName);
+        grid.CommandHandler = gridMenu.ExecuteCommand;
         ObjectId currentCheckout = commands.Module.GetCurrentCheckout();
         LogViewModel viewModel = new(
             ViewStrings.Load<LogStrings>(),
