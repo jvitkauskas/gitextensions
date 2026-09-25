@@ -59,7 +59,7 @@ with the macOS fonts: the stash, commit, push, create branch and settings dialog
 Seen on macOS and fixed on every system: Cmd/Ctrl+C in the revision grid copies the hashes of the selection again (the
 DataGrid copied its empty template cells), the commit dialog gives the focus to the unstaged files, the message or Amend
 once its files are loaded (as `LoadUnstagedOutput`), and `dotnet GitExtensions.dll` takes the folder of the application
-rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`).
+rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`), and the translation target runs off Windows.
 
 ## Rules
 
@@ -99,8 +99,8 @@ rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`).
 - Translations: a new or changed string of a strings class (`GitUI.Presentation/**/*Strings.cs`) needs English.xlf
   regenerated: `cd src/app/GitExtensions && dotnet msbuild -p:Configuration=Release -t:_UpdateEnglishTranslations
   -p:RunTranslationApp=true`. `ViewStringsTests` fails until then; new strings classes are added to its list. The target
-  runs on Windows only (`TranslationApp.exe`, `findstr`), and `dotnet TranslationApp.dll` on macOS writes an incomplete
-  English.xlf (most strings missing): off Windows add the entries by hand, in the order of their neighbors.
+  also runs off Windows (`dotnet TranslationApp.dll`, `grep`); it wrote an incomplete English.xlf there before, since the
+  plugins were looked for next to `dotnet` (`ManagedExtensibility` now uses `AppContext.BaseDirectory`).
 - CI has not run on this branch: `app-build.yml` builds `master`, `release*` and `experimental/**` pushes and pull
   requests only (add the branch, or use `workflow_dispatch`, to get the Linux job and the Windows publish with the MSI).
 - A portable copy of the app for smoke tests: copy `artifacts/Release/bin/GitExtensions/net10.0` to another folder,
