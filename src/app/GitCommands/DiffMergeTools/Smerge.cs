@@ -6,10 +6,11 @@ internal sealed class Smerge : DiffMergeTool
     public override string ExeFileName => OperatingSystem.IsWindows() ? "smerge.exe" : "smerge";
 
     /// <inheritdoc />
-    public override string DiffCommand => "mergetool \"$LOCAL\" \"$REMOTE\" -o=\"$MERGED\"";
+    /// <remarks>The output is <c>-o merged</c> (as git's definition of smerge): <c>-o=merged</c> is not read, the tool asks where to save.</remarks>
+    public override string DiffCommand => "mergetool \"$LOCAL\" \"$REMOTE\" -o \"$MERGED\"";
 
     /// <inheritdoc />
-    public override string MergeCommand => "mergetool \"$BASE\" \"$LOCAL\" \"$REMOTE\" -o=\"$MERGED\"";
+    public override string MergeCommand => "mergetool \"$BASE\" \"$LOCAL\" \"$REMOTE\" -o \"$MERGED\"";
 
     /// <inheritdoc />
     public override string Name => "smerge";

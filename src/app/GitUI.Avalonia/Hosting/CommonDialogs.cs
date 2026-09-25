@@ -7,6 +7,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using GitExtensions.Extensibility;
 using GitExtUtils;
 using GitUI.Presentation.HelperDialogs;
@@ -136,6 +137,7 @@ public sealed class ColorPickerWindow : DialogWindow
             Margin = new Thickness(12),
             Name = "colorView",
         };
+        ColorView.Loaded += (_, _) => DrawTabIcons(ColorView);
 
         Button ok = DialogBoxParts.CreateButton(strings.Ok.Text, "okButton");
         ok.IsDefault = true;
@@ -161,6 +163,21 @@ public sealed class ColorPickerWindow : DialogWindow
     }
 
     public ColorView ColorView { get; }
+
+    /// <summary>
+    ///  Makes the icons of the tabs of <paramref name="view"/> drawn: Avalonia (12.1) draws nothing for a <see cref="PathGeometry"/>
+    ///  stretched by a shape, as the icons of the Fluent theme of the color view are, but draws it inside a group.
+    /// </summary>
+    private static void DrawTabIcons(ColorView view)
+    {
+        foreach (PathIcon icon in view.GetVisualDescendants().OfType<PathIcon>())
+        {
+            if (icon.Data is PathGeometry geometry)
+            {
+                icon.Data = new GeometryGroup { FillRule = geometry.FillRule, Children = { geometry } };
+            }
+        }
+    }
 
     /// <summary>The chosen color, once accepted.</summary>
     public DrawingColor? SelectedColor { get; private set; }

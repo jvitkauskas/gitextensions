@@ -258,6 +258,41 @@ public sealed class DialogBoxViewTests : HeadlessTest
     });
 
     [Test]
+    public Task ColorPicker_draws_the_icons_of_the_tabs() => OnUiThreadAsync(() =>
+    {
+        UseTheme(ThemeVariant.Light);
+        ColorPickerWindow window = Show(new ColorPickerWindow(System.Drawing.Color.Red, new DialogBoxStrings()));
+        PathIcon[] icons = [.. window.ColorView.GetVisualDescendants().OfType<PathIcon>()];
+        icons.Should().HaveCount(3);
+
+        using global::Avalonia.Media.Imaging.WriteableBitmap frame = window.CaptureRenderedFrame()!;
+        using global::Avalonia.Platform.ILockedFramebuffer buffer = frame.Lock();
+        byte[] pixels = new byte[buffer.RowBytes * buffer.Size.Height];
+        System.Runtime.InteropServices.Marshal.Copy(buffer.Address, pixels, 0, pixels.Length);
+        foreach (PathIcon icon in icons)
+        {
+            // The dark pixels of the icon (Bgra8888, 1 pixel per unit) on the light gray of the tab strip.
+            global::Avalonia.Point origin = global::Avalonia.VisualExtensions.TranslatePoint(icon, default, window)!.Value;
+            int dark = 0;
+            for (int y = (int)origin.Y; y < (int)(origin.Y + icon.Bounds.Height); y++)
+            {
+                for (int x = (int)origin.X; x < (int)(origin.X + icon.Bounds.Width); x++)
+                {
+                    int i = (y * buffer.RowBytes) + (x * 4);
+                    if (pixels[i] + pixels[i + 1] + pixels[i + 2] < 3 * 128)
+                    {
+                        dark++;
+                    }
+                }
+            }
+
+            dark.Should().BeGreaterThan(10);
+        }
+
+        window.Close();
+    });
+
+    [Test]
     public Task FontPicker_gives_the_family_size_and_style_chosen() => OnUiThreadAsync(() =>
     {
         FontPickerWindow window = Show(new FontPickerWindow(null, fixedPitchOnly: false, new DialogBoxStrings()));

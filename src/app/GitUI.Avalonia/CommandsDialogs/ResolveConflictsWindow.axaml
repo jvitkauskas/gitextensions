@@ -14,8 +14,10 @@
     <KeyBinding Gesture="{h:PlatformGesture Ctrl+D3}" Command="{Binding ChooseBaseCommand}" />
   </Window.KeyBindings>
   <Window.Styles>
+    <!-- The width of the WinForms buttons at least, wider as the text of the font needs (the font of macOS is wider). -->
     <Style Selector="StackPanel#buttonsPanel > Button">
-      <Setter Property="Width" Value="140" />
+      <Setter Property="MinWidth" Value="140" />
+      <Setter Property="MaxWidth" Value="240" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
     </Style>
   </Window.Styles>

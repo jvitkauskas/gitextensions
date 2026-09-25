@@ -39,12 +39,15 @@ terminal tab (zsh); git from Homebrew; editors (TextEdit with `open -W -n -e` wa
 macOS's OpenSSH (`ssh-add` of a key with a passphrase); the Keychain (opt-in test); Cmd for the shortcuts; the
 application menu (About, Settings with Cmd+,, Quit that closes the windows) and the main menu in the menu bar, with the
 shortcuts, also over the other windows; the order of the dialog buttons; the
-default UI font (13 pixels, it was 17); the scaling of Retina displays (`DpiUtil`).
+default UI font (13 pixels, it was 17); the scaling of Retina displays (`DpiUtil`); a merge in each installed merge tool
+(FileMerge, KDiff3, Meld, P4Merge, Sublime Merge, Beyond Compare, VS Code); a push over SSH to an OpenSSH server (host
+key and passphrase asked) and over HTTPS to GitHub; the credentials of a build server in the Keychain (a fake Jenkins);
+the color picker of the remotes.
 
 Left for macOS, in batches:
 
-1. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), merges in each tool, a push over
-   SSH to a server, the credentials from the plugin settings, the color picker.
+1. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), the credentials page of a plugin
+   (no plugin of the repository has a `CredentialsSetting`; the build server credentials were checked).
 2. **Phase 6**: the `.app` bundle, signing and notarization. The application cannot start while the display sleeps
    or the screen is locked (Avalonia.Native: "not able to start the RenderTimer", -6661).
 
@@ -60,6 +63,9 @@ Seen on macOS and fixed on every system: Cmd/Ctrl+C in the revision grid copies 
 DataGrid copied its empty template cells), the commit dialog gives the focus to the unstaged files, the message or Amend
 once its files are loaded (as `LoadUnstagedOutput`), and `dotnet GitExtensions.dll` takes the folder of the application
 rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`), and the translation target runs off Windows.
+Also: Sublime Merge's output option (`-o "$MERGED"`; it asked where to save), the icons of the tabs of the color picker
+(Avalonia 12.1 draws no stretched `PathGeometry`, as Fluent's `ColorView` icons are: they are drawn inside a
+`GeometryGroup`), and the buttons of the conflicts dialog grow with their text ("Rescan merge conflicts" was cut).
 
 ## Rules
 
