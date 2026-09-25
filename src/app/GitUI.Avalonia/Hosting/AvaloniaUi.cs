@@ -133,7 +133,7 @@ public static class AvaloniaUi
         try
         {
             AppBuilder.Configure<GitExtensionsAvaloniaApp>()
-                .UseWin32()
+                .UsePlatformDetect()
                 .UseSkia()
                 .UseHarfBuzz()
                 .SetupWithoutStarting();

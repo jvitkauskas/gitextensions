@@ -38,6 +38,9 @@ internal static class Program
             AppDomain.CurrentDomain.ProcessExit += (s, e) => BugReportInvoker.IgnoreFailedToLoadAnAssembly = true;
         }
 
+        // The message boxes and task dialogs off Windows (docs/avalonia-port/CROSS-PLATFORM.md, phase 2).
+        GitUI.AvaloniaHosting.AvaloniaDialogBoxHost.Register();
+
         ServiceContainerRegistry.RegisterServices(_serviceContainer);
         BugReportInvoker.ExecutorProvider = _serviceContainer.GetRequiredService<IGitExecutorProvider>();
 

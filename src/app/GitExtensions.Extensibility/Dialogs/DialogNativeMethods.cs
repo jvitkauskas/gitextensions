@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace GitExtensions.Extensibility;
 
 /// <summary>The Win32 functions of the native message box and task dialog.</summary>
+[SupportedOSPlatform("windows")]
 internal static class DialogNativeMethods
 {
     [DllImport("user32.dll")]

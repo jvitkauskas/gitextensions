@@ -52,7 +52,10 @@ public enum MessageBoxDefaultButton
     Button4 = 0x00000300,
 }
 
-/// <summary>The native (Win32) message box, as the WinForms <c>MessageBox</c> shows it.</summary>
+/// <summary>
+///  The native (Win32) message box, as the WinForms <c>MessageBox</c> shows it; off Windows the message box of the UI of the
+///  application (<see cref="DialogBoxHost"/>).
+/// </summary>
 public static class NativeMessageBox
 {
     /// <summary>
@@ -60,6 +63,16 @@ public static class NativeMessageBox
     /// </summary>
     public static DialogResult Show(IWin32Window? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
     {
+        if (DialogBoxHost.Active is { } host)
+        {
+            return host.ShowMessageBox(owner?.Handle ?? 0, text, caption, buttons, icon, defaultButton);
+        }
+
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException();
+        }
+
         nint hwndOwner = owner?.Handle ?? 0;
         if (hwndOwner == 0)
         {

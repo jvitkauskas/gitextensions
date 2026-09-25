@@ -905,6 +905,24 @@
       <Component Id="Avalonia.Win32.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Avalonia.Win32.dll" />
       </Component>
+      <Component Id="Avalonia.Desktop.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Desktop.dll" />
+      </Component>
+      <Component Id="Avalonia.FreeDesktop.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.FreeDesktop.dll" />
+      </Component>
+      <Component Id="Avalonia.FreeDesktop.AtSpi.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.FreeDesktop.AtSpi.dll" />
+      </Component>
+      <Component Id="Avalonia.Native.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Native.dll" />
+      </Component>
+      <Component Id="Avalonia.X11.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.X11.dll" />
+      </Component>
+      <Component Id="Tmds.DBus.Protocol.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Tmds.DBus.Protocol.dll" />
+      </Component>
       <Component Id="CommunityToolkit.Mvvm.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\CommunityToolkit.Mvvm.dll" />
       </Component>
@@ -1035,6 +1053,12 @@
       <ComponentRef Id="Avalonia.Vulkan.dll" />
       <ComponentRef Id="Avalonia.Win32.Automation.dll" />
       <ComponentRef Id="Avalonia.Win32.dll" />
+      <ComponentRef Id="Avalonia.Desktop.dll" />
+      <ComponentRef Id="Avalonia.FreeDesktop.dll" />
+      <ComponentRef Id="Avalonia.FreeDesktop.AtSpi.dll" />
+      <ComponentRef Id="Avalonia.Native.dll" />
+      <ComponentRef Id="Avalonia.X11.dll" />
+      <ComponentRef Id="Tmds.DBus.Protocol.dll" />
       <ComponentRef Id="CommunityToolkit.Mvvm.dll" />
       <ComponentRef Id="GitUI.Avalonia.dll" />
       <ComponentRef Id="GitUI.Presentation.dll" />

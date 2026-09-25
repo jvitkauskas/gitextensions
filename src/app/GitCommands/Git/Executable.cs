@@ -291,7 +291,17 @@ public sealed class Executable : IExecutable
 
         public void Kill(bool entireProcessTree) => _process.Kill(entireProcessTree);
 
-        public void WaitForInputIdle() => _process.WaitForInputIdle();
+        public void WaitForInputIdle()
+        {
+            try
+            {
+                _process.WaitForInputIdle();
+            }
+            catch (InvalidOperationException) when (_process.HasExited)
+            {
+                // A process that exits at once (e.g. a launcher, or a second pageant) has nothing to wait for.
+            }
+        }
 
 #pragma warning disable VSTHRD003 // Avoid awaiting foreign Tasks
         public Task<int> WaitForExitAsync() => _exitTaskCompletionSource.Task;

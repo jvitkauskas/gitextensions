@@ -1234,6 +1234,62 @@ Please make sure that Git for Windows is installed or set the correct command ma
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="DialogBoxes" source-language="en">
+    <body>
+      <trans-unit id="abort.Text">
+        <source>&amp;Abort</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="cancel.Text">
+        <source>Cancel</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="close.Text">
+        <source>&amp;Close</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="continue.Text">
+        <source>C&amp;ontinue</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="help.Text">
+        <source>Help</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="hideDetails.Text">
+        <source>Hide details</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="ignore.Text">
+        <source>&amp;Ignore</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="no.Text">
+        <source>&amp;No</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="ok.Text">
+        <source>OK</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="retry.Text">
+        <source>&amp;Retry</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="showDetails.Text">
+        <source>Show details</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="tryAgain.Text">
+        <source>&amp;Try Again</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="yes.Text">
+        <source>&amp;Yes</source>
+        <target />
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="DiffViewerSettingsPage" source-language="en">
     <body>
       <trans-unit id="$this.Text">

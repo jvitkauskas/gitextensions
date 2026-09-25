@@ -63,6 +63,7 @@ public sealed class ViewStringsTests
         yield return new TestCaseData(new FilePromptStrings()).SetArgDisplayNames(nameof(FilePromptStrings));
         yield return new TestCaseData(new PuttyErrorStrings()).SetArgDisplayNames(nameof(PuttyErrorStrings));
         yield return new TestCaseData(new SelectMultipleBranchesStrings()).SetArgDisplayNames(nameof(SelectMultipleBranchesStrings));
+        yield return new TestCaseData(new DialogBoxStrings()).SetArgDisplayNames(nameof(DialogBoxStrings));
         yield return new TestCaseData(new ChooseTranslationStrings()).SetArgDisplayNames(nameof(ChooseTranslationStrings));
         yield return new TestCaseData(new AvailableEncodingsStrings()).SetArgDisplayNames(nameof(AvailableEncodingsStrings));
         yield return new TestCaseData(new AddSubmoduleStrings()).SetArgDisplayNames(nameof(AddSubmoduleStrings));

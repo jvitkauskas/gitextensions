@@ -97,7 +97,9 @@ public class TaskDialogButton
 
     public static bool operator !=(TaskDialogButton? left, TaskDialogButton? right) => !(left == right);
 
-    internal bool OnClick()
+    /// <summary>Raises <see cref="Click"/>, as when the button is clicked (for the dialogs of other UI than Win32).</summary>
+    /// <returns>Whether the dialog closes (<see cref="AllowCloseDialog"/>).</returns>
+    public bool PerformClick()
     {
         Click?.Invoke(this, EventArgs.Empty);
         return AllowCloseDialog;
@@ -185,11 +187,13 @@ public sealed class TaskDialogPage
 
     public event EventHandler<TaskDialogLinkClickedEventArgs>? LinkClicked;
 
-    internal void OnLinkClicked(string href) => LinkClicked?.Invoke(this, new TaskDialogLinkClickedEventArgs(href));
+    /// <summary>Raises <see cref="LinkClicked"/>, as when the link is clicked (for the dialogs of other UI than Win32).</summary>
+    public void PerformLinkClick(string href) => LinkClicked?.Invoke(this, new TaskDialogLinkClickedEventArgs(href));
 }
 
 /// <summary>
-///  The native (comctl32) task dialog, as the WinForms <c>TaskDialog</c> shows it (docs/avalonia-port/PLAN.md, phase 8).
+///  The native (comctl32) task dialog, as the WinForms <c>TaskDialog</c> shows it (docs/avalonia-port/PLAN.md, phase 8); off
+///  Windows the task dialog of the UI of the application (<see cref="DialogBoxHost"/>).
 /// </summary>
 public static class TaskDialog
 {
@@ -226,6 +230,17 @@ public static class TaskDialog
     {
         ArgumentNullException.ThrowIfNull(page);
 
+        if (DialogBoxHost.Active is { } host)
+        {
+            return host.ShowTaskDialog(hwndOwner, page);
+        }
+
+        return OperatingSystem.IsWindows() ? ShowNativeDialog(hwndOwner, page) : throw new PlatformNotSupportedException();
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static TaskDialogButton ShowNativeDialog(nint hwndOwner, TaskDialogPage page)
+    {
         if (hwndOwner == 0)
         {
             hwndOwner = DialogNativeMethods.GetActiveWindow();
@@ -342,9 +357,9 @@ public static class TaskDialog
 
                             break;
                         case TDN_BUTTON_CLICKED:
-                            return ButtonOf((int)wordParameter) is { } clicked && !clicked.OnClick() ? S_FALSE : S_OK;
+                            return ButtonOf((int)wordParameter) is { } clicked && !clicked.PerformClick() ? S_FALSE : S_OK;
                         case TDN_HYPERLINK_CLICKED:
-                            page.OnLinkClicked(Marshal.PtrToStringUni(longParameter) ?? "");
+                            page.PerformLinkClick(Marshal.PtrToStringUni(longParameter) ?? "");
                             break;
                         case TDN_VERIFICATION_CLICKED:
                             page.Verification?.Checked = wordParameter != 0;

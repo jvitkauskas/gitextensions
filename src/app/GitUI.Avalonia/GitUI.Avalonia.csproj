@@ -4,6 +4,7 @@
     Deliberately WinForms-free: interop with WinForms happens through native window handles only.
   -->
   <PropertyGroup>
+    <TargetFramework>$(PortableTargetFramework)</TargetFramework>
     <UseSystemDrawing>false</UseSystemDrawing>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
@@ -17,7 +18,7 @@
     <PackageReference Include="Avalonia.HarfBuzz" />
     <PackageReference Include="Avalonia.Skia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia.Win32" />
+    <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Iciclecreek.Avalonia.Terminal" />
   </ItemGroup>
 

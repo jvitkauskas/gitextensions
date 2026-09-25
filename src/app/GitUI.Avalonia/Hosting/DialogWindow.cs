@@ -233,6 +233,7 @@ public class DialogWindow : Window
     ///  A dialog whose height follows its content can only be resized horizontally (as the WinForms forms that fix
     ///  their height through <c>MinimumSize</c> / <c>MaximumSize</c>).
     /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     private nint WndProcHook(nint handle, uint msg, nint wordParameter, nint longParameter, ref bool handled)
     {
         if (!CanResize || SizeToContent != SizeToContent.Height)
@@ -253,6 +254,7 @@ public class DialogWindow : Window
     }
 
     /// <summary>The top and bottom borders do not resize the dialog.</summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     private static nint HitTestHorizontalBordersOnly(nint handle, uint msg, nint wordParameter, nint longParameter, ref bool handled)
     {
         nint hit = NativeMethods.DefWindowProc(handle, msg, wordParameter, longParameter);
@@ -275,6 +277,7 @@ public class DialogWindow : Window
     /// <remarks>
     ///  Avalonia would otherwise drop <see cref="SizeToContent.Height"/> on such a resize.
     /// </remarks>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     private void KeepContentHeight(nint handle, nint windowPosPointer)
     {
         NativeMethods.WINDOWPOS windowPos = Marshal.PtrToStructure<NativeMethods.WINDOWPOS>(windowPosPointer);

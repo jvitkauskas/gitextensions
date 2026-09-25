@@ -5,14 +5,21 @@ using Avalonia.Threading;
 namespace GitUI.Avalonia.Hosting;
 
 /// <summary>
-///  Shows Avalonia dialogs modally over native (WinForms) owner windows.
+///  Shows Avalonia dialogs modally over their owner windows, given by native handle.
 /// </summary>
 /// <remarks>
-///  Avalonia's own <c>ShowDialog</c> only accepts an Avalonia owner. While WinForms owns the main window, this
-///  reproduces what WinForms' <c>Form.ShowDialog</c> does: it disables the other windows of the UI thread, sets the
-///  native owner (so the dialog stays above it and is minimised with it), and runs a nested message loop until
-///  the dialog closes. Avalonia's loop dispatches all Win32 messages of the thread, so WinForms windows keep
-///  painting, and WinForms/JoinableTaskFactory continuations posted to the UI thread keep running.
+///  <para>
+///   On Windows the owner may be any native window (Avalonia's own <c>ShowDialog</c> only accepts an Avalonia owner), so
+///   this reproduces what WinForms' <c>Form.ShowDialog</c> did: it disables the other windows of the UI thread, sets the
+///   native owner (so the dialog stays above it and is minimised with it), and runs a nested message loop until the
+///   dialog closes. Avalonia's loop dispatches all Win32 messages of the thread, so native windows keep painting.
+///  </para>
+///  <para>
+///   Elsewhere every owner is an Avalonia window (<see cref="DialogWindow.NativeHandle"/> is the handle of its platform,
+///   e.g. an X11 window), so the dialog is shown with Avalonia's <c>ShowDialog</c> over the open window of that handle, in
+///   a nested dispatcher frame too (docs/avalonia-port/CROSS-PLATFORM.md, phase 2): the callers still get the result when
+///   the call returns.
+///  </para>
 /// </remarks>
 public static class AvaloniaDialogHost
 {
@@ -30,9 +37,16 @@ public static class AvaloniaDialogHost
     /// <summary>The open window of <paramref name="handle"/> (or of a window it contains), if any.</summary>
     public static DialogWindow? FindOpenWindow(nint handle)
     {
-        nint root = handle == 0 ? 0 : NativeMethods.GetAncestor(handle, NativeMethods.GA_ROOT);
+        nint root = handle == 0 ? 0 : OperatingSystem.IsWindows() ? NativeMethods.GetAncestor(handle, NativeMethods.GA_ROOT) : handle;
         return root == 0 ? null : _openWindows.FirstOrDefault(window => window.NativeHandle == root);
     }
+
+    /// <summary>
+    ///  The handle of the active window of the application, else of the window opened last (the owner of a message box
+    ///  shown without one, as the native message box takes the active window); 0 if no window is open.
+    /// </summary>
+    public static nint GetActiveWindowHandle()
+        => (_openWindows.LastOrDefault(window => window.IsActive) ?? _openWindows.LastOrDefault())?.NativeHandle ?? 0;
 
     /// <summary>Closes all the open windows (as the WinForms <c>Application.Exit</c>), which ends the main loop.</summary>
     public static void CloseAllWindows()
@@ -62,6 +76,15 @@ public static class AvaloniaDialogHost
         AvaloniaUi.VerifyUiThread();
         AvaloniaUi.RememberHostContext();
 
+        return OperatingSystem.IsWindows()
+            ? ShowDialogOverNativeOwner(window, ownerHandle)
+            : ShowDialogOverAvaloniaOwner(window, ownerHandle);
+    }
+
+    /// <summary>On Windows: a modal dialog over any native window (as WinForms' <c>Form.ShowDialog</c>).</summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static bool ShowDialogOverNativeOwner(DialogWindow window, nint ownerHandle)
+    {
         nint owner = ownerHandle == 0 ? 0 : NativeMethods.GetAncestor(ownerHandle, NativeMethods.GA_ROOT);
         nint dialog = window.NativeHandle;
 
@@ -130,6 +153,20 @@ public static class AvaloniaDialogHost
         AvaloniaUi.VerifyUiThread();
         AvaloniaUi.RememberHostContext();
 
+        if (OperatingSystem.IsWindows())
+        {
+            ShowOverNativeOwner(window, ownerHandle);
+        }
+        else
+        {
+            ShowOverAvaloniaOwner(window, ownerHandle);
+        }
+    }
+
+    /// <summary>On Windows: a modeless window over any native window (as WinForms' <c>Form.Show(owner)</c>).</summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static void ShowOverNativeOwner(DialogWindow window, nint ownerHandle)
+    {
         nint owner = ownerHandle == 0 ? 0 : NativeMethods.GetAncestor(ownerHandle, NativeMethods.GA_ROOT);
         nint handle = window.NativeHandle;
         if (owner != 0 && handle != 0)
@@ -157,6 +194,67 @@ public static class AvaloniaDialogHost
         window.Show();
     }
 
+    /// <summary>Off Windows: a modal dialog over the open window of <paramref name="ownerHandle"/>, if any.</summary>
+    private static bool ShowDialogOverAvaloniaOwner(DialogWindow window, nint ownerHandle)
+    {
+        DialogWindow? owner = FindOpenWindow(ownerHandle);
+        PrepareForOwner(window, owner);
+
+        DispatcherFrame frame = new();
+        window.Closed += (_, _) => frame.Continue = false;
+
+        DialogShowingForTests?.Invoke(window);
+        TrackOpenWindow(window);
+        if (owner is not null)
+        {
+            // Avalonia disables the owner while the dialog is open; the task completes when the dialog closes, which the
+            // frame waits for.
+            _ = window.ShowDialog(owner);
+        }
+        else
+        {
+            window.Show();
+        }
+
+        Dispatcher.UIThread.PushFrame(frame);
+        owner?.Activate();
+        return window.DialogResult;
+    }
+
+    /// <summary>Off Windows: a modeless window over the open window of <paramref name="ownerHandle"/>, if any.</summary>
+    private static void ShowOverAvaloniaOwner(DialogWindow window, nint ownerHandle)
+    {
+        DialogWindow? owner = FindOpenWindow(ownerHandle);
+        PrepareForOwner(window, owner);
+
+        DialogShowingForTests?.Invoke(window);
+        TrackOpenWindow(window);
+        if (owner is not null)
+        {
+            // An owned window stays above its owner and closes with it.
+            window.Show(owner);
+        }
+        else
+        {
+            window.Show();
+        }
+    }
+
+    private static void PrepareForOwner(DialogWindow window, DialogWindow? owner)
+    {
+        if (owner is not null)
+        {
+            window.ShowInTaskbar = false;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            window.IsCenteredOnOwner = true;
+        }
+        else
+        {
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     private static void CenterOver(Window window, nint owner)
     {
         if (!NativeMethods.GetWindowRect(owner, out NativeMethods.RECT ownerRect))

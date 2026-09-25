@@ -1,11 +1,13 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace GitUI.Avalonia.Hosting;
 
 /// <summary>
-///  Win32 interop used to host Avalonia windows in the WinForms process. Windows-only by design until the
-///  cross-platform phase (docs/avalonia-port/PLAN.md).
+///  Win32 interop used to host Avalonia windows over native owner windows on Windows (other systems use the owners of
+///  Avalonia, docs/avalonia-port/CROSS-PLATFORM.md, phase 2).
 /// </summary>
+[SupportedOSPlatform("windows")]
 internal static class NativeMethods
 {
     public const uint GA_ROOT = 2;

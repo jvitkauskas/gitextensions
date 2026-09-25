@@ -63,6 +63,10 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
 - In headless tests, `await` continuations may leave the UI thread; poll with `Dispatcher.UIThread.RunJobs()` instead.
 - Test fixtures of `GitRef` need a module (`TestGitModule.Instance`), since `IsTrackingRemote` reads `MergeWith` from it.
 - Shell heredocs mangle `\\`, `\n` and similar escapes in code being edited; write edit scripts to a file instead.
+- Linux GUI in WSL: WSLg shows X11 windows on the Windows desktop (`DISPLAY=:0`); Avalonia's X11 backend needs
+  `libice6`, `libsm6` and the X11 libraries (`apt-get install libice6 libsm6 libx11-xcb1 libxrandr2 libxi6 libxcursor1`).
+- `TranslationApp.exe` is started by name from its folder by `_UpdateEnglishTranslations`; a shell with
+  `NoDefaultCurrentDirectoryInExePath` set (e.g. an agent's) cannot find it: unset it for that command.
 - From Git Bash, `wsl.exe` arguments are mangled twice: MSYS converts paths (set `MSYS_NO_PATHCONV=1`) and `wsl.exe`
   expands `$` through the default shell of the distribution. Put Linux commands in a script file and run it with
   `wsl.exe -e bash <script>`.
