@@ -16,44 +16,45 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
   message boxes passed on X11 (WSLg) and Windows. Done: `Avalonia.Desktop`, owners, message boxes, task dialogs, common
   dialogs, clipboard, system theme; all application projects target `net10.0`. Under WSLg the application starts,
   browses, diffs and commits. Every project, plugins and tests included, targets `net10.0`, and the tests run on Linux
-  (all but `UI.IntegrationTests`). Left: macOS (not checked: no Mac here).
-- Phase 3 (git, tools and processes on each system) is done for Linux: the file manager, git discovery, editors, diff
-  and merge tools, shells, scripts and plugins. The owner checks macOS afterwards; the macOS branches exist (`open`,
-  TextEdit, Homebrew folders, Araxis) but were not run.
-- Phase 4 (credentials, SSH, the Windows capabilities) is done for Linux: the askpass prompt of Git Extensions, the
-  Secret Service for credentials, the Windows features hidden. macOS needs its Keychain (`ICredentialStore`).
+  (all but `UI.IntegrationTests`). macOS: see "macOS" below.
+- Phase 3 (git, tools and processes on each system) is done for Linux and macOS: the file manager, git discovery,
+  editors, diff and merge tools, shells, scripts and plugins.
+- Phase 4 (credentials, SSH, the Windows capabilities) is done for Linux and macOS: the askpass prompt of Git
+  Extensions, the Secret Service and the Keychain for credentials, the Windows features hidden.
+- Phase 5 (macOS and Linux conventions) is under way on macOS: Cmd, the application menu, the dialog buttons, fonts.
 - Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
   a fast-forward of `avalonia` and a push of it.
 
-## Next: macOS
+## macOS (2026-09-25)
 
-Nothing has run on macOS yet; the macOS branches of phases 2-4 are written but untested (the ledger's "Platforms"
-section says which). Windows and Linux are checked separately by the owner: keep their behavior unchanged, put
-macOS-only changes behind `OperatingSystem.IsMacOS()` where shared code would otherwise change, and say in each commit
-what could not be verified. In batches:
+The macOS pass of phases 2-5 ran on a Mac (Apple silicon, macOS 26, .NET SDK 10.0.401, Xcode). Windows and Linux are
+checked separately by the owner: keep their behavior unchanged, put macOS-only changes behind `OperatingSystem.IsMacOS()`
+where shared code would otherwise change, and say in each commit what could not be verified.
 
-1. **Build and test.** The .NET SDK of `global.json`, the build and every test suite (below). `UI.IntegrationTests`
-   is Windows-only (NUnit skips it). The headless tests measure text with the system fonts.
-2. **Smoke test** a portable copy (below) on scratch repositories:
-   - startup with the native backend (Avalonia.Native), browse, diff, blame, commit, push and pull, stash;
-   - message boxes, task dialogs and dialogs (synchronous modality with Avalonia owners), the file, folder, color and
-     font pickers, the clipboard;
-   - dark mode (`SystemTheme`: `defaults read -g AppleInterfaceStyle`);
-   - the terminal tab (`$SHELL`, zsh);
-   - git discovery (`/opt/homebrew/bin`, `/opt/local/bin`; `/usr/bin/git` is the Xcode shim);
-   - editors (TextEdit with `open -W -n -e`, `code --wait`, `subl --wait`);
-   - diff and merge tools (Araxis is offered on macOS; add FileMerge / `opendiff`; search
-     `/Applications/*.app/Contents/MacOS` in `PathUtil.FindInFolders`, as the plan says);
-   - `open` and `open -R` (`OsShellUtil`: folders, Show in folder);
-   - the askpass prompt (`SSH_ASKPASS` is the script of `AskPassScript`, which runs `GitExtensions askpass`) with a
-     passphrase-protected key.
-3. **Keychain.** An `ICredentialStore` for the macOS Keychain in
-   `src/app/GitExtensions.Extensibility/Settings/CredentialStore.cs` (macOS has `NoCredentialStore` today: the
-   credentials are kept for the session only). Tests that write to the Keychain are opt-in, as the Secret Service one is.
-4. **Phase 5 of `CROSS-PLATFORM.md`:** Cmd instead of Ctrl (hotkeys stay stored as `Control`), the application menu
-   (`NativeMenu`: About, Settings with Cmd+,, Quit), the order of dialog buttons, file dialog filters, fixed widths that
-   clip with the macOS fonts.
-5. Later: phase 6, the `.app` bundle, signing and notarization.
+Done and checked there (the ledger's "Platforms" section has the details): the build and every test suite (the submodules
+must be checked out); the native backend; browse, diff, blame, commit, push, pull, stash; message boxes, task dialogs, the
+file and font pickers (native open panel as a sheet), the clipboard; the dark theme (it was unreadable off Windows); the
+terminal tab (zsh); git from Homebrew; editors (TextEdit with `open -W -n -e` waits); diff and merge tools (bundles of
+`/Applications`, FileMerge / `opendiff`, Beyond Compare's `bcomp`); `open` and `open -R`; the askpass prompt with
+macOS's OpenSSH (`ssh-add` of a key with a passphrase); the Keychain (opt-in test); Cmd for the shortcuts; the
+application menu (About, Settings with Cmd+,, Quit that closes the windows); the order of the dialog buttons; the
+default UI font (13 pixels, it was 17); the scaling of Retina displays (`DpiUtil`).
+
+Left for macOS, in batches:
+
+1. **Small issues seen**: the footer of the settings (OK, Cancel, Apply) and the askpass prompt keep the order of
+   Windows; the askpass prompt ignores the dark theme; the font picker and the Fonts page round 9.75 points (the default
+   UI font) to 9.8 / 10, and saving from the picker stores the rounded size.
+2. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), merges in each tool, a push over
+   SSH to a server, the credentials from the plugin settings, the color picker.
+3. **Phase 5, rest**: the main menu stays in the window (moving it to the menu bar of macOS is open), file dialog
+   filters, fixed widths that still clip with the macOS fonts.
+4. **Phase 6**: the `.app` bundle, signing and notarization. The application cannot start while the display sleeps
+   or the screen is locked (Avalonia.Native: "not able to start the RenderTimer", -6661).
+
+Seen on macOS but not specific to it: Cmd/Ctrl+C in the revision grid copies the built-in DataGrid text of the row
+(empty cells), there is no hotkey for it; the commit dialog puts no focus in the message when it opens; `dotnet
+GitExtensions.dll` in portable mode takes the folder of `dotnet` as the application folder.
 
 ## Rules
 
@@ -80,9 +81,21 @@ what could not be verified. In batches:
   and `fontconfig`). Build in a copy on the Linux file system rather than under `/mnt/c` (much faster, and file name
   case is checked as on a real Linux machine). NUnit skips the Windows-only tests there (`UI.IntegrationTests`, and the
   tests marked `[Platform(Include = "Win")]`). Test data written as Windows paths goes through `TestPaths.Native`.
+- macOS: `brew install --cask dotnet-sdk` (Microsoft's; the `dotnet` formula that `powershell` pulls in must not shadow
+  it), Xcode for FileMerge, `git submodule update --init` before the first build. The opt-in Keychain test:
+  `GE_TEST_KEYCHAIN=1`. Smoke tests: the portable copy started with `HOME` set to a scratch folder (git's global config
+  then is a scratch `.gitconfig`: the Repair buttons and the diff tool settings write to it) and without `GIT_EDITOR`
+  (agent shells set it to `true`, which overrides `core.editor`). Windows are captured with `screencapture -l <id>`
+  (the ids from `CGWindowListCopyWindowInfo`, e.g. through `osascript -l JavaScript`) and driven with `cliclick`
+  (Accessibility and Screen Recording for the terminal app). `cliclick kp:esc` does not reach Avalonia windows: send
+  Escape with `osascript -e 'tell application "System Events" to key code 53'`. Check the front app (`lsappinfo front`)
+  before typing, as someone else may be using the Mac. A crash report dialog of macOS ("quit unexpectedly") takes the
+  keyboard and ignores synthetic input: `killall UserNotificationCenter` closes it.
 - Translations: a new or changed string of a strings class (`GitUI.Presentation/**/*Strings.cs`) needs English.xlf
   regenerated: `cd src/app/GitExtensions && dotnet msbuild -p:Configuration=Release -t:_UpdateEnglishTranslations
-  -p:RunTranslationApp=true`. `ViewStringsTests` fails until then; new strings classes are added to its list.
+  -p:RunTranslationApp=true`. `ViewStringsTests` fails until then; new strings classes are added to its list. The target
+  runs on Windows only (`TranslationApp.exe`, `findstr`), and `dotnet TranslationApp.dll` on macOS writes an incomplete
+  English.xlf (most strings missing): off Windows add the entries by hand, in the order of their neighbors.
 - CI has not run on this branch: `app-build.yml` builds `master`, `release*` and `experimental/**` pushes and pull
   requests only (add the branch, or use `workflow_dispatch`, to get the Linux job and the Windows publish with the MSI).
 - A portable copy of the app for smoke tests: copy `artifacts/Release/bin/GitExtensions/net10.0` to another folder,

@@ -40,7 +40,7 @@ internal static class UserEnvironmentInformation
         sb.AppendLine($"- Git Extensions {AppSettings.ProductVersion}");
         sb.AppendLine($"- Build {_sha}{(_dirty ? " (Dirty)" : "")}");
         sb.AppendLine($"- Git {gitVersionInfo}");
-        sb.AppendLine($"- {Environment.OSVersion}");
+        sb.AppendLine($"- {(OperatingSystem.IsMacOS() ? $"macOS {Environment.OSVersion.Version}" : Environment.OSVersion.ToString())}");
         sb.AppendLine($"- {RuntimeInformation.FrameworkDescription}");
         sb.AppendLine($"- DPI {DpiUtil.DpiX}dpi ({(DpiUtil.ScaleX == 1 ? "no" : $"{Math.Round(DpiUtil.ScaleX * 100)}%")} scaling)");
 

@@ -54,7 +54,7 @@ public static partial class UserEnvironmentInformation
         sb.Append("- Git Extensions ").AppendLine(AppSettings.ProductVersion);
         sb.Append("- Build ").Append(_sha).AppendLine(_dirty ? " (Dirty)" : "");
         sb.Append("- Git ").AppendLine(gitVersionInfo);
-        sb.Append("- ").Append(Environment.OSVersion).AppendLine();
+        sb.Append("- ").Append(OperatingSystem.IsMacOS() ? $"macOS {Environment.OSVersion.Version}" : Environment.OSVersion.ToString()).AppendLine();
         sb.Append("- ").AppendLine(RuntimeInformation.FrameworkDescription);
         sb.Append("- DPI ").Append(DpiUtil.DpiX).Append("dpi (").Append(DpiUtil.ScaleX == 1 ? "no" : $"{Math.Round(DpiUtil.ScaleX * 100)}%").AppendLine(" scaling)");
         sb.Append("- Portable: ").Append(AppSettings.IsPortable()).AppendLine();

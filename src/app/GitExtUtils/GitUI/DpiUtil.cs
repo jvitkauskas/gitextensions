@@ -9,11 +9,26 @@ namespace GitExtUtils.GitUI;
 /// </summary>
 public static class DpiUtil
 {
-    public static int DpiX { get; }
-    public static int DpiY { get; }
+    public static int DpiX { get; private set; }
+    public static int DpiY { get; private set; }
 
-    public static float ScaleX { get; }
-    public static float ScaleY { get; }
+    public static float ScaleX { get; private set; }
+    public static float ScaleY { get; private set; }
+
+    /// <summary>
+    ///  Off Windows, where there is no GDI to ask, the scaling of the UI as Avalonia renders it (e.g. 2 on a Retina display of
+    ///  macOS), so that the images drawn for a size (the avatars) have the pixels of the screen. Windows keeps the DPI of GDI.
+    /// </summary>
+    public static void UseRenderScaling(double renderScaling)
+    {
+        if (OperatingSystem.IsWindows() || renderScaling <= 0)
+        {
+            return;
+        }
+
+        DpiX = DpiY = (int)Math.Round(96 * renderScaling);
+        ScaleX = ScaleY = (float)renderScaling;
+    }
 
     static DpiUtil()
     {

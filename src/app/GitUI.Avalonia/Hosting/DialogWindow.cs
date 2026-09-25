@@ -119,6 +119,9 @@ public class DialogWindow : Window
         // Cancel, OK on macOS (before the focus goes to the default button).
         DialogButtonOrder.Apply(this, DialogButtonOrder.IsReversed);
 
+        // Off Windows the scaling of the screens is known from the windows only (e.g. Retina displays).
+        GitExtUtils.GitUI.DpiUtil.UseRenderScaling(RenderScaling);
+
         // Before the base raises Opened, where the host centers the dialog with its final size.
         _frameThickness = FrameSize is { } frameSize ? new Size(Math.Max(0, frameSize.Width - ClientSize.Width), Math.Max(0, frameSize.Height - ClientSize.Height)) : default;
         RestorePosition();

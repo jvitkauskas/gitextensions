@@ -1,6 +1,8 @@
 ﻿using GitExtUtils.GitUI;
 
 namespace GitExtUtilsTests.GitUI;
+
+[NonParallelizable]
 public sealed class DpiUtilTests
 {
     [Test]
@@ -52,5 +54,38 @@ public sealed class DpiUtilTests
         int result = DpiUtil.Scale(input, ceiling: ceiling);
 
         result.Should().BeLessThanOrEqualTo(0);
+    }
+
+    // Off Windows the DPI is the render scaling of the UI (docs/avalonia-port/CROSS-PLATFORM.md, phase 5).
+    [Test]
+    [Platform(Exclude = "Win")]
+    public void Off_Windows_the_render_scaling_of_the_UI_is_the_scaling()
+    {
+        try
+        {
+            DpiUtil.UseRenderScaling(2);
+
+            DpiUtil.DpiX.Should().Be(192);
+            DpiUtil.ScaleY.Should().Be(2);
+            DpiUtil.Scale(32).Should().Be(64);
+
+            DpiUtil.UseRenderScaling(0);
+            DpiUtil.ScaleX.Should().Be(2, "an unknown scaling is ignored");
+        }
+        finally
+        {
+            DpiUtil.UseRenderScaling(1);
+        }
+    }
+
+    [Test]
+    [Platform(Include = "Win")]
+    public void On_Windows_the_DPI_of_GDI_stays()
+    {
+        int dpi = DpiUtil.DpiX;
+
+        DpiUtil.UseRenderScaling(dpi == 192 ? 1 : 2);
+
+        DpiUtil.DpiX.Should().Be(dpi);
     }
 }
