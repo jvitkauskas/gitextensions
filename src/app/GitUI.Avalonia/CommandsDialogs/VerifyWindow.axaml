@@ -8,9 +8,9 @@
                 Title="{Binding Strings.Title.PlainText}"
                 Width="960" Height="620" MinWidth="700" MinHeight="400">
   <Window.KeyBindings>
-    <KeyBinding Gesture="Ctrl+T" Command="{Binding CreateTagCommand}" />
-    <KeyBinding Gesture="Ctrl+B" Command="{Binding CreateBranchCommand}" />
-    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveAsCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+T}" Command="{Binding CreateTagCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+B}" Command="{Binding CreateBranchCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+S}" Command="{Binding SaveAsCommand}" />
   </Window.KeyBindings>
   <DockPanel>
     <Grid DockPanel.Dock="Top" Margin="8,6" ColumnDefinitions="Auto,*" ColumnSpacing="16">
@@ -76,13 +76,13 @@
               </MenuItem.Icon>
             </MenuItem>
             <MenuItem Name="createTagMenuItem" Header="{Binding Strings.CreateTag.AccessKeyText}" Command="{Binding CreateTagCommand}"
-                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+T">
+                      IsEnabled="{Binding CanCreateRef}" InputGesture="{h:PlatformGesture Ctrl+T}">
               <MenuItem.Icon>
                 <Image Source="avares://GitUI.Avalonia/Assets/TagCreate.png" Width="16" Height="16" />
               </MenuItem.Icon>
             </MenuItem>
             <MenuItem Name="createBranchMenuItem" Header="{Binding Strings.CreateBranch.AccessKeyText}" Command="{Binding CreateBranchCommand}"
-                      IsEnabled="{Binding CanCreateRef}" InputGesture="Ctrl+B">
+                      IsEnabled="{Binding CanCreateRef}" InputGesture="{h:PlatformGesture Ctrl+B}">
               <MenuItem.Icon>
                 <Image Source="avares://GitUI.Avalonia/Assets/BranchCreate.png" Width="16" Height="16" />
               </MenuItem.Icon>
@@ -99,7 +99,7 @@
               </MenuItem.Icon>
             </MenuItem>
             <MenuItem Name="saveAsMenuItem" Header="{Binding Strings.SaveAs.AccessKeyText}" Command="{Binding SaveAsCommand}"
-                      IsEnabled="{Binding CanSaveAs}" InputGesture="Ctrl+S">
+                      IsEnabled="{Binding CanSaveAs}" InputGesture="{h:PlatformGesture Ctrl+S}">
               <MenuItem.Icon>
                 <Image Source="avares://GitUI.Avalonia/Assets/SaveAs.png" Width="16" Height="16" />
               </MenuItem.Icon>

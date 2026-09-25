@@ -44,17 +44,17 @@
           <ListBox Name="logItems" Classes="log" ItemsSource="{Binding LogItems}" SelectedItem="{Binding SelectedLogItem}" SelectionMode="Single">
             <ListBox.ContextMenu>
               <ContextMenu Name="logMenu">
-                <MenuItem Name="saveToFileItem" Header="{Binding Strings.SaveToFile.AccessKeyText}" InputGesture="Ctrl+S" Command="{Binding SaveToFileCommand}">
+                <MenuItem Name="saveToFileItem" Header="{Binding Strings.SaveToFile.AccessKeyText}" InputGesture="{h:PlatformGesture Ctrl+S}" Command="{Binding SaveToFileCommand}">
                   <MenuItem.Icon>
                     <Image Source="avares://GitUI.Avalonia/Assets/SaveAs.png" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Name="copyCommandLineItem" Header="{Binding Strings.CopyCommandLine.AccessKeyText}" InputGesture="Ctrl+C" Command="{Binding CopyCommandLineCommand}">
+                <MenuItem Name="copyCommandLineItem" Header="{Binding Strings.CopyCommandLine.AccessKeyText}" InputGesture="{h:PlatformGesture Ctrl+C}" Command="{Binding CopyCommandLineCommand}">
                   <MenuItem.Icon>
                     <Image Source="avares://GitUI.Avalonia/Assets/CopyToClipboard.png" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Name="clearLogItem" Header="{Binding Strings.ClearLog.AccessKeyText}" InputGesture="Ctrl+L" Command="{Binding ClearLogCommand}">
+                <MenuItem Name="clearLogItem" Header="{Binding Strings.ClearLog.AccessKeyText}" InputGesture="{h:PlatformGesture Ctrl+L}" Command="{Binding ClearLogCommand}">
                   <MenuItem.Icon>
                     <Image Source="avares://GitUI.Avalonia/Assets/ClearLog.png" Width="16" Height="16" />
                   </MenuItem.Icon>
@@ -76,7 +76,7 @@
           <ListBox Name="cacheItems" Classes="log" ItemsSource="{Binding CacheItems}" SelectedItem="{Binding SelectedCacheItem}" SelectionMode="Single">
             <ListBox.ContextMenu>
               <ContextMenu Name="cacheMenu">
-                <MenuItem Name="clearCacheItem" Header="{Binding Strings.ClearCache.AccessKeyText}" InputGesture="Ctrl+L" Command="{Binding ClearCacheCommand}">
+                <MenuItem Name="clearCacheItem" Header="{Binding Strings.ClearCache.AccessKeyText}" InputGesture="{h:PlatformGesture Ctrl+L}" Command="{Binding ClearCacheCommand}">
                   <MenuItem.Icon>
                     <Image Source="avares://GitUI.Avalonia/Assets/ClearLog.png" Width="16" Height="16" />
                   </MenuItem.Icon>

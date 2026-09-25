@@ -10,12 +10,32 @@ namespace GitUI.Avalonia.Hosting;
 internal static class KeyMapping
 {
     /// <summary>
+    ///  The modifier of the shortcuts: Cmd on macOS, Ctrl elsewhere. The hotkeys stay stored with
+    ///  <see cref="HotkeyBinding.Control"/>, which is Cmd on macOS (docs/avalonia-port/CROSS-PLATFORM.md, phase 5).
+    /// </summary>
+    public static KeyModifiers CommandModifier { get; } = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
+
+    /// <summary>A shortcut written with Ctrl (e.g. "Ctrl+S"), with <see cref="CommandModifier"/> instead (Cmd+S on macOS).</summary>
+    public static KeyGesture ToPlatformGesture(string gesture) => ToPlatformGesture(KeyGesture.Parse(gesture), CommandModifier);
+
+    internal static KeyGesture ToPlatformGesture(KeyGesture gesture, KeyModifiers commandModifier)
+        => commandModifier == KeyModifiers.Control || !gesture.KeyModifiers.HasFlag(KeyModifiers.Control)
+            ? gesture
+            : new KeyGesture(gesture.Key, (gesture.KeyModifiers & ~KeyModifiers.Control) | commandModifier);
+
+    /// <summary>
     ///  Returns the WinForms key data (virtual-key code plus modifier flags), or 0 for keys hotkeys cannot use.
     /// </summary>
-    public static int ToKeyData(Key key, KeyModifiers modifiers)
+    public static int ToKeyData(Key key, KeyModifiers modifiers) => ToKeyData(key, modifiers, CommandModifier);
+
+    /// <param name="commandModifier">
+    ///  The modifier stored as <see cref="HotkeyBinding.Control"/>: with Cmd (macOS), the Ctrl key is not the one of the
+    ///  shortcuts, so no hotkey has it (it stays for the text boxes and the terminal, e.g. Ctrl+A, Ctrl+C).
+    /// </param>
+    internal static int ToKeyData(Key key, KeyModifiers modifiers, KeyModifiers commandModifier)
     {
         int virtualKey = ToVirtualKey(key);
-        if (virtualKey == 0)
+        if (virtualKey == 0 || (commandModifier != KeyModifiers.Control && modifiers.HasFlag(KeyModifiers.Control)))
         {
             return 0;
         }
@@ -25,7 +45,7 @@ internal static class KeyMapping
             virtualKey |= HotkeyBinding.Shift;
         }
 
-        if (modifiers.HasFlag(KeyModifiers.Control))
+        if (modifiers.HasFlag(commandModifier))
         {
             virtualKey |= HotkeyBinding.Control;
         }
@@ -39,7 +59,9 @@ internal static class KeyMapping
     }
 
     /// <summary>The gesture shown beside a menu item for a hotkey (the <c>ShortcutKeyDisplayString</c>), if the key maps.</summary>
-    public static KeyGesture? ToKeyGesture(int keyData)
+    public static KeyGesture? ToKeyGesture(int keyData) => ToKeyGesture(keyData, CommandModifier);
+
+    internal static KeyGesture? ToKeyGesture(int keyData, KeyModifiers commandModifier)
     {
         int virtualKey = keyData & 0xFFFF;
         Key? key = Enum.GetValues<Key>().Cast<Key?>().FirstOrDefault(k => k is { } candidate && ToVirtualKey(candidate) == virtualKey);
@@ -56,7 +78,7 @@ internal static class KeyMapping
 
         if ((keyData & HotkeyBinding.Control) != 0)
         {
-            modifiers |= KeyModifiers.Control;
+            modifiers |= commandModifier;
         }
 
         if ((keyData & HotkeyBinding.Alt) != 0)

@@ -32,7 +32,28 @@ public sealed class InfrastructureTests
     [TestCase(Key.LeftShift, KeyModifiers.Shift, 0)]
     public void Keys_map_to_the_WinForms_encoding_of_hotkeys(Key key, KeyModifiers modifiers, int expected)
     {
-        KeyMapping.ToKeyData(key, modifiers).Should().Be(expected);
+        KeyMapping.ToKeyData(key, modifiers, commandModifier: KeyModifiers.Control).Should().Be(expected);
+    }
+
+    // On macOS Cmd is the Control of the stored hotkeys, and Ctrl is no hotkey (it stays for the text boxes and the terminal).
+    [TestCase(Key.Z, KeyModifiers.Meta, 0x5A | 0x20000)]
+    [TestCase(Key.Delete, KeyModifiers.Meta | KeyModifiers.Shift, 0x2E | 0x20000 | 0x10000)]
+    [TestCase(Key.F12, KeyModifiers.Alt, 0x7B | 0x40000)]
+    [TestCase(Key.Z, KeyModifiers.Control, 0)]
+    [TestCase(Key.A, KeyModifiers.Control | KeyModifiers.Meta, 0)]
+    public void With_Cmd_as_the_command_modifier_Cmd_is_stored_as_Control(Key key, KeyModifiers modifiers, int expected)
+    {
+        KeyMapping.ToKeyData(key, modifiers, commandModifier: KeyModifiers.Meta).Should().Be(expected);
+    }
+
+    [Test]
+    public void With_Cmd_as_the_command_modifier_the_gestures_show_Cmd()
+    {
+        KeyMapping.ToKeyGesture(0x53 | 0x20000 | 0x10000, commandModifier: KeyModifiers.Meta).Should().Be(new KeyGesture(Key.S, KeyModifiers.Meta | KeyModifiers.Shift));
+        KeyMapping.ToKeyGesture(0x53 | 0x20000, commandModifier: KeyModifiers.Control).Should().Be(new KeyGesture(Key.S, KeyModifiers.Control));
+        KeyMapping.ToPlatformGesture(KeyGesture.Parse("Ctrl+Shift+C"), KeyModifiers.Meta).Should().Be(new KeyGesture(Key.C, KeyModifiers.Meta | KeyModifiers.Shift));
+        KeyMapping.ToPlatformGesture(KeyGesture.Parse("Ctrl+D1"), KeyModifiers.Control).Should().Be(new KeyGesture(Key.D1, KeyModifiers.Control));
+        KeyMapping.ToPlatformGesture(KeyGesture.Parse("F3"), KeyModifiers.Meta).Should().Be(new KeyGesture(Key.F3));
     }
 
     [Test]

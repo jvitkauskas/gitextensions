@@ -98,7 +98,7 @@ public sealed class DialogInfrastructureTests : HeadlessTest
         filter.Focus();
 
         window.KeyPressQwerty(PhysicalKey.R, RawInputModifiers.None);
-        window.KeyPressQwerty(PhysicalKey.F5, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F5, TestKeys.Command);
 
         viewModel.ExecutedCommands.Should().Equal([2], "R is typed in the text box, Ctrl+F5 is still a hotkey");
         window.Close();
@@ -116,7 +116,7 @@ public sealed class DialogInfrastructureTests : HeadlessTest
         window.Show();
         Dispatcher.UIThread.RunJobs();
 
-        window.KeyPressQwerty(PhysicalKey.F5, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F5, TestKeys.Command);
         window.KeyPressQwerty(PhysicalKey.F5, RawInputModifiers.None);
 
         viewModel.ExecutedCommands.Should().Equal(7);

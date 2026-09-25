@@ -33,6 +33,10 @@ public partial class BrowseWindow : DialogWindow
         toolbar.ContextRequested += OnToolbarContextRequested;
         diffPanel.HotkeyHandler = keyData => _viewModel?.ProcessRevisionDiffHotkey(keyData, fileTree: false) == true;
         treePanel.HotkeyHandler = keyData => _viewModel?.ProcessRevisionDiffHotkey(keyData, fileTree: true) == true;
+        if (OperatingSystem.IsMacOS())
+        {
+            Activated += (_, _) => AttachMacOSApplicationMenu();
+        }
 
         // As OnRuntimeLoad: the revisions are loaded once the window is shown.
         Opened += (_, _) =>
@@ -129,6 +133,21 @@ public partial class BrowseWindow : DialogWindow
         {
             viewModel.Initialize(selectedId, firstId);
         }
+    }
+
+    /// <summary>"About Git Extensions" and "Settings" of the application menu of macOS run the commands of this window.</summary>
+    private void AttachMacOSApplicationMenu()
+    {
+        if (!OperatingSystem.IsMacOS() || _viewModel is not { Strings: { } strings })
+        {
+            return;
+        }
+
+        MacOSApplicationMenu.Attach(
+            $"{strings.About.PlainText} {strings.Title.PlainText}",
+            () => _viewModel?.RunCommand.Execute(BrowseCommand.About),
+            strings.Settings.PlainText,
+            () => _viewModel?.RunCommand.Execute(BrowseCommand.Settings));
     }
 
     /// <summary>Reads the items of the recent and favourite repositories menus again.</summary>

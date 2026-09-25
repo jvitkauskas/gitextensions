@@ -76,6 +76,37 @@ public sealed class CredentialStoreTests
         _systemStore.Get(target).Should().BeNull();
     }
 
+    /// <summary>A round trip with the login Keychain of macOS: opt in with GE_TEST_KEYCHAIN=1 (it writes an item and removes it).</summary>
+    [Test]
+    [Platform(Include = "MacOsX")]
+    public void The_Keychain_keeps_the_credentials()
+    {
+        Assume.That(Environment.GetEnvironmentVariable("GE_TEST_KEYCHAIN"), Is.EqualTo("1"), "opt in: it writes to the Keychain of the user");
+        _systemStore.IsAvailable.Should().BeTrue();
+
+        string target = $"GitExtensionsTests_{Guid.NewGuid():N}";
+        try
+        {
+            _systemStore.Save(target, new NetworkCredential("user", "pass\nwörd")).Should().BeTrue();
+            NetworkCredential? read = _systemStore.Get(target);
+            read!.UserName.Should().Be("user");
+            read.Password.Should().Be("pass\nwörd");
+
+            // Saved again, the item is updated (the user name too).
+            _systemStore.Save(target, new NetworkCredential("other", "secret")).Should().BeTrue();
+            read = _systemStore.Get(target);
+            read!.UserName.Should().Be("other");
+            read.Password.Should().Be("secret");
+        }
+        finally
+        {
+            _systemStore.Remove(target).Should().BeTrue();
+        }
+
+        _systemStore.Get(target).Should().BeNull();
+        _systemStore.Remove(target).Should().BeFalse();
+    }
+
     private sealed class GlobalSource : SettingsSource
     {
         public override SettingLevel SettingLevel { get; init; } = SettingLevel.Global;

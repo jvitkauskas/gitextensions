@@ -9,7 +9,7 @@
                 Width="800" Height="600" MinWidth="800" MinHeight="600">
   <!-- The editor takes Enter for itself, so Ctrl+Enter saves (as FormSparseWorkingCopy). -->
   <Window.KeyBindings>
-    <KeyBinding Gesture="Ctrl+Enter" Command="{Binding SaveCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+Enter}" Command="{Binding SaveCommand}" />
   </Window.KeyBindings>
   <DockPanel>
     <Border DockPanel.Dock="Top" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" Padding="10">

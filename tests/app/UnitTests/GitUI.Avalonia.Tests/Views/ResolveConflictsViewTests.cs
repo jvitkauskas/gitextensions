@@ -113,7 +113,7 @@ public sealed class ResolveConflictsViewTests : HeadlessTest
         host.Calls.Should().ContainInOrder("checkout README.md", "run kdiff3-full:\"base/README.md\" \"local/README.md\" \"remote/README.md\" -o \"README.md\"");
 
         host.Calls.Clear();
-        window.KeyPressQwerty(PhysicalKey.Digit1, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.Digit1, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         host.Calls.Should().StartWith("choose README.md Local");
 

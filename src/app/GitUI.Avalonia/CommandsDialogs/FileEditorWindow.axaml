@@ -8,7 +8,7 @@
                 Title="{Binding Title}"
                 Width="659" Height="543" MinWidth="400" MinHeight="250">
   <Window.KeyBindings>
-    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+S}" Command="{Binding SaveCommand}" />
   </Window.KeyBindings>
   <DockPanel>
     <!-- Equivalent of the tool strip -->

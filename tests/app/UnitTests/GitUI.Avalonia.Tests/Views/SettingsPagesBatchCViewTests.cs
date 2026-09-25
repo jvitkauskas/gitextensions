@@ -61,10 +61,10 @@ public sealed class SettingsPagesBatchCViewTests : HeadlessTest
 
         // As TextboxHotkey: a modifier alone is ignored, the key typed with its modifiers is the hotkey.
         hotkeysView.HotkeyBox.Focus();
-        window.KeyPress(Key.LeftCtrl, RawInputModifiers.Control, PhysicalKey.ControlLeft, null);
+        window.KeyPress(OperatingSystem.IsMacOS() ? Key.LWin : Key.LeftCtrl, TestKeys.Command, OperatingSystem.IsMacOS() ? PhysicalKey.MetaLeft : PhysicalKey.ControlLeft, null);
         hotkeys.KeyData.Should().Be(116);
-        window.KeyPress(Key.K, RawInputModifiers.Control, PhysicalKey.K, "k");
-        hotkeys.KeyData.Should().Be(0x20000 | 'K', "Ctrl+K as Keys");
+        window.KeyPress(Key.K, TestKeys.Command, PhysicalKey.K, "k");
+        hotkeys.KeyData.Should().Be(0x20000 | 'K', "Ctrl+K as Keys (Cmd+K on macOS)");
 
         viewModel.GotoPage("TestPlugin");
         Dispatcher.UIThread.RunJobs();

@@ -27,7 +27,7 @@ public partial class GitCommandLogWindow : DialogWindow
 
     private void OnLogItemsKeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is not GitCommandLogViewModel viewModel || e.KeyModifiers != KeyModifiers.Control)
+        if (DataContext is not GitCommandLogViewModel viewModel || e.KeyModifiers != KeyMapping.CommandModifier)
         {
             return;
         }
@@ -48,7 +48,7 @@ public partial class GitCommandLogWindow : DialogWindow
 
     private void OnCacheItemsKeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is GitCommandLogViewModel viewModel && e.Key == Key.L && e.KeyModifiers == KeyModifiers.Control)
+        if (DataContext is GitCommandLogViewModel viewModel && e.Key == Key.L && e.KeyModifiers == KeyMapping.CommandModifier)
         {
             e.Handled = true;
             viewModel.ClearCacheCommand.Execute(null);

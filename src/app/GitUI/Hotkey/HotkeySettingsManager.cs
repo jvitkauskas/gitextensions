@@ -179,6 +179,9 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
         HotkeyCommand Hk(object en, Keys k) => new((int)en, en.ToString()!) { KeyData = k };
 
         const Keys OpenWithDifftoolHotkey = Keys.F3;
+
+        // Control is Cmd on macOS, where Cmd+H hides the application: Cmd+Option+F there, as in Xcode.
+        Keys replaceHotkey = OperatingSystem.IsMacOS() ? Keys.Control | Keys.Alt | Keys.F : Keys.Control | Keys.H;
         const Keys OpenWithDifftoolFirstToLocalHotkey = Keys.Alt | Keys.F3;
         const Keys OpenWithDifftoolSelectedToLocalHotkey = Keys.Shift | Keys.Alt | Keys.F3;
         const Keys OpenAsTempFileHotkey = Keys.Control | Keys.F3;
@@ -320,7 +323,7 @@ internal sealed class HotkeySettingsManager : IHotkeySettingsManager
             new HotkeySettings(
                 HotkeyCommands.FileViewerSettingsName,
                 Hk(HotkeyCommands.FileViewer.Find, Keys.Control | Keys.F),
-                Hk(HotkeyCommands.FileViewer.Replace, Keys.Control | Keys.H),
+                Hk(HotkeyCommands.FileViewer.Replace, replaceHotkey),
                 Hk(HotkeyCommands.FileViewer.FindNextOrOpenWithDifftool, OpenWithDifftoolHotkey),
                 Hk(HotkeyCommands.FileViewer.FindPrevious, Keys.Shift | OpenWithDifftoolHotkey),
                 Hk(HotkeyCommands.FileViewer.GoToLine, Keys.Control | Keys.G),

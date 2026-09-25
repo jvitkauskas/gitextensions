@@ -24,7 +24,7 @@ public sealed class EditorSearchViewTests : HeadlessTest
         (Window window, TextEditorView view) = Show(readOnly: false);
         view.Editor.CaretOffset = Text.IndexOf("cond", StringComparison.Ordinal);
 
-        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
 
         view.Search.IsOpened.Should().BeTrue();
@@ -92,7 +92,7 @@ public sealed class EditorSearchViewTests : HeadlessTest
         view.Editor.CaretOffset = Text.IndexOf("value", StringComparison.Ordinal);
         view.Editor.TextArea.Focus();
 
-        window.KeyPressQwerty(PhysicalKey.H, RawInputModifiers.Control);
+        PressReplace(window);
         Dispatcher.UIThread.RunJobs();
         view.Search.IsReplaceMode.Should().BeFalse("a read-only text cannot be replaced");
         view.OpenSearch(replace: true);
@@ -102,7 +102,7 @@ public sealed class EditorSearchViewTests : HeadlessTest
         (window, view) = Show(readOnly: false);
         view.Editor.CaretOffset = Text.IndexOf("value", StringComparison.Ordinal);
         view.Editor.TextArea.Focus();
-        window.KeyPressQwerty(PhysicalKey.H, RawInputModifiers.Control);
+        PressReplace(window);
         Dispatcher.UIThread.RunJobs();
         view.Search.IsReplaceMode.Should().BeTrue();
         view.Search.SearchPattern.Should().Be("value");
@@ -177,5 +177,18 @@ public sealed class EditorSearchViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         view.Editor.TextArea.Focus();
         return (window, view);
+    }
+
+    /// <summary>Ctrl+H, Cmd+Option+F on macOS (where Cmd+H hides the application).</summary>
+    private static void PressReplace(Window window)
+    {
+        if (OperatingSystem.IsMacOS())
+        {
+            window.KeyPressQwerty(PhysicalKey.F, TestKeys.Command | RawInputModifiers.Alt);
+        }
+        else
+        {
+            window.KeyPressQwerty(PhysicalKey.H, TestKeys.Command);
+        }
     }
 }

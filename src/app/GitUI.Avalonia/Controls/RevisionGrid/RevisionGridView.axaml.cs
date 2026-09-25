@@ -433,7 +433,7 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
                 _viewModel.QuickSearchNext(down: e.Key == Key.Down);
                 break;
 
-            case (Key.V, KeyModifiers.Control) when _viewModel is not null:
+            case (Key.V, var modifiers) when modifiers == KeyMapping.CommandModifier && _viewModel is not null:
                 e.Handled = true;
                 _ = PasteIntoQuickSearchAsync(_viewModel);
                 break;

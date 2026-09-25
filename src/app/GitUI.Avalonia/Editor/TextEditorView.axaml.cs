@@ -424,13 +424,16 @@ public partial class TextEditorView : UserControl
             return;
         }
 
+        // Cmd+F on macOS, where Cmd+H hides the application: Cmd+Option+F replaces there, as in Xcode.
+        KeyModifiers command = KeyMapping.CommandModifier;
         switch (e.Key, e.KeyModifiers)
         {
-            case (Key.F, KeyModifiers.Control):
+            case (Key.F, var modifiers) when modifiers == command:
                 OpenSearch(replace: false);
                 e.Handled = true;
                 break;
-            case (Key.H, KeyModifiers.Control) when !editor.IsReadOnly:
+            case (Key.H, var modifiers) when modifiers == command && !OperatingSystem.IsMacOS() && !editor.IsReadOnly:
+            case (Key.F, var macOSModifiers) when macOSModifiers == (command | KeyModifiers.Alt) && OperatingSystem.IsMacOS() && !editor.IsReadOnly:
                 OpenSearch(replace: true);
                 e.Handled = true;
                 break;

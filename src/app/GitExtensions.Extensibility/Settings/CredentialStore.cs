@@ -3,13 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
 
 namespace GitExtensions.Extensibility.Settings;
 
 /// <summary>
 ///  The secure store of credentials of the system (docs/avalonia-port/CROSS-PLATFORM.md, phase 4): the Credential Manager
-///  of Windows, the Secret Service of Linux (libsecret: GNOME Keyring, KWallet, KeePassXC). Elsewhere, or without a
-///  secret service, <see cref="IsAvailable"/> is <see langword="false"/> and nothing is stored.
+///  of Windows, the Keychain of macOS, the Secret Service of Linux (libsecret: GNOME Keyring, KWallet, KeePassXC).
+///  Elsewhere, or without a secret service, <see cref="IsAvailable"/> is <see langword="false"/> and nothing is stored.
 /// </summary>
 public interface ICredentialStore
 {
@@ -31,11 +32,12 @@ public static class CredentialStores
 {
     public static ICredentialStore Current { get; set; }
         = OperatingSystem.IsWindows() ? new WindowsCredentialStore()
+            : OperatingSystem.IsMacOS() ? new MacOSKeychainCredentialStore()
             : OperatingSystem.IsLinux() ? new SecretServiceCredentialStore()
             : new NoCredentialStore();
 }
 
-/// <summary>No store: nothing is kept (macOS until its Keychain is supported).</summary>
+/// <summary>No store: nothing is kept (the systems other than Windows, macOS and Linux).</summary>
 internal sealed class NoCredentialStore : ICredentialStore
 {
     public bool IsAvailable => false;
@@ -282,4 +284,201 @@ internal sealed partial class SecretServiceCredentialStore : ICredentialStore
 
     [LibraryImport(LibGLib)]
     private static partial void g_error_free(IntPtr error);
+}
+
+/// <summary>
+///  The login Keychain of macOS (the generic passwords of the Security framework, as Git Credential Manager): one item per
+///  target, whose service is the target prefixed by <c>GitExtensions_</c> (the name of the Windows target), whose account
+///  is the user name and whose password is the password. Only this application reads its items without asking the user.
+/// </summary>
+[SupportedOSPlatform("macos")]
+internal sealed unsafe partial class MacOSKeychainCredentialStore : ICredentialStore
+{
+    private const string SecurityFramework = "/System/Library/Frameworks/Security.framework/Security";
+    private const string CoreFoundationFramework = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
+    private const string ServicePrefix = "GitExtensions_";
+    private const int ErrSecItemNotFound = -25300;
+    private const uint AccountAttribute = 0x61636374; // kSecAccountItemAttr, 'acct'
+    private const uint StringFormat = 0; // CSSM_DB_ATTRIBUTE_FORMAT_STRING
+
+    public bool IsAvailable => true;
+
+    public NetworkCredential? Get(string target)
+    {
+        byte[] service = GetService(target);
+        uint length = 0;
+        void* data = null;
+        IntPtr item = IntPtr.Zero;
+        int status;
+        fixed (byte* serviceName = service)
+        {
+            status = SecKeychainFindGenericPassword(IntPtr.Zero, (uint)service.Length, serviceName, 0, null, &length, &data, &item);
+        }
+
+        if (!Succeeded(status))
+        {
+            return null;
+        }
+
+        try
+        {
+            return new NetworkCredential(GetAccount(item) ?? "", Encoding.UTF8.GetString((byte*)data, (int)length));
+        }
+        finally
+        {
+            SecKeychainItemFreeContent(null, data);
+            CFRelease(item);
+        }
+    }
+
+    public bool Save(string target, NetworkCredential credential)
+    {
+        byte[] service = GetService(target);
+        byte[] account = Encoding.UTF8.GetBytes(credential.UserName);
+        byte[] password = Encoding.UTF8.GetBytes(credential.Password);
+        IntPtr item = FindItem(service);
+        fixed (byte* serviceName = service, accountName = account, passwordData = password)
+        {
+            if (item == IntPtr.Zero)
+            {
+                IntPtr added = IntPtr.Zero;
+                int status = SecKeychainAddGenericPassword(IntPtr.Zero, (uint)service.Length, serviceName, (uint)account.Length, accountName, (uint)password.Length, passwordData, &added);
+                if (added != IntPtr.Zero)
+                {
+                    CFRelease(added);
+                }
+
+                return Succeeded(status);
+            }
+
+            try
+            {
+                // The user name may have changed: the account is rewritten with the password.
+                SecKeychainAttribute attribute = new() { Tag = AccountAttribute, Length = (uint)account.Length, Data = accountName };
+                SecKeychainAttributeList attributes = new() { Count = 1, Attributes = &attribute };
+                return Succeeded(SecKeychainItemModifyAttributesAndData(item, &attributes, (uint)password.Length, passwordData));
+            }
+            finally
+            {
+                CFRelease(item);
+            }
+        }
+    }
+
+    public bool Remove(string target)
+    {
+        IntPtr item = FindItem(GetService(target));
+        if (item == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        try
+        {
+            return Succeeded(SecKeychainItemDelete(item));
+        }
+        finally
+        {
+            CFRelease(item);
+        }
+    }
+
+    /// <summary>The item of a service (to be released with <c>CFRelease</c>), or <see cref="IntPtr.Zero"/>; its password is not read.</summary>
+    private static IntPtr FindItem(byte[] service)
+    {
+        IntPtr item = IntPtr.Zero;
+        int status;
+        fixed (byte* serviceName = service)
+        {
+            status = SecKeychainFindGenericPassword(IntPtr.Zero, (uint)service.Length, serviceName, 0, null, null, null, &item);
+        }
+
+        return Succeeded(status) ? item : IntPtr.Zero;
+    }
+
+    /// <summary>The account (the user name) of an item.</summary>
+    private static string? GetAccount(IntPtr item)
+    {
+        uint tag = AccountAttribute;
+        uint format = StringFormat;
+        SecKeychainAttributeInfo info = new() { Count = 1, Tags = &tag, Formats = &format };
+        SecKeychainAttributeList* attributes = null;
+        if (!Succeeded(SecKeychainItemCopyAttributesAndData(item, &info, null, &attributes, null, null)) || attributes is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return attributes->Count > 0 && attributes->Attributes[0].Data is not null
+                ? Encoding.UTF8.GetString((byte*)attributes->Attributes[0].Data, (int)attributes->Attributes[0].Length)
+                : null;
+        }
+        finally
+        {
+            SecKeychainItemFreeAttributesAndData(attributes, null);
+        }
+    }
+
+    private static byte[] GetService(string target)
+        => string.IsNullOrWhiteSpace(target) ? throw new ArgumentNullException(nameof(target)) : Encoding.UTF8.GetBytes($"{ServicePrefix}{target}");
+
+    /// <summary>Whether a call succeeded; the failures other than a missing item are traced.</summary>
+    private static bool Succeeded(int status)
+    {
+        if (status != 0 && status != ErrSecItemNotFound)
+        {
+            Trace.WriteLine($"Keychain: error {status}");
+        }
+
+        return status == 0;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SecKeychainAttribute
+    {
+        public uint Tag;
+        public uint Length;
+        public void* Data;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SecKeychainAttributeList
+    {
+        public uint Count;
+        public SecKeychainAttribute* Attributes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SecKeychainAttributeInfo
+    {
+        public uint Count;
+        public uint* Tags;
+        public uint* Formats;
+    }
+
+    // The SecKeychain functions are deprecated in favor of SecItem, but they are still supported and need no CFDictionary.
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainFindGenericPassword(IntPtr keychainOrArray, uint serviceNameLength, byte* serviceName, uint accountNameLength, byte* accountName, uint* passwordLength, void** passwordData, IntPtr* itemRef);
+
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainAddGenericPassword(IntPtr keychain, uint serviceNameLength, byte* serviceName, uint accountNameLength, byte* accountName, uint passwordLength, void* passwordData, IntPtr* itemRef);
+
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainItemModifyAttributesAndData(IntPtr itemRef, SecKeychainAttributeList* attrList, uint length, void* data);
+
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainItemCopyAttributesAndData(IntPtr itemRef, SecKeychainAttributeInfo* info, uint* itemClass, SecKeychainAttributeList** attrList, uint* length, void** outData);
+
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainItemFreeAttributesAndData(SecKeychainAttributeList* attrList, void* data);
+
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainItemFreeContent(SecKeychainAttributeList* attrList, void* data);
+
+    [LibraryImport(SecurityFramework)]
+    private static partial int SecKeychainItemDelete(IntPtr itemRef);
+
+    [LibraryImport(CoreFoundationFramework)]
+    private static partial void CFRelease(IntPtr cf);
 }

@@ -60,7 +60,7 @@ public partial class CommitWindow : DialogWindow
         // As Message_KeyDown: Ctrl+Enter commits.
         editor.AddHandler(KeyDownEvent, (_, e) =>
         {
-            if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.Control && _viewModel is not null)
+            if (e.Key == Key.Enter && e.KeyModifiers == KeyMapping.CommandModifier && _viewModel is not null)
             {
                 _viewModel.CommitCommand.Execute(null);
                 e.Handled = true;

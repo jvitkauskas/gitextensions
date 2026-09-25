@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Threading;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.Controls.RevisionGrid;
@@ -50,7 +51,7 @@ public sealed class RevisionGridMenuViewTests : HeadlessTest
         MenuItem copy = (MenuItem)menu.Items[0]!;
         copy.Header.Should().Be("_Copy");
         copy.Icon.Should().BeOfType<Image>();
-        copy.InputGesture!.ToString().Should().Be("Ctrl+C");
+        copy.InputGesture.Should().Be(new KeyGesture(Key.C, OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control), "the texts of the gestures are written with Ctrl, Cmd on macOS");
         copy.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
         executed.Should().Be(1);
         MenuItem viewMenu = (MenuItem)menu.Items[2]!;

@@ -51,7 +51,7 @@ public sealed class CommitViewTests : HeadlessTest
         viewModel.Message.Text = "Fix the bug";
         Dispatcher.UIThread.RunJobs();
         window.Watermark.IsVisible.Should().BeFalse();
-        window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.Enter, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
 
         host.Commits.Should().ContainSingle().Which.Message.Should().Be("Fix the bug");
@@ -112,9 +112,9 @@ public sealed class CommitViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         window.Activate();
 
-        window.KeyPressQwerty(PhysicalKey.Digit4, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.Digit4, TestKeys.Command);
         window.MessageEditor.IsKeyboardFocusWithin.Should().BeTrue();
-        window.KeyPressQwerty(PhysicalKey.N, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.N, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         viewModel.Staged.SelectedEntry!.Item.Name.Should().Be("c.txt", "from the message, the next staged file is selected");
         window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.None);
@@ -122,7 +122,7 @@ public sealed class CommitViewTests : HeadlessTest
 
         viewModel.Diff.Show(new FileViewContent(FileViewKind.Diff, "@@ -1 +1 @@\n+added line\n"));
         Dispatcher.UIThread.RunJobs();
-        window.KeyPressQwerty(PhysicalKey.Digit2, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.Digit2, TestKeys.Command);
         window.DiffViewer.IsKeyboardFocusWithin.Should().BeTrue();
         AvaloniaEdit.TextEditor diffEditor = window.DiffViewer.TextView.Editor;
         diffEditor.Select(diffEditor.Text.IndexOf("added", StringComparison.Ordinal), "added line".Length);
@@ -130,7 +130,7 @@ public sealed class CommitViewTests : HeadlessTest
         window.MessageEditor.Editor.Text.Should().Be("added line\n");
         window.MessageEditor.Editor.CaretOffset.Should().Be("added line\n".Length);
 
-        window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.Digit3, TestKeys.Command);
         window.StagedFiles.IsKeyboardFocusWithin.Should().BeTrue();
         window.Close();
     });
@@ -148,7 +148,7 @@ public sealed class CommitViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         window.Activate();
 
-        window.KeyPressQwerty(PhysicalKey.T, RawInputModifiers.Control | RawInputModifiers.Shift);
+        window.KeyPressQwerty(PhysicalKey.T, TestKeys.Command | RawInputModifiers.Shift);
         Dispatcher.UIThread.RunJobs();
 
         MenuItem conventional = window.CommitTemplatesMenuItems.OfType<MenuItem>().Single(i => i.Items.Count > 0);
@@ -175,13 +175,13 @@ public sealed class CommitViewTests : HeadlessTest
         ComboBox filter = window.GetLogicalDescendants().OfType<ComboBox>().Single(c => c.Name == "selectionFilter");
         filter.IsEffectivelyVisible.Should().BeFalse();
 
-        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         filter.IsEffectivelyVisible.Should().BeTrue();
         filter.IsKeyboardFocusWithin.Should().BeTrue();
         SaveScreenshot(window.CaptureRenderedFrame(), "commit-selection-filter");
 
-        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         viewModel.IsSelectionFilterVisible.Should().BeFalse();
         window.UnstagedFiles.IsKeyboardFocusWithin.Should().BeTrue("the focus goes to the unstaged files");

@@ -612,15 +612,15 @@ public sealed class BrowseViewTests : HeadlessTest
 
         // As RevisionDiffControl.ProcessCmdKey: the keys in the diff tab run the item of the context menu.
         window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<ListBoxItem>().Last().Focus().Should().BeTrue();
-        window.KeyPressQwerty(PhysicalKey.D, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.D, TestKeys.Command);
         menu.Log.Should().Contain("difftool FirstToSelected: src/file.cs");
 
         // Not for a disabled item (blame), nor outside the tab.
-        window.KeyPressQwerty(PhysicalKey.B, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.B, TestKeys.Command);
         menu.Log.Should().NotContain(l => l.StartsWith("history"));
         int logged = menu.Log.Count;
         window.FindControl<Button>("refreshButton")!.Focus().Should().BeTrue();
-        window.KeyPressQwerty(PhysicalKey.D, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.D, TestKeys.Command);
         menu.Log.Should().HaveCount(logged);
 
         viewModel.ExecuteRevisionDiffCommand(RevisionDiffHotkeyCommand.ShowHistory, fileTree: false).Should().BeTrue();
@@ -731,7 +731,7 @@ public sealed class BrowseViewTests : HeadlessTest
         // As StageFile_Click and RequestRefresh: the status and the working directory are refreshed, the next file selected.
         host.DiffFiles = ["a.txt", "c.txt", "src/d.cs"];
         window.FindControl<Control>("diffFiles")!.GetVisualDescendants().OfType<ListBoxItem>().Last().Focus().Should().BeTrue();
-        window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.S, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         menu.Log.Should().Contain("stage: b.txt");
         host.StatusRefreshes.Should().Be(1);

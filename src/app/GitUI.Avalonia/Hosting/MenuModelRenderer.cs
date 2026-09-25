@@ -74,7 +74,8 @@ public static class MenuModelRenderer
     {
         try
         {
-            return global::Avalonia.Input.KeyGesture.Parse(text);
+            // The texts are written with Ctrl: Cmd on macOS.
+            return KeyMapping.ToPlatformGesture(text);
         }
         catch (ArgumentException)
         {

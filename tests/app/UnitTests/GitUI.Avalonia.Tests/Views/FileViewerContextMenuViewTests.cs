@@ -77,19 +77,19 @@ public sealed class FileViewerContextMenuViewTests : HeadlessTest
         window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.None);
         viewerHost.Patches.Should().Equal($"Stage WorkTree {FileViewerContextMenuTests.Patch.IndexOf("-b", StringComparison.Ordinal)}+2");
 
-        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         view.TextView.Search.IsOpened.Should().BeTrue("Ctrl+F finds in the focused diff");
         viewModel.IsSelectionFilterVisible.Should().BeFalse("the hotkey of the dialog does not apply");
         view.TextView.Search.Close();
 
         view.TextView.Editor.TextArea.Focus();
-        window.KeyPressQwerty(PhysicalKey.G, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.G, TestKeys.Command);
         view.TextView.Editor.TextArea.Caret.Line.Should().Be(8, "the last line of the new file (MaxLineNumber)");
 
         window.UnstagedFiles.Tree.ContainerFromIndex(0)!.Focus();
         window.DiffViewer.IsKeyboardFocusWithin.Should().BeFalse();
-        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.F, TestKeys.Command);
         Dispatcher.UIThread.RunJobs();
         viewModel.IsSelectionFilterVisible.Should().BeTrue("outside the diff, the hotkey of the dialog applies");
         window.Close();

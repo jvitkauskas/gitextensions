@@ -46,7 +46,7 @@ public sealed class GitCommandLogViewTests : HeadlessTest
 
         window.Activate();
         logItems.ContainerFromIndex(0)!.Focus();
-        window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.Control);
+        window.KeyPressQwerty(PhysicalKey.C, TestKeys.Command);
         host.Actions.Should().Equal("copy \"git.exe\" status");
 
         window.Close();

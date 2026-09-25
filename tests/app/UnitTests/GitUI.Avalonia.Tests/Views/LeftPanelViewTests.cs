@@ -89,7 +89,7 @@ public sealed class LeftPanelViewTests : HeadlessTest
         panel.Grid.SelectedRow!.Subject.Should().Be("Experiment");
         panel.GetMultiSelectedNodes().Should().Equal(experiment);
 
-        Click(window, TextOf(view, "v1.0"), RawInputModifiers.Control);
+        Click(window, TextOf(view, "v1.0"), TestKeys.Command);
         panel.SelectedNode.Should().BeSameAs(tag);
         panel.GetMultiSelectedNodes().Should().Equal(experiment, tag);
         view.Tree.SelectedItem.Should().BeSameAs(view.FlatTree!.RowOf(tag));

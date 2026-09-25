@@ -236,7 +236,7 @@ public partial class LeftPanelView : UserControl, IHotkeyControl
         }
 
         bool rightButton = e.GetCurrentPoint(tree).Properties.IsRightButtonPressed;
-        bool multiple = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        bool multiple = e.KeyModifiers.HasFlag(KeyMapping.CommandModifier);
         _viewModel.ClickNode(node, multiple, includingDescendants: e.KeyModifiers.HasFlag(KeyModifiers.Shift), rightButton);
 
         // Any click selects the node (a right click too, for the context menu), and its revision again if it was selected.

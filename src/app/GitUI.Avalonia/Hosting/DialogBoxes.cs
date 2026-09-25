@@ -252,7 +252,7 @@ public sealed class MessageBoxWindow : DialogWindow
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e.Key == Key.C && e.KeyModifiers == KeyModifiers.Control && Clipboard is { } clipboard)
+        if (e.Key == Key.C && e.KeyModifiers == KeyMapping.CommandModifier && Clipboard is { } clipboard)
         {
             e.Handled = true;
             _ = clipboard.SetTextAsync(CopyText);

@@ -9,9 +9,9 @@
                 Width="619" Height="392" MinWidth="450" MinHeight="299">
   <!-- The shortcuts of the choose items of ConflictedFilesContextMenu. -->
   <Window.KeyBindings>
-    <KeyBinding Gesture="Ctrl+D1" Command="{Binding ChooseLocalCommand}" />
-    <KeyBinding Gesture="Ctrl+D2" Command="{Binding ChooseRemoteCommand}" />
-    <KeyBinding Gesture="Ctrl+D3" Command="{Binding ChooseBaseCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+D1}" Command="{Binding ChooseLocalCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+D2}" Command="{Binding ChooseRemoteCommand}" />
+    <KeyBinding Gesture="{h:PlatformGesture Ctrl+D3}" Command="{Binding ChooseBaseCommand}" />
   </Window.KeyBindings>
   <Window.Styles>
     <Style Selector="StackPanel#buttonsPanel > Button">
@@ -38,11 +38,11 @@
             <MenuItem Name="markAsSolvedMenuItem" Header="{Binding Strings.MarkAsSolved.PlainText}" Command="{Binding MarkAsSolvedCommand}" />
             <Separator />
             <MenuItem Name="chooseLocalMenuItem" Header="{Binding ChooseLocalText}" ToolTip.Tip="{Binding ChooseLocalToolTip}"
-                      InputGesture="Ctrl+D1" Command="{Binding ChooseLocalCommand}" />
+                      InputGesture="{h:PlatformGesture Ctrl+D1}" Command="{Binding ChooseLocalCommand}" />
             <MenuItem Name="chooseRemoteMenuItem" Header="{Binding ChooseRemoteText}" ToolTip.Tip="{Binding ChooseRemoteToolTip}"
-                      InputGesture="Ctrl+D2" Command="{Binding ChooseRemoteCommand}" />
+                      InputGesture="{h:PlatformGesture Ctrl+D2}" Command="{Binding ChooseRemoteCommand}" />
             <MenuItem Name="chooseBaseMenuItem" Header="{Binding Strings.ChooseBase.PlainText}" ToolTip.Tip="{Binding ChooseBaseToolTip}"
-                      InputGesture="Ctrl+D3" Command="{Binding ChooseBaseCommand}" />
+                      InputGesture="{h:PlatformGesture Ctrl+D3}" Command="{Binding ChooseBaseCommand}" />
             <Separator />
             <MenuItem Name="openLocalWithMenuItem" Header="{Binding Strings.OpenLocalWith.PlainText}" Command="{Binding OpenLocalWithCommand}"
                       IsEnabled="{Binding CanOpenLocal}" />
