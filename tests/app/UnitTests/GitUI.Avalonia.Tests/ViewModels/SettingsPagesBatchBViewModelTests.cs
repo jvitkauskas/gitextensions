@@ -324,6 +324,20 @@ public sealed class SettingsPagesBatchBViewModelTests
     }
 
     [Test]
+    public void Saving_unchanged_shell_settings_does_not_write_the_registry() => WithAppSettings(() =>
+    {
+        FakePagesHost host = new();
+        ShellExtensionSettingsPageViewModel page = new(new ShellExtensionSettingsPageStrings(), host);
+        SettingsDialogViewModel dialog = CreateDialog(page, new FakeSources().GlobalOnly);
+        dialog.Open(page.PageName);
+
+        dialog.SaveAll();
+
+        host.ShellMenuWrites.Should().Be(0);
+        host.AlwaysShowWrites.Should().Be(0);
+    });
+
+    [Test]
     public void The_shell_extension_page_cycles_the_menu_items_and_previews_the_menu() => WithAppSettings(() =>
     {
         FakePagesHost host = new();
@@ -491,9 +505,32 @@ public sealed class SettingsPagesBatchBViewModelTests
 
         public string SshPath { get; set; } = "";
 
-        public string CascadeShellMenuItems { get; set; } = "110111000111111111";
+        private string _cascadeShellMenuItems = "110111000111111111";
+        private bool _alwaysShowAllCommands;
 
-        public bool AlwaysShowAllCommands { get; set; }
+        public string CascadeShellMenuItems
+        {
+            get => _cascadeShellMenuItems;
+            set
+            {
+                _cascadeShellMenuItems = value;
+                ShellMenuWrites++;
+            }
+        }
+
+        public bool AlwaysShowAllCommands
+        {
+            get => _alwaysShowAllCommands;
+            set
+            {
+                _alwaysShowAllCommands = value;
+                AlwaysShowWrites++;
+            }
+        }
+
+        public int ShellMenuWrites { get; private set; }
+
+        public int AlwaysShowWrites { get; private set; }
 
         public (string? GitConfigGlobal, string HomeDir) GitEnvironment { get; set; } = (null, "C:\\Users\\user");
 

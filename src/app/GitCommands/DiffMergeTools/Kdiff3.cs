@@ -15,7 +15,8 @@ internal sealed class Kdiff3 : DiffMergeTool
     public override IEnumerable<string> SearchPaths => new[]
     {
         // regkdiff3path
-        @"KDiff3"
+        @"KDiff3",
+        @"KDiff3\bin"
     };
 
     /// <inheritdoc />

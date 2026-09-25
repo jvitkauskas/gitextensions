@@ -82,6 +82,13 @@ P4Merge passed a saved resolution after the user approved Gatekeeper; no integra
 Test processes and credential entries were cleaned up; see the report for the whole-Keychain metadata comparison
 limitation. `QA.md` now also covers the click-through on Windows and under WSLg.
 
+## Windows QA (2026-09-25, in progress)
+
+See [the Windows report](QA-Windows-2026-09-25.md). The first batch fixes portable registration and registry reads,
+unchanged shell-settings writes, the portable checklist startup preference, and discovery of current Windows tool
+installations. The report distinguishes actual UI checks from discovery-only checks. Linux manual QA is deferred by
+the owner; shared changes are built and tested on Windows and WSL.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the

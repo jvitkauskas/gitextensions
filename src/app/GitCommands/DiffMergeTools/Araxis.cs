@@ -21,7 +21,9 @@ internal sealed class Araxis : DiffMergeTool
     /// <inheritdoc />
     public override IEnumerable<string> SearchPaths => new[]
     {
-        @"Araxis\"
+        @"Araxis\",
+        @"Araxis\Araxis Merge",
+        Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Apps", "Araxis", "Araxis Merge")
     };
 
     /// <inheritdoc />

@@ -18,6 +18,43 @@ public class DiffMergeToolConfigurationManagerTests
     private const string MergeToolKey = "merge.guitool";
     private const string MergeToolNoGuiKey = "merge.tool";
 
+    [Test]
+    public void Visual_Studio_discovery_searches_all_instances_without_adding_the_executable_twice()
+    {
+        string installations = "C:/VS/2022 Community\r\nD:/VS/Preview\r\n";
+        string[] folders = VsDiffMerge.GetModernSearchPaths(installations).ToArray();
+
+        folders.Should().Equal(
+            Path.Join("C:/VS/2022 Community", "Common7", "IDE", "CommonExtensions", "Microsoft", "TeamFoundation", "Team Explorer"),
+            Path.Join("D:/VS/Preview", "Common7", "IDE", "CommonExtensions", "Microsoft", "TeamFoundation", "Team Explorer"));
+        folders.Should().OnlyContain(folder => !folder.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestCase("kdiff3", @"KDiff3\bin", "kdiff3.exe")]
+    [TestCase("semanticmerge", @"PlasticSCM5\client", "semanticmergetool.exe")]
+    [TestCase("araxis", @"Araxis\Araxis Merge", "Compare.exe")]
+    [Platform(Include = "Win")]
+    public void Discovers_current_Windows_installation_layouts(string tool, string installationFolder, string executable)
+    {
+        string expectedPath = Path.Join(Path.GetTempPath(), installationFolder, executable);
+        DiffMergeToolConfigurationManager manager = new(() => null,
+            (file, folders) => file == executable && folders.Contains(installationFolder) ? expectedPath : string.Empty);
+
+        manager.LoadDiffMergeToolConfig(tool, userSuppliedPath: null).Path.Should().Be(expectedPath.ToPosixPath());
+    }
+
+    [Test]
+    [Platform(Include = "Win")]
+    public void Discovers_the_per_user_Araxis_installation()
+    {
+        string folder = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Apps", "Araxis", "Araxis Merge");
+        string expectedPath = Path.Join(folder, "Compare.exe");
+        DiffMergeToolConfigurationManager manager = new(() => null,
+            (file, folders) => file == "Compare.exe" && folders.Contains(folder) ? expectedPath : string.Empty);
+
+        manager.LoadDiffMergeToolConfig("araxis", userSuppliedPath: null).Path.Should().Be(expectedPath.ToPosixPath());
+    }
+
     [SetUp]
     public void Setup()
     {

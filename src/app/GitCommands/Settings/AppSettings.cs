@@ -298,7 +298,8 @@ public static partial class AppSettings
     [SupportedOSPlatform("windows")]
     private static bool ReadBoolRegKey(string key, bool defaultValue)
     {
-        object? obj = VersionIndependentRegKey.GetValue(key);
+        using RegistryKey? settings = Registry.CurrentUser.OpenSubKey("Software\\GitExtensions");
+        object? obj = settings?.GetValue(key);
         if (obj is not string)
         {
             obj = null;
@@ -322,7 +323,8 @@ public static partial class AppSettings
     [return: NotNullIfNotNull(nameof(defaultValue))]
     private static string? ReadStringRegValue(string key, string? defaultValue)
     {
-        return (string?)VersionIndependentRegKey.GetValue(key, defaultValue);
+        using RegistryKey? settings = Registry.CurrentUser.OpenSubKey("Software\\GitExtensions");
+        return (string?)settings?.GetValue(key, defaultValue) ?? defaultValue;
     }
 
     [SupportedOSPlatform("windows")]
@@ -335,8 +337,19 @@ public static partial class AppSettings
 
     public static bool CheckSettings
     {
-        get => GetWindowsRegistryBool("CheckSettings", true);
-        set => SetWindowsRegistryBool("CheckSettings", value);
+        get => IsPortable() ? GetBool("CheckSettings", true) : GetWindowsRegistryBool("CheckSettings", true);
+        set
+        {
+            // The checklist disables itself after a successful scan. A portable copy must not change the installed app.
+            if (IsPortable())
+            {
+                SetBool("CheckSettings", value);
+            }
+            else
+            {
+                SetWindowsRegistryBool("CheckSettings", value);
+            }
+        }
     }
 
     public static string CascadeShellMenuItems
@@ -2162,7 +2175,7 @@ public static partial class AppSettings
     [SupportedOSPlatform("windows")]
     private static IEnumerable<(string name, string? value)> GetSettingsFromRegistry()
     {
-        RegistryKey? oldSettings = VersionIndependentRegKey.OpenSubKey("GitExtensions");
+        using RegistryKey? oldSettings = Registry.CurrentUser.OpenSubKey("Software\\GitExtensions\\GitExtensions");
 
         if (oldSettings is null)
         {

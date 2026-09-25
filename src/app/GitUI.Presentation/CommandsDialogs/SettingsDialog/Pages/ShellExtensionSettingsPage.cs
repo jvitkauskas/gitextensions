@@ -183,13 +183,23 @@ public sealed partial class ShellExtensionSettingsPageViewModel : SettingsPageVi
 
     protected override void PageToSettings(SettingsSource? settings)
     {
-        _host.CascadeShellMenuItems = new string([.. MenuEntries.Select(entry => entry.State switch
+        string cascadeShellMenuItems = new([.. MenuEntries.Select(entry => entry.State switch
         {
             null => IndeterminateInSubMenu,
             true => CheckedInMenu,
             false => UncheckedNotInMenu,
         })]);
-        _host.AlwaysShowAllCommands = AlwaysShowAllCommands;
+
+        // Saving another page must not create or overwrite shell-extension registry settings.
+        if (cascadeShellMenuItems != _host.CascadeShellMenuItems)
+        {
+            _host.CascadeShellMenuItems = cascadeShellMenuItems;
+        }
+
+        if (AlwaysShowAllCommands != _host.AlwaysShowAllCommands)
+        {
+            _host.AlwaysShowAllCommands = AlwaysShowAllCommands;
+        }
 
         base.PageToSettings(settings);
     }

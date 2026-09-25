@@ -14,6 +14,32 @@ internal sealed class AppSettingsTests
     private const string SettingsFileContent = @"<?xml version=""1.0"" encoding=""utf-8""?><dictionary />";
 
     [Test]
+    public void Portable_startup_check_uses_the_isolated_settings_container()
+    {
+        bool wasPortable = GitCommands.Properties.Settings.Default.IsPortable;
+        bool original = AppSettings.CheckSettings;
+        using TempFileCollection tempFiles = new();
+        using GitExtSettingsCache cache = new(tempFiles.AddExtension(".settings"), autoSave: false);
+        DistributedSettings container = new(lowerPriority: null, cache, SettingLevel.Global);
+        try
+        {
+            GitCommands.Properties.Settings.Default["IsPortable"] = true;
+            AppSettings.UsingContainer(container, () =>
+            {
+                AppSettings.SetBool("CheckSettings", !original);
+                // This read fails before the write below on the old registry-backed implementation.
+                AppSettings.CheckSettings.Should().Be(!original);
+                AppSettings.CheckSettings = original;
+                AppSettings.GetBool("CheckSettings", !original).Should().Be(original);
+            });
+        }
+        finally
+        {
+            GitCommands.Properties.Settings.Default["IsPortable"] = wasPortable;
+        }
+    }
+
+    [Test]
     public void The_mutex_of_the_settings_file_can_be_created_on_every_system()
     {
         // The settings were not saved at all off Windows while the name had the path (with '/') in it.

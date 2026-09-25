@@ -27,10 +27,11 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
 
 ### Windows
 
-- Some settings live in the registry (`HKCU\Software\GitExtensions`) even in portable mode: `CheckSettings` (so the
-  settings checklist opens at every start: close it, do not untick its check box), the shell extension settings
-  (`CascadeShellMenuItems`, `AlwaysShowAllCommands`) and `ShowCurrentBranchInVS`. Look at those pages, do not change
-  them, and do not register the shell extension.
+- Some integration settings live in the registry (`HKCU\Software\GitExtensions`) even in portable mode: the shell
+  extension settings (`CascadeShellMenuItems`, `AlwaysShowAllCommands`) and `ShowCurrentBranchInVS`. Look at those
+  pages, do not change them, and do not register the shell extension. `CheckSettings` is stored in the portable
+  settings file; nonportable Windows installations still use the registry for it. A successful checklist scan may
+  disable it automatically without changing the installed application's preference.
 - Set `HOME` (Git for Windows honors it) or `GIT_CONFIG_GLOBAL` for the process you start.
 - Driving the UI:
   - The desktop is shared with the user, and synthetic input moves their real mouse and keyboard. Say so before you

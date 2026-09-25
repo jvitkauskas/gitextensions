@@ -25,7 +25,8 @@ internal sealed class SemanticMerge : DiffMergeTool
         return
         [
             Path.Join(folder, @"semanticmerge"),
-            Path.Join(folder, "PlasticSCM4", "semanticmerge")
+            Path.Join(folder, "PlasticSCM4", "semanticmerge"),
+            @"PlasticSCM5\client"
         ];
     }
 }

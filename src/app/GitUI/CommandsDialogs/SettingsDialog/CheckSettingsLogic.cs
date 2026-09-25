@@ -152,12 +152,18 @@ public class CheckSettingsLogic
     }
 
     public static bool SolveGitExtensionsDir()
-    {
-        string? fileName = AppSettings.GetGitExtensionsDirectory();
+        => SolveGitExtensionsDir(AppSettings.GetGitExtensionsDirectory(), AppSettings.IsPortable(), AppSettings.SetInstallDir);
 
-        if (Directory.Exists(fileName))
+    internal static bool SolveGitExtensionsDir(string? directory, bool isPortable, Action<string> setInstallDir)
+    {
+        if (Directory.Exists(directory))
         {
-            AppSettings.SetInstallDir(fileName!);
+            // A portable copy must not replace the registered installation used by Explorer and other applications.
+            if (!isPortable)
+            {
+                setInstallDir(directory);
+            }
+
             return true;
         }
 

@@ -19,20 +19,27 @@ internal sealed class VsDiffMerge : DiffMergeTool
     public override string Name => "vsdiffmerge";
 
     /// <inheritdoc />
-    public override IEnumerable<string> SearchPaths => new[]
-    {
-        GetVsDiffMergePath()
-    };
+    public override IEnumerable<string> SearchPaths => GetSearchPaths();
 
-    private static string GetVsDiffMergePath()
+    private static IEnumerable<string> GetSearchPaths()
     {
         if (!OperatingSystem.IsWindows())
         {
-            return ExeName;
+            yield break;
         }
 
-        // For 2017 (15.0) and later, VsDiffMerge is not installed by default but often included
-        // C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer
+        // VS 2017 and later use instance-based installations, discoverable through vswhere.
+        string vswhere = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio", "Installer", "vswhere.exe");
+        if (File.Exists(vswhere))
+        {
+            string installations = new Executable(vswhere).GetOutput("-prerelease -products * -property installationPath");
+            foreach (string folder in GetModernSearchPaths(installations))
+            {
+                yield return folder;
+            }
+        }
+
         string[] vsVersions = ["14.0", "12.0", "11.0"];
 
         foreach (string version in vsVersions)
@@ -42,10 +49,12 @@ internal sealed class VsDiffMerge : DiffMergeTool
             string? path = localMachineKey?.GetValue("InstallDir") as string;
             if (!string.IsNullOrEmpty(path))
             {
-                return Path.Join(path, ExeName);
+                yield return path;
             }
         }
-
-        return ExeName;
     }
+
+    internal static IEnumerable<string> GetModernSearchPaths(string installations)
+        => installations.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(path => Path.Join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "TeamFoundation", "Team Explorer"));
 }

@@ -56,7 +56,7 @@ public static class EditorHelper
         => GetEditorCommandLine("code.exe", "--new-window --wait", "Microsoft VS Code");
 
     private static string GetZed()
-        => GetEditorCommandLine("zed.exe", "--wait", "Zed.dev");
+        => GetEditorCommandLine("zed.exe", "--wait", "Zed.dev", @"Zed\bin");
 
     // http://stackoverflow.com/questions/8951275/git-config-core-editor-how-to-make-sublime-text-the-default-editor-for-git-on
     private static string GetSublimeText()
