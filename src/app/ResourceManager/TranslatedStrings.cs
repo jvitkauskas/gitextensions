@@ -19,14 +19,6 @@ public sealed class TranslatedStrings : Translate
     private readonly TranslationString _dateText = new("Date");
     private readonly TranslationString _authorText = new("{0:Author|Authors}");
 
-    private readonly TranslationString _telemetryPermissionCaption = new("Allow Capture Telemetry?");
-    private readonly TranslationString _telemetryPermissionMessage = new(@"We collect information so we can make the app better.
-
-We won't collect any personal or identifiable information.
-You can change your mind at any time.
-
-Yes, I allow telemetry!");
-
     private readonly TranslationString _installGitInstructions = new("Install git...");
     private readonly TranslationString _findGitExecutable = new("Find git...");
     private readonly TranslationString _gitExecutableNotFoundText = new("The Git executable could not be located on your system.");
@@ -75,9 +67,6 @@ Yes, I allow telemetry!");
     public static string FindGitExecutable => _instance.Value._findGitExecutable.Text;
     public static string InstallGitInstructions => _instance.Value._installGitInstructions.Text;
     public static string GitExecutableNotFound => _instance.Value._gitExecutableNotFoundText.Text;
-
-    public static string TelemetryPermissionCaption => _instance.Value._telemetryPermissionCaption.Text;
-    public static string TelemetryPermissionMessage => _instance.Value._telemetryPermissionMessage.Text;
 
     public static string Date => _instance.Value._dateText.Text;
     public static string Author => GetAuthor(1);

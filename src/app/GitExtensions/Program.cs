@@ -111,12 +111,8 @@ internal static class Program
             GitUI.AvaloniaHosting.AvaloniaStartupDialogs.TryShowChooseTranslation();
         }
 
-        AppSettings.TelemetryEnabled ??= MessageBoxes.Show(
-            null,
-            ResourceManager.TranslatedStrings.TelemetryPermissionMessage,
-            ResourceManager.TranslatedStrings.TelemetryPermissionCaption,
-            MessageBoxButtons.YesNo,
-            MessageBoxIcon.Question) == DialogResult.Yes;
+        // The first start does not ask about telemetry: it is off until the user allows it in the settings (General).
+        AppSettings.TelemetryEnabled ??= false;
 
         try
         {

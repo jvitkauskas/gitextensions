@@ -39,9 +39,10 @@
           ContinueOnError="false" />
 
     <!-- 2. Run TranslationApp.exe to update English*.xlf -->
-    <!-- Off Windows there is no TranslationApp.exe: the host of .NET runs the assembly. -->
+    <!-- Off Windows there is no TranslationApp.exe: the host of .NET runs the assembly. On Windows the path is explicit, as
+         cmd does not look in the current folder when NoDefaultCurrentDirectoryInExePath is set (e.g. in agent shells). -->
     <PropertyGroup>
-      <_TranslationAppCommand Condition="'$(OS)' == 'Windows_NT'">TranslationApp.exe</_TranslationAppCommand>
+      <_TranslationAppCommand Condition="'$(OS)' == 'Windows_NT'">.\TranslationApp.exe</_TranslationAppCommand>
       <_TranslationAppCommand Condition="'$(OS)' != 'Windows_NT'">dotnet TranslationApp.dll</_TranslationAppCommand>
       <_TranslationChangesCommand Condition="'$(OS)' == 'Windows_NT'">git status --porcelain | findstr /i /r &quot;English.xlf English.Plugins.xlf&quot; </_TranslationChangesCommand>
       <_TranslationChangesCommand Condition="'$(OS)' != 'Windows_NT'">git status --porcelain | grep -i -E &quot;English.xlf|English.Plugins.xlf&quot; </_TranslationChangesCommand>

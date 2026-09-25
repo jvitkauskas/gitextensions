@@ -360,3 +360,11 @@ report was `Index not found (0x80131124)` in `UIReporter.get_OwnerForm`; a still
 assembly metadata is the likely cause. A fresh complete portable copy passed startup, settings, commit-dialog and
 shutdown checks with Classic (dark) and Simple (light), without new crash reports or BugReporter processes.
 `QA.md` now requires waiting for process exit before copying binaries and checking the separate error reporter.
+
+### No telemetry question at the first start
+
+The first start no longer asks about telemetry (the owner's decision): `TelemetryEnabled` is saved as `false` when
+it has no value, and the user can allow telemetry on the General settings page. A saved answer is kept. The strings
+of the question are removed (`TranslatedStrings`, English.xlf). The translation target runs `.\TranslationApp.exe`
+on Windows, since cmd does not look in the current folder when `NoDefaultCurrentDirectoryInExePath` is set, as it is
+in agent shells.
