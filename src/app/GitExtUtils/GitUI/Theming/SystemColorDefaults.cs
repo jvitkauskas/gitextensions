@@ -46,8 +46,8 @@ public static class SystemColorDefaults
 
     /// <summary>
     ///  The system colors of the dark color mode of WinForms (<c>SystemColorMode.Dark</c>, listed in <c>Themes/dark.css</c>),
-    ///  which the dark themes relied on for the colors they do not set. Off Windows there is no such mode, so a dark theme
-    ///  would get the light values above (light backgrounds behind the light text of the theme).
+    ///  which the dark themes relied on for the colors they do not set. Avalonia does not enable that WinForms mode,
+    ///  including on Windows, so these defaults must supply the dark backgrounds and text on every platform.
     /// </summary>
     private static readonly Dictionary<KnownColor, int> _windowsDarkDefaults = new()
     {
@@ -90,11 +90,10 @@ public static class SystemColorDefaults
     public static Color Get(KnownColor systemColor) => Get(systemColor, OperatingSystem.IsWindows());
 
     /// <summary>
-    ///  The value of a system color for a theme that is dark or not: off Windows those of the dark color mode of WinForms
-    ///  for a dark theme; on Windows those of the system, as before.
+    ///  The value of a system color for a theme: dark defaults for a dark theme, otherwise the platform's light defaults.
     /// </summary>
     internal static Color Get(KnownColor systemColor, bool onWindows, bool isDarkTheme)
-        => !onWindows && isDarkTheme && _windowsDarkDefaults.TryGetValue(systemColor, out int rgb)
+        => isDarkTheme && _windowsDarkDefaults.TryGetValue(systemColor, out int rgb)
             ? Color.FromArgb(unchecked((int)0xFF000000) | rgb)
             : Get(systemColor, onWindows);
 

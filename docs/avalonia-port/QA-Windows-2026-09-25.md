@@ -46,6 +46,50 @@ macOS was not available for this batch.
 The remaining base-functionality, diff/merge and editor matrix is being exercised. Installation/discovery is not a
 saved-merge or editor-wait sign-off. In particular, tool licensing/first-run barriers are not yet assessed.
 
+## Tool and editor follow-up
+
+Each merge below was started from the application's "Open in <tool>" button against a scratch three-way conflict in
+`merge sample.txt`. Successful saves were checked on disk and against `git ls-files -u`, including the application's
+wait and subsequent offer to commit. No merge commits were made in these fixtures.
+
+| Profile | Observed result |
+|---|---|
+| winmerge | Chose local text, saved, closed; conflict cleared. Two-way addition diff also displayed correctly. |
+| kdiff3 | Selected lines from B, saved local text, closed; conflict cleared. |
+| p4merge | Selected local text in the result, saved, closed; conflict cleared. |
+| bc | Beyond Compare 4 Text Merge saved local text; conflict cleared after closing. |
+| diffmerge | DiffMerge Edit View copied local text into the result; save/close cleared the conflict. |
+| meld | Slow first launch, then local-to-middle copy, save and close cleared the conflict. |
+| smerge | Sublime Merge used the intended output path; saved a resolution removing the disputed line, retaining header/footer; conflict cleared. |
+| tortoisediff | TortoiseGitMerge copied the local block, saved and closed; conflict cleared. |
+| tortoisemerge | Same executable and merge arguments; opened correctly. Closing without saving retained all three unmerged index entries. |
+| vscode | Skipped account sign-in, completed first-run UI, accepted local text, saved and closed; conflict cleared. |
+| vsdiffmerge | Saved local text using Take Right / Accept Merge; conflict cleared when the launcher returned. |
+| araxis | Opened registration requiring a serial number. Cancel left the conflict intact. No license was supplied. |
+| semanticmerge | Unity VCS reported missing per-user `plastic4/client.conf`. Dismissed the error; no resolution claimed. |
+| bc3 | Excluded by the owner. |
+
+Visual Studio's CoreEditor-only installation was insufficient: `vsDiffMerge` returned exit 1 without a window,
+including a standalone invocation using Microsoft's documented syntax. Initial setup and `/setup` did not resolve
+it. Adding `Microsoft.VisualStudio.Workload.ManagedDesktop` completed successfully and registered `VisualStudio.DTE.17.0`;
+the unchanged Git Extensions profile then worked. No Git Extensions command-line change was needed.
+
+Editor commands produced by the built Git Extensions presets were placed in scratch repository `core.editor`
+settings. Notepad++, Sublime Text, Zed, VS Code and Windows Notepad each opened `COMMIT_EDITMSG`, saved a new message,
+kept Git waiting while the window remained open, and completed the expected commit after closing. The built-in file
+editor was separately exercised from the Diff tab. Terminal `vi` remains to be checked in the application.
+
+Further base checks: Clone to a scratch directory, the post-clone Open prompt, and checkout of a remote branch to a
+local tracking branch. The first clone displayed Git's warning about the scratch bare remote's nonexistent default
+HEAD; the fixture's HEAD was corrected to `main`. Revert without auto-commit staged the expected deletion; the Commit
+dialog committed it, and Amend with its confirmation rewrote that unpublished commit. Fonts opened the native Windows
+picker and accepted a changed code-font size; Hotkeys displayed Browse mappings; the SSH page exposed Windows clients.
+
+The explicit dark theme reproduced white text on light backgrounds after restart. The cause was the Windows fallback
+to system light colors for values omitted by dark.css, formerly supplied by WinForms dark mode. Avalonia no longer
+enables that mode. Dark defaults now apply on every platform; explicit theme overrides and Windows light system colors
+are preserved. Five new regression cases failed before the fix. Build, suite and visual rechecks are in progress.
+
 The automatic checklist preference write was also reproduced and fixed. Its regression test reads the isolated
 setting before testing a write, so the old implementation fails without touching the real registry.
 
