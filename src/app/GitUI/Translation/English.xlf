@@ -715,6 +715,10 @@ Please make sure that Git for Windows is installed or set the correct command ma
         <source>Multicolor branches</source>
         <target />
       </trans-unit>
+      <trans-unit id="SystemColorModeThemeName.Text">
+        <source>System color mode</source>
+        <target />
+      </trans-unit>
       <trans-unit id="chkColorblind.Text">
         <source>Colorblind</source>
         <target />

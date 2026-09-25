@@ -13,8 +13,8 @@ namespace GitUI.Avalonia.Hosting;
 [SupportedOSPlatform("macos")]
 public static class MacOSApplicationMenu
 {
-    private static readonly NativeMenuItem _about = new();
-    private static readonly NativeMenuItem _settings = new() { Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta) };
+    private static readonly NativeMenuItem _about = new("About Git Extensions");
+    private static readonly NativeMenuItem _settings = new("Settings...") { Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta) };
     private static readonly NativeMenu _menu = new() { Items = { _about, new NativeMenuItemSeparator(), _settings } };
     private static Action? _showAbout;
     private static Action? _showSettings;
@@ -25,16 +25,18 @@ public static class MacOSApplicationMenu
         _settings.Click += (_, _) => _showSettings?.Invoke();
     }
 
-    /// <summary>Makes the items run the commands of a main window (when it is activated).</summary>
+    /// <summary>
+    ///  Sets the menu of the application, while Avalonia sets up (in <see cref="Application.Initialize"/>): the native menu
+    ///  is created from the menu the application has then (else with "About Avalonia"); later its items can change.
+    /// </summary>
+    public static void Install(Application application) => NativeMenu.SetMenu(application, _menu);
+
+    /// <summary>Makes the items run the commands of a main window (when it is activated), with its texts.</summary>
     public static void Attach(string aboutText, Action showAbout, string settingsText, Action showSettings)
     {
         _about.Header = aboutText;
         _settings.Header = settingsText;
         _showAbout = showAbout;
         _showSettings = showSettings;
-        if (Application.Current is { } application && NativeMenu.GetMenu(application) != _menu)
-        {
-            NativeMenu.SetMenu(application, _menu);
-        }
     }
 }

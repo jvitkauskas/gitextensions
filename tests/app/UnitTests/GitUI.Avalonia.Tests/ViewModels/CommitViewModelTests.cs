@@ -163,6 +163,19 @@ public sealed class CommitViewModelTests
     }
 
     [Test]
+    public async Task Without_changes_the_commit_and_push_button_pushes_only()
+    {
+        FakeHost host = new();
+        host.WorkTree.Clear();
+        host.Index.Clear();
+        (CommitViewModel viewModel, _) = Create(host);
+        await viewModel.InitializeAsync();
+
+        // The text of the push button is a WinForms text (TranslatedStrings.ButtonPush): its mnemonic becomes an access key.
+        viewModel.CommitAndPushText.Should().Be("_Push");
+    }
+
+    [Test]
     public async Task Amending_asks_first_and_starts_with_the_head_message()
     {
         FakeHost host = new() { StoredMessage = "", Options = new CommitDialogOptions { CommitAndPushForcedWhenAmend = true } };
@@ -396,7 +409,7 @@ public sealed class CommitViewModelTests
 
         public string WorkingDirectory => @"C:\repo";
 
-        public string PushText => "Push";
+        public string PushText => "&Push";
 
         public bool IsBareRepository => false;
 

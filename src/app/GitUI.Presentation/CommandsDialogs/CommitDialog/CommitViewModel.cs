@@ -254,7 +254,7 @@ public sealed partial class CommitViewModel : DialogViewModel
     public string CommitAndPushText
         => IsPushForced ? Strings.CommitAndForcePush.AccessKeyText
             : HasChanges || Amend ? Strings.CommitAndPush.AccessKeyText
-            : _host.PushText;
+            : TranslatedText.ToAccessKeyText(_host.PushText);
 
     /// <summary>The line and column of the caret in the message, which the view reports.</summary>
     [ObservableProperty]

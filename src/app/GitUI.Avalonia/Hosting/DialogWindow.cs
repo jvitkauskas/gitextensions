@@ -116,6 +116,9 @@ public class DialogWindow : Window
 
     protected override void OnOpened(EventArgs e)
     {
+        // Cancel, OK on macOS (before the focus goes to the default button).
+        DialogButtonOrder.Apply(this, DialogButtonOrder.IsReversed);
+
         // Before the base raises Opened, where the host centers the dialog with its final size.
         _frameThickness = FrameSize is { } frameSize ? new Size(Math.Max(0, frameSize.Width - ClientSize.Width), Math.Max(0, frameSize.Height - ClientSize.Height)) : default;
         RestorePosition();

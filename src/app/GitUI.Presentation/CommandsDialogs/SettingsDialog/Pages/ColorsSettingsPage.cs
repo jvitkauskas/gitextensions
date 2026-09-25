@@ -18,6 +18,7 @@ public sealed class ColorsSettingsPageStrings : ViewStrings
         Title = Add("$this", "Text", "Colors");
         FormatBuiltinThemeName = Add("FormatBuiltinThemeName", "Text", "{0}");
         FormatUserDefinedThemeName = Add("FormatUserDefinedThemeName", "Text", "{0}, user-defined");
+        SystemColorModeThemeName = Add("SystemColorModeThemeName", "Text", "System color mode");
         RevisionGraph = Add("gbRevisionGraph", "Text", "Revision graph");
         MulticolorBranches = Add("MulticolorBranches", "Text", "Multicolor branches");
         DrawAlternateBackColor = Add("chkDrawAlternateBackColor", "Text", "Draw alternate background");
@@ -39,6 +40,9 @@ public sealed class ColorsSettingsPageStrings : ViewStrings
     public TranslatedText FormatBuiltinThemeName { get; }
 
     public TranslatedText FormatUserDefinedThemeName { get; }
+
+    /// <summary>The name of the theme that follows the light or dark mode of the system, off Windows ("Windows app color mode" there).</summary>
+    public TranslatedText SystemColorModeThemeName { get; }
 
     public TranslatedText RevisionGraph { get; }
 
@@ -224,9 +228,11 @@ public sealed partial class ColorsSettingsPageViewModel : SettingsPageWithServic
             + $"{Environment.NewLine}{Environment.NewLine}See also https://github.com/gitextensions/gitextensions/wiki/Dark-Mode");
     }
 
-    // As FormattedThemeId.ToString.
+    // As FormattedThemeId.ToString; off Windows the theme of the color mode of the system is not named after Windows.
     private string Format(ThemeId themeId)
-        => string.Format(themeId.IsBuiltin ? Strings.FormatBuiltinThemeName.Text : Strings.FormatUserDefinedThemeName.Text, themeId.Name);
+        => themeId == ThemeId.WindowsAppColorModeId && !OperatingSystem.IsWindows()
+            ? Strings.SystemColorModeThemeName.Text
+            : string.Format(themeId.IsBuiltin ? Strings.FormatBuiltinThemeName.Text : Strings.FormatUserDefinedThemeName.Text, themeId.Name);
 
     partial void OnSelectedThemeChanged(ThemeChoice? value) => _controller.HandleSelectedThemeChanged();
 

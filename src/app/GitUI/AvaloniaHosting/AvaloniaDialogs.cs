@@ -133,6 +133,9 @@ internal static partial class AvaloniaDialogs
         // The exceptions of Avalonia code are reported as those of WinForms code (Application.ThreadException).
         AvaloniaUi.UnhandledExceptionHandler ??= exception => GitUI.NBugReports.BugReportInvoker.Report(exception, isTerminating: false);
 
+        // Quit (Cmd+Q on macOS) closes the main windows, as closing each one would.
+        AvaloniaUi.QuitRequested ??= CloseBrowseWindows;
+
         // As GitExtensionsDialog.OnHelpButtonClicked: F1 opens the section of the user manual.
         DialogWindow.OpenManualSection ??= (subfolder, anchor) => OsShellUtil.OpenUrlInDefaultBrowser(UserManual.UserManual.UrlFor(subfolder, anchor));
 

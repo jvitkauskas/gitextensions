@@ -1547,11 +1547,15 @@ public static partial class AppSettings
     ///  The default font of the UI and the commit messages: on Windows the font of its message boxes (Segoe UI, or the font
     ///  of the language of the system), elsewhere the font of the system (resolved by the UI).
     /// </summary>
+    /// <remarks>
+    ///  The sizes are points of 1/72 inch at 96 DPI (<see cref="FontDescriptor.SizeInPixels"/>): the 13 points of the system
+    ///  font of macOS are points of its own, one per pixel of the UI, so 9.75 points here (13 pixels, not 17).
+    /// </remarks>
     private static FontDescriptor DefaultFont
         => OperatingSystem.IsWindowsVersionAtLeast(6, 1) && SystemFonts.MessageBoxFont is Font messageBoxFont
             ? messageBoxFont.ToFontDescriptor()
             : OperatingSystem.IsMacOS()
-                ? new FontDescriptor(".AppleSystemUIFont", 13)
+                ? new FontDescriptor(".AppleSystemUIFont", 9.75f)
                 : new FontDescriptor("DejaVu Sans", 9);
 
     /// <summary>The default fixed pitch font of each system: Consolas on Windows, Menlo on macOS, DejaVu Sans Mono elsewhere.</summary>

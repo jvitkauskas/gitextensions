@@ -16,6 +16,10 @@ public partial class GitExtensionsAvaloniaApp : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        if (OperatingSystem.IsMacOS())
+        {
+            MacOSApplicationMenu.Install(this);
+        }
     }
 
     /// <summary>

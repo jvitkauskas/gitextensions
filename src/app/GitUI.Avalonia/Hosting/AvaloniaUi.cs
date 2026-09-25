@@ -1,4 +1,6 @@
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 
 namespace GitUI.Avalonia.Hosting;
@@ -57,6 +59,19 @@ public static class AvaloniaUi
     /// </summary>
     public static Action<Exception>? UnhandledExceptionHandler { get; set; }
 
+    /// <summary>
+    ///  Called when the system asks the application to quit (on macOS: Quit of the application menu, Cmd+Q, the Dock) while
+    ///  <see cref="RunMainLoop"/> runs, instead of letting the system end the process at once: e.g. closing the main windows,
+    ///  which ends the loop as closing the last one does.
+    /// </summary>
+    public static Action? QuitRequested { get; set; }
+
+    /// <summary>
+    ///  On macOS, the lifetime that runs the first loop of <see cref="RunMainLoop"/>: the Quit of the application menu reaches a
+    ///  lifetime only (without one, the system ends the process at once). It is set at the setup, as Avalonia requires.
+    /// </summary>
+    private static ClassicDesktopStyleApplicationLifetime? _macOSLifetime;
+
     /// <summary>Whether <see cref="RunMainLoop"/> is running, i.e. Avalonia runs the message loop of the process.</summary>
     public static bool IsMainLoopRunning { get; private set; }
 
@@ -70,12 +85,38 @@ public static class AvaloniaUi
         IsMainLoopRunning = true;
         try
         {
-            Dispatcher.UIThread.MainLoop(cancellationToken);
+            if (_macOSLifetime is { } lifetime)
+            {
+                _macOSLifetime = null;
+                RunMainLoopWithLifetime(lifetime, cancellationToken);
+            }
+            else
+            {
+                Dispatcher.UIThread.MainLoop(cancellationToken);
+            }
         }
         finally
         {
             IsMainLoopRunning = false;
         }
+    }
+
+    /// <summary>
+    ///  The loop of <see cref="RunMainLoop"/> run by the lifetime of macOS, which asks <see cref="QuitRequested"/> when the system
+    ///  asks to quit. It shuts down only when <paramref name="cancellationToken"/> is cancelled, as the loop without lifetime.
+    /// </summary>
+    private static void RunMainLoopWithLifetime(ClassicDesktopStyleApplicationLifetime lifetime, CancellationToken cancellationToken)
+    {
+        lifetime.ShutdownRequested += (_, e) =>
+        {
+            if (QuitRequested is { } quit)
+            {
+                e.Cancel = true;
+                Dispatcher.UIThread.Post(quit);
+            }
+        };
+        using CancellationTokenRegistration registration = cancellationToken.Register(() => Dispatcher.UIThread.Post(() => lifetime.Shutdown()));
+        lifetime.Start([]);
     }
 
     /// <summary>
@@ -132,11 +173,20 @@ public static class AvaloniaUi
         _hostContext = winFormsContext;
         try
         {
-            AppBuilder.Configure<GitExtensionsAvaloniaApp>()
+            AppBuilder builder = AppBuilder.Configure<GitExtensionsAvaloniaApp>()
                 .UsePlatformDetect()
                 .UseSkia()
-                .UseHarfBuzz()
-                .SetupWithoutStarting();
+                .UseHarfBuzz();
+            if (OperatingSystem.IsMacOS())
+            {
+                // Explicit shutdown: the main loop ends as without lifetime (RunMainLoop), not when windows close.
+                _macOSLifetime = new ClassicDesktopStyleApplicationLifetime { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+                builder.SetupWithLifetime(_macOSLifetime);
+            }
+            else
+            {
+                builder.SetupWithoutStarting();
+            }
         }
         finally
         {

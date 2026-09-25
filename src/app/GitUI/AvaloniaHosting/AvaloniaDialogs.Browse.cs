@@ -49,6 +49,15 @@ internal static partial class AvaloniaDialogs
         return true;
     }
 
+    /// <summary>Closes the main windows (the application quits once the last one is closed).</summary>
+    private static void CloseBrowseWindows()
+    {
+        foreach (BrowseSession session in _browseSessions.ToList())
+        {
+            session.Close();
+        }
+    }
+
     private static BrowseWindow ShowBrowseWindow(IGitUICommands commands, BrowseArguments args)
     {
         BrowseWindow window = new()
@@ -109,6 +118,8 @@ internal static partial class AvaloniaDialogs
         private BrowseArguments? _arguments = args;
 
         public nint Handle => window.NativeHandle;
+
+        public void Close() => window.Close();
 
         public IGitUICommands? Commands => _host?.Commands;
 
