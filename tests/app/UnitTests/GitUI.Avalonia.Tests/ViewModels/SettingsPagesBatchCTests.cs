@@ -47,7 +47,7 @@ public sealed class SettingsPagesBatchCTests
         name.Value = "mine";
         choice.Value = "b";
         password.Value = StringSettingValue.EmptyStringValue;
-        ratio.Text = "1.5";
+        ratio.Text = 1.5.ToString();
         page.Level = SettingsLevel.Global;
 
         sources.Local.GetValue("plugin.Name").Should().Be("mine", "the settings of the plugin are prefixed by its container");

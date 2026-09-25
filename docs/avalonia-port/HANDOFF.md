@@ -67,6 +67,13 @@ Also: Sublime Merge's output option (`-o "$MERGED"`; it asked where to save), th
 (Avalonia 12.1 draws no stretched `PathGeometry`, as Fluent's `ColorView` icons are: they are drawn inside a
 `GeometryGroup`), and the buttons of the conflicts dialog grow with their text ("Rescan merge conflicts" was cut).
 
+The subsequent QA click-through (2026-09-25) fixed first-run stack overflow in the plugin assembly resolver and
+checkout error dialogs while typing partial branch names. Both have regression tests and were rechecked in the
+macOS app; the Release build and all 18 suite invocations pass. Culture-dependent decimal expectations in two
+headless tests were corrected too. Windows/Linux verification remains with the owner. The manual pass is still
+in progress: investigate the automated Cmd+C selection anomaly and retry merge tools after the user-approved
+Gatekeeper prompt before treating either as an application defect.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the

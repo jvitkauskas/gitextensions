@@ -247,6 +247,23 @@ Each view's strings class (`GitUI.Presentation/**/*Strings.cs`) declares the XLI
 
 ## Platforms
 
+### QA follow-up (2026-09-25, in progress)
+
+The click-through in `QA.md` found two general bugs, fixed with regression tests:
+
+- First-run startup could overflow the stack after the telemetry dialog: the plugin assembly resolver inspected
+  every adjacent file with `FileVersionInfo`, which could recursively request localized exception resources.
+  It now resolves the exact assembly file name, with the culture subdirectory for satellite assemblies.
+- Typing a branch name in Checkout requested commit counts for incomplete names (for example `f`, `fe`, `fea`),
+  opening git error dialogs. Counts are requested only for names in the available branch list.
+
+Both fixes were reproduced and checked again in the macOS app. Two headless assertions/input values now use the
+current culture for decimal numbers; their hard-coded decimal points failed on this Mac's locale. Release build
+passed, and all 18 sequential suite invocations passed with `--blame-hang-timeout 3m` (25,277 tests passed;
+Windows-only and other excluded tests skipped). The opt-in Keychain round trip passed and removed its test item.
+Windows and Linux were not rerun on this machine. Manual QA is continuing; this is not a complete checklist sign-off.
+
+
 The cross-platform phase (`CROSS-PLATFORM.md`) records here which parts run on which system. **Builds** means that
 `dotnet build` of the solution succeeds there; **runs** that the code is used there, with its tests passing there.
 

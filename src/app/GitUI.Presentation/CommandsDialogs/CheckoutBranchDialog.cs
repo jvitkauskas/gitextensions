@@ -378,7 +378,8 @@ public sealed partial class CheckoutBranchViewModel : DialogViewModel
         LocalBranchNameText = "'" + _localBranchName + "'";
         CustomBranchName = newLocalBranchName;
 
-        if (!string.IsNullOrWhiteSpace(branch))
+        // The editable selector also reports partial names while typing; those are not revisions yet.
+        if (!string.IsNullOrWhiteSpace(branch) && Branches.Contains(branch))
         {
             _host.RequestCommitCount(branch, text =>
             {

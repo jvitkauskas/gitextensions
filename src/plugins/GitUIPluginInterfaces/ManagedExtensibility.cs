@@ -178,14 +178,13 @@ public static class ManagedExtensibility
                 return null;
             }
 
-            string? dll = Directory.GetFiles(fullName)
-                .FirstOrDefault(f =>
-                {
-                    string? fileDescription = FileVersionInfo.GetVersionInfo(f).FileDescription;
+            AssemblyName name = new(args.Name);
 
-                    return fileDescription is not null && args.Name.StartsWith(fileDescription);
-                });
-            return dll is null ? null : AssemblyLoadContext.Default.LoadFromAssemblyPath(dll);
+            // File descriptions are not assembly names. Reading the metadata of unrelated files can also
+            // request localized exception resources and re-enter this handler until the stack overflows.
+            string directory = string.IsNullOrEmpty(name.CultureName) ? fullName : Path.Combine(fullName, name.CultureName);
+            string dll = Path.Combine(directory, name.Name + ".dll");
+            return File.Exists(dll) ? AssemblyLoadContext.Default.LoadFromAssemblyPath(dll) : null;
         }
         catch
         {

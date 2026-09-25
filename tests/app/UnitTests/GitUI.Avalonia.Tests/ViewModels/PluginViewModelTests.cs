@@ -212,8 +212,8 @@ public sealed class PluginViewModelTests
         await viewModel.SearchAsync();
 
         viewModel.GitObjects.Select(row => (row.Sha, row.Path, row.Size, row.CommitCount)).Should().Equal(
-            ("aaaa", "big.bin", "2.00 Mb", 2),
-            ("cccc", "new.bin", "3.00 Mb", 1));
+            ("aaaa", "big.bin", $"{2:F2} Mb", 2),
+            ("cccc", "new.bin", $"{3:F2} Mb", 1));
         viewModel.GitObjects[0].LastCommitDate.Should().Be(DateTime.Parse("2020-02-02 10:00:00 +0000"));
         viewModel.GitObjects[0].CompressedSize.Should().Be("<Unknown>");
         viewModel.ProgressMaximum.Should().Be(2);

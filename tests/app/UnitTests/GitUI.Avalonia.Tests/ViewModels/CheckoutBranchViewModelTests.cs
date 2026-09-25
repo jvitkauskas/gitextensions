@@ -13,6 +13,28 @@ public sealed class CheckoutBranchViewModelTests
     private static readonly ObjectId RemoteCommit = ObjectId.Parse("2222222222222222222222222222222222222222");
     private static readonly ObjectId BaseCommit = ObjectId.Parse("3333333333333333333333333333333333333333");
 
+    [TestCase(false, "d", "dev")]
+    [TestCase(true, "origin/f", "origin/feature")]
+    public void Typing_a_partial_branch_does_not_request_a_commit_count(bool remote, string partialBranch, string branch)
+    {
+        FakeCheckoutBranchHost host = new();
+        CheckoutBranchViewModel viewModel = Create(host, Options(branch: null, remote));
+
+        viewModel.Branch = partialBranch;
+
+        host.CommitCountRequests.Should().BeEmpty("partial input is not a revision and must not cause a git error dialog");
+        viewModel.CommitCountText.Should().BeEmpty();
+
+        viewModel.Branch = branch;
+
+        host.CommitCountRequests.Should().Equal(branch);
+        viewModel.CommitCountText.Should().Be($"{branch}: 1 commit behind");
+
+        viewModel.Branch = partialBranch;
+        viewModel.CommitCountText.Should().BeEmpty();
+        host.CommitCountRequests.Should().Equal(branch);
+    }
+
     [Test]
     public void Lists_the_local_or_remote_branches()
     {
@@ -275,7 +297,13 @@ public sealed class CheckoutBranchViewModelTests
 
         public ObjectId GetMergeBase(ObjectId a, ObjectId b) => MergeBase;
 
-        public void RequestCommitCount(string branch, Action<string> report) => report($"{branch}: 1 commit behind");
+        public List<string> CommitCountRequests { get; } = [];
+
+        public void RequestCommitCount(string branch, Action<string> report)
+        {
+            CommitCountRequests.Add(branch);
+            report($"{branch}: 1 commit behind");
+        }
 
         public bool IsValidBranchName(string branchName) => !branchName.Contains("..");
 
