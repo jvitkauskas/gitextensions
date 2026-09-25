@@ -118,19 +118,9 @@ internal static partial class AvaloniaDialogs
         // As ShowFontDialog of AppearanceFontsSettingsPage and consoleFontChangeButton_Click of ConsoleStyleSettingsPage.
         public SettingsFont? PickFont(SettingsFontKind kind, SettingsFont? current) => AvaloniaUi.RunInHostContext(() =>
         {
-            using FontDialog fontDialog = new()
-            {
-                AllowVerticalFonts = false,
-                Color = SystemColors.ControlText,
-                FixedPitchOnly = kind == SettingsFontKind.Code,
-            };
             try
             {
-                fontDialog.Font = (current?.Value as FontDescriptor)?.ToFont() ?? new Font("Consolas", 12);
-                if (fontDialog.ShowDialog(Owner) is DialogResult.OK or DialogResult.Yes)
-                {
-                    return ToSettingsFont(fontDialog.Font.ToFontDescriptor());
-                }
+                return ToSettingsFont(FontPicker.Show(Owner, current?.Value as FontDescriptor, fixedPitchOnly: kind == SettingsFontKind.Code));
             }
             catch (ArgumentException ex) when (kind != SettingsFontKind.Console)
             {

@@ -154,6 +154,28 @@ public static class AvaloniaUi
         };
     }
 
+    /// <summary>
+    ///  Waits on the UI thread for <paramref name="task"/> of an asynchronous Avalonia API (e.g. the storage provider, the
+    ///  clipboard) in a nested dispatcher frame, so that the UI keeps running, for the synchronous callers of the dialogs and
+    ///  of the clipboard (docs/avalonia-port/CROSS-PLATFORM.md, phase 2).
+    /// </summary>
+    public static T WaitFor<T>(Task<T> task)
+    {
+        VerifyUiThread();
+        if (!task.IsCompleted)
+        {
+            DispatcherFrame frame = new();
+#pragma warning disable VSTHRD110, VSTHRD105 // The continuation only ends the frame, on the UI thread.
+            task.ContinueWith(_ => Dispatcher.UIThread.Post(() => frame.Continue = false), TaskScheduler.Default);
+#pragma warning restore VSTHRD110, VSTHRD105
+            Dispatcher.UIThread.PushFrame(frame);
+        }
+
+#pragma warning disable VSTHRD002 // The task is complete.
+        return task.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+    }
+
     internal static void VerifyUiThread() => Dispatcher.UIThread.VerifyAccess();
 
     /// <summary>

@@ -4,8 +4,21 @@ using System.Runtime.Versioning;
 
 namespace GitExtUtils;
 
-/// <summary>The text of the Windows clipboard (without WinForms: docs/avalonia-port/PLAN.md, phase 8).</summary>
-[SupportedOSPlatform("windows")]
+/// <summary>The clipboard of the UI off Windows (docs/avalonia-port/CROSS-PLATFORM.md, phase 2), set by the application.</summary>
+public interface IClipboardBackend
+{
+    bool TrySetText(string text);
+
+    /// <summary>Sets the HTML of the clipboard and its text (or only the text, if the system has no HTML format).</summary>
+    bool TrySetHtml(string html, string text);
+
+    bool TryGetText([NotNullWhen(returnValue: true)] out string? text);
+}
+
+/// <summary>
+///  The text of the clipboard: of Windows (without WinForms: docs/avalonia-port/PLAN.md, phase 8), else of the UI of the
+///  application (<see cref="Backend"/>).
+/// </summary>
 public static class ClipboardUtil
 {
     private const uint CF_UNICODETEXT = 13;
@@ -16,10 +29,34 @@ public static class ClipboardUtil
     private const int RetryTimes = 5;
     private const int RetryDelay = 100;
 
+    /// <summary>The clipboard off Windows; set by the application at startup. Without it the clipboard is not available there.</summary>
+    public static IClipboardBackend? Backend { get; set; }
+
     public static bool TrySetText(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
+        return OperatingSystem.IsWindows() ? TrySetTextNative(text) : Backend?.TrySetText(text) ?? false;
+    }
 
+    /// <summary>Sets the HTML format of the clipboard (CF_HTML, e.g. for Word) and its text.</summary>
+    /// <param name="html">The CF_HTML text, with its header.</param>
+    public static bool TrySetHtml(string html, string text)
+    {
+        ArgumentNullException.ThrowIfNull(html);
+        ArgumentNullException.ThrowIfNull(text);
+        return OperatingSystem.IsWindows() ? TrySetHtmlNative(html, text) : Backend?.TrySetHtml(html, text) ?? false;
+    }
+
+    /// <summary>Reads the text of the clipboard, if it has text (e.g. for the plugins, which need no UI type then).</summary>
+    public static bool TryGetText([NotNullWhen(returnValue: true)] out string? text)
+    {
+        text = null;
+        return OperatingSystem.IsWindows() ? TryGetTextNative(out text) : Backend?.TryGetText(out text) ?? false;
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static bool TrySetTextNative(string text)
+    {
         if (!TryOpenClipboard())
         {
             // The clipboard is being used by another process
@@ -72,13 +109,9 @@ public static class ClipboardUtil
         }
     }
 
-    /// <summary>Sets the HTML format of the clipboard (CF_HTML, e.g. for Word) and its text.</summary>
-    /// <param name="html">The CF_HTML text, with its header.</param>
-    public static bool TrySetHtml(string html, string text)
+    [SupportedOSPlatform("windows")]
+    private static bool TrySetHtmlNative(string html, string text)
     {
-        ArgumentNullException.ThrowIfNull(html);
-        ArgumentNullException.ThrowIfNull(text);
-
         uint htmlFormat = RegisterClipboardFormatW("HTML Format");
         if (htmlFormat == 0 || !TryOpenClipboard())
         {
@@ -135,8 +168,8 @@ public static class ClipboardUtil
         }
     }
 
-    /// <summary>Reads the text of the clipboard, if it has text (e.g. for the plugins, which need no UI type then).</summary>
-    public static bool TryGetText([NotNullWhen(returnValue: true)] out string? text)
+    [SupportedOSPlatform("windows")]
+    private static bool TryGetTextNative([NotNullWhen(returnValue: true)] out string? text)
     {
         text = null;
         if (!IsClipboardFormatAvailable(CF_UNICODETEXT) || !TryOpenClipboard())
@@ -174,6 +207,7 @@ public static class ClipboardUtil
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private static bool TryOpenClipboard()
     {
         for (int attempt = 0; ; attempt++)
@@ -192,40 +226,51 @@ public static class ClipboardUtil
         }
     }
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool OpenClipboard(nint newOwner);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseClipboard();
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool EmptyClipboard();
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsClipboardFormatAvailable(uint format);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", SetLastError = true)]
     private static extern nint SetClipboardData(uint format, nint memory);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", SetLastError = true)]
     private static extern nint GetClipboardData(uint format);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern uint RegisterClipboardFormatW(string format);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern nint GlobalAlloc(uint flags, nuint bytes);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern nint GlobalFree(nint memory);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern nint GlobalLock(nint memory);
 
+    [SupportedOSPlatform("windows")]
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GlobalUnlock(nint memory);

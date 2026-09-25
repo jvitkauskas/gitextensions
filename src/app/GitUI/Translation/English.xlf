@@ -1240,6 +1240,10 @@ Please make sure that Git for Windows is installed or set the correct command ma
         <source>&amp;Abort</source>
         <target />
       </trans-unit>
+      <trans-unit id="bold.Text">
+        <source>&amp;Bold</source>
+        <target />
+      </trans-unit>
       <trans-unit id="cancel.Text">
         <source>Cancel</source>
         <target />
@@ -1248,8 +1252,24 @@ Please make sure that Git for Windows is installed or set the correct command ma
         <source>&amp;Close</source>
         <target />
       </trans-unit>
+      <trans-unit id="colorTitle.Text">
+        <source>Color</source>
+        <target />
+      </trans-unit>
       <trans-unit id="continue.Text">
         <source>C&amp;ontinue</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="fontFamily.Text">
+        <source>&amp;Font:</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="fontSize.Text">
+        <source>&amp;Size:</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="fontTitle.Text">
+        <source>Font</source>
         <target />
       </trans-unit>
       <trans-unit id="help.Text">
@@ -1264,6 +1284,10 @@ Please make sure that Git for Windows is installed or set the correct command ma
         <source>&amp;Ignore</source>
         <target />
       </trans-unit>
+      <trans-unit id="italic.Text">
+        <source>&amp;Italic</source>
+        <target />
+      </trans-unit>
       <trans-unit id="no.Text">
         <source>&amp;No</source>
         <target />
@@ -1274,6 +1298,10 @@ Please make sure that Git for Windows is installed or set the correct command ma
       </trans-unit>
       <trans-unit id="retry.Text">
         <source>&amp;Retry</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="sample.Text">
+        <source>Sample</source>
         <target />
       </trans-unit>
       <trans-unit id="showDetails.Text">

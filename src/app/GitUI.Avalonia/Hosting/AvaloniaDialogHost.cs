@@ -45,8 +45,10 @@ public static class AvaloniaDialogHost
     ///  The handle of the active window of the application, else of the window opened last (the owner of a message box
     ///  shown without one, as the native message box takes the active window); 0 if no window is open.
     /// </summary>
-    public static nint GetActiveWindowHandle()
-        => (_openWindows.LastOrDefault(window => window.IsActive) ?? _openWindows.LastOrDefault())?.NativeHandle ?? 0;
+    public static nint GetActiveWindowHandle() => GetActiveWindow()?.NativeHandle ?? 0;
+
+    /// <summary>The active window of the application, else the window opened last; none if no window is open.</summary>
+    public static DialogWindow? GetActiveWindow() => _openWindows.LastOrDefault(window => window.IsActive) ?? _openWindows.LastOrDefault();
 
     /// <summary>Closes all the open windows (as the WinForms <c>Application.Exit</c>), which ends the main loop.</summary>
     public static void CloseAllWindows()

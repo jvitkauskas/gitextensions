@@ -4,9 +4,9 @@ using System.Runtime.Versioning;
 namespace GitExtensions.Extensibility;
 
 /// <summary>
-///  The native dialog to choose a file (the Common Item Dialog), with the properties the WinForms <c>FileDialog</c> had.
+///  The native dialog to choose a file (the Common Item Dialog), with the properties the WinForms <c>FileDialog</c> had; off
+///  Windows the file dialog of the UI of the application (<see cref="DialogBoxHost"/>).
 /// </summary>
-[SupportedOSPlatform("windows6.1")]
 public abstract class FileDialog : IDisposable
 {
     private const uint ERROR_CANCELLED = 0x800704C7;
@@ -34,6 +34,34 @@ public abstract class FileDialog : IDisposable
     /// <summary>Shows the dialog modally over <paramref name="owner"/> (the active window if none).</summary>
     /// <returns><see cref="DialogResult.OK"/> if a file was chosen, else <see cref="DialogResult.Cancel"/>.</returns>
     public DialogResult ShowDialog(IWin32Window? owner = null)
+    {
+        if (DialogBoxHost.Active is { } host)
+        {
+            FileDialogRequest request = new(
+                Kind,
+                Title,
+                [.. ParseFilter(Filter).Select(f => new FileDialogFileType(f.Name, f.Spec.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)))],
+                FilterIndex,
+                InitialDirectory,
+                FileName,
+                AddExtension && !string.IsNullOrEmpty(DefaultExt) ? DefaultExt.TrimStart('.') : null,
+                AllowsMultiselect,
+                PromptsOverwrite);
+            if (host.ShowFileDialog(owner?.Handle ?? 0, request) is not { Paths.Count: > 0 } result)
+            {
+                return DialogResult.Cancel;
+            }
+
+            FilterIndex = result.FileTypeIndex;
+            SetResult(result.Paths);
+            return DialogResult.OK;
+        }
+
+        return OperatingSystem.IsWindowsVersionAtLeast(6, 1) ? ShowNativeDialog(owner) : throw new PlatformNotSupportedException();
+    }
+
+    [SupportedOSPlatform("windows6.1")]
+    private DialogResult ShowNativeDialog(IWin32Window? owner)
     {
         nint hwndOwner = owner?.Handle ?? 0;
         if (hwndOwner == 0)
@@ -103,16 +131,30 @@ public abstract class FileDialog : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>What the dialog chooses (for the dialogs of <see cref="DialogBoxHost"/>).</summary>
+    private protected abstract FileDialogKind Kind { get; }
+
+    private protected virtual bool AllowsMultiselect => false;
+
+    private protected virtual bool PromptsOverwrite => false;
+
+    /// <summary>Takes the paths chosen with a dialog of <see cref="DialogBoxHost"/>.</summary>
+    private protected virtual void SetResult(IReadOnlyList<string> paths) => FileName = paths[0];
+
+    [SupportedOSPlatform("windows6.1")]
     private protected abstract IFileDialog CreateDialog();
 
+    [SupportedOSPlatform("windows6.1")]
     private protected abstract uint GetOptions();
 
+    [SupportedOSPlatform("windows6.1")]
     private protected virtual void ReadResult(IFileDialog dialog)
     {
         dialog.GetResult(out IShellItem item);
         FileName = GetPath(item);
     }
 
+    [SupportedOSPlatform("windows6.1")]
     private protected static string GetPath(IShellItem item)
     {
         item.GetDisplayName(ShellItemDisplayName.FileSystemPath, out nint path);
@@ -126,6 +168,7 @@ public abstract class FileDialog : IDisposable
         }
     }
 
+    [SupportedOSPlatform("windows6.1")]
     private protected static IShellItem? TryCreateShellItem(string path)
     {
         try
@@ -156,6 +199,7 @@ public abstract class FileDialog : IDisposable
         return [.. Enumerable.Range(0, parts.Length / 2).Select(i => new FilterSpec { Name = parts[2 * i], Spec = parts[(2 * i) + 1] })];
     }
 
+    [SupportedOSPlatform("windows6.1")]
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
     private static extern int SHCreateItemFromParsingName(string path, nint bindContext, ref Guid interfaceId, out IShellItem item);
 
@@ -190,6 +234,7 @@ public abstract class FileDialog : IDisposable
     [ComImport]
     [Guid("42f85136-db7e-439c-85f1-e4075d135fc8")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [SupportedOSPlatform("windows6.1")]
     private protected interface IFileDialog
     {
         [PreserveSig]
@@ -245,6 +290,7 @@ public abstract class FileDialog : IDisposable
     [ComImport]
     [Guid("d57c7288-d4ad-4768-be02-9d969532d960")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [SupportedOSPlatform("windows6.1")]
     private protected interface IFileOpenDialog : IFileDialog
     {
         [PreserveSig]
@@ -304,6 +350,7 @@ public abstract class FileDialog : IDisposable
     [ComImport]
     [Guid("84bccd23-5fde-4cdb-aea4-af64b83d78ab")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [SupportedOSPlatform("windows6.1")]
     private protected interface IFileSaveDialog : IFileDialog
     {
         [PreserveSig]
@@ -369,6 +416,7 @@ public abstract class FileDialog : IDisposable
     [ComImport]
     [Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [SupportedOSPlatform("windows6.1")]
     private protected interface IShellItem
     {
         void BindToHandler(nint bindContext, ref Guid handler, ref Guid interfaceId, out nint result);
@@ -385,6 +433,7 @@ public abstract class FileDialog : IDisposable
     [ComImport]
     [Guid("b63ea76d-1f85-456f-a19c-48159efa858b")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [SupportedOSPlatform("windows6.1")]
     private protected interface IShellItemArray
     {
         void BindToHandler(nint bindContext, ref Guid handler, ref Guid interfaceId, out nint result);
@@ -404,19 +453,20 @@ public abstract class FileDialog : IDisposable
 
     [ComImport]
     [Guid("dc1c5a9c-e88a-4dde-a5a1-60f82a20aef7")]
+    [SupportedOSPlatform("windows6.1")]
     private protected class FileOpenDialogCoClass
     {
     }
 
     [ComImport]
     [Guid("c0b4e2f3-ba21-4773-8dba-335ec946eb8b")]
+    [SupportedOSPlatform("windows6.1")]
     private protected class FileSaveDialogCoClass
     {
     }
 }
 
 /// <summary>The native dialog to choose files to open (as the WinForms <c>OpenFileDialog</c>).</summary>
-[SupportedOSPlatform("windows6.1")]
 public sealed class OpenFileDialog : FileDialog
 {
     public bool Multiselect { get; set; }
@@ -426,13 +476,26 @@ public sealed class OpenFileDialog : FileDialog
     /// <summary>The chosen files, once the dialog is accepted.</summary>
     public string[] FileNames { get; private set; } = [];
 
+    private protected override FileDialogKind Kind => FileDialogKind.Open;
+
+    private protected override bool AllowsMultiselect => Multiselect;
+
+    private protected override void SetResult(IReadOnlyList<string> paths)
+    {
+        FileNames = [.. paths];
+        FileName = paths[0];
+    }
+
+    [SupportedOSPlatform("windows6.1")]
     private protected override IFileDialog CreateDialog() => (IFileOpenDialog)new FileOpenDialogCoClass();
 
+    [SupportedOSPlatform("windows6.1")]
     private protected override uint GetOptions()
         => FileDialogOptions.PathMustExist
             | (CheckFileExists ? FileDialogOptions.FileMustExist : 0)
             | (Multiselect ? FileDialogOptions.AllowMultiselect : 0);
 
+    [SupportedOSPlatform("windows6.1")]
     private protected override void ReadResult(IFileDialog dialog)
     {
         ((IFileOpenDialog)dialog).GetResults(out IShellItemArray items);
@@ -447,19 +510,23 @@ public sealed class OpenFileDialog : FileDialog
 }
 
 /// <summary>The native dialog to choose a file to save (as the WinForms <c>SaveFileDialog</c>).</summary>
-[SupportedOSPlatform("windows6.1")]
 public sealed class SaveFileDialog : FileDialog
 {
     public bool OverwritePrompt { get; set; } = true;
 
+    private protected override FileDialogKind Kind => FileDialogKind.Save;
+
+    private protected override bool PromptsOverwrite => OverwritePrompt;
+
+    [SupportedOSPlatform("windows6.1")]
     private protected override IFileDialog CreateDialog() => (IFileSaveDialog)new FileSaveDialogCoClass();
 
+    [SupportedOSPlatform("windows6.1")]
     private protected override uint GetOptions()
         => FileDialogOptions.PathMustExist | (OverwritePrompt ? FileDialogOptions.OverwritePrompt : 0);
 }
 
 /// <summary>The native dialog to choose a folder (as the WinForms <c>FolderBrowserDialog</c>, the Common Item Dialog).</summary>
-[SupportedOSPlatform("windows6.1")]
 public sealed class FolderBrowserDialog : IDisposable
 {
     public string? InitialDirectory { get; set; }
@@ -497,14 +564,20 @@ public sealed class FolderBrowserDialog : IDisposable
     /// <summary>The open dialog of the folders.</summary>
     private sealed class FolderPicker : FileDialog
     {
+        private protected override FileDialogKind Kind => FileDialogKind.Folder;
+
+        [SupportedOSPlatform("windows6.1")]
         private protected override IFileDialog CreateDialog() => (IFileOpenDialog)new FileOpenDialogCoClass();
 
+        [SupportedOSPlatform("windows6.1")]
         private protected override uint GetOptions() => FileDialogOptions.PickFolders | FileDialogOptions.PathMustExist;
     }
 }
 
-/// <summary>The native dialog to choose a color (as the WinForms <c>ColorDialog</c>).</summary>
-[SupportedOSPlatform("windows6.1")]
+/// <summary>
+///  The native dialog to choose a color (as the WinForms <c>ColorDialog</c>); off Windows the color dialog of the UI of the
+///  application (<see cref="DialogBoxHost"/>).
+/// </summary>
 public sealed class ColorDialog : IDisposable
 {
     private const int CC_RGBINIT = 0x1;
@@ -518,6 +591,23 @@ public sealed class ColorDialog : IDisposable
     public bool FullOpen { get; set; }
 
     public DialogResult ShowDialog(IWin32Window? owner = null)
+    {
+        if (DialogBoxHost.Active is { } host)
+        {
+            if (host.ShowColorDialog(owner?.Handle ?? 0, Color) is not { } color)
+            {
+                return DialogResult.Cancel;
+            }
+
+            Color = color;
+            return DialogResult.OK;
+        }
+
+        return OperatingSystem.IsWindowsVersionAtLeast(6, 1) ? ShowNativeDialog(owner) : throw new PlatformNotSupportedException();
+    }
+
+    [SupportedOSPlatform("windows6.1")]
+    private DialogResult ShowNativeDialog(IWin32Window? owner)
     {
         nint hwndOwner = owner?.Handle ?? DialogNativeMethods.GetActiveWindow();
         nint customColors = Marshal.AllocCoTaskMem(sizeof(int) * _customColors.Length);
@@ -559,6 +649,7 @@ public sealed class ColorDialog : IDisposable
         // Nothing to release: the native dialog lives while shown only.
     }
 
+    [SupportedOSPlatform("windows6.1")]
     [DllImport("comdlg32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ChooseColorW(ref ChooseColorData data);
@@ -693,5 +784,38 @@ public sealed class FontDialog : IDisposable
         public short MissingAlignment;
         public int SizeMin;
         public int SizeMax;
+    }
+}
+
+/// <summary>
+///  The dialog to choose a font of the settings: the native font dialog on Windows (<see cref="FontDialog"/>), else the font
+///  dialog of the UI of the application (<see cref="DialogBoxHost"/>).
+/// </summary>
+public static class FontPicker
+{
+    /// <summary>Shows the font dialog over <paramref name="owner"/>, with <paramref name="font"/> (Consolas 12 if none).</summary>
+    /// <param name="fixedPitchOnly">Whether only the fonts of fixed pitch are offered (for code).</param>
+    /// <returns>The chosen font; <see langword="null"/> if the dialog was cancelled.</returns>
+    /// <exception cref="ArgumentException">The native dialog does not accept the font (e.g. a font that is not TrueType).</exception>
+    public static FontDescriptor? Show(IWin32Window? owner, FontDescriptor? font, bool fixedPitchOnly)
+    {
+        if (DialogBoxHost.Active is { } host)
+        {
+            return host.ShowFontDialog(owner?.Handle ?? 0, font, fixedPitchOnly);
+        }
+
+        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+        {
+            throw new PlatformNotSupportedException();
+        }
+
+        using FontDialog dialog = new()
+        {
+            AllowVerticalFonts = false,
+            Color = SystemColors.ControlText,
+            FixedPitchOnly = fixedPitchOnly,
+        };
+        dialog.Font = font?.ToFont() ?? new Font("Consolas", 12);
+        return dialog.ShowDialog(owner) is DialogResult.OK or DialogResult.Yes ? dialog.Font.ToFontDescriptor() : null;
     }
 }

@@ -234,6 +234,72 @@ public sealed class DialogBoxViewTests : HeadlessTest
         window.Close();
     });
 
+    [Test]
+    public Task Render_screenshots_of_the_common_dialogs([Values("light", "dark")] string theme) => OnUiThreadAsync(() =>
+    {
+        UseTheme(theme == "dark" ? ThemeVariant.Dark : ThemeVariant.Light);
+
+        Capture(new ColorPickerWindow(System.Drawing.Color.FromArgb(255, 30, 115, 190), new DialogBoxStrings()), $"color-picker-{theme}");
+        Capture(new FontPickerWindow(new FontDescriptor("Consolas", 10), fixedPitchOnly: false, new DialogBoxStrings()), $"font-picker-{theme}");
+    });
+
+    [Test]
+    public Task ColorPicker_OK_gives_the_color_of_the_view_and_Cancel_none() => OnUiThreadAsync(() =>
+    {
+        ColorPickerWindow accepted = Show(new ColorPickerWindow(System.Drawing.Color.Red, new DialogBoxStrings()));
+        accepted.ColorView.Color.Should().Be(global::Avalonia.Media.Colors.Red);
+        accepted.ColorView.Color = global::Avalonia.Media.Color.FromRgb(1, 2, 3);
+        Click(accepted.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "okButton"));
+        accepted.SelectedColor.Should().Be(System.Drawing.Color.FromArgb(255, 1, 2, 3));
+
+        ColorPickerWindow cancelled = Show(new ColorPickerWindow(System.Drawing.Color.Red, new DialogBoxStrings()));
+        Click(cancelled.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "cancelButton"));
+        cancelled.SelectedColor.Should().BeNull();
+    });
+
+    [Test]
+    public Task FontPicker_gives_the_family_size_and_style_chosen() => OnUiThreadAsync(() =>
+    {
+        FontPickerWindow window = Show(new FontPickerWindow(null, fixedPitchOnly: false, new DialogBoxStrings()));
+        string family = window.AllFamilies.Last();
+
+        window.Families.SelectedItem = family;
+        window.FontSizeBox.Value = 13;
+        window.Bold.IsChecked = true;
+        window.Italic.IsChecked = true;
+        Click(window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "okButton"));
+
+        window.SelectedFont.Should().Be(new FontDescriptor(family, 13, IsBold: true, IsItalic: true));
+    });
+
+    [Test]
+    public Task FontPicker_selects_the_font_of_the_settings_and_filters_the_families() => OnUiThreadAsync(() =>
+    {
+        FontPickerWindow probe = new(null, fixedPitchOnly: false, new DialogBoxStrings());
+        string family = probe.AllFamilies[probe.AllFamilies.Count / 2];
+
+        FontPickerWindow window = Show(new FontPickerWindow(new FontDescriptor(family.ToUpperInvariant(), 9, IsItalic: true), fixedPitchOnly: false, new DialogBoxStrings()));
+
+        window.Families.SelectedItem.Should().Be(family);
+        window.FontSizeBox.Value.Should().Be(9);
+        window.Italic.IsChecked.Should().BeTrue();
+
+        window.FamilyFilter.Text = family;
+        Dispatcher.UIThread.RunJobs();
+        window.Families.ItemsSource.Should().BeAssignableTo<IEnumerable<string>>().Which.Should().Contain(family).And.OnlyContain(f => f.Contains(family, StringComparison.CurrentCultureIgnoreCase));
+        window.Close();
+    });
+
+    [Test]
+    public Task FontPicker_of_fixed_pitch_offers_only_fonts_of_fixed_pitch() => OnUiThreadAsync(() =>
+    {
+        FontPickerWindow window = new(null, fixedPitchOnly: true, new DialogBoxStrings());
+
+        window.AllFamilies.Should().OnlyContain(family => FontPickerWindow.IsFixedPitch(family));
+        FontPickerWindow all = new(null, fixedPitchOnly: false, new DialogBoxStrings());
+        all.AllFamilies.Count.Should().BeGreaterThan(window.AllFamilies.Count);
+    });
+
     private static void Click(Button button)
     {
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

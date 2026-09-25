@@ -24,7 +24,28 @@ public sealed class DialogBoxStrings : ViewStrings
         Continue = Add("continue", "Text", "C&ontinue");
         ShowDetails = Add("showDetails", "Text", "Show details");
         HideDetails = Add("hideDetails", "Text", "Hide details");
+        ColorTitle = Add("colorTitle", "Text", "Color");
+        FontTitle = Add("fontTitle", "Text", "Font");
+        FontFamily = Add("fontFamily", "Text", "&Font:");
+        FontSize = Add("fontSize", "Text", "&Size:");
+        Bold = Add("bold", "Text", "&Bold");
+        Italic = Add("italic", "Text", "&Italic");
+        Sample = Add("sample", "Text", "Sample");
     }
+
+    public TranslatedText ColorTitle { get; }
+
+    public TranslatedText FontTitle { get; }
+
+    public TranslatedText FontFamily { get; }
+
+    public TranslatedText FontSize { get; }
+
+    public TranslatedText Bold { get; }
+
+    public TranslatedText Italic { get; }
+
+    public TranslatedText Sample { get; }
 
     public TranslatedText Ok { get; }
 
