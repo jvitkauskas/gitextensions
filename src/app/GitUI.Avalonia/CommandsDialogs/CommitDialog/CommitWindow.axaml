@@ -52,10 +52,8 @@
     <Grid ColumnDefinitions="380,Auto,*">
       <!-- Equivalent of splitLeft: the unstaged files, then toolbarStaged above the staged files. -->
       <Grid RowDefinitions="Auto,*,Auto,Auto,*">
+        <!-- The rescan is the Refresh button of the toolbar of the unstaged files, as in FormCommit. -->
         <StackPanel Orientation="Horizontal" Spacing="2">
-          <Button Name="rescanButton" Classes="toolbar" Command="{Binding RescanChangesCommand}">
-            <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
-          </Button>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Width="60" MinWidth="0" VerticalAlignment="Center" Margin="6,0" />
           <!-- Equivalent of toolbarSelectionFilter. -->
           <StackPanel Name="selectionFilterBar" Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsSelectionFilterVisible}">

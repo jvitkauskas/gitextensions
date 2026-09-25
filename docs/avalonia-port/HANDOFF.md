@@ -67,7 +67,8 @@ Also: Sublime Merge's output option (`-o "$MERGED"`; it asked where to save), th
 (Avalonia 12.1 draws no stretched `PathGeometry`, as Fluent's `ColorView` icons are: they are drawn inside a
 `GeometryGroup`), and the buttons of the conflicts dialog grow with their text ("Rescan merge conflicts" was cut).
 The Tools menu: gitk and Git GUI are found where Homebrew and the distributions install them and say how to install
-them when missing (`GitGuiTools`); on macOS "Git bash" is "Open in Terminal".
+them when missing (`GitGuiTools`); on macOS "Git bash" is "Open in Terminal". The commit dialog had a second Rescan button above the unstaged files
+(FormCommit has only the Refresh of the toolbar of that list): removed.
 
 The subsequent QA click-through (2026-09-25) fixed first-run stack overflow in the plugin assembly resolver and
 checkout error dialogs while typing partial branch names. Both have regression tests and were rechecked in the
