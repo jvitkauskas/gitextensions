@@ -11,6 +11,7 @@ public abstract class GitPluginBase : IGitPlugin, ITranslate
     public string? Description { get; protected set; }
     public string? Name { get; protected set; }
     public Image? Icon { get; protected set; }
+    public PluginImage? IconImage { get; protected set; }
 
     protected GitPluginBase(bool hasSettings)
     {

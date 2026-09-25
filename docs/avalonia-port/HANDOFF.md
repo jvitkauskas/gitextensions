@@ -9,9 +9,10 @@ port, done) and `CROSS-PLATFORM.md` (macOS and Linux, next); `ledger.md` records
   removed, and the parity gaps of the ledger are closed or recorded as deliberate. (`avalonia-3rdparty` stayed at the
   commit before the cross-platform work.)
 - Phase 0 of `CROSS-PLATFORM.md` (guard rails and CI) is done: the solution builds on Linux, and CI has a Linux job.
-- Phase 1 (portable core libraries) is under way, in the dependency order GitExtensions.Extensibility, GitExtUtils,
-  GitUIPluginInterfaces, GitCommands, ResourceManager, GitUI.RevisionGraph, GitUI.Presentation. The "Platforms"
-  section of the ledger says which projects target `net10.0` and which tests run on Linux.
+- Phase 1 (portable core libraries) is done: GitExtensions.Extensibility, GitExtUtils, GitUIPluginInterfaces,
+  GitCommands, ResourceManager, GitUI.RevisionGraph and GitUI.Presentation target `net10.0`, and their tests run on Linux.
+  The "Platforms" section of the ledger says what runs where. Next: phase 2 (the application starts on Linux and
+  macOS), which the owner has not approved yet; the plan asks for a spike of the modal message boxes first.
 - Work in batches: each ends with a build, the full test suites (on Windows, and the portable ones on Linux), a commit,
   a fast-forward of `avalonia` and a push of it.
 

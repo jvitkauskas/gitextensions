@@ -1,4 +1,6 @@
-﻿using GitCommands.Utils;
+﻿using System.Runtime.Serialization;
+using GitCommands.Utils;
+using GitExtensions.Extensibility.Plugins;
 
 namespace GitCommands;
 
@@ -6,10 +8,14 @@ public sealed class CommitTemplateItem
 {
     public string Name { get; set; }
     public string Text { get; set; }
-    public Image? Icon { get; set; }
+
+    /// <summary>The icon of a template of a plugin; the templates of the settings have none (not saved).</summary>
+    [IgnoreDataMember]
+    public PluginImage? Icon { get; set; }
+
     public bool IsRegex { get; set; }
 
-    public CommitTemplateItem(string name, string text, Image? icon, bool isRegex)
+    public CommitTemplateItem(string name, string text, PluginImage? icon, bool isRegex)
     {
         Name = name;
         Text = text;

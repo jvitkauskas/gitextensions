@@ -14,7 +14,7 @@ public class ReleaseNotesGeneratorPlugin : GitPluginBase
         Id = new Guid("49E7F2D6-AD79-489E-80A4-5CD212AE6DF3");
         Name = "Release Notes Generator";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconReleaseNotesGenerator;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     public override bool Execute(GitUIEventArgs args)

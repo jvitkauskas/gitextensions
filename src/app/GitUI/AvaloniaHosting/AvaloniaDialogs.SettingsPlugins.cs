@@ -26,7 +26,7 @@ internal static partial class AvaloniaDialogs
         {
             pages = [.. PluginRegistry.Plugins
                 .Where(plugin => plugin.HasSettings)
-                .Select(plugin => (CreatePluginSettingsPage(plugin, strings, valueStrings, getOwner), ToPng(plugin.Icon)))];
+                .Select(plugin => (CreatePluginSettingsPage(plugin, strings, valueStrings, getOwner), GetPluginIconPng(plugin)))];
         }
 
         return pages.OrderBy(entry => entry.Page.Title, StringComparer.CurrentCultureIgnoreCase);
@@ -89,6 +89,9 @@ internal static partial class AvaloniaDialogs
             _ => throw new NotSupportedException($"No control binding registered for {setting.GetType().Name}.")
         };
     }
+
+    /// <summary>The icon of a plugin as PNG: its image of plugin API v3, else its GDI+ icon.</summary>
+    private static byte[]? GetPluginIconPng(IGitPlugin plugin) => plugin.IconImage?.ToArray() ?? ToPng(plugin.Icon);
 
     private static byte[]? ToPng(Image? image)
     {

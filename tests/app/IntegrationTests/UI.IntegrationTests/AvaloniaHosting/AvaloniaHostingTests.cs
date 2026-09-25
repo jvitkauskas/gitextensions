@@ -152,8 +152,16 @@ public sealed partial class AvaloniaHostingTests
                 DispatcherTimer.RunOnce(
                     () =>
                     {
-                        Capture(window, "commit-template-settings");
-                        viewModel.SaveCommand.Execute(null);
+                        try
+                        {
+                            Capture(window, "commit-template-settings");
+                            viewModel.SaveCommand.Execute(null);
+                        }
+                        catch (Exception ex)
+                        {
+                            _driveFailure = ex;
+                            window.Close();
+                        }
                     },
                     TimeSpan.FromMilliseconds(500));
             });

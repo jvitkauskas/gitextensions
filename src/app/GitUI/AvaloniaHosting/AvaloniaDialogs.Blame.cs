@@ -139,7 +139,7 @@ internal static partial class AvaloniaDialogs
             : new MenuModelItem(
                 TranslatedText.ToAccessKeyText(item.Text),
                 item.OnClick is null ? null : () => AvaloniaUi.RunInHostContext(item.Click),
-                ToPng(item.Icon),
+                item.IconImage?.ToArray() ?? ToPng(item.Icon),
                 item.Children.Count == 0 ? null : ToMenuModel(item.Children),
                 IsEnabled: item.IsEnabled);
 }

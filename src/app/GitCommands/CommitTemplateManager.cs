@@ -1,6 +1,7 @@
 using System.IO.Abstractions;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
+using GitExtensions.Extensibility.Plugins;
 
 namespace GitCommands;
 
@@ -28,7 +29,7 @@ public interface ICommitTemplateManager
     /// </summary>
     /// <param name="templateName">The name of the template.</param>
     /// <param name="templateText">The body of the template.</param>
-    void Register(string templateName, Func<string> templateText, Image? icon, bool isRegex);
+    void Register(string templateName, Func<string> templateText, PluginImage? icon, bool isRegex);
 
     /// <summary>
     /// Allows a plugin to unregister a commit template.
@@ -44,10 +45,10 @@ public sealed class CommitTemplateManager : ICommitTemplateManager
         public readonly string Name;
 
         public readonly Func<string> Text;
-        public readonly Image? Icon;
+        public readonly PluginImage? Icon;
         public readonly bool IsRegex;
 
-        public RegisteredCommitTemplateItem(string name, Func<string> text, Image? icon, bool isRegex)
+        public RegisteredCommitTemplateItem(string name, Func<string> text, PluginImage? icon, bool isRegex)
         {
             Name = name;
             Text = text;
@@ -121,7 +122,7 @@ public sealed class CommitTemplateManager : ICommitTemplateManager
     /// </summary>
     /// <param name="templateName">The name of the template.</param>
     /// <param name="templateText">The body of the template.</param>
-    public void Register(string templateName, Func<string> templateText, Image? icon, bool isRegex = false)
+    public void Register(string templateName, Func<string> templateText, PluginImage? icon, bool isRegex = false)
     {
         lock (_registeredTemplatesStorageSync)
         {

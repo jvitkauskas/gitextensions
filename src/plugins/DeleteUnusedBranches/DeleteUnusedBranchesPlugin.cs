@@ -15,7 +15,7 @@ public class DeleteUnusedBranchesPlugin : GitPluginBase, IGitPluginForRepository
         Id = new Guid("DC3CA904-B9A5-4FE8-BF63-5B8EE9C2DDAC");
         Name = "Delete obsolete branches";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconDeleteUnusedBranches;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     private readonly StringSetting _mergedInBranch = new("Branch where all branches should be merged in", "HEAD");

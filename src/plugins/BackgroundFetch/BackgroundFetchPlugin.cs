@@ -20,7 +20,7 @@ public class BackgroundFetchPlugin : GitPluginBase, IGitPluginForRepository
         Id = new Guid("D19A7905-8AAD-4271-ACA9-817669B94A1D");
         Name = "Periodic background fetch";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconBackgroundFetch;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     private IDisposable? _cancellationToken;

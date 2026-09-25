@@ -692,6 +692,11 @@ public sealed class GitUICommands : IGitUICommands
 
     public void AddCommitTemplate(string key, Func<string> addingText, Image? icon, bool isRegex)
     {
+        _commitTemplateManager.Register(key, addingText, icon?.ToPluginImage(), isRegex);
+    }
+
+    public void RegisterCommitTemplate(string key, Func<string> addingText, PluginImage? icon = null, bool isRegex = false)
+    {
         _commitTemplateManager.Register(key, addingText, icon, isRegex);
     }
 

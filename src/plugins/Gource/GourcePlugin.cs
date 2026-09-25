@@ -47,7 +47,7 @@ public class GourcePlugin : GitPluginBase, IGitPluginForRepository
         Id = new Guid("F0A6A769-6DCC-4452-9A43-343347015EEC");
         Name = "Gource";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconGource;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     #region IGitPlugin Members

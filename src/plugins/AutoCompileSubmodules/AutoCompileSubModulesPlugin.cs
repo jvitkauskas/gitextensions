@@ -23,7 +23,7 @@ public class AutoCompileSubModulesPlugin : GitPluginBase, IGitPluginForRepositor
         Id = new Guid("D4D1ACB7-0B6B-4A3C-B0DB-A25056A277D9");
         Name = "Auto compile submodules";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconAutoCompileSubmodules;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     private readonly BoolSetting _msBuildEnabled = new("Enabled", false);

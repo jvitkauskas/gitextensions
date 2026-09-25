@@ -58,6 +58,11 @@ Each phase ends with a Windows build that passes every test, and from phase 2 on
 relative (S, M, L, XL).
 
 ### Phase 0: Guard rails (S)
+**Done (2026-09-25).** As planned, except: the publish steps keep Windows PowerShell on Windows (with
+`-ExecutionPolicy Bypass`; `pwsh` is not always installed there) and use `pwsh` elsewhere; the solution build already
+skipped the WiX project, so only `src/native/build.proj` needed a guard; the ledger has a "Platforms" section rather than
+a column (its rows are forms). Found on the way: `CommonAssemblyInfo.cs` declared every assembly Windows-only, which
+silenced CA1416 and made NUnit skip every test assembly off Windows; it now does so only for `net10.0-windows`.
 - Build `setup/installer/Setup.wixproj` and `src/native` only on Windows (conditions in `GitExtensions.slnx` or a
   separate installer solution), so that `dotnet build` of the solution can work elsewhere.
 - Add a Linux CI job (ubuntu) that builds the portable libraries and runs their tests; it grows with each phase. Add a
@@ -67,6 +72,16 @@ relative (S, M, L, XL).
 - Record the phase in the ledger (a "Platform" column: which areas run on which system).
 
 ### Phase 1: Portable core libraries (L)
+**Done (2026-09-25).** All seven projects target `net10.0` (`$(PortableTargetFramework)`), with CommonTestUtils and the
+tests of the libraries, which run on Linux in CI (about 3700). Differences from the plan below: the dependency order is
+Extensibility, GitExtUtils, GitUIPluginInterfaces, GitCommands, ResourceManager, RevisionGraph, Presentation; only
+`gitcommand` and `gitssh` moved to the settings file, since the installer, the shell extension and the Visual Studio
+extension read the other registry values (they stay in the registry on Windows, and are in the settings file elsewhere);
+`ImportFromRegistry` stays in the static constructor, guarded by `OperatingSystem.IsWindows()`; the plugin API v3 images
+are `IGitPlugin.IconImage`, `PluginMenuItem.IconImage` and `IGitUICommands.RegisterCommitTemplate` (an `AddCommitTemplate`
+overload would make the calls with `null` ambiguous). `DpiUtil`, `Screens`, `ClipboardUtil` and `TextMeasurement` stay
+until phase 2, guarded or marked Windows-only. Found on the way: the settings were never saved off Windows (the name
+of the mutex of `SaveSettings` had the path in it). The ledger's "Platforms" section has the details.
 Retarget bottom-up, one project per step, each only once CA1416 is clean for it: `GitExtUtils` → `GitCommands` →
 `GitExtensions.Extensibility` → `ResourceManager` → `GitUI.Presentation` → `GitUI.RevisionGraph`.
 - **Settings off the registry.** Move the registry-backed settings (`gitcommand`, `gitssh`, `plink`, `puttygen`,

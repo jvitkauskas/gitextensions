@@ -72,7 +72,7 @@ internal static partial class AvaloniaDialogs
                 RegisterPlugins();
                 lock (PluginRegistry.Plugins)
                 {
-                    return [.. PluginRegistry.Plugins.Select(plugin => new BrowsePlugin(plugin.Name ?? "", ToPng(plugin.Icon), plugin is IGitPluginForRepository, plugin))];
+                    return [.. PluginRegistry.Plugins.Select(plugin => new BrowsePlugin(plugin.Name ?? "", GetPluginIconPng(plugin), plugin is IGitPluginForRepository, plugin))];
                 }
             }
         }

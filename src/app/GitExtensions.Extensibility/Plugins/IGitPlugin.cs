@@ -11,7 +11,13 @@ public interface IGitPlugin
 
     string? Description { get; }
 
+    /// <summary>The icon of the plugin as a GDI+ image, which is only shown on Windows; see <see cref="IconImage"/>.</summary>
     Image? Icon { get; }
+
+    /// <summary>
+    ///  The icon of the plugin on every system (plugin API v3). The host shows it rather than <see cref="Icon"/>.
+    /// </summary>
+    PluginImage? IconImage => null;
 
     IGitPluginSettingsContainer? SettingsContainer { get; set; }
 

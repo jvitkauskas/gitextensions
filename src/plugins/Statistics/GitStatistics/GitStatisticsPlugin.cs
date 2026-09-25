@@ -24,7 +24,7 @@ public class GitStatisticsPlugin : GitPluginBase, IGitPluginForRepository
         Id = new Guid("17D1507D-C00D-4A10-AB75-DECB2EA5FCBF");
         Name = "Statistics";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconGitStatistics;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     public override IEnumerable<ISetting> GetSettings()

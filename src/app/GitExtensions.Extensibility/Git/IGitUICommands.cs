@@ -34,7 +34,15 @@ public interface IGitUICommands : IServiceProvider
     /// </summary>
     ILockableNotifier RepoChangedNotifier { get; }
 
+    /// <summary>Adds a commit template with a GDI+ icon, which is only shown on Windows; see <see cref="RegisterCommitTemplate"/>.</summary>
     void AddCommitTemplate(string key, Func<string> addingText, Image? icon, bool isRegex = false);
+
+    /// <summary>Adds a commit template to the templates menu of the commit dialog (plugin API v3).</summary>
+    /// <param name="key">The name of the template, which also removes it (<see cref="RemoveCommitTemplate"/>).</param>
+    /// <param name="addingText">Gives the text of the template when it is chosen.</param>
+    /// <param name="icon">The icon of the menu item, if any.</param>
+    /// <param name="isRegex">Whether the text of the template is a regular expression.</param>
+    void RegisterCommitTemplate(string key, Func<string> addingText, PluginImage? icon = null, bool isRegex = false);
     void AddUpstreamRemote(IWin32Window? owner, IRepositoryHostPlugin gitHoster);
     IGitRemoteCommand CreateRemoteCommand();
     bool DoActionOnRepo(Func<bool> action);

@@ -15,7 +15,7 @@ public class FindLargeFilesPlugin : GitPluginBase, IGitPluginForRepository
         Id = new Guid("5AE20AB1-D677-46C5-ABDB-7874FF5A9296");
         Name = "Find large files";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconFindLargeFiles;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     private readonly NumberSetting<float> _sizeLargeFile = new("Find large files bigger than (Mb)", 1);

@@ -20,7 +20,7 @@ public class ProxySwitcherPlugin : GitPluginBase
         Id = new Guid("C2A1C7A4-D519-4BD1-859B-6CE7DB9325FB");
         Name = "Proxy Switcher";
         Translate(AppSettings.CurrentTranslation);
-        Icon = Resources.IconProxySwitcher;
+        IconImage = PluginImage.FromResource(GetType().Assembly, "PluginIcon.png");
     }
 
     public override IEnumerable<ISetting> GetSettings()

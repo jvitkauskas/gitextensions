@@ -33,7 +33,11 @@ public sealed class PluginMenuItem
 
     public Action? OnClick { get; }
 
+    /// <summary>The image of the item as a GDI+ image, which is only shown on Windows; see <see cref="IconImage"/>.</summary>
     public Image? Icon { get; }
+
+    /// <summary>The image of the item on every system (plugin API v3); the host shows it rather than <see cref="Icon"/>.</summary>
+    public PluginImage? IconImage { get; init; }
 
     /// <summary>The items of the submenu of the item; empty for none.</summary>
     public IReadOnlyList<PluginMenuItem> Children { get; }

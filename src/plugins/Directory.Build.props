@@ -31,4 +31,9 @@
     <ProjectReference Include="$(RepoRoot)\src\app\GitExtensions.Extensibility\GitExtensions.Extensibility.csproj" />
   </ItemGroup>
 
+  <!-- The icon of a plugin (plugin API v3, no GDI+): its Resources\Icon*.png, read with PluginImage.FromResource(assembly, "PluginIcon.png"). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Icon*.png" LogicalName="PluginIcon.png" />
+  </ItemGroup>
+
 </Project>

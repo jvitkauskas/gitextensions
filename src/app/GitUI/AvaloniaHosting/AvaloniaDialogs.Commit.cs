@@ -295,17 +295,7 @@ internal static partial class AvaloniaDialogs
         public (IReadOnlyList<CommitTemplateItem> Registered, IReadOnlyList<CommitTemplateItem> FromSettings) GetCommitTemplates()
             => ([.. _commitTemplateManager.RegisteredTemplates], CommitTemplateItem.LoadFromSettings() ?? []);
 
-        public byte[]? GetTemplateIcon(CommitTemplateItem template)
-        {
-            if (template.Icon is not { } icon)
-            {
-                return null;
-            }
-
-            using MemoryStream stream = new();
-            icon.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-            return stream.ToArray();
-        }
+        public byte[]? GetTemplateIcon(CommitTemplateItem template) => template.Icon?.ToArray();
 
         public string? GetListOfChangesInSubmodules(IReadOnlyList<GitItemStatus> stagedFiles)
         {
