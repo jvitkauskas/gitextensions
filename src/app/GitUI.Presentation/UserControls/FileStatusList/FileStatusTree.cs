@@ -51,6 +51,12 @@ public sealed partial class FileStatusNode : ObservableObject
 
     public ObservableCollection<FileStatusNode> Children { get; } = [];
 
+    /// <summary>
+    ///  The file whose type the icon of a plain file shows: this one, or the first file below a group node (as
+    ///  <c>FindMissingIcons</c>).
+    /// </summary>
+    public string? IconFileName => Entry?.Item.Name ?? DescendantsAndSelf().Select(node => node.Entry).OfType<FileStatusEntry>().FirstOrDefault()?.Item.Name;
+
     /// <summary>The name shown for a file: relative to its folder, and its old name if renamed.</summary>
     public string DisplayName => Entry is { Item: var item } && !item.IsRangeDiff ? GetDisplayName(item) : Text;
 

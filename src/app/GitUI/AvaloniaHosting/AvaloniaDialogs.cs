@@ -122,6 +122,22 @@ internal static partial class AvaloniaDialogs
         // As GitExtensionsDialog.OnHelpButtonClicked: F1 opens the section of the user manual.
         DialogWindow.OpenManualSection ??= (subfolder, anchor) => OsShellUtil.OpenUrlInDefaultBrowser(UserManual.UserManual.UrlFor(subfolder, anchor));
 
+        // As FileStatusList.LoadFileIcons: the icon of the type of a file in the shell (for an extension, the files need not exist).
+        GitUI.Avalonia.Controls.FileStatusList.FileStatusIconImage.LoadFileTypeIcon ??= fileName =>
+        {
+            // Not disposed: the provider keeps the icons of the extensions.
+            Icon? icon = new FileAssociatedIconProvider().Get(Path.GetTempPath(), Path.GetFileName(fileName));
+            if (icon is null)
+            {
+                return null;
+            }
+
+            using Bitmap bitmap = icon.ToBitmap();
+            using MemoryStream stream = new();
+            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            return stream.ToArray();
+        };
+
         Font font = AppSettings.Font;
         return new AvaloniaUiOptions(
             IsDarkTheme: ColorHelper.IsDarkTheme,
