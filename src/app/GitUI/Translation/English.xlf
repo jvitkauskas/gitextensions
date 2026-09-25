@@ -747,6 +747,14 @@ Please make sure that Git for Windows is installed or set the correct command ma
         <source>Theme</source>
         <target />
       </trans-unit>
+      <trans-unit id="lblControlTheme.Text">
+        <source>&amp;Controls:</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="lblControlTheme.ToolTipText">
+        <source>The look of the controls: Fluent, or a community theme (a preview: some views are designed for Fluent).</source>
+        <target />
+      </trans-unit>
       <trans-unit id="lblRestartNeeded.Text">
         <source>Restart required to apply changes</source>
         <target />
@@ -8255,6 +8263,15 @@ help</source>
       </trans-unit>
       <trans-unit id="_rememberChoice.Text">
         <source>&amp;Remember choice</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_restartToApplyTheme.Text">
+        <source>The theme is applied when Git Extensions starts.
+Restart Git Extensions now?</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_restartToApplyThemeCaption.Text">
+        <source>Restart</source>
         <target />
       </trans-unit>
       <trans-unit id="_retry.Text">

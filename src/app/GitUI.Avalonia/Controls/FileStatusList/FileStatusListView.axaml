@@ -357,7 +357,7 @@
           <DataTemplate DataType="ft:FlatTreeRow">
             <StackPanel Orientation="Horizontal" Margin="{Binding Indent}">
               <Panel Width="16">
-                <ToggleButton Theme="{StaticResource FluentTreeViewExpandCollapseChevron}" Focusable="False"
+                <ToggleButton Theme="{DynamicResource FluentTreeViewExpandCollapseChevron}" Focusable="False"
                               IsVisible="{Binding HasChildren}" IsChecked="{Binding IsExpanded}" />
               </Panel>
               <ContentControl Content="{Binding Node}" />

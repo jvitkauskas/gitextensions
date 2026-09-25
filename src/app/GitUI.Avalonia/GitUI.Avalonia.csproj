@@ -21,6 +21,10 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Iciclecreek.Avalonia.Terminal" />
+    <PackageReference Include="Avalonia.Themes.Simple" />
+    <PackageReference Include="Classic.Avalonia.Theme" />
+    <PackageReference Include="Classic.Avalonia.Theme.ColorPicker" />
+    <PackageReference Include="Classic.Avalonia.Theme.DataGrid" />
   </ItemGroup>
 
   <ItemGroup>

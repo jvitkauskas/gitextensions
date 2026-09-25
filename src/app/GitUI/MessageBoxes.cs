@@ -44,6 +44,9 @@ public class MessageBoxes : Translate
     private readonly TranslationString _shellNotFoundCaption = new("Shell not found");
     private readonly TranslationString _shellNotFound = new("The selected shell is not installed, or is not on your path.");
 
+    private readonly TranslationString _restartToApplyThemeCaption = new("Restart");
+    private readonly TranslationString _restartToApplyTheme = new("The theme is applied when Git Extensions starts.\nRestart Git Extensions now?");
+
     private readonly TranslationString _gitToolNotFoundCaption = new("Program not found");
     private readonly TranslationString _gitToolNotFound = new(@"""{0}"" is not installed, or is not on your path.");
     private readonly TranslationString _gitToolInstallMacOS = new("Install it with Homebrew: brew install git-gui");
@@ -207,6 +210,10 @@ public class MessageBoxes : Translate
 
     public static void ShellNotFound(IWin32Window? owner)
         => ShowError(owner, Instance._shellNotFound.Text, Instance._shellNotFoundCaption.Text);
+
+    /// <summary>The theme or the control theme was changed: whether to restart the application to apply it.</summary>
+    public static bool ConfirmRestartToApplyTheme(IWin32Window? owner)
+        => Confirm(owner, Instance._restartToApplyTheme.Text, Instance._restartToApplyThemeCaption.Text);
 
     /// <summary>gitk or git gui is not installed (off Windows, where git does not always include them).</summary>
     public static void GitToolNotFound(IWin32Window? owner, string program)

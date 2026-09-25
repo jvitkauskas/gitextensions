@@ -1512,6 +1512,19 @@ public static partial class AppSettings
         }
     }
 
+    /// <summary>The control themes of the Avalonia UI, the default (Fluent) first; the others are community themes.</summary>
+    public static IReadOnlyList<string> AvaloniaControlThemes { get; } = ["fluent", "simple", "classic"];
+
+    /// <summary>
+    ///  The control theme of the Avalonia UI, one of <see cref="AvaloniaControlThemes"/> (the default for another name, e.g. of
+    ///  a theme removed since), applied at the next start.
+    /// </summary>
+    public static string AvaloniaControlTheme
+    {
+        get => GetString("AvaloniaControlTheme", AvaloniaControlThemes[0]) is { } name && AvaloniaControlThemes.Contains(name) ? name : AvaloniaControlThemes[0];
+        set => SetString("AvaloniaControlTheme", value);
+    }
+
     public static string[] ThemeVariations
     {
         get

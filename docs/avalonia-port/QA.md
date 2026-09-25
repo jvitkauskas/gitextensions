@@ -18,6 +18,9 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
   `GitExtensions.dll.config`), so its settings (`GitExtensions.settings`) and `WindowPositions.xml` stay in that folder.
   A `GitExtensions.settings` that sets `translation` (`English`), `CheckForUpdates` (`false`) and `gitcommand` skips the
   language dialog; leave them out to test the first run.
+- Before refreshing a portable copy, quit it and wait for its processes to exit. Never overwrite loaded DLLs; use a
+  fresh complete copy for a new build if needed. Inspect windows owned by `BugReporter` as well as `GitExtensions`:
+  an error report runs in a separate process and can remain after the main application exits.
 - Keep git's global config a scratch one: `HOME` set to a scratch folder, or `GIT_CONFIG_GLOBAL=<scratch>/.gitconfig`
   when the tool needs the real `HOME` (the Keychain, gh, VS Code). Start without `GIT_EDITOR` (agent shells may set it
   to `true`, which overrides `core.editor`). The Repair buttons of the checklist and the editor and diff tool settings

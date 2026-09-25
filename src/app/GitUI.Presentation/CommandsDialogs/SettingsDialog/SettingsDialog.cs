@@ -338,6 +338,12 @@ public interface ISettingsDialogHost
     string? SaveSettingsSets();
 
     void ShowError(string heading, string text);
+
+    /// <summary>
+    ///  After each save (OK, Apply): whether the application is to restart for what was saved, e.g. another theme (the host
+    ///  asks). The dialog then closes.
+    /// </summary>
+    bool ConfirmRestart() => false;
 }
 
 /// <summary>
@@ -554,8 +560,16 @@ public sealed partial class SettingsDialogViewModel : DialogViewModel, ISettings
         }
 
         IsSaved = true;
+        if (_host.ConfirmRestart())
+        {
+            IsRestartConfirmed = true;
+        }
+
         return true;
     }
+
+    /// <summary>Whether a save asked to restart the application (<see cref="ISettingsDialogHost.ConfirmRestart"/>).</summary>
+    public bool IsRestartConfirmed { get; private set; }
 
     /// <summary>As <c>_saved</c>: the settings were saved (the dialog result is OK).</summary>
     public bool IsSaved { get; private set; }
@@ -570,7 +584,13 @@ public sealed partial class SettingsDialogViewModel : DialogViewModel, ISettings
     }
 
     [RelayCommand]
-    private void Apply() => Save();
+    private void Apply()
+    {
+        if (Save() && IsRestartConfirmed)
+        {
+            Close(accepted: true);
+        }
+    }
 
     [RelayCommand]
     private void Cancel() => Close(accepted: IsSaved);

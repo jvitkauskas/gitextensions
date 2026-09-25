@@ -96,6 +96,26 @@ public sealed class SettingsDialogViewModelTests
         viewModel.IsSaved.Should().BeTrue();
     }
 
+    [Test]
+    public void Apply_asks_the_host_to_restart_after_the_save_and_closes_when_confirmed()
+    {
+        (SettingsDialogViewModel viewModel, FakeHost host, _) = Create();
+        bool? closed = null;
+        viewModel.CloseRequested += (_, accepted) => closed = accepted;
+        viewModel.Open(null);
+
+        viewModel.ApplyCommand.Execute(null);
+        host.RestartQuestions.Should().Be(1);
+        closed.Should().BeNull("no restart was confirmed");
+        viewModel.IsRestartConfirmed.Should().BeFalse();
+
+        host.Restart = true;
+        viewModel.ApplyCommand.Execute(null);
+        host.RestartQuestions.Should().Be(2);
+        closed.Should().BeTrue();
+        viewModel.IsRestartConfirmed.Should().BeTrue();
+    }
+
     private static List<string> Highlighted(SettingsDialogViewModel viewModel)
         => [.. viewModel.Nodes.SelectMany(n => n.DescendantsAndSelf()).Where(n => n.IsHighlighted).Select(n => n.Title)];
 
@@ -186,5 +206,15 @@ public sealed class SettingsDialogViewModelTests
         }
 
         public void ShowError(string heading, string text) => Errors.Add($"{heading}: {text}");
+
+        public bool Restart { get; set; }
+
+        public int RestartQuestions { get; private set; }
+
+        public bool ConfirmRestart()
+        {
+            RestartQuestions++;
+            return Restart;
+        }
     }
 }

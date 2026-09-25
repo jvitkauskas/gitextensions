@@ -169,6 +169,7 @@ Adopted after phase 8 to close gaps of the port (all MIT, all built for Avalonia
 | AvaloniaEdit.TextMate (TextMateSharp, Onigwrap) | The syntax highlighting of files and diffs, by the grammars and the Light+ / Dark+ themes of Visual Studio Code | `GitUI.Avalonia/Editor/TextMateColorizer.cs`, `TextEditorView` | Replaces the highlighting definitions of AvaloniaEdit (kept for the extensions TextMate does not know). A diff is tokenized as its old file (removed and context lines) and new file (added and context lines), without the prefixes. With git's colors as the background (`ReverseGitColoring`), the changed lines keep the syntax colors (`DiffColorizer.KeepsSyntaxColors`). Not highlighted: lines over 5000 characters, files over 50000 lines, word diffs, git grep. |
 | AvaloniaHex | Binary files in hexadecimal and ASCII (as `FileViewer.DisplayAsHexDump`) | `FileViewKind.Binary`, `FileViewerView` (`hexEditor`), `FileViewerHost.GetItem` | All the bytes, read-only, where WinForms showed a text dump of the first 4 KB. |
 | Iciclecreek.Avalonia.Terminal (XTerm.NET, Porta.Pty, the ConPTY of Microsoft) | The built-in terminal: the console tab and the progress dialog | `GitUI/ConsoleEmulation/BuiltIn/*` (`BuiltInTerminalEmulator`, `BuiltInTerminal`, `TerminalOutputProcessor`) | The default console emulator (`ConsoleEmulatorName` = `terminal`), and the fallback before ConEmu; ConEmu and Mintty can still be chosen. The console views are `IEmbeddedView`: a native window or an Avalonia control. The processes run in a pseudo console spawned by `BuiltInTerminal` and attached to the control (the control would launch a finished command again when it is loaded), in a job object (they end with the application). Themes: Tomorrow / Tomorrow Night (following the application theme), Solarized Light / Dark. For the cross-platform phase: a shell descriptor for `$SHELL`, `cd` without the Git Bash paths, `Path.PathSeparator` in the PATH of the shell, and the Unix native files of Porta.Pty in the packages. |
+| Classic.Avalonia.Theme, Avalonia.Themes.Simple, with their DataGrid and color picker styles | Community control themes: Settings, Colors, "Controls" (`AppSettings.AvaloniaControlTheme`), or `GE_AVALONIA_THEME=simple` or `classic` to try one without changing the settings | `GitExtensionsAvaloniaApp.ControlTheme.cs`, `ColorsSettingsPage` | Added over Fluent (the views use its brushes and chevron), so the Fluent resources used by the views stay available. Simple has a host-derived light/dark palette (`Themes/SimpleThemePalette.cs`, `Themes/Simple.axaml`): neutral control/hover surfaces, accent-tinted selections, distinct inputs and focus borders, readable selected tabs and primary actions. Highlight text falls back to white or black when the host pair lacks contrast. The compact templates stay. Classic also maps its system brushes and bevel shades to the host light/dark colors (`ClassicThemePalette.cs`, `Classic.axaml`), with tinted selections, accent primary actions, smooth text and the configured font size; the upstream package is a beta for Avalonia 12. Semi and Material were tried and left out (Material hid the text of the toolbar buttons and clipped the graph and tab headers). The theme applies at the start: when a save (OK or Apply) changes the theme, its variations or the control theme, the dialog asks to restart (compared in the settings of the dialog: those of the application see the save only when their file watcher reports it), then starts a new process on the repository and closes the main windows as Quit does. Checked on macOS. |
 
 Not adopted: TreeDataGrid, whose releases for Avalonia 12 are part of the commercial Avalonia Pro (they validate a license);
 only its releases for Avalonia 11 are MIT. The large trees are virtualizing lists of their visible nodes instead
@@ -333,3 +334,29 @@ Rerun afterwards on Windows and in WSL (at `57e71ce9e`): the Release builds, all
 suites on Linux pass, and a portable copy browses a scratch repository with its plugins on both. `QA.md` now covers
 the click-through on Windows and under WSLg too.
 
+### Simple control palette (2026-09-26)
+
+The Simple control theme now derives its surfaces, selections and accent from the host colors in both modes.
+Buttons use restrained neutral hover/pressed states; inputs, focus borders and selected tab labels are clearer.
+Primary buttons and selected grid rows keep readable highlight text even when the host supplies a low-contrast pair
+(covered by `SimpleThemePaletteTests`). The Simple control styles load only with Simple; its compact templates stay intact.
+Checked on macOS in a portable copy on a scratch repository: browse, settings, dropdowns, restart between light and
+dark, and the commit dialog. Release build and all 18 sequential suite invocations succeeded (25,300 tests passed;
+Windows-only UI tests are excluded here). Windows and Linux were not visually checked in this pass.
+
+### Classic control palette (2026-09-26)
+
+Classic's fixed light palette made dark-theme rows and commit details unreadable. Its system colors and the
+Simple-compatible resources used by its DataGrid/color picker now follow the host colors. Bevels use restrained
+light/shadow shades, inactive selections remain visible, selected tabs are tinted and primary buttons use the accent
+with readable text. Classic's templates stay; text smoothing is enabled and its base font size follows the setting.
+Checked on macOS in the portable scratch app: browse, settings, checkboxes, dropdowns, primary buttons, restarting
+between light/dark and the commit dialog. Release build and all 18 sequential suite invocations succeeded (25,300
+tests passed; Windows-only UI tests are excluded here). Windows and Linux were not visually checked in this pass.
+
+Follow-up after the user spotted a separate BugReporter window: three earlier test instances aborted with
+`BadImageFormatException` while the test workflow replaced a DLL immediately after requesting Quit. The visible
+report was `Index not found (0x80131124)` in `UIReporter.get_OwnerForm`; a still-running process using replaced
+assembly metadata is the likely cause. A fresh complete portable copy passed startup, settings, commit-dialog and
+shutdown checks with Classic (dark) and Simple (light), without new crash reports or BugReporter processes.
+`QA.md` now requires waiting for process exit before copying binaries and checking the separate error reporter.

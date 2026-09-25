@@ -27,11 +27,8 @@
     </ResourceDictionary>
   </Application.Resources>
   <Application.Styles>
-    <!-- Compact density matches the information density of the WinForms UI. -->
-    <FluentTheme DensityStyle="Compact" />
-    <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
-    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
-    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+    <!-- The control theme (Fluent, compact) and its styles of the DataGrid, color picker and editor are added first, in
+         code: see GitExtensionsAvaloniaApp.ControlTheme.cs. -->
     <StyleInclude Source="avares://AvaloniaHex/Themes/Simple/AvaloniaHex.axaml" />
 
     <!-- Equivalent of GitExtensionsDialog.ControlsPanel: the OK/Cancel strip at the bottom of a dialog. -->

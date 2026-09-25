@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using Avalonia.Threading;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Settings;
@@ -30,8 +32,9 @@ internal static partial class AvaloniaDialogs
     {
         saved = false;
         CommonLogic commonLogic = new(commands.Module);
-        SettingsDialogViewModel viewModel = new(ViewStrings.Load<SettingsDialogStrings>(), new SettingsDialogHost(commonLogic, owner));
         SettingsWindow? settingsWindow = null;
+        SettingsDialogHost dialogHost = new(commonLogic, owner, () => settingsWindow is null ? owner : new NativeWindowOwner(settingsWindow));
+        SettingsDialogViewModel viewModel = new(ViewStrings.Load<SettingsDialogStrings>(), dialogHost);
         GeneralSettingsPagesHost generalHost = new(commands, owner);
         GitSettingsPagesHost gitHost = new(commands, commonLogic);
         AddSettingsPages(
@@ -46,6 +49,7 @@ internal static partial class AvaloniaDialogs
         // As ShowSettingsDialog: the pages read and write AppSettings in the global settings of the dialog until saved.
         AppSettings.UsingContainer(commonLogic.DistributedSettingsSet.GlobalSettings, () =>
         {
+            dialogHost.ThemeSettings = GetThemeSettings();
             ShowDialog(
                 () =>
                 {
@@ -72,7 +76,46 @@ internal static partial class AvaloniaDialogs
         }
 
         saved = viewModel.IsSaved;
+
+        if (viewModel.IsRestartConfirmed)
+        {
+            string repository = commands.Module.IsValidGitWorkingDir() ? commands.Module.WorkingDir : Environment.CurrentDirectory;
+            Dispatcher.UIThread.Post(() => RestartApplication(repository));
+        }
+
         return true;
+    }
+
+    /// <summary>The settings applied at the start: the theme, its variations and the control theme.</summary>
+    private static string GetThemeSettings()
+        => $"{AppSettings.ThemeId.Name}|{AppSettings.ThemeId.IsBuiltin}|{string.Join(",", AppSettings.ThemeVariations)}|{AppSettings.AvaloniaControlTheme}";
+
+    /// <summary>
+    ///  Starts the application again on <paramref name="repository"/> (as the main window), then closes the main windows of
+    ///  this one, as Quit does; the process ends with the last one.
+    /// </summary>
+    private static void RestartApplication(string repository)
+    {
+        ProcessStartInfo startInfo = new(Environment.ProcessPath!) { WorkingDirectory = repository, UseShellExecute = false };
+
+        // Started as "dotnet GitExtensions.dll": the host is given the application again.
+        if (Path.GetFileNameWithoutExtension(startInfo.FileName).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo.ArgumentList.Add(Environment.GetCommandLineArgs()[0]);
+        }
+
+        startInfo.ArgumentList.Add("browse");
+        try
+        {
+            Process.Start(startInfo)?.Dispose();
+        }
+        catch (Exception exception)
+        {
+            MessageBoxes.ShowError(owner: null, exception.Message);
+            return;
+        }
+
+        CloseBrowseWindows();
     }
 
     /// <summary>
@@ -184,8 +227,27 @@ internal static partial class AvaloniaDialogs
     }
 
     /// <summary>The end of <c>FormSettings.Save</c> and its error message.</summary>
-    private sealed class SettingsDialogHost(CommonLogic commonLogic, IWin32Window? owner) : ISettingsDialogHost
+    private sealed class SettingsDialogHost(CommonLogic commonLogic, IWin32Window? owner, Func<IWin32Window?> getDialogOwner) : ISettingsDialogHost
     {
+        /// <summary>
+        ///  The settings applied at the start (<see cref="GetThemeSettings"/>) when the dialog opened or when last asked, read in
+        ///  the settings of the dialog: the settings of the application may see a save only later (their file watcher).
+        /// </summary>
+        public string? ThemeSettings { get; set; }
+
+        // Another theme, variation or control theme saved: offer to restart the main windows (asked once per change).
+        public bool ConfirmRestart()
+        {
+            string themeSettings = GetThemeSettings();
+            if (themeSettings == ThemeSettings || !AvaloniaUi.IsMainLoopRunning)
+            {
+                return false;
+            }
+
+            ThemeSettings = themeSettings;
+            return AvaloniaUi.RunInHostContext(() => MessageBoxes.ConfirmRestartToApplyTheme(getDialogOwner()));
+        }
+
         public string? SaveSettingsSets() => AvaloniaUi.RunInHostContext(() =>
         {
             try

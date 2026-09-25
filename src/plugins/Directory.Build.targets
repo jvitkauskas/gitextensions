@@ -17,7 +17,7 @@
   <Target Name="_ExcludeApplicationUIPackagesFromPluginOutput" AfterTargets="ResolveLockFileCopyLocalFiles">
     <ItemGroup>
       <_ApplicationUIPackageFile Include="@(ReferenceCopyLocalPaths)"
-                                 Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(ReferenceCopyLocalPaths.NuGetPackageId)', '^(Avalonia|SkiaSharp|HarfBuzzSharp|MicroCom|Tmds\.DBus|TextMateSharp|Onigwrap|Iciclecreek|Porta\.Pty|XTerm\.NET|Microsoft\.Windows\.Console\.ConPTY|Wcwidth|Unicode\.net)'))" />
+                                 Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(ReferenceCopyLocalPaths.NuGetPackageId)', '^(Avalonia|SkiaSharp|HarfBuzzSharp|MicroCom|Tmds\.DBus|TextMateSharp|Onigwrap|Iciclecreek|Porta\.Pty|XTerm\.NET|Microsoft\.Windows\.Console\.ConPTY|Wcwidth|Unicode\.net|Classic\.)'))" />
       <ReferenceCopyLocalPaths Remove="@(_ApplicationUIPackageFile)" />
     </ItemGroup>
   </Target>

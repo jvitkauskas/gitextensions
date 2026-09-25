@@ -896,6 +896,21 @@
       <Component Id="Avalonia.Themes.Fluent.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Avalonia.Themes.Fluent.dll" />
       </Component>
+      <Component Id="Avalonia.Themes.Simple.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Avalonia.Themes.Simple.dll" />
+      </Component>
+      <Component Id="Classic.Avalonia.Theme.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Classic.Avalonia.Theme.dll" />
+      </Component>
+      <Component Id="Classic.Avalonia.Theme.ColorPicker.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Classic.Avalonia.Theme.ColorPicker.dll" />
+      </Component>
+      <Component Id="Classic.Avalonia.Theme.DataGrid.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Classic.Avalonia.Theme.DataGrid.dll" />
+      </Component>
+      <Component Id="Classic.CommonControls.Avalonia.dll" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Classic.CommonControls.Avalonia.dll" />
+      </Component>
       <Component Id="Avalonia.Vulkan.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Avalonia.Vulkan.dll" />
       </Component>
@@ -1053,6 +1068,11 @@
       <ComponentRef Id="Avalonia.Remote.Protocol.dll" />
       <ComponentRef Id="Avalonia.Skia.dll" />
       <ComponentRef Id="Avalonia.Themes.Fluent.dll" />
+      <ComponentRef Id="Avalonia.Themes.Simple.dll" />
+      <ComponentRef Id="Classic.Avalonia.Theme.dll" />
+      <ComponentRef Id="Classic.Avalonia.Theme.ColorPicker.dll" />
+      <ComponentRef Id="Classic.Avalonia.Theme.DataGrid.dll" />
+      <ComponentRef Id="Classic.CommonControls.Avalonia.dll" />
       <ComponentRef Id="Avalonia.Vulkan.dll" />
       <ComponentRef Id="Avalonia.Win32.Automation.dll" />
       <ComponentRef Id="Avalonia.Win32.dll" />
