@@ -301,7 +301,7 @@ The cross-platform phase (`CROSS-PLATFORM.md`) records here which parts run on w
 | Order of the dialog buttons (`DialogButtonOrder`) | OK, Cancel | OK, Cancel | Cancel, OK | Phase 5: the dialogs are written in the order of Windows; on macOS, when a dialog opens, a row of buttons aligned right in a `Border.dialogFooter` is reversed (the affirmative button rightmost), rows with other controls (check boxes are toggle buttons) keep their order. This covers the message boxes, the task dialogs and the XAML footers. Checked in the app: the confirmation of the branch deletion ([No] [Yes]). A row marked `StackPanel.dialogButtons` is reversed too: the footer of the settings ([Apply] [Cancel] [OK] on macOS). The askpass prompt has a dialog footer ([Cancel] [OK]) and the theme of the settings (`ThemeModule.Load` in the askpass mode). Checked in the app. |
 | Name of the theme of the system color mode | "Windows app color mode" | "System color mode" | "System color mode" | The theme id stays `Windows app color mode` (saved in the settings); off Windows the list names it `SystemColorModeThemeName`. |
 
-### QA follow-up (2026-09-25, in progress)
+### QA follow-up (2026-09-25–26)
 
 The click-through in `QA.md` found two general bugs, fixed with regression tests:
 
@@ -315,7 +315,10 @@ Both fixes were reproduced and checked again in the macOS app. Two headless asse
 current culture for decimal numbers; their hard-coded decimal points failed on this Mac's locale. Release build
 passed, and all 18 sequential suite invocations passed with `--blame-hang-timeout 3m` (25,277 tests passed;
 Windows-only and other excluded tests skipped). The opt-in Keychain round trip passed and removed its test item.
-Windows and Linux were not rerun on this machine. Manual QA is continuing; this is not a complete checklist sign-off.
+Windows and Linux were not rerun on this machine. The [macOS QA report](QA-2026-09-25.md) records manual coverage,
+remaining checks, cleanup and two open findings: Cmd+C selects every revision under automated native input, and
+the Hotkeys settings page still labels Command shortcuts as Ctrl. P4Merge completed a saved resolution after the
+user approved Gatekeeper. This pass is not an all-green checklist sign-off.
 Rerun afterwards on Windows and in WSL (at `57e71ce9e`): the Release builds, all 18 Windows suites and the portable
 suites on Linux pass, and a portable copy browses a scratch repository with its plugins on both. `QA.md` now covers
 the click-through on Windows and under WSLg too.

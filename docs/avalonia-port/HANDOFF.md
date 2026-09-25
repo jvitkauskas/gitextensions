@@ -71,9 +71,11 @@ The subsequent QA click-through (2026-09-25) fixed first-run stack overflow in t
 checkout error dialogs while typing partial branch names. Both have regression tests and were rechecked in the
 macOS app; the Release build and all 18 suite invocations pass. Culture-dependent decimal expectations in two
 headless tests were corrected too. Windows and WSL were rerun afterwards (builds, suites, a portable smoke test).
-The manual pass is still in progress: investigate the automated Cmd+C selection anomaly and retry merge tools after
-the user-approved Gatekeeper prompt before treating either as an application defect. `QA.md` now also covers the
-click-through on Windows and under WSLg.
+The [macOS QA report](QA-2026-09-25.md) records coverage and remaining checks. Open: Cmd+C selects all revisions
+under automated native input (the headless test passes), and Hotkeys settings displays Ctrl for Command shortcuts.
+P4Merge passed a saved resolution after the user approved Gatekeeper; no integration defect was established.
+Test processes and credential entries were cleaned up; see the report for the whole-Keychain metadata comparison
+limitation. `QA.md` now also covers the click-through on Windows and under WSLg.
 
 ## Rules
 
