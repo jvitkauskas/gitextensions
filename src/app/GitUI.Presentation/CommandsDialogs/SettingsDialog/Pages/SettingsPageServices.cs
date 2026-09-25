@@ -54,7 +54,7 @@ public enum SettingsFontKind
 }
 
 /// <summary>A font of the settings, as the text and the font of the button showing it (<c>SetFontButtonText</c>).</summary>
-/// <param name="Value">The font of the host (a <c>System.Drawing.Font</c>), saved as is.</param>
+/// <param name="Value">The font of the host (a <c>FontDescriptor</c>), saved as is.</param>
 /// <param name="SizeInPoints">The size of the font, in points.</param>
 public sealed record SettingsFont(object Value, string FamilyName, float SizeInPoints, bool IsBold, bool IsItalic)
 {

@@ -1,4 +1,5 @@
 ﻿using GitCommands;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Translations;
 using GitExtensions.Extensibility.Translations.Xliff;
 using GitUI;
@@ -23,7 +24,7 @@ internal static class Program
         // Required for translation
         PluginRegistry.InitializeAll();
 
-        AppSettings.Font = SystemFonts.MessageBoxFont!;
+        AppSettings.Font = SystemFonts.MessageBoxFont!.ToFontDescriptor();
 
         IDictionary<string, List<TranslationItemWithCategory>> neutralItems = TranslationHelpers.LoadNeutralItems();
         string filename = Path.Combine(Translator.GetTranslationDir(), "English.xlf");

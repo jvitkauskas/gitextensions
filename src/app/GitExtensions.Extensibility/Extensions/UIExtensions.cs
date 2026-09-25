@@ -4,22 +4,6 @@ namespace GitExtensions.Extensibility.Extensions;
 
 public static class UIExtensions
 {
-    public static bool IsFixedWidth(this Font ft, Graphics g)
-    {
-        ReadOnlySpan<char> charSizes = ['i', 'a', 'Z', '%', '#', 'a', 'B', 'l', 'm', ',', '.'];
-        float charWidth = g.MeasureString("I", ft).Width;
-
-        foreach (char c in charSizes)
-        {
-            if (Math.Abs(g.MeasureString(c.ToString(), ft).Width - charWidth) > float.Epsilon)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     /// <summary>
     /// bodyOrSubject
     /// Notes:

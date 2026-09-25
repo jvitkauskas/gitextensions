@@ -138,15 +138,15 @@ internal static partial class AvaloniaDialogs
             return stream.ToArray();
         };
 
-        Font font = AppSettings.Font;
+        FontDescriptor font = AppSettings.Font;
         return new AvaloniaUiOptions(
             IsDarkTheme: ColorHelper.IsDarkTheme,
-            FontFamily: font.FontFamily.Name,
-            FontSize: font.SizeInPoints * 96 / 72,
+            FontFamily: font.FamilyName,
+            FontSize: font.SizeInPixels,
             Colors: GetThemeColors(),
-            MonospaceFontFamily: AppSettings.MonospaceFont.FontFamily.Name,
-            EditorFontFamily: AppSettings.FixedWidthFont.FontFamily.Name,
-            EditorFontSize: AppSettings.FixedWidthFont.SizeInPoints * 96 / 72);
+            MonospaceFontFamily: AppSettings.MonospaceFont.FamilyName,
+            EditorFontFamily: AppSettings.FixedWidthFont.FamilyName,
+            EditorFontSize: AppSettings.FixedWidthFont.SizeInPixels);
     }
 
     private sealed class AboutDialogHost(DialogWindow window) : IAboutDialogHost

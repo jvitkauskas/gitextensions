@@ -1,10 +1,12 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace GitExtensions.Extensibility;
 
 /// <summary>
 ///  The native dialog to choose a file (the Common Item Dialog), with the properties the WinForms <c>FileDialog</c> had.
 /// </summary>
+[SupportedOSPlatform("windows6.1")]
 public abstract class FileDialog : IDisposable
 {
     private const uint ERROR_CANCELLED = 0x800704C7;
@@ -414,6 +416,7 @@ public abstract class FileDialog : IDisposable
 }
 
 /// <summary>The native dialog to choose files to open (as the WinForms <c>OpenFileDialog</c>).</summary>
+[SupportedOSPlatform("windows6.1")]
 public sealed class OpenFileDialog : FileDialog
 {
     public bool Multiselect { get; set; }
@@ -444,6 +447,7 @@ public sealed class OpenFileDialog : FileDialog
 }
 
 /// <summary>The native dialog to choose a file to save (as the WinForms <c>SaveFileDialog</c>).</summary>
+[SupportedOSPlatform("windows6.1")]
 public sealed class SaveFileDialog : FileDialog
 {
     public bool OverwritePrompt { get; set; } = true;
@@ -455,6 +459,7 @@ public sealed class SaveFileDialog : FileDialog
 }
 
 /// <summary>The native dialog to choose a folder (as the WinForms <c>FolderBrowserDialog</c>, the Common Item Dialog).</summary>
+[SupportedOSPlatform("windows6.1")]
 public sealed class FolderBrowserDialog : IDisposable
 {
     public string? InitialDirectory { get; set; }
@@ -499,6 +504,7 @@ public sealed class FolderBrowserDialog : IDisposable
 }
 
 /// <summary>The native dialog to choose a color (as the WinForms <c>ColorDialog</c>).</summary>
+[SupportedOSPlatform("windows6.1")]
 public sealed class ColorDialog : IDisposable
 {
     private const int CC_RGBINIT = 0x1;
@@ -573,6 +579,7 @@ public sealed class ColorDialog : IDisposable
 }
 
 /// <summary>The native dialog to choose a font (as the WinForms <c>FontDialog</c>).</summary>
+[SupportedOSPlatform("windows6.1")]
 public sealed class FontDialog : IDisposable
 {
     private const int CF_SCREENFONTS = 0x1;

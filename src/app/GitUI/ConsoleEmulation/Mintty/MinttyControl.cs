@@ -123,7 +123,7 @@ internal sealed class MinttyControl : IDisposable
 
         if (consoleSettings.Font is { } font)
         {
-            args.Append($"-o \"Font={font.Name}\" -o \"FontHeight={(int)(font.Size + 0.5f)}\" ");
+            args.Append($"-o \"Font={font.FamilyName}\" -o \"FontHeight={(int)(font.SizeInPoints + 0.5f)}\" ");
         }
 
         return args.ToString();

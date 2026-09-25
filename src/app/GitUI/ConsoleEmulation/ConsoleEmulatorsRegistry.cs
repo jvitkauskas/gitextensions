@@ -1,4 +1,5 @@
 using GitCommands.Settings;
+using GitExtensions.Extensibility;
 using GitUI.ConsoleEmulation.BuiltIn;
 using GitUI.ConsoleEmulation.ConEmu;
 using GitUI.ConsoleEmulation.PlainText;
@@ -10,7 +11,7 @@ internal sealed class ConsoleEmulatorsRegistry(
     ISetting<bool> useConsoleEmulation,
     ISetting<string> consoleEmulatorName,
     ISetting<string> consoleEmulatorTheme,
-    Func<Font?> consoleFont)
+    Func<FontDescriptor?> consoleFont)
     : IConsoleEmulatorsRegistry
 {
     public IReadOnlyCollection<IConsoleEmulator> AvailableConsoleEmulators { get; } =

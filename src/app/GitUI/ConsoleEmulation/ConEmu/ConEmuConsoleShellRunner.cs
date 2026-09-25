@@ -124,8 +124,8 @@ internal sealed class ConEmuConsoleShellRunner(IShellProvider shellProvider, Con
                 startInfo,
                 ThreadHelper.JoinableTaskFactory,
                 settings.Theme,
-                settings.Font.Name,
-                settings.Font.Size.ToString("F0", CultureInfo.InvariantCulture));
+                settings.Font.FamilyName,
+                settings.Font.SizeInPoints.ToString("F0", CultureInfo.InvariantCulture));
         }
         catch (InvalidOperationException)
         {

@@ -1,4 +1,5 @@
-﻿using GitExtUtils;
+﻿using GitExtensions.Extensibility;
+using GitExtUtils;
 using Microsoft;
 
 namespace GitCommands.UserRepositoryHistory;
@@ -51,7 +52,7 @@ public class RecentRepoSplitter
     public bool SortRecentRepos { get; set; }
     public int RecentReposComboMinWidth { get; set; }
 
-    public Font? MeasureFont { get; set; }
+    public FontDescriptor? MeasureFont { get; set; }
 
     public RecentRepoSplitter()
     {

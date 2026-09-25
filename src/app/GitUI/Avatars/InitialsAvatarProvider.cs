@@ -198,7 +198,13 @@ public class InitialsAvatarProvider : IAvatarProvider
     public void UpdateFontsSettings()
     {
         Font? oldFont = _estimationFont;
-        _fontFamily = AppSettings.Font.FontFamily;
+
+        // The family GDI+ resolves (another one if the system does not have the family of the settings).
+        using (Font font = AppSettings.Font.ToFont())
+        {
+            _fontFamily = new FontFamily(font.FontFamily.Name);
+        }
+
         _estimationFont = new(_fontFamily, _fontSizeEstimation);
         oldFont?.Dispose();
     }

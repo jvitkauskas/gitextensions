@@ -2,6 +2,7 @@
 using Avalonia.Threading;
 using BugReporter.Serialization;
 using GitCommands;
+using GitExtensions.Extensibility;
 using GitUI;
 using GitUI.Avalonia.Hosting;
 using Microsoft.VisualStudio.Threading;
@@ -63,12 +64,12 @@ internal static class Program
     /// <summary>The fonts of the application (its theme is not loaded by the bug reporter).</summary>
     private static AvaloniaUiOptions GetOptions()
     {
-        Font font = AppSettings.Font;
+        FontDescriptor font = AppSettings.Font;
         return new AvaloniaUiOptions(
             IsDarkTheme: false,
-            FontFamily: font.FontFamily.Name,
-            FontSize: font.SizeInPoints * 96 / 72,
-            MonospaceFontFamily: AppSettings.MonospaceFont.FontFamily.Name);
+            FontFamily: font.FamilyName,
+            FontSize: font.SizeInPixels,
+            MonospaceFontFamily: AppSettings.MonospaceFont.FamilyName);
     }
 
     private static string Base64Decode(string base64EncodedData)

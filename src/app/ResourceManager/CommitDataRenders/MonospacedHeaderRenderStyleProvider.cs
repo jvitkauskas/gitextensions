@@ -1,7 +1,4 @@
-﻿using GitCommands;
-using GitExtensions.Extensibility.Extensions;
-
-namespace ResourceManager.CommitDataRenders;
+﻿namespace ResourceManager.CommitDataRenders;
 
 /// <summary>
 /// Renders commit information in a tabular format with data columns aligned with spaces.
@@ -26,17 +23,5 @@ public sealed class MonospacedHeaderRenderStyleProvider : IHeaderRenderStyleProv
         _maxLength = strings.Select(s => s.Length).Max() + 2;
     }
 
-    public Font GetFont(Graphics g)
-    {
-        if (!AppSettings.Font.IsFixedWidth(g))
-        {
-            return new Font(FontFamily.GenericMonospace, AppSettings.Font.Size);
-        }
-
-        return AppSettings.Font;
-    }
-
     public int GetMaxWidth() => _maxLength;
-
-    public IEnumerable<int> GetTabStops() => [];
 }

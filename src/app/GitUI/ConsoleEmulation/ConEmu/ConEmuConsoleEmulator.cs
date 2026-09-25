@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using GitExtensions.Extensibility;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Shells;
 
@@ -9,7 +10,7 @@ internal sealed class ConEmuConsoleEmulator(IShellProvider shellProvider) : ICon
     private const string DarkThemeFallback = "<Tomorrow Night>";
     private const string LightThemeFallback = "<Tomorrow>";
 
-    private static readonly Font DefaultFont = new("Consolas", 12);
+    private static readonly FontDescriptor DefaultFont = new("Consolas", 12);
 
     public string Name => "conemu";
 

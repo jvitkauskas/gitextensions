@@ -53,24 +53,6 @@ public class CommitDataHeaderRendererTests
     }
 
     [Test]
-    public void GetFont_should_get_font_from_style_provider()
-    {
-        using Bitmap bitmap = new(1, 1);
-        using Graphics g = Graphics.FromImage(bitmap);
-        _renderer.GetFont(g);
-
-        _headerRendererStyleProvider.Received().GetFont(g);
-    }
-
-    [Test]
-    public void GetTabStops_should_get_stops_from_style_provider()
-    {
-        _renderer.GetTabStops();
-
-        _headerRendererStyleProvider.Received().GetTabStops();
-    }
-
-    [Test]
     public void Render_should_throw_if_data_null()
     {
         ((Action)(() => _renderer.Render(null!, true))).Should().Throw<ArgumentNullException>();

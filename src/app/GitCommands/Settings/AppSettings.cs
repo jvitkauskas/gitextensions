@@ -1468,35 +1468,50 @@ public static partial class AppSettings
 
     #region Fonts
 
-    public static Font FixedWidthFont
+    public static FontDescriptor FixedWidthFont
     {
-        get => GetFont("difffont", new Font("Consolas", 10));
+        get => GetFont("difffont", GetDefaultMonospaceFont(10));
         set => SetFont("difffont", value);
     }
 
-    public static Font CommitFont
+    public static FontDescriptor CommitFont
     {
-        get => GetFont("commitfont", SystemFonts.MessageBoxFont!);
+        get => GetFont("commitfont", DefaultFont);
         set => SetFont("commitfont", value);
     }
 
-    public static Font MonospaceFont
+    public static FontDescriptor MonospaceFont
     {
-        get => GetFont("monospacefont", new Font("Consolas", 9));
+        get => GetFont("monospacefont", GetDefaultMonospaceFont(9));
         set => SetFont("monospacefont", value);
     }
 
-    public static Font Font
+    public static FontDescriptor Font
     {
-        get => GetFont("font", SystemFonts.MessageBoxFont!);
+        get => GetFont("font", DefaultFont);
         set => SetFont("font", value);
     }
 
-    public static Font? ConEmuConsoleFont
+    public static FontDescriptor? ConEmuConsoleFont
     {
         get => GetFont("conemuconsolefont", null);
         set => SetFont("conemuconsolefont", value);
     }
+
+    /// <summary>
+    ///  The default font of the UI and the commit messages: on Windows the font of its message boxes (Segoe UI, or the font
+    ///  of the language of the system), elsewhere the font of the system (resolved by the UI).
+    /// </summary>
+    private static FontDescriptor DefaultFont
+        => OperatingSystem.IsWindowsVersionAtLeast(6, 1) && SystemFonts.MessageBoxFont is Font messageBoxFont
+            ? messageBoxFont.ToFontDescriptor()
+            : OperatingSystem.IsMacOS()
+                ? new FontDescriptor(".AppleSystemUIFont", 13)
+                : new FontDescriptor("DejaVu Sans", 9);
+
+    /// <summary>The default fixed pitch font of each system: Consolas on Windows, Menlo on macOS, DejaVu Sans Mono elsewhere.</summary>
+    private static FontDescriptor GetDefaultMonospaceFont(float sizeInPoints)
+        => new(OperatingSystem.IsWindows() ? "Consolas" : OperatingSystem.IsMacOS() ? "Menlo" : "DejaVu Sans Mono", sizeInPoints);
 
     public static bool ShowEolMarkerAsGlyph
     {
@@ -2128,8 +2143,9 @@ public static partial class AppSettings
 
     // Font
     [return: NotNullIfNotNull("defaultValue")]
-    public static Font? GetFont(string name, Font? defaultValue) => SettingsContainer.GetFont(name, defaultValue);
-    public static void SetFont(string name, Font? value) => SettingsContainer.SetFont(name, value);
+    [return: NotNullIfNotNull(nameof(defaultValue))]
+    public static FontDescriptor? GetFont(string name, FontDescriptor? defaultValue) => SettingsContainer.GetFont(name, defaultValue);
+    public static void SetFont(string name, FontDescriptor? value) => SettingsContainer.SetFont(name, value);
 
     [Obsolete("AppSettings is no longer responsible for colors, ThemeModule is. Only used by ThemeMigration.")]
     public static Color GetColor(AppColor name)

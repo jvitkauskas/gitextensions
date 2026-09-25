@@ -94,7 +94,7 @@ internal static partial class AvaloniaDialogs
 
         public void SetFont(SettingsFontKind kind, SettingsFont? font)
         {
-            Font? value = font?.Value as Font;
+            FontDescriptor? value = font?.Value as FontDescriptor;
             switch (kind)
             {
                 case SettingsFontKind.Console:
@@ -126,10 +126,10 @@ internal static partial class AvaloniaDialogs
             };
             try
             {
-                fontDialog.Font = current?.Value as Font ?? new Font("Consolas", 12);
+                fontDialog.Font = (current?.Value as FontDescriptor)?.ToFont() ?? new Font("Consolas", 12);
                 if (fontDialog.ShowDialog(Owner) is DialogResult.OK or DialogResult.Yes)
                 {
-                    return ToSettingsFont(fontDialog.Font);
+                    return ToSettingsFont(fontDialog.Font.ToFontDescriptor());
                 }
             }
             catch (ArgumentException ex) when (kind != SettingsFontKind.Console)
@@ -140,8 +140,8 @@ internal static partial class AvaloniaDialogs
             return null;
         });
 
-        private static SettingsFont? ToSettingsFont(Font? font)
-            => font is null ? null : new SettingsFont(font, font.FontFamily.Name, font.SizeInPoints, font.Bold, font.Italic);
+        private static SettingsFont? ToSettingsFont(FontDescriptor? font)
+            => font is null ? null : new SettingsFont(font, font.FamilyName, font.SizeInPoints, font.IsBold, font.IsItalic);
 
         // Diff viewer
 

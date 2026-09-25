@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using GitCommands;
 using GitCommands.UserRepositoryHistory;
+using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitUI.CommandsDialogs;
 using Microsoft.VisualStudio.Threading;
@@ -145,7 +146,7 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
         RecentRepoSplitter splitter = new()
         {
-            MeasureFont = SystemFonts.MenuFont,
+            MeasureFont = SystemFonts.MenuFont?.ToFontDescriptor(),
         };
 
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);
@@ -188,7 +189,7 @@ internal sealed class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
         RecentRepoSplitter splitter = new()
         {
-            MeasureFont = SystemFonts.MenuFont,
+            MeasureFont = SystemFonts.MenuFont?.ToFontDescriptor(),
         };
 
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);

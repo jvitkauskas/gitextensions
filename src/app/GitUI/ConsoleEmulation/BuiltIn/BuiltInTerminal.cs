@@ -39,10 +39,8 @@ internal sealed class BuiltInTerminal : IEmbeddedControlView, IDisposable
 
         if (settings.Font is { } font)
         {
-            _control.FontFamily = new global::Avalonia.Media.FontFamily(font.Name);
-
-            // Points to device independent pixels.
-            _control.FontSize = font.SizeInPoints * 96 / 72;
+            _control.FontFamily = new global::Avalonia.Media.FontFamily(font.FamilyName);
+            _control.FontSize = font.SizeInPixels;
         }
 
         _control.OutputReceived += (_, e) => OutputReceived?.Invoke(this, e.Bytes);

@@ -10,6 +10,9 @@
     -->
     <RuntimeFrameworkVersion>10.0.0</RuntimeFrameworkVersion>
     <SolutionTargetFramework>net10.0-windows</SolutionTargetFramework>
+    <!-- The projects that also run on macOS and Linux (docs/avalonia-port/CROSS-PLATFORM.md): their Windows-only code is
+         guarded, as the platform analyzer (CA1416) checks. -->
+    <PortableTargetFramework>net10.0</PortableTargetFramework>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
     <PlatformName Condition="'$(PlatformName)' == ''">$(Platform)</PlatformName>
