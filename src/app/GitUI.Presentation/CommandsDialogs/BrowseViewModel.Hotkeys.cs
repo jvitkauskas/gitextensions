@@ -110,6 +110,33 @@ public sealed partial class BrowseViewModel
         return new ScriptSelection(selected, position?.Line, position?.Column);
     }
 
+    /// <summary>
+    ///  The hotkey that runs a command of the menus through <see cref="ExecuteHotkeyCommand"/> (the shortcut shown beside the
+    ///  item, as the <c>ShortcutKeyDisplayString</c> of the menus of <c>FormBrowse</c>), or <see langword="null"/>.
+    /// </summary>
+    public static BrowseHotkeyCommand? GetHotkeyCommand(BrowseCommand command) => command switch
+    {
+        BrowseCommand.Open => BrowseHotkeyCommand.OpenRepo,
+        BrowseCommand.CloseRepository => BrowseHotkeyCommand.CloseRepository,
+        BrowseCommand.ManageWorktrees => BrowseHotkeyCommand.ManageWorkTrees,
+        BrowseCommand.Commit => BrowseHotkeyCommand.Commit,
+        BrowseCommand.CheckoutBranch => BrowseHotkeyCommand.CheckoutBranch,
+        BrowseCommand.Pull => BrowseHotkeyCommand.PullOrFetch,
+        BrowseCommand.Push => BrowseHotkeyCommand.Push,
+        BrowseCommand.CreateBranch => BrowseHotkeyCommand.CreateBranch,
+        BrowseCommand.MergeBranches => BrowseHotkeyCommand.MergeBranches,
+        BrowseCommand.CreateTag => BrowseHotkeyCommand.CreateTag,
+        BrowseCommand.Rebase => BrowseHotkeyCommand.Rebase,
+        BrowseCommand.StashChanges => BrowseHotkeyCommand.Stash,
+        BrowseCommand.StashStaged => BrowseHotkeyCommand.StashStaged,
+        BrowseCommand.StashPop => BrowseHotkeyCommand.StashPop,
+        BrowseCommand.GitBash => BrowseHotkeyCommand.GitBash,
+        BrowseCommand.GitGui => BrowseHotkeyCommand.GitGui,
+        BrowseCommand.GitK => BrowseHotkeyCommand.GitGitK,
+        BrowseCommand.Settings => BrowseHotkeyCommand.OpenSettings,
+        _ => null,
+    };
+
     /// <summary>Raised when a hotkey moves the focus to a part of the window the view model has no view model for.</summary>
     public event EventHandler<BrowseFocusTarget>? FocusRequested;
 

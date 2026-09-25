@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using GitUI.Avalonia.CommandsDialogs.SettingsDialog;
+using GitUI.Avalonia.Hosting;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Services;
 
@@ -14,8 +16,8 @@ namespace GitUI.Avalonia.CommandsDialogs.BrowseDialog;
 ///  key window, after the application menu) instead of in the window (docs/avalonia-port/CROSS-PLATFORM.md, phase 5). It is
 ///  built from the same <see cref="BrowseViewModel.Menus"/>; the submenus read when they open (the recent repositories, the
 ///  Navigate and View menus of the grid) are read when the system asks to update them, once they closed and after a
-///  command. The menu of the window stays built, and is hidden once the platform shows the native menu (not in the
-///  headless tests).
+///  command. The items show the shortcuts of their hotkeys that have Cmd. The menu of the window stays built, and is hidden once the
+///  platform shows the native menu (not in the headless tests).
 /// </summary>
 /// <remarks>
 ///  Avalonia.Native fails when another menu instance is set on the window, and the system shows the items it had when
@@ -103,6 +105,7 @@ public partial class BrowseWindow
         }
         else if (item.Command is BrowseCommand command)
         {
+            nativeItem.Gesture = GetMacOSGesture(command);
             _macOSActions.AddOrUpdate(nativeItem, () => _viewModel?.RunCommand.Execute(command));
         }
         else if (item.Invoke is { } invoke)
@@ -120,9 +123,8 @@ public partial class BrowseWindow
             return new NativeMenuItemSeparator();
         }
 
-        // No gesture: the hotkeys of the window run the commands; a key equivalent of the system would run the item of the
-        // last time the menu was read.
         NativeMenuItem nativeItem = CreateNativeMenuItem(ToNativeHeader(item.Header, shortcut: null), item.IsEnabled, item.IsChecked, item.ToolTip, item.IsChecked is null ? item.Icon : null);
+        nativeItem.Gesture = ToMacOSGesture(item.Gesture);
         if (item.Children is { } children)
         {
             NativeMenu childMenu = new();
@@ -226,6 +228,7 @@ public partial class BrowseWindow
                 existing.Icon = fresh.Icon;
                 existing.ToggleType = fresh.ToggleType;
                 existing.IsChecked = fresh.IsChecked;
+                existing.Gesture = fresh.Gesture;
                 if (_macOSActions.TryGetValue(fresh, out Action? action))
                 {
                     _macOSActions.AddOrUpdate(existing, action);
@@ -254,6 +257,43 @@ public partial class BrowseWindow
             menu.Items.RemoveAt(menu.Items.Count - 1);
         }
     }
+
+    /// <summary>
+    ///  The shortcut of a command of the menus: the key of its hotkey (<see cref="BrowseViewModel.GetHotkeyCommand"/>) in the
+    ///  hotkeys of the window, with Cmd for Control. The system then runs the item for the key (the key does not reach the
+    ///  window, so the command runs once), and asks to update the menu first, so the action is the current one.
+    /// </summary>
+    private KeyGesture? GetMacOSGesture(BrowseCommand command)
+        => BrowseViewModel.GetHotkeyCommand(command) is { } hotkey
+            && Hotkeys.FirstOrDefault(binding => binding.CommandCode == (int)hotkey) is { KeyData: not 0 } binding
+                ? WithCommandKey(KeyMapping.ToKeyGesture(binding.KeyData))
+                : null;
+
+    /// <summary>The shortcut of an item of a menu model (written with Ctrl, e.g. "Ctrl+Shift+C"), with Cmd for Control.</summary>
+    private static KeyGesture? ToMacOSGesture(string? gesture)
+    {
+        if (string.IsNullOrWhiteSpace(gesture))
+        {
+            return null;
+        }
+
+        try
+        {
+            return WithCommandKey(KeyMapping.ToPlatformGesture(gesture));
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///  Only the shortcuts with Cmd: the system runs a menu item for its key wherever the focus is, so a shortcut without Cmd
+    ///  (e.g. Alt+Left, which moves by word in a text box) would take the key from the text boxes; those stay hotkeys of the
+    ///  window (not shown in the menu).
+    /// </summary>
+    private static KeyGesture? WithCommandKey(KeyGesture? gesture)
+        => gesture is not null && gesture.KeyModifiers.HasFlag(KeyModifiers.Meta) ? gesture : null;
 
     /// <summary>The text of an item: macOS menus have no access keys (<c>_</c>); the text shown on the right follows.</summary>
     internal static string ToNativeHeader(string header, string? shortcut)

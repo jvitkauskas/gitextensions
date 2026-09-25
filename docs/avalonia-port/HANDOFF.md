@@ -47,8 +47,8 @@ Left for macOS, in batches:
    UI font) to 9.8 / 10, and saving from the picker stores the rounded size.
 2. **Not checked**: Araxis (not installed), DiffMerge (its Homebrew cask is disabled), merges in each tool, a push over
    SSH to a server, the credentials from the plugin settings, the color picker.
-3. **Phase 5, rest**: file dialog filters, fixed widths that still clip with the macOS fonts, the shortcuts shown in
-   the menu bar (its items have no gestures), a menu bar for the other windows (they show the application menu only).
+3. **Phase 5, rest**: file dialog filters, fixed widths that still clip with the macOS fonts, a menu bar for the other
+   windows (they show the application menu only), defaults for the hotkeys that macOS takes (Cmd+Space, Commit).
 4. **Phase 6**: the `.app` bundle, signing and notarization. The application cannot start while the display sleeps
    or the screen is locked (Avalonia.Native: "not able to start the RenderTimer", -6661).
 

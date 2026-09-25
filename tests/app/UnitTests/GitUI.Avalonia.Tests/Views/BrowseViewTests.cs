@@ -372,6 +372,26 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_shortcut_shown_beside_a_menu_command_is_the_hotkey_that_runs_it() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+
+        // The Git bash hotkey runs the default shell when there is one, the menu item the Git bash command.
+        foreach (BrowseCommand command in Enum.GetValues<BrowseCommand>().Where(c => c != BrowseCommand.GitBash))
+        {
+            if (BrowseViewModel.GetHotkeyCommand(command) is { } hotkey)
+            {
+                viewModel.ExecuteHotkeyCommand((int)hotkey).Should().BeTrue(command.ToString());
+                host.Runs[^1].Command.Should().Be(command);
+            }
+        }
+
+        BrowseViewModel.GetHotkeyCommand(BrowseCommand.Commit).Should().Be(BrowseHotkeyCommand.Commit);
+        BrowseViewModel.GetHotkeyCommand(BrowseCommand.About).Should().BeNull();
+        window.Close();
+    });
+
+    [Test]
     public Task The_hotkeys_run_the_commands_show_the_tabs_and_run_the_scripts() => OnUiThreadAsync(() =>
     {
         (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
