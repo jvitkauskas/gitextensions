@@ -266,6 +266,11 @@ regression tests. All 18 test-project invocations pass on Linux (25,316 passed, 
 manual X11/Xvfb coverage at 100%/200% from untested native Wayland and other systems, and lists remaining defects,
 manual checks and the external-tool preference-isolation limitations.
 
+The report's later Hyprland follow-up verifies the actual desktop: this build uses XWayland, and a Wayland-only
+startup probe fails in `XOpenDisplay`. It records incorrect default HiDPI scaling with Hyprland's zero XWayland
+scaling, format-dependent XWayland-to-Wayland clipboard output, successful terminal paste in the other direction,
+and launch of native Wayland Meld. These findings are open; this is not native Wayland backend support.
+
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;
 their checklist startup preference is local to the portable settings file. Saving unchanged shell-extension options

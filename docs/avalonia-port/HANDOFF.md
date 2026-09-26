@@ -100,6 +100,12 @@ first-run language persistence, menu dismissal and dark-link contrast findings, 
 manual coverage, and desktop-preference isolation limitations. Windows/macOS were not rerun. `QA.md` now includes
 native-Linux setup and all writable XDG roots/private D-Bus activation isolation.
 
+The subsequent actual Hyprland desktop check confirms that this build is an XWayland client; without `DISPLAY`,
+the startup path fails with `XOpenDisplay failed` even with Wayland available. Browsing, diffs, settings, terminal
+paste and launch of native Wayland Meld were checked. Default 200% monitor scaling is too small (an explicit
+Avalonia scale override works), and Wayland clipboard `text/plain` returns empty while UTF-8 succeeds. The Linux
+report records both findings and distinguishes this focused check from the earlier seven saved Xvfb merges.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the
