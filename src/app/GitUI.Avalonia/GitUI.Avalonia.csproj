@@ -35,6 +35,13 @@
     <!-- Shared with the WinForms UI rather than copied, so upstream asset updates apply to both. -->
     <AvaloniaResource Include="..\..\..\setup\assets\Logo\git-extensions-logo-256px.png" Link="Assets\git-extensions-logo-256px.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Donate.png" Link="Assets\Donate.png" />
+    <!-- The icons of the menus as the WinForms ones (the Tools and Help menus, the menu of the file lists). -->
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GitGui.png" Link="Assets\GitGui.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Gitk.png" Link="Assets\Gitk.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\CheckForUpdates.png" Link="Assets\CheckForUpdates.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\VisualStudio16.png" Link="Assets\VisualStudio16.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\AddToGitIgnore.png" Link="Assets\AddToGitIgnore.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\StopTrackingFile.png" Link="Assets\StopTrackingFile.png" />
     <!-- The icons of the menus of the revision grid (Navigate, Advanced, Reset another branch). -->
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Advanced.png" Link="Assets\Advanced.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\GoToChildCommit.png" Link="Assets\GoToChildCommit.png" />

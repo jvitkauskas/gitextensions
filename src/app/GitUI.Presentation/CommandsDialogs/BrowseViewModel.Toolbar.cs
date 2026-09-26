@@ -120,7 +120,7 @@ public sealed partial class BrowseViewModel
         .. _host.GetRepositoriesMenu(favourites: false),
         BrowseMenuItem.Separator,
         new(Strings.Open.AccessKeyText, BrowseCommand.Open, "RepoOpen"),
-        new(Strings.CloseRepository.AccessKeyText, BrowseCommand.CloseRepository),
+        new(Strings.CloseRepository.AccessKeyText, BrowseCommand.CloseRepository, "DashboardFolderGit"),
         BrowseMenuItem.Separator,
         new(ToolbarStrings.ConfigureWorkingDirMenu.AccessKeyText, BrowseCommand.RecentRepositoriesSettings),
     ];

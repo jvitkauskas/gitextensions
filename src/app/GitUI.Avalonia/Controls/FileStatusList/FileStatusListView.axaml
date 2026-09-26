@@ -72,11 +72,23 @@
         </Panel>
         <SplitButton.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedLeft">
-            <MenuItem Header="{Binding MenuStrings.GroupByFilePathTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFilePathTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Header="{Binding MenuStrings.GroupByFilePathFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePathFlat}" />
-            <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtensionFlat}" />
-            <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}" />
+            <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Header="{Binding MenuStrings.GroupByFileStatusFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatusFlat}" />
             <Separator />
             <MenuItem Name="denseTreeMenuItem" Header="{Binding ToolbarStrings.DenseTree.AccessKeyText}" ToggleType="CheckBox"
@@ -152,9 +164,15 @@
               <MenuItem.Icon>
                 <Image Source="avares://GitUI.Avalonia/Assets/EditGitIgnore.png" Width="16" Height="16" />
               </MenuItem.Icon>
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditGitIgnore.png" Width="16" Height="16" />
+              </MenuItem.Icon>
             </MenuItem>
             <MenuItem Name="editLocallyIgnoredFilesMenuItem" Header="{Binding ToolbarStrings.EditLocallyIgnoredFiles.AccessKeyText}" IsVisible="{Binding HasMenuHost}"
                       Command="{Binding EditGitIgnoreCommand}" CommandParameter="{x:True}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditGitIgnore.png" Width="16" Height="16" />
+              </MenuItem.Icon>
               <MenuItem.Icon>
                 <Image Source="avares://GitUI.Avalonia/Assets/EditGitIgnore.png" Width="16" Height="16" />
               </MenuItem.Icon>
@@ -226,23 +244,50 @@
             <!-- As ItemContextMenu (UpdateStatusOfMenuItems): the items shown for the selection, in the order of the WinForms menu. -->
             <MenuItem Name="updateSubmoduleMenuItem" Header="{Binding MenuStrings.UpdateSubmodule.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowSubmoduleItems}"
-                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Update}" />
+                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Update}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/SubmodulesUpdate.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="resetSubmoduleChangesMenuItem" Header="{Binding MenuStrings.ResetSubmoduleChanges.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowSubmoduleItems}"
-                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Reset}" />
+                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Reset}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ResetWorkingDirChanges.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="stashSubmoduleChangesMenuItem" Header="{Binding MenuStrings.StashSubmoduleChanges.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowSubmoduleItems}"
-                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Stash}" />
+                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Stash}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Stash.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="commitSubmoduleChangesMenuItem" Header="{Binding MenuStrings.CommitSubmoduleChanges.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowSubmoduleItems}"
-                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Commit}" />
+                      Command="{Binding RunSubmoduleActionCommand}" CommandParameter="{x:Static fs:SubmoduleMenuAction.Commit}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/RepoStateDirtySubmodules.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <Separator IsVisible="{Binding MenuState.ShowSubmoduleItems}" />
             <MenuItem Name="stageFileMenuItem" Header="{Binding MenuStrings.StageFile.AccessKeyText}" FontWeight="Bold"
-                      IsVisible="{Binding MenuState.ShowStage}" Command="{Binding StageFilesCommand}" />
+                      IsVisible="{Binding MenuState.ShowStage}" Command="{Binding StageFilesCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Stage.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="unstageFileMenuItem" Header="{Binding MenuStrings.UnstageFile.AccessKeyText}" FontWeight="Bold"
-                      IsVisible="{Binding MenuState.ShowUnstage}" Command="{Binding UnstageFilesCommand}" />
+                      IsVisible="{Binding MenuState.ShowUnstage}" Command="{Binding UnstageFilesCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Unstage.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="resetFileToMenuItem" Header="{Binding MenuStrings.ResetFileTo.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanResetFileTo}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ResetWorkingDirChanges.png" Width="16" Height="16" />
+              </MenuItem.Icon>
               <MenuItem Name="resetFileToSelectedMenuItem" Header="{Binding MenuState.ResetToSelectedText}"
                         IsVisible="{Binding MenuState.ResetToSelectedText, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Command="{Binding ResetFilesCommand}" CommandParameter="{x:False}" />
@@ -255,10 +300,17 @@
             <MenuItem Name="interactiveAddMenuItem" Header="{Binding MenuStrings.InteractiveAdd.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowResetChunkAndInteractiveAdd}" Command="{Binding InteractiveAddCommand}" />
             <MenuItem Name="cherryPickChangesMenuItem" Header="{Binding MenuStrings.CherryPickChanges.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowCherryPick}" Command="{Binding CherryPickChangesCommand}" />
+                      IsVisible="{Binding MenuState.ShowCherryPick}" Command="{Binding CherryPickChangesCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/CherryPick.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <Separator IsVisible="{Binding HasMenuHost}" />
             <MenuItem Name="openWithDifftoolMenuItem" Header="{Binding MenuStrings.OpenWithDifftool.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanOpenWithDifftool}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Diff.png" Width="16" Height="16" />
+              </MenuItem.Icon>
               <!-- The captions of the revisions compared (tsmiSecondDiffCaption, tsmiFirstDiffCaption). -->
               <MenuItem Name="secondDiffCaptionMenuItem" Header="{Binding SecondDiffCaption}" IsEnabled="False" FontStyle="Italic"
                         IsVisible="{Binding SecondDiffCaption, Converter={x:Static ObjectConverters.IsNotNull}}" />
@@ -289,26 +341,62 @@
             </MenuItem>
             <MenuItem Name="openWorkingDirectoryFileMenuItem" Header="{Binding MenuStrings.OpenWorkingDirectoryFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFile}"
-                      Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:False}" />
+                      Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:False}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="openWorkingDirectoryFileWithMenuItem" Header="{Binding MenuStrings.OpenWorkingDirectoryFileWith.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowOpenWorkingDirectoryFileWith}"
-                      Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:True}" />
+                      Command="{Binding OpenWorkingDirectoryFileCommand}" CommandParameter="{x:True}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="openRevisionFileMenuItem" Header="{Binding MenuStrings.OpenRevisionFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowOpenRevisionFile}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
-                      Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:False}" />
+                      Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:False}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="openRevisionFileWithMenuItem" Header="{Binding MenuStrings.OpenRevisionFileWith.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowOpenRevisionFileWith}" IsEnabled="{Binding MenuState.CanOpenRevisionFile}"
-                      Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:True}" />
+                      Command="{Binding OpenRevisionFileCommand}" CommandParameter="{x:True}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="editWorkingDirectoryFileMenuItem" Header="{Binding MenuStrings.EditWorkingDirectoryFile.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowEditWorkingDirectoryFile}" Command="{Binding EditWorkingDirectoryFileCommand}" />
+                      IsVisible="{Binding MenuState.ShowEditWorkingDirectoryFile}" Command="{Binding EditWorkingDirectoryFileCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/EditFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="openInVisualStudioMenuItem" Header="{Binding MenuStrings.OpenInVisualStudio.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowOpenInVisualStudio}" Command="{Binding OpenInVisualStudioCommand}" />
+                      IsVisible="{Binding MenuState.ShowOpenInVisualStudio}" Command="{Binding OpenInVisualStudioCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/VisualStudio16.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="saveAsMenuItem" Header="{Binding MenuStrings.SaveAs.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowSaveAs}" Command="{Binding SaveAsCommand}" />
+                      IsVisible="{Binding MenuState.ShowSaveAs}" Command="{Binding SaveAsCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/SaveAs.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="moveMenuItem" Header="{Binding MenuStrings.Move.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowMove}" Command="{Binding MoveCommand}" />
+                      IsVisible="{Binding MenuState.ShowMove}" Command="{Binding MoveCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FileStatusRenamed.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="deleteFileMenuItem" Header="{Binding MenuState.DeleteFileText}"
-                      IsVisible="{Binding MenuState.ShowDeleteFile}" Command="{Binding DeleteFilesCommand}" />
+                      IsVisible="{Binding MenuState.ShowDeleteFile}" Command="{Binding DeleteFilesCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/DeleteFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <Separator IsVisible="{Binding HasMenuHost}" />
             <MenuItem Name="copyPathsMenuItem" Header="{Binding MenuStrings.CopyPaths.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanCopyPaths}">
@@ -324,19 +412,39 @@
                         Command="{Binding CopyPathsCommand}" CommandParameter="{x:Static fs:CopyPathKind.RelativePosix}" />
             </MenuItem>
             <MenuItem Name="showInFolderMenuItem" Header="{Binding MenuStrings.ShowInFolder.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowShowInFolder}" IsEnabled="{Binding MenuState.CanShowInFolder}" Command="{Binding ShowInFolderCommand}" />
+                      IsVisible="{Binding MenuState.ShowShowInFolder}" IsEnabled="{Binding MenuState.CanShowInFolder}" Command="{Binding ShowInFolderCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <Separator IsVisible="{Binding HasMenuHost}" />
             <MenuItem Name="showInFileTreeMenuItem" Header="{Binding MenuStrings.ShowInFileTree.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowShowInFileTree}" Command="{Binding ShowInFileTreeCommand}" />
+                      IsVisible="{Binding MenuState.ShowShowInFileTree}" Command="{Binding ShowInFileTreeCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FileTree.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="filterFileInGridMenuItem" Header="{Binding MenuStrings.FilterFileInGrid.AccessKeyText}"
-                      IsVisible="{Binding HasFilterFileInGrid}" IsEnabled="{Binding MenuState.CanFilterFileInGrid}" Command="{Binding FilterFileInGridCommand}" />
+                      IsVisible="{Binding HasFilterFileInGrid}" IsEnabled="{Binding MenuState.CanFilterFileInGrid}" Command="{Binding FilterFileInGridCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FunnelPencil.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="fileHistoryMenuItem" Header="{Binding MenuStrings.FileHistory.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanShowFileHistory}"
-                      Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:False}" />
+                      Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:False}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/FileHistory.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="blameMenuItem" Header="{Binding MenuStrings.Blame.AccessKeyText}"
                       IsVisible="{Binding HasMenuHost}" IsEnabled="{Binding MenuState.CanBlame}"
                       ToggleType="CheckBox" IsChecked="{Binding IsBlameShown, Mode=OneWay}"
-                      Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:True}" />
+                      Command="{Binding ShowFileHistoryCommand}" CommandParameter="{x:True}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Blame.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="findFileMenuItem" Header="{Binding MenuStrings.FindFile.AccessKeyText}"
                       IsVisible="{Binding MenuState.ShowFindFile}" Command="{Binding FindFileCommand}" />
             <!-- As tsmiOpenFindInCommitFilesGitGrepDialog and tsmiShowFindInCommitFilesGitGrep (CanUseFindInCommitFilesGitGrep). -->
@@ -345,14 +453,25 @@
               <MenuItem.Icon>
                 <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
               </MenuItem.Icon>
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
             </MenuItem>
             <MenuItem Name="showGitGrepBoxMenuItem" Header="{Binding ToolbarStrings.ShowGitGrepBox.AccessKeyText}" IsVisible="{Binding CanUseGitGrep}"
                       ToggleType="CheckBox" IsChecked="{Binding IsGitGrepBoxVisible, Mode=OneWay}" Command="{Binding ToggleGitGrepBoxCommand}" />
             <Separator IsVisible="{Binding MenuState.ShowIgnoreSeparator}" />
             <MenuItem Name="addFileToGitIgnoreMenuItem" Header="{Binding MenuStrings.AddFileToGitIgnore.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowIgnore}" Command="{Binding AddToIgnoreFileCommand}" CommandParameter="{x:False}" />
+                      IsVisible="{Binding MenuState.ShowIgnore}" Command="{Binding AddToIgnoreFileCommand}" CommandParameter="{x:False}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/AddToGitIgnore.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="addFileToGitInfoExcludeMenuItem" Header="{Binding MenuStrings.AddFileToGitInfoExclude.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowIgnore}" Command="{Binding AddToIgnoreFileCommand}" CommandParameter="{x:True}" />
+                      IsVisible="{Binding MenuState.ShowIgnore}" Command="{Binding AddToIgnoreFileCommand}" CommandParameter="{x:True}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/AddToGitIgnore.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <MenuItem Name="skipWorktreeMenuItem" Header="{Binding MenuStrings.SkipWorktree.AccessKeyText}" ToolTip.Tip="{Binding MenuStrings.SkipWorktreeToolTip.Text}"
                       IsVisible="{Binding MenuState.ShowSkipWorktreeAndAssumeUnchanged}" ToggleType="CheckBox" IsChecked="{Binding MenuState.IsSkipWorktree, Mode=OneWay}"
                       Command="{Binding ToggleSkipWorktreeCommand}" />
@@ -360,18 +479,41 @@
                       IsVisible="{Binding MenuState.ShowSkipWorktreeAndAssumeUnchanged}" ToggleType="CheckBox" IsChecked="{Binding MenuState.IsAssumeUnchanged, Mode=OneWay}"
                       Command="{Binding ToggleAssumeUnchangedCommand}" />
             <MenuItem Name="stopTrackingMenuItem" Header="{Binding MenuStrings.StopTracking.AccessKeyText}"
-                      IsVisible="{Binding MenuState.ShowStopTracking}" Command="{Binding StopTrackingCommand}" />
+                      IsVisible="{Binding MenuState.ShowStopTracking}" Command="{Binding StopTrackingCommand}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/StopTrackingFile.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <!-- As AddUserScripts: the view adds the scripts under "Run script", and the scripts shown in the menu itself after it. -->
             <Separator Name="scriptsSeparator" IsVisible="{Binding MenuState.HasScripts}" />
             <MenuItem Name="runScriptMenuItem" Header="{Binding MenuStrings.RunScript.AccessKeyText}"
-                      IsVisible="{Binding MenuState.HasScripts}" IsEnabled="{Binding MenuState.HasRunScriptItems}" />
+                      IsVisible="{Binding MenuState.HasScripts}" IsEnabled="{Binding MenuState.HasRunScriptItems}">
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/Console.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
             <Separator IsVisible="{Binding HasMenuHost}" />
             <MenuItem Name="sortByMenuItem" Header="{Binding MenuStrings.SortBy.AccessKeyText}" IsVisible="{Binding !IsFileTreeMode}">
-              <MenuItem Header="{Binding MenuStrings.GroupByFilePathTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}" />
+              <MenuItem.Icon>
+                <Image Source="avares://GitUI.Avalonia/Assets/SortBy.png" Width="16" Height="16" />
+              </MenuItem.Icon>
+              <MenuItem Header="{Binding MenuStrings.GroupByFilePathTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
               <MenuItem Header="{Binding MenuStrings.GroupByFilePathFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePathFlat}" />
-              <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
               <MenuItem Header="{Binding MenuStrings.GroupByFileExtensionFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtensionFlat}" />
-              <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}" />
+              <MenuItem Header="{Binding MenuStrings.GroupByFileStatusTree.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
+                <MenuItem.Icon>
+                  <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
               <MenuItem Header="{Binding MenuStrings.GroupByFileStatusFlat.AccessKeyText}" Command="{Binding SetSortTypeCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatusFlat}" />
             </MenuItem>
             <MenuItem Name="collapseRootFoldersMenuItem" Header="{Binding ToolbarStrings.CollapseRootFolders.AccessKeyText}" IsVisible="{Binding CanCollapseRootFolders}" Command="{Binding CollapseRootFoldersCommand}">

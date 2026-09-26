@@ -345,7 +345,7 @@ internal static partial class AvaloniaDialogs
             bool advanced = rebaseOnTopOf is not null && (selected.Count == 1 || (selected.Count == 2 && selected.All(r => !r.IsArtificial)));
             return
             [
-                new(_s.Rebase.AccessKeyText, () => Rebase(rebaseOnTopOf!, interactive: false), IsEnabled: one),
+                new(_s.Rebase.AccessKeyText, () => Rebase(rebaseOnTopOf!, interactive: false), "Rebase", IsEnabled: one),
                 new(_s.RebaseInteractively.AccessKeyText, () => Rebase(rebaseOnTopOf!, interactive: true), IsEnabled: one),
                 new(_s.RebaseWithAdvOptions.AccessKeyText, () => Run(() => commands.StartRebaseDialogWithAdvOptions(owner(), rebaseOnTopOf!, selected.Count == 2 ? selected[1].ObjectId.ToShortString() : string.Empty)), IsEnabled: advanced),
             ];

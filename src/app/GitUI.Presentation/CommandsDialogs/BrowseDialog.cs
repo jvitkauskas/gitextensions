@@ -600,7 +600,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
     public IReadOnlyList<BrowseMenuItem> StashItems =>
     [
         new(Strings.StashChanges.AccessKeyText, BrowseCommand.StashChanges),
-        new(Strings.StashStaged.AccessKeyText, BrowseCommand.StashStaged),
+        new(Strings.StashStaged.AccessKeyText, BrowseCommand.StashStaged, "Stash"),
         new(Strings.StashPop.AccessKeyText, BrowseCommand.StashPop),
         BrowseMenuItem.Separator,
         new(Strings.ManageStashesItem.AccessKeyText, BrowseCommand.ManageStashes),
@@ -827,7 +827,7 @@ public sealed partial class BrowseViewModel : DialogViewModel
             new(s.CheckoutBranch.AccessKeyText, BrowseCommand.CheckoutBranch, "BranchCheckout"),
             new(s.MergeBranches.AccessKeyText, BrowseCommand.MergeBranches, "Merge"),
             new(s.Rebase.AccessKeyText, BrowseCommand.Rebase, "Rebase"),
-            new(s.SolveMergeConflicts.AccessKeyText, BrowseCommand.SolveMergeConflicts, "Conflict"),
+            new(s.SolveMergeConflicts.AccessKeyText, BrowseCommand.SolveMergeConflicts, "SolveMerge"),
             BrowseMenuItem.Separator,
             new(s.CreateTag.AccessKeyText, BrowseCommand.CreateTag, "TagCreate"),
             new(s.DeleteTag.AccessKeyText, BrowseCommand.DeleteTag, "TagDelete"),
@@ -848,8 +848,8 @@ public sealed partial class BrowseViewModel : DialogViewModel
             OperatingSystem.IsMacOS()
                 ? new(s.Terminal.AccessKeyText, BrowseCommand.GitBash, "Console")
                 : new(s.GitBash.AccessKeyText, BrowseCommand.GitBash, "GitForWindows"),
-            new(s.GitGui.AccessKeyText, BrowseCommand.GitGui),
-            new(s.GitK.AccessKeyText, BrowseCommand.GitK),
+            new(s.GitGui.AccessKeyText, BrowseCommand.GitGui, "GitGui"),
+            new(s.GitK.AccessKeyText, BrowseCommand.GitK, "Gitk"),
             BrowseMenuItem.Separator,
             new(s.GitCommandLog.AccessKeyText, BrowseCommand.GitCommandLog, "GitCommandLog"),
             BrowseMenuItem.Separator,
@@ -857,13 +857,13 @@ public sealed partial class BrowseViewModel : DialogViewModel
         ]),
         new(s.HelpMenu.AccessKeyText, null, Children:
         [
-            new(s.UserManual.AccessKeyText, BrowseCommand.UserManual, "GitExtensionsLogo16"),
+            new(s.UserManual.AccessKeyText, BrowseCommand.UserManual, "GotoManual"),
             new(s.Changelog.AccessKeyText, BrowseCommand.Changelog, "Changelog"),
             BrowseMenuItem.Separator,
             new(s.Translate.AccessKeyText, BrowseCommand.Translate, "Translate"),
-            new(s.Donate.AccessKeyText, BrowseCommand.Donate, "Donate"),
+            new(s.Donate.AccessKeyText, BrowseCommand.Donate, "DollarSign"),
             new(s.ReportAnIssue.AccessKeyText, BrowseCommand.ReportAnIssue, "BugReport"),
-            new(s.CheckForUpdates.AccessKeyText, BrowseCommand.CheckForUpdates),
+            new(s.CheckForUpdates.AccessKeyText, BrowseCommand.CheckForUpdates, "CheckForUpdates"),
             BrowseMenuItem.Separator,
             new(s.About.AccessKeyText, BrowseCommand.About, "Information"),
         ]),

@@ -172,7 +172,7 @@ public sealed partial class BrowseViewModel
 
     private IReadOnlyList<BrowseMenuItem> CreatePluginItems(IReadOnlyList<BrowsePlugin>? plugins)
     {
-        BrowseMenuItem settings = new(PluginStrings.PluginSettings.AccessKeyText, null) { Invoke = () => _pluginsHost!.OpenPluginSettings() };
+        BrowseMenuItem settings = new(PluginStrings.PluginSettings.AccessKeyText, null, "Settings") { Invoke = () => _pluginsHost!.OpenPluginSettings() };
         if (plugins is null)
         {
             return [new(PluginStrings.PluginsLoading.AccessKeyText, null) { IsEnabled = false }, BrowseMenuItem.Separator, settings];
