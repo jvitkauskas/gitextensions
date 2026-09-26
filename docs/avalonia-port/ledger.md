@@ -379,3 +379,18 @@ it has no value, and the user can allow telemetry on the General settings page. 
 of the question are removed (`TranslatedStrings`, English.xlf). The translation target runs `.\TranslationApp.exe`
 on Windows, since cmd does not look in the current folder when `NoDefaultCurrentDirectoryInExePath` is set, as it is
 in agent shells.
+
+### Fluent control palette (2026-09-26)
+
+Fluent's control brushes now follow the host-derived palette: neutral buttons, clearer input surfaces and focus
+borders, tinted selections and checked toggles, and an accented default dialog action with readable text. These
+overrides load only with Fluent; disabled states retain Fluent's styling.
+
+Verified the owner's committed theme changes and subsequent layout work at `fe932db5a` on macOS, using a fresh
+portable copy and the scratch repository. Light and dark checks covered browse, settings, default buttons,
+checkboxes (including a disabled state), control-theme dropdowns, input focus and the commit dialog. Both unlocked
+runs exited cleanly, with empty application logs and no BugReporter process. The initial launch while the screen
+was locked failed with the already documented native RenderTimer error (-6661); startup succeeded after unlocking.
+Release build passed (7 warnings, no errors); all 18 sequential suite invocations succeeded, with 25,313 tests
+passed and Windows-only UI tests excluded. No further application changes were needed. Windows and Linux were
+not visually checked in this pass.
