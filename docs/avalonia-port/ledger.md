@@ -285,6 +285,12 @@ modal shortcut after key release, reopening dialogs. The Linux report records th
 verified backend selection/fallback, and remaining cross-backend clipboard/mixed-DPI/workflow coverage. Default
 XWayland automatic HiDPI under Hyprland's zero-scaling setting is still unresolved.
 
+A local source patch for [Avalonia#22317](https://github.com/AvaloniaUI/Avalonia/issues/22317) subsequently stops
+repeat when an owner is disabled and preserves release/focus cleanup. Four regressions fail before the patch;
+all 49 Wayland tests and all 18 Git Extensions suites pass after it. The actual patched native app passes six
+modal cycles (including held Ctrl+O) and nested Escape dismissal. The Linux report records the locally built
+package and runnable demo. No upstream fix PR/package is published; this checkout still references stock 12.1.3.
+
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;
 their checklist startup preference is local to the portable settings file. Saving unchanged shell-extension options

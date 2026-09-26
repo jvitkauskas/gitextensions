@@ -127,6 +127,14 @@ this batch intentionally has no reflection-based backend patch. Native cross-bac
 monitors, drag/drop and full workflow/tool parity remain unverified. Default XWayland scaling with Hyprland's
 zero-scaling configuration still needs the existing `AVALONIA_GLOBAL_SCALE_FACTOR=2` workaround at 200%.
 
+A later local upstream-source experiment fixes and verifies that repeat blocker: all 49 Wayland tests pass, with
+four new cases proven failing on stock source, and the real patched app passes six modal cycles including held
+shortcuts and nested Escape dismissal. All 18 Git Extensions suites also pass (25,330 passed, 167 skipped) with the
+locally restored package. Source, patch, package and a runnable isolated demo are retained under
+`/home/julius/avalonia-wayland-fix`; see the Linux report's "Local Avalonia source patch" section. The upstream issue
+is [#22317](https://github.com/AvaloniaUI/Avalonia/issues/22317). No fix PR/package was published, and this checkout's
+package pin remains stock 12.1.3, so its native-backend limitation still applies until the patch is adopted.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the
