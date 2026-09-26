@@ -90,9 +90,12 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
   enabled with `GITEXTENSIONS_USE_WAYLAND=1`; `WAYLAND_DISPLAY` must also be set. It falls back to X11 if Wayland
   initialization fails. Confirm the actual backend with compositor client information, and test native startup
   with `DISPLAY` unset. Do not infer the backend merely from the session type or environment variables.
-- Avalonia 12.1.3's native Wayland backend has a reproduced modal-dialog key-repeat defect: Ctrl+O can keep reopening
-  the repository dialog after release/cancel. See the Linux report before using this opt-in for everyday work.
-  A future backend update must pass keyboard-opened modal dialogs, held/released shortcuts and nested dialogs.
+- Official Avalonia 12.1.3 has a modal-dialog key-repeat defect: Ctrl+O can keep reopening the repository dialog
+  after release/cancel. This checkout uses a vendored source patch for that defect; see
+  [package provenance and rebuild/removal instructions](../../third_party/avalonia-wayland/README.md).
+  Verify the vendored artifact with `python3 third_party/avalonia-wayland/rebuild.py --verify-only`.
+  Future package updates must pass keyboard-opened modal dialogs, held/released shortcuts and nested dialogs,
+  as well as a restore with fresh NuGet caches to verify package source mapping.
 - Check native scaling without `AVALONIA_GLOBAL_SCALE_FACTOR` or `AVALONIA_SCREEN_SCALE_FACTORS`, including a live
   fractional-scale change and nested dialogs. Change physical display settings only with the owner's authorization;
   back up and restore them afterwards. For XWayland with compositor scaling disabled, the existing process-local

@@ -217,8 +217,8 @@ public static class AvaloniaUi
         };
     }
 
-    // Avalonia 12.1.3 Wayland is experimental: in particular, modal windows can leave keyboard repeat running.
-    // Keep X11 as the default until those upstream issues are resolved (see the Linux QA report).
+    // Native Wayland remains experimental despite the vendored modal key-repeat fix.
+    // Keep X11 as the default pending broader compositor and workflow QA (see the Linux QA report).
     internal static bool ShouldUseWayland(bool isLinux, string? waylandDisplay, string? useWayland)
         => isLinux && !string.IsNullOrWhiteSpace(waylandDisplay) && useWayland == "1";
 

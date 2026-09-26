@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Avalonia.Wayland</id>
+    <version>set-by-rebuild-script</version>
+    <authors>Avalonia Team</authors>
+    <license type="expression">MIT</license>
+    <icon>Icon.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/AvaloniaUI/Avalonia/pull/22318</projectUrl>
+    <description>Git Extensions' temporary build of Avalonia.Wayland 12.1.3 with the modal-owner keyboard-repeat fix from AvaloniaUI/Avalonia#22318. Not an official Avalonia release. Targets net10.0 only.</description>
+    <copyright>Copyright 2013-2026 The AvaloniaUI Project</copyright>
+    <repository type="git" url="set-by-rebuild-script" commit="set-by-rebuild-script" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="NWayland" version="0.11.0" exclude="Build,Analyzers" />
+        <dependency id="Avalonia" version="12.1.3" />
+        <dependency id="Avalonia.FreeDesktop" version="12.1.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="Avalonia.Wayland.dll" target="lib/net10.0" />
+    <file src="Avalonia.Wayland.xml" target="lib/net10.0" />
+    <file src="Avalonia.Wayland.pdb" target="lib/net10.0" />
+    <file src="Icon.png" target="" />
+    <file src="LICENSE.md" target="" />
+    <file src="NOTICE.md" target="" />
+    <file src="README.md" target="" />
+  </files>
+</package>

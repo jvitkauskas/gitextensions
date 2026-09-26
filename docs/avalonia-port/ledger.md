@@ -289,7 +289,13 @@ A local source patch for [Avalonia#22317](https://github.com/AvaloniaUI/Avalonia
 repeat when an owner is disabled and preserves release/focus cleanup. Four regressions fail before the patch;
 all 49 Wayland tests and all 18 Git Extensions suites pass after it. The actual patched native app passes six
 modal cycles (including held Ctrl+O) and nested Escape dismissal. The Linux report records the locally built
-package and runnable demo. No upstream fix PR/package is published; this checkout still references stock 12.1.3.
+package and runnable demo. The fix is submitted as [Avalonia PR #22318](https://github.com/AvaloniaUI/Avalonia/pull/22318).
+
+This checkout now vendors `Avalonia.Wayland 12.1.3-gitextensions-wayland.1`, rebuilt from the committed source fix.
+The central pin is exact, and package source mapping resolves only that package ID from `third_party/nuget`.
+Other Avalonia packages remain official 12.1.3. The patch, license/notice, checksums, rebuild helper and removal
+instructions are in [third_party/avalonia-wayland](../../third_party/avalonia-wayland/README.md).
+Native Wayland remains opt-in; the vendored package fixes the modal repeat defect without claiming full parity.
 
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;

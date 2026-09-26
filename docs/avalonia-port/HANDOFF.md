@@ -120,10 +120,9 @@ clipboard and terminal paste pass. Live 200% → 150% → 100% → 200% scaling 
 original display configuration was restored. Backend probes also pass for default XWayland and failed-Wayland/X11
 fallback. Final Release build and all 18 suites pass: 25,330 passed, 167 skipped.
 
-**Native Wayland is not ready to be the default:** Avalonia 12.1.3 drops key-up/leave handling while a modal owner
-is disabled and keeps dispatching its repeat timer. Ctrl+O can reopen dialogs after release/cancel. The Linux report
-records a protocol trace, reproduction and pinned upstream source references. It remains an upstream blocker;
-this batch intentionally has no reflection-based backend patch. Native cross-backend clipboard export, mixed-DPI
+**Native Wayland remains opt-in:** official Avalonia 12.1.3 drops key-up/leave handling while a modal owner is
+disabled and keeps dispatching its repeat timer. The vendored source patch described below fixes that defect;
+the Linux report preserves its protocol trace and reproduction. Native cross-backend clipboard export, mixed-DPI
 monitors, drag/drop and full workflow/tool parity remain unverified. Default XWayland scaling with Hyprland's
 zero-scaling configuration still needs the existing `AVALONIA_GLOBAL_SCALE_FACTOR=2` workaround at 200%.
 
@@ -132,8 +131,15 @@ four new cases proven failing on stock source, and the real patched app passes s
 shortcuts and nested Escape dismissal. All 18 Git Extensions suites also pass (25,330 passed, 167 skipped) with the
 locally restored package. Source, patch, package and a runnable isolated demo are retained under
 `/home/julius/avalonia-wayland-fix`; see the Linux report's "Local Avalonia source patch" section. The upstream issue
-is [#22317](https://github.com/AvaloniaUI/Avalonia/issues/22317). No fix PR/package was published, and this checkout's
-package pin remains stock 12.1.3, so its native-backend limitation still applies until the patch is adopted.
+is [#22317](https://github.com/AvaloniaUI/Avalonia/issues/22317), and the fix is submitted as
+[PR #22318](https://github.com/AvaloniaUI/Avalonia/pull/22318).
+
+The subsequent vendoring batch adopts that fix as `Avalonia.Wayland 12.1.3-gitextensions-wayland.1`: root
+`NuGet.Config` maps only this package ID to the checked-in feed in `third_party/nuget`, and the central version is
+pinned exactly. Other Avalonia dependencies remain official 12.1.3. The package is rebuilt from committed source,
+with the patch, licenses, SHA-256 provenance and an exercised rebuild helper in
+[third_party/avalonia-wayland](../../third_party/avalonia-wayland/README.md). Follow its removal instructions once
+an official release includes the fix; native Wayland is still opt-in pending broader QA.
 
 ## Rules
 
