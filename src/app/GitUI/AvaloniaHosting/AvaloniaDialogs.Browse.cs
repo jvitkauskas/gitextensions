@@ -627,6 +627,18 @@ internal static partial class AvaloniaDialogs
                     TryShowAbout(owner);
 
                     break;
+                case BrowseCommand.ViewSelectedRevisions:
+                    if (selection.LatestSelectedFirst is [{ IsArtificial: false } revision, ..])
+                    {
+                        TryShowCommitDiff(owner, _commands, revision.ObjectId, modeless: true);
+                    }
+                    else if (selection.LatestSelectedFirst.Count == 0)
+                    {
+                        _commands.StartCompareRevisionsDialog(owner);
+                    }
+
+                    // A window of its own: nothing changed in the repository.
+                    return;
             }
 
             // As the refresh after the dialogs of FormBrowse (e.g. RefreshRevisions, UpdateStashCount).

@@ -31,6 +31,9 @@ public partial class BrowseWindow : DialogWindow
         }
 
         toolbar.ContextRequested += OnToolbarContextRequested;
+
+        // As RevisionGridControl.OnGridViewDoubleClick: the commit and its diff in a window.
+        revisionGrid.RevisionActivated += (_, _) => _viewModel?.RunCommand.Execute(BrowseCommand.ViewSelectedRevisions);
         diffPanel.HotkeyHandler = keyData => _viewModel?.ProcessRevisionDiffHotkey(keyData, fileTree: false) == true;
         treePanel.HotkeyHandler = keyData => _viewModel?.ProcessRevisionDiffHotkey(keyData, fileTree: true) == true;
         if (OperatingSystem.IsMacOS())

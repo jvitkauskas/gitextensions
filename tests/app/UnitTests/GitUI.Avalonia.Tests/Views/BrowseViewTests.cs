@@ -9,6 +9,7 @@ using GitCommands.Git.Gpg;
 using GitExtensions.Extensibility.BuildServerIntegration;
 using GitExtensions.Extensibility.Git;
 using GitUI.Avalonia.CommandsDialogs.BrowseDialog;
+using GitUI.Avalonia.Controls.RevisionGrid;
 using GitUI.AvaloniaTests.ViewModels;
 using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Editor;
@@ -44,6 +45,24 @@ public sealed class BrowseViewTests : HeadlessTest
         Dispatcher.UIThread.RunJobs();
         viewModel.SelectedTab.Should().Be(BrowseTab.Diff);
         SaveScreenshot(window.CaptureRenderedFrame(), $"browse-diff-{theme}");
+        window.Close();
+    });
+
+    [Test]
+    public Task A_double_click_on_a_revision_views_it_as_the_WinForms_grid() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        viewModel.Grid.SetSelectedRows([viewModel.Grid.Rows[2]]);
+        Dispatcher.UIThread.RunJobs();
+
+        // Enter in the grid activates the revision as a double click does.
+        window.GetVisualDescendants().OfType<RevisionGridView>().Single().GetVisualDescendants().OfType<DataGrid>().Single().Focus();
+        window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+        Dispatcher.UIThread.RunJobs();
+
+        host.Runs.Should().ContainSingle();
+        host.Runs[0].Command.Should().Be(BrowseCommand.ViewSelectedRevisions);
+        host.Runs[0].Selection.LatestSelectedFirst.Select(r => r.ObjectId).Should().Equal(viewModel.Grid.Rows[2].ObjectId);
         window.Close();
     });
 

@@ -408,6 +408,12 @@ public enum BrowseCommand
     ReportAnIssue,
     CheckForUpdates,
     About,
+
+    /// <summary>
+    ///  As <c>RevisionGridControl.ViewSelectedRevisions</c> (a double click on a revision): the commit and its diff in a window,
+    ///  else without selection the compare dialog.
+    /// </summary>
+    ViewSelectedRevisions,
 }
 
 /// <summary>
