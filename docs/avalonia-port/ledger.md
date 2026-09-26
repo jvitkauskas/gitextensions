@@ -295,7 +295,12 @@ This checkout now vendors `Avalonia.Wayland 12.1.3-gitextensions-wayland.1`, reb
 The central pin is exact, and package source mapping resolves only that package ID from `third_party/nuget`.
 Other Avalonia packages remain official 12.1.3. The patch, license/notice, checksums, rebuild helper and removal
 instructions are in [third_party/avalonia-wayland](../../third_party/avalonia-wayland/README.md).
-Native Wayland remains opt-in; the vendored package fixes the modal repeat defect without claiming full parity.
+The vendoring batch retained opt-in while fixing the modal repeat defect. The subsequent broader Hyprland QA
+enables native Wayland by default on Linux with a nonempty `WAYLAND_DISPLAY`; `GITEXTENSIONS_USE_WAYLAND=0`
+forces X11, and failed Wayland initialization falls back to X11. Everyday Git workflows, native Meld conflict
+resolution, cross-backend clipboard, terminal paste, file pickers, dark theme, plugins and live scaling passed.
+Five startup modes and six held/released modal cycles pass on the final build; all 18 suites pass (25,333 passed,
+167 skipped). See the Linux QA report for coverage, limitations and the non-blocking diff-menu finding.
 
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;

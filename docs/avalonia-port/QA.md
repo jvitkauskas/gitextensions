@@ -86,10 +86,12 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
   click-through without moving the user's pointer. Set `DISPLAY` for every input/capture command, unset
   `WAYLAND_DISPLAY`, and use `GDK_BACKEND=x11` / `QT_QPA_PLATFORM=xcb` for external tools. Electron may need explicit
   X11 flags in its scratch configuration. Report Xvfb coverage separately from native Wayland coverage.
-- The default Linux backend is X11 (XWayland on a Wayland desktop). Native Wayland is experimental and explicitly
-  enabled with `GITEXTENSIONS_USE_WAYLAND=1`; `WAYLAND_DISPLAY` must also be set. It falls back to X11 if Wayland
-  initialization fails. Confirm the actual backend with compositor client information, and test native startup
-  with `DISPLAY` unset. Do not infer the backend merely from the session type or environment variables.
+- On Linux, a nonempty `WAYLAND_DISPLAY` selects native Wayland by default. The backend is still experimental;
+  set `GITEXTENSIONS_USE_WAYLAND=0` to force X11 (XWayland on a Wayland desktop). `1` remains supported, but is no
+  longer necessary. Without a Wayland display, or if Wayland initialization fails, X11 is used. Confirm the actual
+  backend with compositor client information. Test default native startup with `DISPLAY` unset, explicit opt-out,
+  an invalid Wayland socket with X11 available, and an X11-only session. Do not infer the backend merely from the
+  session type or environment variables.
 - Official Avalonia 12.1.3 has a modal-dialog key-repeat defect: Ctrl+O can keep reopening the repository dialog
   after release/cancel. This checkout uses a vendored source patch for that defect; see
   [package provenance and rebuild/removal instructions](../../third_party/avalonia-wayland/README.md).

@@ -217,10 +217,10 @@ public static class AvaloniaUi
         };
     }
 
-    // Native Wayland remains experimental despite the vendored modal key-repeat fix.
-    // Keep X11 as the default pending broader compositor and workflow QA (see the Linux QA report).
+    // Prefer native scaling and input in Wayland sessions. Keep an explicit X11 escape hatch
+    // while the backend is experimental; initialization failures also fall back to X11.
     internal static bool ShouldUseWayland(bool isLinux, string? waylandDisplay, string? useWayland)
-        => isLinux && !string.IsNullOrWhiteSpace(waylandDisplay) && useWayland == "1";
+        => isLinux && !string.IsNullOrWhiteSpace(waylandDisplay) && useWayland != "0";
 
     /// <summary>
     ///  Waits on the UI thread for <paramref name="task"/> of an asynchronous Avalonia API (e.g. the storage provider, the

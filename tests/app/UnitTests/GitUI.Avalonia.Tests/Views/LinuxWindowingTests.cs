@@ -6,15 +6,18 @@ namespace GitUI.AvaloniaTests.Views;
 [TestFixture]
 public sealed class LinuxWindowingTests : HeadlessTest
 {
-    [TestCase(true, "wayland-1", null, false)]
+    [TestCase(true, "wayland-1", null, true)]
+    [TestCase(true, "wayland-1", "", true)]
     [TestCase(true, "/run/user/1000/wayland-1", "1", true)]
     [TestCase(true, "wayland-1", "1", true)]
     [TestCase(true, "wayland-1", "0", false)]
+    [TestCase(true, null, null, false)]
     [TestCase(true, null, "1", false)]
     [TestCase(true, "", "1", false)]
     [TestCase(true, " ", "1", false)]
     [TestCase(false, "wayland-1", "1", false)]
-    public void Backend_selection_requires_a_Linux_Wayland_session_and_explicit_opt_in(bool isLinux, string? display, string? useWayland, bool expected)
+    [TestCase(false, "wayland-1", null, false)]
+    public void Backend_selection_prefers_a_Linux_Wayland_session_unless_opted_out(bool isLinux, string? display, string? useWayland, bool expected)
         => AvaloniaUi.ShouldUseWayland(isLinux, display, useWayland).Should().Be(expected);
 
     [Test]

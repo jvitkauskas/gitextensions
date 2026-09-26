@@ -120,7 +120,7 @@ clipboard and terminal paste pass. Live 200% → 150% → 100% → 200% scaling 
 original display configuration was restored. Backend probes also pass for default XWayland and failed-Wayland/X11
 fallback. Final Release build and all 18 suites pass: 25,330 passed, 167 skipped.
 
-**Native Wayland remains opt-in:** official Avalonia 12.1.3 drops key-up/leave handling while a modal owner is
+**Original opt-in blocker (now fixed):** official Avalonia 12.1.3 drops key-up/leave handling while a modal owner is
 disabled and keeps dispatching its repeat timer. The vendored source patch described below fixes that defect;
 the Linux report preserves its protocol trace and reproduction. Native cross-backend clipboard export, mixed-DPI
 monitors, drag/drop and full workflow/tool parity remain unverified. Default XWayland scaling with Hyprland's
@@ -139,7 +139,15 @@ The subsequent vendoring batch adopts that fix as `Avalonia.Wayland 12.1.3-gitex
 pinned exactly. Other Avalonia dependencies remain official 12.1.3. The package is rebuilt from committed source,
 with the patch, licenses, SHA-256 provenance and an exercised rebuild helper in
 [third_party/avalonia-wayland](../../third_party/avalonia-wayland/README.md). Follow its removal instructions once
-an official release includes the fix; native Wayland is still opt-in pending broader QA.
+an official release includes the fix. Native Wayland was kept opt-in during that batch.
+
+The broader native Hyprland click-through now enables Wayland by default on Linux when `WAYLAND_DISPLAY` is
+nonempty. `GITEXTENSIONS_USE_WAYLAND=0` forces X11; failed Wayland initialization also falls back to X11. Commit,
+push/pull/clone, branches, stash, conflict resolution through native Meld, history/blame, clipboard exchange with
+X11, terminal paste, file pickers, dark theme, plugins and live scaling passed. Five actual backend probes and six
+held/released modal cycles pass on the final build. Release build and all 18 suites pass: 25,333 passed, 167 skipped.
+See the Linux report for exact coverage and the non-blocking diff-menu finding. Other compositors, mixed-DPI
+monitors, drag/drop and IME input remain unverified; Windows/macOS were not rerun.
 
 ## Rules
 

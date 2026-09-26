@@ -15,8 +15,9 @@ and rejects repeat into disabled/disposed sinks. `source.patch` contains the ful
 regression cases. Four fail before the fix; all 49 Wayland tests pass afterwards. The patched backend passed actual
 native Hyprland dialog cycles, including held Ctrl+O and nested Escape dismissal; see the Linux QA report for scope.
 
-Native Wayland remains opt-in with `GITEXTENSIONS_USE_WAYLAND=1`. This patch does not establish complete Wayland
-parity across compositors or change the default X11 backend.
+Following broader application QA, Linux sessions with `WAYLAND_DISPLAY` now use native Wayland by default.
+Set `GITEXTENSIONS_USE_WAYLAND=0` to force X11; initialization failures also fall back to X11. The backend remains
+experimental, and this patch does not establish complete parity across compositors.
 
 ## Restore and integrity
 
@@ -79,4 +80,4 @@ Once an official release contains the fix:
 2. Remove the `vendored` source and the exact `Avalonia.Wayland` source mapping from `NuGet.Config` so that it restores
    from nuget.org again. The generic nuget.org mapping can remain.
 3. Remove this directory and the temporary `.nupkg` from `third_party/nuget/`.
-4. Repeat the native modal regression and clean-cache build/test checks before changing Wayland's opt-in status.
+4. Repeat the native modal regression and clean-cache build/test checks when upgrading the backend.
