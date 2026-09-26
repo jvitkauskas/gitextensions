@@ -114,6 +114,10 @@ internal static class Program
         // The first start does not ask about telemetry: it is off until the user allows it in the settings (General).
         AppSettings.TelemetryEnabled ??= false;
 
+        // The checklist and settings dialog load independent copies from disk. Flush the startup choices before
+        // creating them, rather than waiting for the settings cache's delayed save (which can lose the language).
+        AppSettings.SaveSettings();
+
         try
         {
             // Ensure we can find the git command to execute,

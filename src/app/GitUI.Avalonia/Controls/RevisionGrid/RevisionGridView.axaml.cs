@@ -453,7 +453,7 @@ public partial class RevisionGridView : UserControl, IHotkeyControl
         IReadOnlyList<GitRevision> selected = viewModel.GetSelectedRevisions(descending: true);
         if (selected.Count > 0 && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
         {
-            await clipboard.SetTextAsync(string.Join(Environment.NewLine, selected.Select(revision => revision.ObjectId)));
+            await AvaloniaClipboardBackend.SetTextAsync(clipboard, string.Join(Environment.NewLine, selected.Select(revision => revision.ObjectId)));
         }
     }
 

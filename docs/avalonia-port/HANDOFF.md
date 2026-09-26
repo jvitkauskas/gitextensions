@@ -106,6 +106,13 @@ paste and launch of native Wayland Meld were checked. Default 200% monitor scali
 Avalonia scale override works), and Wayland clipboard `text/plain` returns empty while UTF-8 succeeds. The Linux
 report records both findings and distinguishes this focused check from the earlier seven saved Xvfb merges.
 
+The next fix batch closes first-run language loss by saving startup choices before the checklist loads independent
+settings, verified through save/restart on Hyprland. Linux copy commands now supply the X11 `TEXT` alias required by
+Hyprland's Wayland `text/plain` requests; hashes and Unicode/multiline messages pass actual desktop reads. Built-in
+Avalonia text-control copying and native Wayland support are outside that workaround. The asynchronous headless
+test helper now awaits the test body rather than hiding failures in a nested task, with a regression. Release build
+and all 18 suite invocations pass: 25,320 passed, 167 skipped. Default HiDPI scaling and the other open findings remain.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the

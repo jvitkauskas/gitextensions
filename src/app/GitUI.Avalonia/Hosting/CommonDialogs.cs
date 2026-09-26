@@ -1,8 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -319,7 +321,23 @@ public sealed class FontPickerWindow : DialogWindow
 public sealed class AvaloniaClipboardBackend : IClipboardBackend
 {
     public bool TrySetText(string text)
-        => AvaloniaDialogHost.GetActiveWindow()?.Clipboard is { } clipboard && Run(clipboard.SetTextAsync(text));
+        => AvaloniaDialogHost.GetActiveWindow()?.Clipboard is { } clipboard && Run(SetTextAsync(clipboard, text));
+
+    internal static Task SetTextAsync(IClipboard clipboard, string text)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return clipboard.SetTextAsync(text);
+        }
+
+        // Hyprland maps a Wayland text/plain request to the X11 TEXT atom. Avalonia 12.1 supplies text/plain
+        // and UTF8_STRING, but not TEXT, so that request otherwise returns no data across XWayland.
+        DataTransferItem item = DataTransferItem.CreateText(text);
+        item.Set(DataFormat.CreateBytesPlatformFormat("TEXT"), Encoding.UTF8.GetBytes(text));
+        DataTransfer data = new();
+        data.Add(item);
+        return clipboard.SetDataAsync(data);
+    }
 
     /// <summary>Only the text: the clipboard of Avalonia has no HTML format on every system.</summary>
     public bool TrySetHtml(string html, string text) => TrySetText(text);

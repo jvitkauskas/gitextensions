@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
-using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using GitExtensions.Extensibility;
@@ -255,7 +254,7 @@ public sealed class MessageBoxWindow : DialogWindow
         if (e.Key == Key.C && e.KeyModifiers == KeyMapping.CommandModifier && Clipboard is { } clipboard)
         {
             e.Handled = true;
-            _ = clipboard.SetTextAsync(CopyText);
+            _ = AvaloniaClipboardBackend.SetTextAsync(clipboard, CopyText);
             return;
         }
 

@@ -32,7 +32,12 @@ public abstract class HeadlessTest
     protected static Task OnUiThreadAsync(Action test) => Session.Dispatch(test, CancellationToken.None);
 
     /// <summary>Runs the asynchronous <paramref name="test"/> on the Avalonia UI thread (e.g. with the clipboard).</summary>
-    protected static Task OnUiThreadAsync(Func<Task> test) => Session.Dispatch(test, CancellationToken.None);
+    protected static Task OnUiThreadAsync(Func<Task> test) => Session.Dispatch(async () =>
+    {
+        // Dispatch(Func<TResult>) with TResult = Task would return Task<Task> and hide assertion failures.
+        await test();
+        return 0;
+    }, CancellationToken.None);
 
     /// <summary>Sets the theme variant for the rest of the current test (reset by <see cref="ResetThemeAsync"/>).</summary>
     protected static void UseTheme(ThemeVariant theme) => Application.Current!.RequestedThemeVariant = theme;

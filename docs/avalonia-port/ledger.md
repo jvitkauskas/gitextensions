@@ -269,7 +269,12 @@ manual checks and the external-tool preference-isolation limitations.
 The report's later Hyprland follow-up verifies the actual desktop: this build uses XWayland, and a Wayland-only
 startup probe fails in `XOpenDisplay`. It records incorrect default HiDPI scaling with Hyprland's zero XWayland
 scaling, format-dependent XWayland-to-Wayland clipboard output, successful terminal paste in the other direction,
-and launch of native Wayland Meld. These findings are open; this is not native Wayland backend support.
+and launch of native Wayland Meld. A subsequent fix saves first-run language choices before the settings checklist
+loads fresh containers and supplies the X11 `TEXT` alias for Linux copy commands (Hyprland requests it for Wayland
+`text/plain`). Actual desktop checks pass for hashes and Unicode/multiline messages. Built-in text-control copying,
+default HiDPI scaling and native Wayland backend support remain outside these fixes. The async headless-test helper
+also now awaits the test body, so failures reach the runner. With four new regression cases, all 18 invocations pass:
+25,320 passed, 167 skipped. The report records the manual language save/restart regression and clipboard evidence.
 
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;
