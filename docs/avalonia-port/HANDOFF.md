@@ -90,6 +90,16 @@ unchanged shell-settings writes, the portable checklist startup preference, and 
 installations. The report distinguishes actual UI checks from discovery-only checks. Linux manual QA is deferred by
 the owner; shared changes are built and tested on Windows and WSL.
 
+## Native Linux QA (2026-09-26)
+
+See [the Linux report](QA-Linux-2026-09-26.md). Seven installed diff/merge tools
+passed actual diffs and saved conflict resolutions; seven editor commands completed Git commit-message edits. The
+Release build and all 18 suite invocations pass (25,316 passed, 167 skipped). This batch fixes Arch's `zeditor`
+discovery and a fractional-line-height boundary in the diff viewer, with regressions. It also records unresolved
+first-run language persistence, menu dismissal and dark-link contrast findings, the custom difftool list, remaining
+manual coverage, and desktop-preference isolation limitations. Windows/macOS were not rerun. `QA.md` now includes
+native-Linux setup and all writable XDG roots/private D-Bus activation isolation.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the

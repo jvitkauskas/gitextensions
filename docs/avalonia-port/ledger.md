@@ -259,6 +259,13 @@ Each view's strings class (`GitUI.Presentation/**/*Strings.cs`) declares the XLI
 
 ## Platforms
 
+The [native Linux QA report of 2026-09-26](QA-Linux-2026-09-26.md) records actual diffs and saved merges in Meld,
+KDiff3, P4Merge, Beyond Compare 5, DiffMerge, Sublime Merge and Code OSS, plus seven Git editor commands. It fixes
+Arch Zed discovery (`zeditor` fallback) and first-visible-line lookup at fractional diff line boundaries, with
+regression tests. All 18 test-project invocations pass on Linux (25,316 passed, 167 skipped). The report separates
+manual X11/Xvfb coverage at 100%/200% from untested native Wayland and other systems, and lists remaining defects,
+manual checks and the external-tool preference-isolation limitations.
+
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;
 their checklist startup preference is local to the portable settings file. Saving unchanged shell-extension options

@@ -20,4 +20,25 @@ public sealed class EditorHelperTests
         EditorHelper.GetUnixEditors(isMacOS: true, name => name == "subl")
             .Should().Equal("vi", "subl --new-window --wait", "open -W -n -e");
     }
+
+    [Test]
+    public void On_Linux_Zed_is_offered_under_its_distribution_command_name()
+    {
+        EditorHelper.GetUnixEditors(isMacOS: false, name => name == "zeditor")
+            .Should().Equal("vi", "zeditor --wait");
+    }
+
+    [Test]
+    public void Zed_is_offered_only_once_when_both_command_names_are_available()
+    {
+        EditorHelper.GetUnixEditors(isMacOS: false, name => name is "zed" or "zeditor")
+            .Should().Equal("vi", "zed --wait");
+    }
+
+    [Test]
+    public void On_macOS_the_Linux_Zed_command_is_not_offered()
+    {
+        EditorHelper.GetUnixEditors(isMacOS: true, name => name == "zeditor")
+            .Should().Equal("vi", "open -W -n -e");
+    }
 }

@@ -326,8 +326,9 @@ public partial class TextEditorView : UserControl
     }
 
     /// <summary>The first line in view (1-based).</summary>
+    /// <remarks>Fractional line heights can round an exact line boundary back into the preceding line in the height tree.</remarks>
     public int FirstVisibleLine
-        => editor.TextArea.TextView.GetDocumentLineByVisualTop(editor.VerticalOffset)?.LineNumber ?? 1;
+        => editor.TextArea.TextView.GetDocumentLineByVisualTop(editor.VerticalOffset + 0.000001)?.LineNumber ?? 1;
 
     /// <summary>The number of lines in view.</summary>
     public int VisibleLineCount

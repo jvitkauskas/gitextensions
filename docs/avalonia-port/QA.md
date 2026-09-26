@@ -1,6 +1,6 @@
 # QA click-through of the port
 
-A manual check of Git Extensions (the Avalonia port, branch `avalonia`) on Windows, Linux (WSLg) and macOS, by clicking
+A manual check of Git Extensions (the Avalonia port, branch `avalonia`) on Windows, Linux (native or WSLg) and macOS, by clicking
 through the application as a user would. Read [HANDOFF.md](HANDOFF.md) first (state of the port, rules), and the
 "Platforms" section of [ledger.md](ledger.md) for what was already checked and what is known to be open.
 
@@ -71,6 +71,29 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
   - Menus and popups are nameless override-redirect windows.
   - GTK apps such as meld and the keyring prompter use Wayland, so X11 tools do not see them: capture the Windows screen
     to see them.
+
+### Native Linux
+
+- The same portable-copy and scratch-repository rules apply. Install tools through the distribution's package manager
+  when the owner authorizes installation; record which packages remain installed. Vendor archives can instead live
+  below the scratch folder, with launchers on a scratch `PATH`.
+- Set **all** writable XDG roots before starting the application, external tools, or a private D-Bus session:
+  `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_CACHE_HOME` and `XDG_STATE_HOME`, as well as `HOME` and `GIT_CONFIG_GLOBAL`.
+  A private bus started with the real environment can autoactivate dconf, portals and file-manager helpers with the
+  real paths even when the app itself uses scratch HOME. Start the bus after exporting the scratch environment;
+  setting the app's environment later is insufficient. Do not reuse a real user's Secret Service for fixture tests.
+- On a shared Wayland desktop, a separate Xvfb display with a small window manager (for example Openbox) allows X11
+  click-through without moving the user's pointer. Set `DISPLAY` for every input/capture command, unset
+  `WAYLAND_DISPLAY`, and use `GDK_BACKEND=x11` / `QT_QPA_PLATFORM=xcb` for external tools. Electron may need explicit
+  X11 flags in its scratch configuration. Report Xvfb coverage separately from native Wayland coverage.
+- Arch's distribution .NET SDK may select an unavailable `arch-x64` apphost package. The tested override is
+  `dotnet build GitExtensions.slnx -c Release -p:NETCoreSdkRuntimeIdentifier=linux-x64`. Install DejaVu fonts for the
+  headless Avalonia suite too. Run projects sequentially with the same hang timeout/watchdog as Windows.
+- Close external tools normally when checking wait/exit behavior. Record and stop private bus helpers, keyring,
+  SSH agent, window manager and Xvfb processes during cleanup, without killing the user's desktop services.
+- The [native Linux report of 2026-09-26](QA-Linux-2026-09-26.md) records seven diff/merge tools and seven editor
+  commands exercised, prerequisites, fixes, remaining coverage, and the isolation mistakes that motivated these
+  environment instructions.
 
 ### macOS
 

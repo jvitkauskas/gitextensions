@@ -20,11 +20,14 @@ namespace GitUI.AvaloniaTests.Views;
 [TestFixture]
 public sealed class FileViewerPositionViewTests : HeadlessTest
 {
-    [Test]
-    public Task A_diff_is_shown_at_its_first_change_below_its_context() => OnUiThreadAsync(() =>
+    [TestCase(11)]
+    [TestCase(12.5)]
+    [TestCase(13.3)]
+    public Task A_diff_is_shown_at_its_first_change_below_its_context(double fontSize) => OnUiThreadAsync(() =>
     {
         DiffViewModelTests.FakeViewerHost host = new() { Content = new FileViewContent(FileViewKind.Diff, LongDiff(contextBefore: 40), FileName: "f.cs") };
         (DialogWindow window, FileViewerView view, FileViewerViewModel viewModel) = Create(host);
+        view.TextView.Editor.FontSize = fontSize;
 
         _ = viewModel.ShowChangesAsync(FileViewerContextMenuTests.Entry(StagedStatus.WorkTree));
         Dispatcher.UIThread.RunJobs();

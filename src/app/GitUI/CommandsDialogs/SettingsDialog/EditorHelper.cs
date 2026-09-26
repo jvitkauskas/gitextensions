@@ -30,7 +30,7 @@ public static class EditorHelper
             ("nano", ""),
             ("code", "--new-window --wait"),
             ("subl", "--new-window --wait"),
-            ("zed", "--wait"),
+            (isMacOS || isOnPath("zed") ? "zed" : "zeditor", "--wait"),
             ("gedit", "--standalone"),
             ("kate", "--block"),
         ];
