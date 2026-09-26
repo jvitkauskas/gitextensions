@@ -302,6 +302,12 @@ resolution, cross-backend clipboard, terminal paste, file pickers, dark theme, p
 Five startup modes and six held/released modal cycles pass on the final build; all 18 suites pass (25,333 passed,
 167 skipped). See the Linux QA report for coverage, limitations and the non-blocking diff-menu finding.
 
+The [Ubuntu GNOME and Fedora KDE VM pass](QA-VM-Linux-2026-09-26.md) adds Mutter/KWin native Wayland coverage
+at `495ede8b5`: full Release builds and all 18 test-project invocations pass independently on each guest
+(25,333 passed, 167 skipped). Core Git/Meld workflows, terminal/editors, cross-backend clipboard, modal repeat,
+folder picking, live single-monitor scaling and five startup modes pass. No new application blocker was found;
+physical GPU behavior, mixed-DPI monitors and the remainder of the full QA checklist are not implied by this pass.
+
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;
 their checklist startup preference is local to the portable settings file. Saving unchanged shell-extension options

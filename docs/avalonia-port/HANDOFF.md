@@ -149,6 +149,16 @@ held/released modal cycles pass on the final build. Release build and all 18 sui
 See the Linux report for exact coverage and the non-blocking diff-menu finding. Other compositors, mixed-DPI
 monitors, drag/drop and IME input remain unverified; Windows/macOS were not rerun.
 
+## Ubuntu GNOME / Fedora KDE VMs (2026-09-26)
+
+The [VM QA report](QA-VM-Linux-2026-09-26.md) extends native Wayland coverage to Mutter and KWin. Both guests
+built `495ede8b5` and passed all 18 test-project invocations (25,333 passed, 167 skipped each). Actual UI checks
+cover commit, push/pull, Meld conflict resolution, held modal shortcuts, clipboard between Wayland and X11,
+terminal/editor integration, GTK folder picking and live 100%/150%/200% scaling. All five startup/fallback modes
+pass. No new application blocker was confirmed. The report records VM graphics limitations and untested areas.
+Reusable VMs and evidence are retained under `/home/julius/VirtualMachines/gitextensions-qa`, with local launch
+instructions in its `README.md`; no VM disks or credentials belong in this repository.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the

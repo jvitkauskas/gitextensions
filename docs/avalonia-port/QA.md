@@ -8,6 +8,9 @@ The machine is someone's real machine: nothing may change outside the scratch fo
 Extensions settings, the Windows registry, the real `~/.gitconfig`, real repositories, or the real credential store
 (except items the test creates and deletes again).
 
+Latest additional compositor coverage: [Ubuntu GNOME and Fedora KDE VM QA](QA-VM-Linux-2026-09-26.md), including
+full builds/tests, native Wayland workflows, live scaling and X11 fallback. See that report for explicit limits.
+
 ## Setup
 
 ### Every system
