@@ -86,6 +86,18 @@ Extensions settings, the Windows registry, the real `~/.gitconfig`, real reposit
   click-through without moving the user's pointer. Set `DISPLAY` for every input/capture command, unset
   `WAYLAND_DISPLAY`, and use `GDK_BACKEND=x11` / `QT_QPA_PLATFORM=xcb` for external tools. Electron may need explicit
   X11 flags in its scratch configuration. Report Xvfb coverage separately from native Wayland coverage.
+- The default Linux backend is X11 (XWayland on a Wayland desktop). Native Wayland is experimental and explicitly
+  enabled with `GITEXTENSIONS_USE_WAYLAND=1`; `WAYLAND_DISPLAY` must also be set. It falls back to X11 if Wayland
+  initialization fails. Confirm the actual backend with compositor client information, and test native startup
+  with `DISPLAY` unset. Do not infer the backend merely from the session type or environment variables.
+- Avalonia 12.1.3's native Wayland backend has a reproduced modal-dialog key-repeat defect: Ctrl+O can keep reopening
+  the repository dialog after release/cancel. See the Linux report before using this opt-in for everyday work.
+  A future backend update must pass keyboard-opened modal dialogs, held/released shortcuts and nested dialogs.
+- Check native scaling without `AVALONIA_GLOBAL_SCALE_FACTOR` or `AVALONIA_SCREEN_SCALE_FACTORS`, including a live
+  fractional-scale change and nested dialogs. Change physical display settings only with the owner's authorization;
+  back up and restore them afterwards. For XWayland with compositor scaling disabled, the existing process-local
+  workaround is `AVALONIA_GLOBAL_SCALE_FACTOR=2` on a 200% monitor. Do not force that value on other configurations
+  or mix it into the native scaling test; it can double-scale a compositor-scaled XWayland window.
 - Arch's distribution .NET SDK may select an unavailable `arch-x64` apphost package. The tested override is
   `dotnet build GitExtensions.slnx -c Release -p:NETCoreSdkRuntimeIdentifier=linux-x64`. Install DejaVu fonts for the
   headless Avalonia suite too. Run projects sequentially with the same hang timeout/watchdog as Windows.

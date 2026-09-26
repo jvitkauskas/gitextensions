@@ -20,6 +20,7 @@
     <PackageReference Include="Avalonia.Skia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Wayland" />
     <PackageReference Include="Iciclecreek.Avalonia.Terminal" />
     <PackageReference Include="Avalonia.Themes.Simple" />
     <PackageReference Include="Classic.Avalonia.Theme" />

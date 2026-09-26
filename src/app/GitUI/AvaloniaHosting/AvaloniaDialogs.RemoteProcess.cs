@@ -138,7 +138,7 @@ internal static partial class AvaloniaDialogs
 
         public ProcessViewModel ViewModel { get; }
 
-        public nint Handle => _window.NativeHandle;
+        public nint Handle => _window.OwnerHandle;
 
         public string? Remote { get; }
 

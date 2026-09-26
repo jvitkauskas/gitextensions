@@ -431,7 +431,8 @@ public partial class FileViewerView : UserControl, IHotkeyControl
     private static int? ShowGoToLineDialog(FileViewerView view, int maxLineNumber)
     {
         GoToLineViewModel viewModel = new(ViewStrings.Load<GoToLineStrings>(), maxLineNumber);
-        nint owner = TopLevel.GetTopLevel(view)?.TryGetPlatformHandle()?.Handle ?? 0;
+        TopLevel? topLevel = TopLevel.GetTopLevel(view);
+        nint owner = topLevel is DialogWindow window ? window.OwnerHandle : topLevel?.TryGetPlatformHandle()?.Handle ?? 0;
         return AvaloniaDialogHost.ShowDialog(new GoToLineWindow { DataContext = viewModel }, owner) ? viewModel.LineNumber : null;
     }
 

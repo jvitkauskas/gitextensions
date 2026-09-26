@@ -15,8 +15,8 @@ namespace GitUI.Avalonia.Hosting;
 ///   dialog closes. Avalonia's loop dispatches all Win32 messages of the thread, so native windows keep painting.
 ///  </para>
 ///  <para>
-///   Elsewhere every owner is an Avalonia window (<see cref="DialogWindow.NativeHandle"/> is the handle of its platform,
-///   e.g. an X11 window), so the dialog is shown with Avalonia's <c>ShowDialog</c> over the open window of that handle, in
+///   Elsewhere every owner is an Avalonia window (<see cref="DialogWindow.OwnerHandle"/> identifies it even on Wayland,
+///   which has no native handle), so the dialog is shown with Avalonia's <c>ShowDialog</c> over the identified window, in
 ///   a nested dispatcher frame too (docs/avalonia-port/CROSS-PLATFORM.md, phase 2): the callers still get the result when
 ///   the call returns.
 ///  </para>
@@ -38,14 +38,14 @@ public static class AvaloniaDialogHost
     public static DialogWindow? FindOpenWindow(nint handle)
     {
         nint root = handle == 0 ? 0 : OperatingSystem.IsWindows() ? NativeMethods.GetAncestor(handle, NativeMethods.GA_ROOT) : handle;
-        return root == 0 ? null : _openWindows.FirstOrDefault(window => window.NativeHandle == root);
+        return root == 0 ? null : _openWindows.FirstOrDefault(window => window.OwnerHandle == root);
     }
 
     /// <summary>
     ///  The handle of the active window of the application, else of the window opened last (the owner of a message box
     ///  shown without one, as the native message box takes the active window); 0 if no window is open.
     /// </summary>
-    public static nint GetActiveWindowHandle() => GetActiveWindow()?.NativeHandle ?? 0;
+    public static nint GetActiveWindowHandle() => GetActiveWindow()?.OwnerHandle ?? 0;
 
     /// <summary>The active window of the application, else the window opened last; none if no window is open.</summary>
     public static DialogWindow? GetActiveWindow() => _openWindows.LastOrDefault(window => window.IsActive) ?? _openWindows.LastOrDefault();

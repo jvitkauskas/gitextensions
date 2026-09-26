@@ -117,7 +117,7 @@ internal static partial class AvaloniaDialogs
         // The filters of the command line apply to the first repository only.
         private BrowseArguments? _arguments = args;
 
-        public nint Handle => window.NativeHandle;
+        public nint Handle => window.OwnerHandle;
 
         public void Close() => window.Close();
 

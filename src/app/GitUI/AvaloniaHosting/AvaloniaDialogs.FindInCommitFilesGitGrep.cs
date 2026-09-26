@@ -50,7 +50,7 @@ internal static partial class AvaloniaDialogs
         window.StartupScreenPosition = new global::Avalonia.PixelPoint(owner.Position.X + 90, owner.Position.Y + 110);
         files.IsGitGrepDialogOpen = true;
         window.Closed += (_, _) => files.IsGitGrepDialogOpen = false;
-        AvaloniaDialogHost.Show(window, owner.TryGetPlatformHandle()?.Handle ?? 0);
+        AvaloniaDialogHost.Show(window, owner.OwnerHandle);
     }
 
     /// <summary>The file status list and the git grep settings (<c>AppSettings</c>).</summary>

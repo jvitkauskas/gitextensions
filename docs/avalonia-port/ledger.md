@@ -276,6 +276,15 @@ default HiDPI scaling and native Wayland backend support remain outside these fi
 also now awaits the test body, so failures reach the runner. With four new regression cases, all 18 invocations pass:
 25,320 passed, 167 skipped. The report records the manual language save/restart regression and clipboard evidence.
 
+The next batch supplies the native Wayland package behind `GITEXTENSIONS_USE_WAYLAND=1`, with X11 fallback,
+process-local owner IDs for handle-less backends, and live render-scale updates to `DpiUtil`. Native startup,
+browsing/diff, nested settings/font dialogs, Unicode clipboard and terminal paste pass on Hyprland. Single-monitor
+live 100%/150%/200% scaling works without overrides; temporary display changes were restored. All 18 suites pass:
+25,330 passed, 167 skipped. **Native remains experimental:** the pinned Avalonia backend can continue repeating a
+modal shortcut after key release, reopening dialogs. The Linux report records that unresolved upstream blocker,
+verified backend selection/fallback, and remaining cross-backend clipboard/mixed-DPI/workflow coverage. Default
+XWayland automatic HiDPI under Hyprland's zero-scaling setting is still unresolved.
+
 The [Windows QA report of 2026-09-25](QA-Windows-2026-09-25.md) records the current click-through. Portable copies no
 longer register themselves as the installed application or create registry keys when reading absent settings;
 their checklist startup preference is local to the portable settings file. Saving unchanged shell-extension options

@@ -90,7 +90,7 @@ internal static partial class AvaloniaDialogs
         });
 
         /// <summary>The arguments of the plugins run from this window.</summary>
-        internal GitUIEventArgs CreatePluginEventArgs() => new(new WindowOwner(_window.NativeHandle), _commands);
+        internal GitUIEventArgs CreatePluginEventArgs() => new(new WindowOwner(_window.OwnerHandle), _commands);
 
         public void OpenPluginSettings() => AvaloniaUi.RunInHostContext(() => _commands.StartPluginSettingsDialog(Owner));
 

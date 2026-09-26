@@ -70,7 +70,7 @@ public static class AvaloniaPluginDialogs
     public static IWin32Window GetOwner(DialogWindow window) => new AvaloniaDialogs.NativeWindowOwner(window);
 
     /// <summary>The Avalonia window as the owner of the dialogs and message boxes it opens (plugin API v2).</summary>
-    public static WindowOwner GetWindowOwner(DialogWindow window) => new(window.NativeHandle);
+    public static WindowOwner GetWindowOwner(DialogWindow window) => new(window.OwnerHandle);
 
     /// <summary>The application's message boxes, owned by the Avalonia window.</summary>
     public static IMessageBoxService CreateMessageBoxService(DialogWindow window) => new AvaloniaDialogs.MessageBoxService(window);

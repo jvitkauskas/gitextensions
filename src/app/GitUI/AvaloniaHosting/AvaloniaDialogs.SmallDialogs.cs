@@ -231,7 +231,7 @@ internal static partial class AvaloniaDialogs
     {
         public IGitUICommands UICommands => commands;
 
-        public nint Handle => window.NativeHandle;
+        public nint Handle => window.OwnerHandle;
 
         public IScriptOptionsProvider GetScriptOptionsProvider() => ScriptOptionsProviderBase.Default;
     }

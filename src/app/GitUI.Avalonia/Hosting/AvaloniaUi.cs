@@ -185,6 +185,11 @@ public static class AvaloniaUi
                 .UsePlatformDetect()
                 .UseSkia()
                 .UseHarfBuzz();
+            if (ShouldUseWayland(OperatingSystem.IsLinux(), Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"), Environment.GetEnvironmentVariable("GITEXTENSIONS_USE_WAYLAND")))
+            {
+                builder.UseWaylandWithFallback();
+            }
+
             if (OperatingSystem.IsMacOS())
             {
                 // Explicit shutdown: the main loop ends as without lifetime (RunMainLoop), not when windows close.
@@ -211,6 +216,11 @@ public static class AvaloniaUi
             }
         };
     }
+
+    // Avalonia 12.1.3 Wayland is experimental: in particular, modal windows can leave keyboard repeat running.
+    // Keep X11 as the default until those upstream issues are resolved (see the Linux QA report).
+    internal static bool ShouldUseWayland(bool isLinux, string? waylandDisplay, string? useWayland)
+        => isLinux && !string.IsNullOrWhiteSpace(waylandDisplay) && useWayland == "1";
 
     /// <summary>
     ///  Waits on the UI thread for <paramref name="task"/> of an asynchronous Avalonia API (e.g. the storage provider, the

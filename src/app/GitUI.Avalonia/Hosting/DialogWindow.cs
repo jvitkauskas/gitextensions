@@ -21,6 +21,9 @@ namespace GitUI.Avalonia.Hosting;
 /// </remarks>
 public class DialogWindow : Window
 {
+    private static int _nextOwnerId;
+    private readonly nint _ownerId = Interlocked.Decrement(ref _nextOwnerId);
+
     private static readonly Lazy<WindowIcon> _applicationIcon = new(
         () => new WindowIcon(AssetLoader.Open(new Uri("avares://GitUI.Avalonia/Assets/git-extensions-logo-256px.png"))));
 
@@ -42,6 +45,7 @@ public class DialogWindow : Window
 
         // As ProcessCmdKey: the hotkeys come before the focused control (which gets the key if the command is not executed).
         AddHandler(KeyDownEvent, OnPreviewKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        ScalingChanged += (_, _) => GitExtUtils.GitUI.DpiUtil.UseRenderScaling(RenderScaling);
     }
 
     /// <summary>
@@ -53,6 +57,12 @@ public class DialogWindow : Window
     ///  The native window handle, available once the window has been created; used to parent WinForms dialogs.
     /// </summary>
     public nint NativeHandle => TryGetPlatformHandle()?.Handle ?? 0;
+
+    /// <summary>
+    ///  Identifies this window to the dialog bridge. Wayland has no native handles, so it uses a unique process-local
+    ///  ID instead; that ID must never be passed to native APIs. Windows keeps its HWND, including 0 before creation.
+    /// </summary>
+    public nint OwnerHandle => NativeHandle != 0 ? NativeHandle : OperatingSystem.IsWindows() ? 0 : _ownerId;
 
     /// <summary>Whether the window is shown modally (off Windows, by <see cref="AvaloniaDialogHost"/>).</summary>
     internal bool IsModal { get; set; }

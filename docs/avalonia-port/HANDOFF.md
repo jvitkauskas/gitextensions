@@ -113,6 +113,20 @@ Avalonia text-control copying and native Wayland support are outside that workar
 test helper now awaits the test body rather than hiding failures in a nested task, with a regression. Release build
 and all 18 suite invocations pass: 25,320 passed, 167 skipped. Default HiDPI scaling and the other open findings remain.
 
+The native follow-up adds **experimental opt-in** Wayland through `GITEXTENSIONS_USE_WAYLAND=1` (with X11 fallback),
+fixes owner lookup on backends without native handles, and updates `DpiUtil` when a window's render scale changes.
+Actual native startup without `DISPLAY`, browsing/diff, nested settings/font ownership, native TextBox Unicode
+clipboard and terminal paste pass. Live 200% → 150% → 100% → 200% scaling works without overrides; the owner's
+original display configuration was restored. Backend probes also pass for default XWayland and failed-Wayland/X11
+fallback. Final Release build and all 18 suites pass: 25,330 passed, 167 skipped.
+
+**Native Wayland is not ready to be the default:** Avalonia 12.1.3 drops key-up/leave handling while a modal owner
+is disabled and keeps dispatching its repeat timer. Ctrl+O can reopen dialogs after release/cancel. The Linux report
+records a protocol trace, reproduction and pinned upstream source references. It remains an upstream blocker;
+this batch intentionally has no reflection-based backend patch. Native cross-backend clipboard export, mixed-DPI
+monitors, drag/drop and full workflow/tool parity remain unverified. Default XWayland scaling with Hyprland's
+zero-scaling configuration still needs the existing `AVALONIA_GLOBAL_SCALE_FACTOR=2` workaround at 200%.
+
 ## Rules
 
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent makes them. Do not commit the
