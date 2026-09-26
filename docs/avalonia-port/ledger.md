@@ -233,6 +233,17 @@ order, group boxes and icons). Deliberate differences:
   `FormViewPatch`, the number boxes of `FormRevisionFilter`).
 - `FormStash` has a refresh button for its F5 hotkey.
 
+Compared with the WinForms release on Windows 11 (September 2026), the look was brought closer to it: toolbar separators drawn
+as vertical lines (`Separator.toolbar`; Fluent drew a dot), small drop-down arrows on the toolbar buttons, Pull and Push as
+icons only, the order Pull, Push, Commit, Stash, filter boxes of 110 and the repository path trimmed at 300 pixels (the main
+toolbar fits one row on a wide window), the separators of the toolbars of the file lists as `FileStatusList.UpdateToolbar`
+shows them and the checked grouping framed, revision rows as high as the font needs (`RevisionGridRowHeight`, as
+`UpdateRowHeight`), reference labels in the font of the row with the arrow of the current branch, the artificial commits in a
+box, the "···" of a message with a body and its tooltip, tab headers as WinForms tabs, tooltips up to 600 pixels, the
+committer and the remote of the commit dialog as links (the remote opens the remotes of the branch), initials of the avatars
+with the margin of the GDI+ drawing (`PngImages.TextExtent`), combo boxes and one-line text boxes with the same inset and
+centered text, and the commit message in `AppSettings.CommitFont` with its watermark where the text starts.
+
 The options toolbar that the WinForms `FileViewer` shows when the mouse moves over it is ported in `FileViewerView` (next and
 previous change, context lines, entire file, nonprinting characters, whitespace, encoding, settings; the options are saved in
 `AppSettings` as the WinForms viewer saves them), with the syntax highlighting of diffs and the context menu (copy patch, find,

@@ -66,6 +66,7 @@ rather than the one of `dotnet` (`ApplicationInfo.GetExecutablePath`), and the t
 Also: Sublime Merge's output option (`-o "$MERGED"`; it asked where to save), the icons of the tabs of the color picker
 (Avalonia 12.1 draws no stretched `PathGeometry`, as Fluent's `ColorView` icons are: they are drawn inside a
 `GeometryGroup`), and the buttons of the conflicts dialog grow with their text ("Rescan merge conflicts" was cut).
+The look was compared with the WinForms release on Windows 11 and brought closer to it (the ledger, "Layout").
 The Tools menu: gitk and Git GUI are found where Homebrew and the distributions install them and say how to install
 them when missing (`GitGuiTools`); on macOS "Git bash" is "Open in Terminal". The commit dialog had a second Rescan button above the unstaged files
 (FormCommit has only the Refresh of the toolbar of that list): removed.

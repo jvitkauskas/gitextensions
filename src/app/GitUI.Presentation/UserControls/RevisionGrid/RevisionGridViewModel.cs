@@ -133,6 +133,15 @@ public sealed partial class RevisionGridRow : ObservableObject
     /// <summary>The subject; none for the autostash, whose subject is its label.</summary>
     public string Subject => Revision.IsAutostash ? "" : Revision.Subject;
 
+    /// <summary>The working directory or the index (drawn in a box, as <c>DrawArtificialRevision</c>).</summary>
+    public bool IsArtificial => Revision.IsArtificial;
+
+    /// <summary>As <c>MultilineIndicator</c>: the message has more than its subject (the "···" at the end of the message).</summary>
+    public bool HasMultiLineMessage => !Revision.IsArtificial && Revision.HasMultiLineMessage;
+
+    /// <summary>As the tooltip of <c>MessageColumnProvider</c>: the whole message of a commit with more than its subject.</summary>
+    public string? MessageToolTip => HasMultiLineMessage ? Revision.Body ?? Revision.Subject : null;
+
     public string AuthorName => Revision.Author ?? "";
 
     /// <summary>The body of the message, shown after the subject (<c>ShowCommitBodyInRevisionGrid</c>); empty if not shown.</summary>

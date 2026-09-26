@@ -28,6 +28,13 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <!-- As a checked ToolStripButton: the grouping in use is framed. -->
+    <Style Selector="Button.toolbar.checked">
+      <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListAccentLowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="2" />
+    </Style>
   </UserControl.Styles>
   <DockPanel>
     <!-- Equivalent of the toolbar of FileStatusList (FileStatusList.Toolbar.cs): each item can be hidden (Settings, Toolbar). -->
@@ -36,10 +43,27 @@
               Command="{Binding CollapseGroupsCommand}">
         <Image Source="avares://GitUI.Avalonia/Assets/CollapseAll.png" Width="16" Height="16" />
       </Button>
+      <!-- The separators of the toolbar as FileStatusList.UpdateToolbar shows them. -->
+      <Separator Name="sepRefresh" Classes="toolbar">
+        <Separator.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="HasGroups" />
+            <Binding Path="HasRefreshButton" />
+          </MultiBinding>
+        </Separator.IsVisible>
+      </Separator>
       <Button Name="btnRefresh" Classes="toolbar" IsVisible="{Binding HasRefreshButton}" IsEnabled="{Binding HasArtificialCommits}"
               ToolTip.Tip="{Binding ToolbarStrings.Refresh.Text}" Command="{Binding RefreshCommand}">
         <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
       </Button>
+      <Separator Name="sepAsTree" Classes="toolbar">
+        <Separator.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.Or}">
+            <Binding Path="HasGroups" />
+            <Binding Path="HasRefreshButton" />
+          </MultiBinding>
+        </Separator.IsVisible>
+      </Separator>
       <SplitButton Name="btnAsTree" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.AsTreeToolTip.Text}"
                    Command="{Binding ToggleFlatListCommand}" Padding="3,1">
         <Panel>
@@ -62,23 +86,26 @@
           </MenuFlyout>
         </SplitButton.Flyout>
       </SplitButton>
-      <Button Name="byPathButton" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
+      <Separator Name="sepGroupBy" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" />
+      <Button Name="byPathButton" Classes="toolbar" Classes.checked="{Binding IsByPath}" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByPathToolTip.Text}"
               Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FilePath}">
         <Image Source="avares://GitUI.Avalonia/Assets/FolderClosed.png" Width="16" Height="16" />
       </Button>
-      <Button Name="byExtensionButton" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
+      <Button Name="byExtensionButton" Classes="toolbar" Classes.checked="{Binding IsByExtension}" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByExtensionToolTip.Text}"
               Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileExtension}">
         <Image Source="avares://GitUI.Avalonia/Assets/File.png" Width="16" Height="16" />
       </Button>
-      <Button Name="byStatusButton" Classes="toolbar" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
+      <Button Name="byStatusButton" Classes="toolbar" Classes.checked="{Binding IsByStatus}" IsVisible="{Binding !IsFileTreeMode}" ToolTip.Tip="{Binding Strings.ByStatusToolTip.Text}"
               Command="{Binding SortByCommand}" CommandParameter="{x:Static gc:DiffListSortType.FileStatus}">
         <Image Source="avares://GitUI.Avalonia/Assets/FileStatusModified.png" Width="16" Height="16" />
       </Button>
       <!-- The A/B filter buttons, for the diffs with a common BASE (IsDiffStatusMatch). -->
+      <Separator Name="sepFilter" Classes="toolbar" IsVisible="{Binding HasDiffABGroups}" />
       <ToggleButton Name="btnUnequalChange" Classes="toolbar filter" Content="!" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowUnequalChange}" ToolTip.Tip="{Binding ToolbarStrings.UnequalChange.Text}" />
       <ToggleButton Name="btnOnlyB" Classes="toolbar filter" Content="B" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowOnlyB}" ToolTip.Tip="{Binding ToolbarStrings.OnlyB.Text}" />
       <ToggleButton Name="btnOnlyA" Classes="toolbar filter" Content="A" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowOnlyA}" ToolTip.Tip="{Binding ToolbarStrings.OnlyA.Text}" />
       <ToggleButton Name="btnSameChange" Classes="toolbar filter" Content="=" IsVisible="{Binding HasDiffABGroups}" IsChecked="{Binding ShowSameChange}" ToolTip.Tip="{Binding ToolbarStrings.SameChange.Text}" />
+      <Separator Name="sepOptions" Classes="toolbar" IsVisible="{Binding CanUseGitGrep}" />
       <SplitButton Name="btnFindInFilesGitGrep" Classes="toolbar" IsVisible="{Binding CanUseGitGrep}" ToolTip.Tip="{Binding ToolbarStrings.FindInFilesGitGrep.Text}"
                    Command="{Binding ToggleGitGrepCommand}" Padding="3,1">
         <Image Source="avares://GitUI.Avalonia/Assets/ViewFile.png" Width="16" Height="16" />
@@ -106,6 +133,7 @@
           </MenuFlyout>
         </SplitButton.Flyout>
       </SplitButton>
+      <Separator Name="sepSettings" Classes="toolbar" />
       <DropDownButton Name="btnSettings" Classes="toolbar" ToolTip.Tip="{Binding ToolbarStrings.Settings.Text}" Padding="3,1">
         <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" Width="16" Height="16" />
         <DropDownButton.Flyout>

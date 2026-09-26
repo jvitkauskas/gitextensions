@@ -33,7 +33,7 @@
       <Button Name="refreshButton" Classes="toolbar" Command="{Binding RefreshRevisionsCommand}" ToolTip.Tip="{Binding Strings.Refresh.Text}" IsVisible="{Binding ToolbarItems[RefreshButton]}">
         <Image Source="avares://GitUI.Avalonia/Assets/ReloadRevisions.png" Width="16" Height="16" />
       </Button>
-      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Separator Classes="toolbar" />
       <ToggleButton Name="toggleLeftPanel" Classes="toolbar" IsChecked="{Binding LeftPanel.IsVisible}" ToolTip.Tip="{Binding LeftPanel.Strings.ToggleLeftPanel.Text}">
         <ToggleButton.IsVisible>
           <MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -50,7 +50,7 @@
       <DropDownButton Name="commitInfoPositionButton" Classes="toolbar" ToolTip.Tip="{Binding LayoutStrings.CommitInfoPosition.Text}" IsVisible="{Binding ToolbarItems[menuCommitInfoPosition]}">
         <Image Source="{Binding CommitInfoPositionIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
       </DropDownButton>
-      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Separator Classes="toolbar" />
       <SplitButton Name="submodulesButton" Classes="toolbar" IsEnabled="{Binding CanShowSubmodules}" ToolTip.Tip="{Binding SubmodulesToolTip}" IsVisible="{Binding ToolbarItems[toolStripButtonLevelUp]}">
         <Image Source="{Binding SubmodulesIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
       </SplitButton>
@@ -67,7 +67,8 @@
       <DropDownButton Name="workingDirButton" Classes="toolbar" ToolTip.Tip="{Binding ToolbarStrings.WorkingDirToolTip.Text}" IsVisible="{Binding ToolbarItems[_NO_TRANSLATE_WorkingDir]}">
         <StackPanel Orientation="Horizontal" Spacing="4">
           <Image Source="avares://GitUI.Avalonia/Assets/RepoOpen.png" Width="16" Height="16" />
-          <TextBlock Text="{Binding WorkingDirectoryText}" VerticalAlignment="Center" />
+          <!-- A long path keeps the toolbar on one row: the middle folders are trimmed (the tooltip names the repository). -->
+          <TextBlock Text="{Binding WorkingDirectoryText}" VerticalAlignment="Center" MaxWidth="300" TextTrimming="PathSegmentEllipsis" />
         </StackPanel>
       </DropDownButton>
       <Button Name="branchButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.CheckoutBranch}" ToolTip.Tip="{Binding Strings.BranchToolTip.Text}" IsVisible="{Binding ToolbarItems[branchSelect]}">
@@ -76,30 +77,28 @@
           <TextBlock Text="{Binding CurrentBranch}" VerticalAlignment="Center" />
         </StackPanel>
       </Button>
-      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Separator Classes="toolbar" />
+      <StackPanel Name="fetchPullShortcuts" Orientation="Horizontal" Spacing="2" />
+      <SplitButton Name="pullButton" ToolTip.Tip="{Binding PullButtonToolTip}" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.PullDefault}" IsVisible="{Binding ToolbarItems[toolStripButtonPull]}">
+        <!-- As toolStripButtonPull: the icon only (its tooltip names the pull action). -->
+        <Image Source="{Binding PullButtonIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
+      </SplitButton>
+      <Button Name="pushButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Push}" IsVisible="{Binding ToolbarItems[toolStripButtonPush]}"
+              ToolTip.Tip="{Binding Strings.PushButton.Text}">
+        <!-- As toolStripButtonPush: the icon only. -->
+        <Image Source="avares://GitUI.Avalonia/Assets/Push.png" Width="16" Height="16" />
+      </Button>
+      <!-- As ToolStripMain: Pull, Push, Commit, Stash. -->
       <Button Name="commitButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Commit}" IsVisible="{Binding ToolbarItems[toolStripButtonCommit]}">
         <StackPanel Orientation="Horizontal" Spacing="4">
           <Image Name="commitButtonIcon" Source="{Binding CommitButtonIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
           <TextBlock Name="commitButtonText" Text="{Binding CommitButtonText}" VerticalAlignment="Center" />
         </StackPanel>
       </Button>
-      <StackPanel Name="fetchPullShortcuts" Orientation="Horizontal" Spacing="2" />
-      <SplitButton Name="pullButton" ToolTip.Tip="{Binding PullButtonToolTip}" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.PullDefault}" IsVisible="{Binding ToolbarItems[toolStripButtonPull]}">
-        <StackPanel Orientation="Horizontal" Spacing="4">
-          <Image Source="{Binding PullButtonIcon, Converter={x:Static s:SettingsIconConverter.Instance}}" Width="16" Height="16" />
-          <TextBlock Text="{Binding Strings.PullButton.Text}" VerticalAlignment="Center" />
-        </StackPanel>
-      </SplitButton>
-      <Button Name="pushButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Push}" IsVisible="{Binding ToolbarItems[toolStripButtonPush]}">
-        <StackPanel Orientation="Horizontal" Spacing="4">
-          <Image Source="avares://GitUI.Avalonia/Assets/Push.png" Width="16" Height="16" />
-          <TextBlock Text="{Binding Strings.PushButton.Text}" VerticalAlignment="Center" />
-        </StackPanel>
-      </Button>
       <SplitButton Name="stashButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.ManageStashes}" ToolTip.Tip="{Binding Strings.ManageStashesToolTip.Text}" IsVisible="{Binding ToolbarItems[toolStripSplitStash]}">
         <Image Source="avares://GitUI.Avalonia/Assets/Stash.png" Width="16" Height="16" />
       </SplitButton>
-      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Separator Classes="toolbar" />
       <Button Name="fileExplorerButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.FileExplorer}" ToolTip.Tip="{Binding Strings.FileExplorerToolTip.Text}" IsVisible="{Binding ToolbarItems[toolStripFileExplorer]}">
         <Image Source="avares://GitUI.Avalonia/Assets/BrowseFileExplorer.png" Width="16" Height="16" />
       </Button>
@@ -124,7 +123,7 @@
       <Button Name="settingsButton" Classes="toolbar" Command="{Binding RunCommand}" CommandParameter="{x:Static vm:BrowseCommand.Settings}" ToolTip.Tip="{Binding Strings.SettingsToolTip.Text}" IsVisible="{Binding ToolbarItems[EditSettings]}">
         <Image Source="avares://GitUI.Avalonia/Assets/Settings.png" Width="16" Height="16" />
       </Button>
-      <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Separator Classes="toolbar" />
       <StackPanel Name="scriptsToolBar" Orientation="Horizontal" Spacing="2" IsVisible="{Binding ShowScriptsToolbar}" />
       <Panel Name="filterToolBarHost" IsVisible="{Binding ShowFiltersToolbar}">
         <rg:FilterToolBarView Name="filterToolBar" DataContext="{Binding Filters}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />

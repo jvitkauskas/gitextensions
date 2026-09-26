@@ -35,6 +35,20 @@
     <!-- Shared with the WinForms UI rather than copied, so upstream asset updates apply to both. -->
     <AvaloniaResource Include="..\..\..\setup\assets\Logo\git-extensions-logo-256px.png" Link="Assets\git-extensions-logo-256px.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\Donate.png" Link="Assets\Donate.png" />
+    <!-- The icons of the menus of the revision grid (Navigate, Advanced, Reset another branch). -->
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\Advanced.png" Link="Assets\Advanced.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GoToChildCommit.png" Link="Assets\GoToChildCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GotoCommit.png" Link="Assets\GotoCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GotoCurrentRevision.png" Link="Assets\GotoCurrentRevision.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GoToFirstParentCommit.png" Link="Assets\GoToFirstParentCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GoToLastParentCommit.png" Link="Assets\GoToLastParentCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GoToMergeBaseCommit.png" Link="Assets\GoToMergeBaseCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\GoToParentCommit.png" Link="Assets\GoToParentCommit.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\NavigateBackward.png" Link="Assets\NavigateBackward.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\NavigateForward.png" Link="Assets\NavigateForward.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\PullRequest.png" Link="Assets\PullRequest.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\RepoStateDirty.png" Link="Assets\RepoStateDirty.png" />
+    <AvaloniaResource Include="..\GitUI\Resources\Icons\ResetAnotherBranchToHere.png" Link="Assets\ResetAnotherBranchToHere.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\CopyToClipboard.png" Link="Assets\CopyToClipboard.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\StatusBadgeWaiting.png" Link="Assets\StatusBadgeWaiting.png" />
     <AvaloniaResource Include="..\GitUI\Resources\Icons\StatusBadgeSuccess.png" Link="Assets\StatusBadgeSuccess.png" />

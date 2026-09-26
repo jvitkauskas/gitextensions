@@ -18,6 +18,8 @@ namespace GitUI.Avalonia.Hosting;
 /// <param name="MonospaceFontFamily">The font family of hashes (<c>AppSettings.MonospaceFont</c>).</param>
 /// <param name="EditorFontFamily">The font family of the file viewer and editor (<c>AppSettings.FixedWidthFont</c>).</param>
 /// <param name="EditorFontSize">The font size of the file viewer and editor, in device-independent pixels.</param>
+/// <param name="CommitFontFamily">The font family of the commit message (<c>AppSettings.CommitFont</c>).</param>
+/// <param name="CommitFontSize">The font size of the commit message, in device-independent pixels.</param>
 /// <param name="ControlTheme">
 ///  The control theme (<c>AppSettings.AvaloniaControlTheme</c>), used by the first options only: Fluent when missing.
 /// </param>
@@ -29,7 +31,9 @@ public sealed record AvaloniaUiOptions(
     string? MonospaceFontFamily = null,
     string? EditorFontFamily = null,
     double EditorFontSize = 0,
-    string? ControlTheme = null);
+    string? ControlTheme = null,
+    string? CommitFontFamily = null,
+    double CommitFontSize = 0);
 
 /// <summary>Keys of <see cref="AvaloniaUiOptions.Colors"/>.</summary>
 public static class ThemeColors

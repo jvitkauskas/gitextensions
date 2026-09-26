@@ -221,6 +221,11 @@ public interface ICommitHost
 
     void EditCommitterSettings();
 
+    /// <summary>As the click of <c>remoteNameLabel</c>: the remotes dialog, for the pull settings of <paramref name="branch"/>.</summary>
+    void EditRemotes(string branch)
+    {
+    }
+
     void NotifyRepositoryChanged();
 
     void ShowError(string message);

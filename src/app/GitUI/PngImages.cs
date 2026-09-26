@@ -8,8 +8,11 @@ namespace GitUI;
 /// </summary>
 internal static class PngImages
 {
-    /// <summary>The part of an avatar that its initials fill at most.</summary>
-    private const float TextExtent = 0.9f;
+    /// <summary>
+    ///  The part of an avatar that its initials fill at most: as the GDI+ drawing, whose measure of the text added about a
+    ///  sixth of the font size on each side (the initials of the WinForms avatars fill about two thirds of their width).
+    /// </summary>
+    private const float TextExtent = 0.7f;
 
     /// <summary>The PNG data of an encoded image (PNG, JPEG, GIF, BMP, ICO, WebP), or <see langword="null"/> if it is not an image.</summary>
     public static byte[]? ToPng(byte[] data)

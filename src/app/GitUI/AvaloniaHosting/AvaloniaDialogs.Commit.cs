@@ -516,6 +516,9 @@ internal static partial class AvaloniaDialogs
 
         public bool CreateBranch() => AvaloniaUi.RunInHostContext(() => _commands.StartCreateBranchDialog(Owner));
 
+        public void EditRemotes(string branch)
+            => AvaloniaUi.RunInHostContext(() => _commands.StartRemotesDialog(Owner, preselectRemote: null, preselectLocal: branch));
+
         public void EditCommitterSettings()
             => AvaloniaUi.RunInHostContext(() => _commands.StartSettingsDialog(Owner, new CommandsDialogs.SettingsDialog.SettingsPageReferenceByName("GitConfigSettingsPage")));
 

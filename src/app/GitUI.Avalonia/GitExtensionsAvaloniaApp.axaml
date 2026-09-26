@@ -10,6 +10,11 @@
       <!-- The file viewer and editor; replaced by AppSettings.FixedWidthFont, see ApplyOptions. -->
       <FontFamily x:Key="EditorFontFamily">Consolas, Cascadia Mono, monospace</FontFamily>
       <x:Double x:Key="EditorFontSize">13</x:Double>
+      <!-- The commit message; replaced by AppSettings.CommitFont, see ApplyOptions. -->
+      <FontFamily x:Key="CommitFontFamily">Segoe UI, San Francisco, sans-serif</FontFamily>
+      <x:Double x:Key="CommitFontSize">12</x:Double>
+      <!-- The rows of the revision grid; follows the font, see ApplyOptions. -->
+      <x:Double x:Key="RevisionGridRowHeight">22</x:Double>
       <!-- Reference colors of the default theme (AppColorDefaults); replaced by the Git Extensions theme, see ApplyOptions. -->
       <SolidColorBrush x:Key="AppColor.Branch" Color="#008000" />
       <SolidColorBrush x:Key="AppColor.RemoteBranch" Color="#8B0009" />
@@ -39,6 +44,79 @@
     <Style Selector="Border.dialogFooter Button">
       <Setter Property="MinWidth" Value="75" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
+    <!--
+      The text of combo boxes at the inset of the text boxes (5 pixels) and centered: Fluent's compact combo box had 12 on the
+      left and 1 above / 3 below, and its editable text box drew the text 2 or 3 pixels above the middle.
+    -->
+    <Style Selector="ComboBox">
+      <Setter Property="Padding" Value="5,2,0,2" />
+    </Style>
+    <Style Selector="ComboBox /template/ TextBox#PART_EditableTextBox">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <!-- The one-line text boxes centered too (the text was drawn at the top of their content); multi-line ones keep the top. -->
+    <Style Selector="TextBox[AcceptsReturn=False]">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!--
+      The drop-down arrows of the toolbar buttons as small as the WinForms ones (the ToolStripSplitButton arrow): Fluent gives
+      the arrow of a split button a button of at least 32 pixels, and the one of a drop-down button a margin of 10.
+    -->
+    <Style Selector="SplitButton.toolbar /template/ Button#PART_PrimaryButton">
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="SplitButton.toolbar /template/ Button#PART_SecondaryButton">
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Padding" Value="3,0" />
+    </Style>
+    <Style Selector="SplitButton.toolbar /template/ Button#PART_SecondaryButton PathIcon">
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Height" Value="8" />
+    </Style>
+    <Style Selector="DropDownButton.toolbar /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Height" Value="8" />
+      <Setter Property="Margin" Value="4,0,0,0" />
+    </Style>
+
+    <!-- Tooltips as wide as the WinForms ones: Fluent's 320 pixels wrapped the lines of commit messages again. -->
+    <Style Selector="ToolTip">
+      <Setter Property="MaxWidth" Value="600" />
+    </Style>
+
+    <!-- Equivalent of ToolStripSeparator: a vertical line between the groups of a toolbar (Fluent draws a separator as a
+         horizontal line of 1 pixel, a dot with Width="1"). -->
+    <Style Selector="Separator.toolbar">
+      <Setter Property="Width" Value="1" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="Margin" Value="4,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+    </Style>
+
+    <!--
+      Tab headers as the WinForms tabs: bordered, the selected one in the color of the window, without Fluent's underline
+      (not the tabs of the color view, which have their own look).
+    -->
+    <Style Selector="TabControl:not(#PART_TabControl) TabItem">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="BorderThickness" Value="1,1,1,0" />
+      <Setter Property="CornerRadius" Value="3,3,0,0" />
+      <Setter Property="Margin" Value="0,0,2,0" />
+    </Style>
+    <Style Selector="TabControl:not(#PART_TabControl) TabItem:pointerover /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}" />
+    </Style>
+    <Style Selector="TabControl:not(#PART_TabControl) TabItem:selected /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+    </Style>
+    <Style Selector="TabControl:not(#PART_TabControl) TabItem /template/ Border#PART_SelectedPipe, TabControl:not(#PART_TabControl) TabItem:selected /template/ Border#PART_SelectedPipe">
+      <!-- Fluent shows it for the selected tab (its IsVisible and Background win over the styles): transparent instead. -->
+      <Setter Property="Opacity" Value="0" />
     </Style>
 
     <!-- Fluent's pivot-style tab headers are sized for touch; use desktop proportions. -->

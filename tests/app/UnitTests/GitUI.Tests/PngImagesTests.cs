@@ -62,6 +62,7 @@ public sealed class PngImagesTests
         Math.Abs(left - (63 - right)).Should().BeLessThanOrEqualTo(4, "the text is centered horizontally");
         Math.Abs(top - (63 - bottom)).Should().BeLessThanOrEqualTo(4, "the text is centered vertically");
         (right - left).Should().BeGreaterThan(32, "the text is as large as fits");
+        (right - left).Should().BeLessThan(48, "a margin is kept around the text, as the WinForms avatars have");
     }
 
     [Test]

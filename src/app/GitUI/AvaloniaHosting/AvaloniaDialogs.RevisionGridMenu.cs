@@ -7,6 +7,8 @@ using GitExtUtils;
 using GitUI.Avalonia.Hosting;
 using GitUI.CommandsDialogs;
 using GitUI.CommandsDialogs.BrowseDialog;
+using GitUI.Hotkey;
+using GitUI.Presentation.CommandsDialogs;
 using GitUI.Presentation.Services;
 using GitUI.Presentation.Translations;
 using GitUI.Presentation.UserControls.RevisionGrid;
@@ -203,12 +205,12 @@ internal static partial class AvaloniaDialogs
                 (If(!bareOrArtificial, Item(_s.ResetCurrentBranchToHere, "ResetCurrentBranchToHere", () => ResetCurrentBranch(revision))), top),
                 (MenuModelItem.Separator, top),
                 (If(SelectInLeftPanel is not null && selectInLeftPanel.Count > 0, SelectInLeftPanelItem(selectInLeftPanel)), top),
-                (If(!bareOrArtificial, Item(_s.CreateNewBranch, "BranchCreate", () => CreateBranch(revision))), top),
+                (If(!bareOrArtificial, Item(_s.CreateNewBranch, "BranchCreate", () => CreateBranch(revision)) with { Gesture = GetBrowseGesture(BrowseHotkeyCommand.CreateBranch) }), top),
                 (If(!bareOrArtificial, Item(_s.ResetAnotherBranchToHere, "ResetAnotherBranchToHere", () => ResetAnotherBranch(revision))), advanced),
                 (If(renameBranches.Count > 0, SubMenu(_s.RenameBranch, "Renamed", renameBranches)), top),
                 (If((deleteBranches.Count > 0 && !bare) || isHeadOfCurrentBranch, SubMenu(_s.DeleteBranch, "BranchDelete", deleteBranches, enabled: deleteBranches.Count > 0 && !bare)), top),
                 (MenuModelItem.Separator, top),
-                (If(!revision.IsArtificial, Item(_s.CreateTag, "TagCreate", () => CreateTag(revision))), advanced),
+                (If(!revision.IsArtificial, Item(_s.CreateTag, "TagCreate", () => CreateTag(revision)) with { Gesture = GetBrowseGesture(BrowseHotkeyCommand.CreateTag) }), advanced),
                 (If(deleteTags.Count > 0, SubMenu(_s.DeleteTag, "TagDelete", deleteTags)), top),
                 (MenuModelItem.Separator, advanced),
                 (If(!bareOrArtificial, Item(_s.CheckoutRevision, "Checkout", () => commands.StartCheckoutRevisionDialog(owner(), revision.Guid))), advanced),
@@ -543,6 +545,15 @@ internal static partial class AvaloniaDialogs
             change();
             ApplyColumns(grid);
         }
+
+        /// <summary>
+        ///  The text of a hotkey of the main window (<c>FormBrowse</c>) shown by an item of the grid, as the WinForms menu does
+        ///  (Create new branch Ctrl+B, Create new tag Ctrl+T).
+        /// </summary>
+        private string? GetBrowseGesture(BrowseHotkeyCommand command)
+            => LoadHotkeys(commands, HotkeyCommands.BrowseSettingsName).FirstOrDefault(hotkey => hotkey.CommandCode == (int)command) is { KeyData: not 0 } hotkey
+                ? ((Keys)hotkey.KeyData).ToShortcutKeyDisplayString()
+                : null;
 
         /// <summary>The text of the hotkey of a command of the grid (the <c>ShortcutKeyDisplayString</c> of its menu item).</summary>
         private string? GetGesture(RevisionGridCommand command)

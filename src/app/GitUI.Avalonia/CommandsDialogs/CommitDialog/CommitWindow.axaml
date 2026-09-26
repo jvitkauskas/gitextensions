@@ -32,14 +32,19 @@
     </Style>
   </Window.Styles>
   <DockPanel Margin="4">
-    <!-- Equivalent of the status bar: the branch and its remote, the committer, the staged files and the caret. -->
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="12" Margin="2,4,2,0">
-      <StackPanel Orientation="Horizontal" Spacing="4">
+    <!-- Equivalent of the status bar: the committer, then on the right the branch and its remote, the staged files and the caret. -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="12" Margin="2,4,2,0">
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
         <Image Source="avares://GitUI.Avalonia/Assets/Branch.png" Width="16" Height="16" />
         <TextBlock Name="branchName" Text="{Binding BranchName}" VerticalAlignment="Center" />
-        <TextBlock Name="pushTo" Text="{Binding PushTo}" VerticalAlignment="Center" />
+        <!-- As remoteNameLabel (IsLink): the remotes of the branch. -->
+        <Button Name="pushTo" Classes="link" Command="{Binding EditRemotesCommand}" VerticalAlignment="Center"
+                IsVisible="{Binding PushTo, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding PushTo}" />
+        </Button>
       </StackPanel>
-      <Button Name="committerButton" Grid.Column="1" Classes="toolbar" Command="{Binding EditCommitterCommand}"
+      <!-- As commitAuthorStatus (IsLink): the committer settings. -->
+      <Button Name="committerButton" Grid.Column="0" Classes="link" VerticalAlignment="Center" Command="{Binding EditCommitterCommand}"
               ToolTip.Tip="{Binding Strings.CommitCommitterToolTip.Text}">
         <TextBlock Text="{Binding Committer}" />
       </Button>
@@ -227,8 +232,11 @@
           </DockPanel>
           <Border Grid.Column="1" Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <Panel>
-              <ed:TextEditorView Name="message" DataContext="{Binding Message}" />
-              <TextBlock Name="messageWatermark" Text="{Binding MessageWatermark}" IsHitTestVisible="False" Margin="6,4"
+              <!-- As Message.TextBoxFont = AppSettings.CommitFont. -->
+              <ed:TextEditorView Name="message" Classes="commitMessage" DataContext="{Binding Message}" />
+              <!-- Where the editor draws its first line, in its font (italic, as the WinForms watermark). -->
+              <TextBlock Name="messageWatermark" Text="{Binding MessageWatermark}" IsHitTestVisible="False" Margin="1,2"
+                         FontFamily="{DynamicResource CommitFontFamily}" FontSize="{DynamicResource CommitFontSize}" FontStyle="Italic"
                          Foreground="{DynamicResource TextControlPlaceholderForeground}" />
             </Panel>
           </Border>

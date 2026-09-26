@@ -1,9 +1,20 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ae="using:AvaloniaEdit"
+             xmlns:ed="using:GitUI.Avalonia.Editor"
              x:Class="GitUI.Avalonia.Editor.TextEditorView">
+  <UserControl.Styles>
+    <!-- The font of the file viewer and editor (AppSettings.FixedWidthFont); of a commit message, the commit font. -->
+    <Style Selector="ae|TextEditor#editor">
+      <Setter Property="FontFamily" Value="{DynamicResource EditorFontFamily}" />
+      <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
+    </Style>
+    <Style Selector="ed|TextEditorView.commitMessage ae|TextEditor#editor">
+      <Setter Property="FontFamily" Value="{DynamicResource CommitFontFamily}" />
+      <Setter Property="FontSize" Value="{DynamicResource CommitFontSize}" />
+    </Style>
+  </UserControl.Styles>
   <ae:TextEditor Name="editor"
-                 FontFamily="{DynamicResource EditorFontFamily}" FontSize="{DynamicResource EditorFontSize}"
                  ShowLineNumbers="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                  Background="{DynamicResource TextControlBackground}"
                  Foreground="{DynamicResource TextControlForeground}" />

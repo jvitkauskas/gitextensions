@@ -33,13 +33,41 @@
     <Style Selector="Border.ref">
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="3" />
-      <Setter Property="Padding" Value="3,0" />
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="Margin" Value="0,0,5,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <!-- Filled with the window color, as the WinForms labels: readable on the selected row too. -->
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
+    </Style>
+    <!-- As the arrow of RevisionGridRefRenderer before the checked out branch. -->
+    <Style Selector="Border.ref TextBlock.currentMark">
+      <Setter Property="IsVisible" Value="False" />
+      <Setter Property="FontSize" Value="9" />
       <Setter Property="Margin" Value="0,0,4,0" />
       <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="Background" Value="Transparent" />
     </Style>
-    <Style Selector="Border.ref TextBlock">
-      <Setter Property="FontSize" Value="11" />
+    <Style Selector="Border.ref.current TextBlock.currentMark">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <!-- As MultilineIndicator: a small gray box with "···" at the end of the message. -->
+    <Style Selector="Border.multiline">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="Margin" Value="6,0,0,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.multiline TextBlock">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <!-- As DrawArtificialRevision: the subject of the working directory and of the index in a box. -->
+    <Style Selector="Border.subject.artificial">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
     </Style>
     <Style Selector="Border.ref.branch">
       <Setter Property="BorderBrush" Value="{DynamicResource AppColor.Branch}" />
@@ -67,7 +95,7 @@
     <!-- The hovered label, whose ancestry is highlighted in the graph (the highlight border of RevisionGridRefRenderer). -->
     <Style Selector="Border.ref.hoverable:pointerover">
       <Setter Property="BorderThickness" Value="2" />
-      <Setter Property="Padding" Value="2,0" />
+      <Setter Property="Padding" Value="4,0" />
       <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Border.ref.current TextBlock">
@@ -101,12 +129,13 @@
     <Style Selector="Border#quickSearchLabel TextBlock.noMatch">
       <Setter Property="Foreground" Value="DarkRed" />
     </Style>
+    <!-- As RevisionDataGridView.UpdateRowHeight: the height of the rows follows the font (RevisionGridRowHeight). -->
     <Style Selector="DataGridCell">
-      <Setter Property="MinHeight" Value="22" />
+      <Setter Property="MinHeight" Value="{DynamicResource RevisionGridRowHeight}" />
     </Style>
     <Style Selector="DataGridRow">
-      <Setter Property="MinHeight" Value="22" />
-      <Setter Property="Height" Value="22" />
+      <Setter Property="MinHeight" Value="{DynamicResource RevisionGridRowHeight}" />
+      <Setter Property="Height" Value="{DynamicResource RevisionGridRowHeight}" />
     </Style>
     <!-- As RevisionDataGridView: the rows of the highlighted author, and the gray texts of the non-relatives. -->
     <Style Selector="DataGridRow.authored DataGridCell">
@@ -155,7 +184,12 @@
         <DataGridTemplateColumn Width="*">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:RevisionGridRow">
-              <StackPanel Orientation="Horizontal" Margin="4,0" ClipToBounds="True">
+              <DockPanel Margin="4,0" ClipToBounds="True" Background="Transparent" ToolTip.Tip="{Binding MessageToolTip}">
+                <!-- As MultilineIndicator: the message has a body. -->
+                <Border Classes="multiline" DockPanel.Dock="Right" IsVisible="{Binding HasMultiLineMessage}">
+                  <TextBlock Text="···" />
+                </Border>
+                <StackPanel Orientation="Horizontal" ClipToBounds="True">
                 <ItemsControl ItemsSource="{Binding Refs}" VerticalAlignment="Center">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -176,7 +210,10 @@
                                 Classes.current="{Binding IsCurrentBranch}"
                                 Classes.nestedHost="{Binding Nested, Converter={x:Static ObjectConverters.IsNotNull}}"
                                 ToolTip.Tip="{Binding ToolTip}">
-                          <TextBlock Text="{Binding Name}" />
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock Classes="currentMark" Text="▶" />
+                            <TextBlock Text="{Binding Name}" />
+                          </StackPanel>
                         </Border>
                         <Border Classes="ref remote nested" DataContext="{Binding Nested}"
                                 IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -190,7 +227,9 @@
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Classes="cellText" Text="{Binding Subject}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Border Classes="subject" Classes.artificial="{Binding IsArtificial}" VerticalAlignment="Center">
+                  <TextBlock Classes="cellText" Text="{Binding Subject}" TextTrimming="CharacterEllipsis" />
+                </Border>
                 <!-- As CommitBodyForeColor: the body, grayed. -->
                 <TextBlock Classes="cellText" Text="{Binding Body}" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Body, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <!-- As DrawArtificialRevision: the counts of the changes of the working directory or the index. -->
@@ -209,7 +248,8 @@
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-              </StackPanel>
+                </StackPanel>
+              </DockPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>

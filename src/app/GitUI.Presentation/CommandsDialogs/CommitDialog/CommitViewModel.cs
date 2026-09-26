@@ -166,6 +166,9 @@ public sealed partial class CommitViewModel : DialogViewModel
     [ObservableProperty]
     public partial string PushTo { get; private set; } = "";
 
+    // The branch of the status bar, for EditRemotes.
+    private string _branch = "";
+
     [ObservableProperty]
     public partial string Committer { get; private set; } = "";
 
@@ -400,6 +403,7 @@ public sealed partial class CommitViewModel : DialogViewModel
     private async Task UpdateBranchInfoAsync()
     {
         CommitBranchInfo info = await _host.GetBranchInfoAsync();
+        _branch = info.Branch;
         BranchName = info.PushTo is null ? info.Branch : $"{info.Branch} {char.ConvertFromUtf32(0x2192)}";
         PushTo = info.PushTo ?? "";
         Title = string.Format(Strings.FormTitle.Text, info.Branch, _host.WorkingDirectory);
@@ -1278,6 +1282,14 @@ public sealed partial class CommitViewModel : DialogViewModel
         {
             _ = UpdateBranchInfoAsync();
         }
+    }
+
+    /// <summary>As the click of <c>remoteNameLabel</c>: the remotes of the branch, then its remote shown again.</summary>
+    [RelayCommand]
+    private void EditRemotes()
+    {
+        _host.EditRemotes(_branch);
+        _ = UpdateBranchInfoAsync();
     }
 
     [RelayCommand]

@@ -186,6 +186,15 @@ public sealed partial class FileStatusListViewModel : ObservableObject
 
     public bool IsFlatList => Options.SortType.ToString().EndsWith("Flat");
 
+    /// <summary>As <c>btnByPath.Checked</c>: the files are grouped by their path.</summary>
+    public bool IsByPath => Options.SortType is DiffListSortType.FilePath or DiffListSortType.FilePathFlat;
+
+    /// <summary>As <c>btnByExtension.Checked</c>.</summary>
+    public bool IsByExtension => Options.SortType is DiffListSortType.FileExtension or DiffListSortType.FileExtensionFlat;
+
+    /// <summary>As <c>btnByStatus.Checked</c>.</summary>
+    public bool IsByStatus => Options.SortType is DiffListSortType.FileStatus or DiffListSortType.FileStatusFlat;
+
     /// <summary>Shows "Loading data..." until the files are set.</summary>
     public void SetLoading()
     {
@@ -688,6 +697,9 @@ public sealed partial class FileStatusListViewModel : ObservableObject
     partial void OnOptionsChanged(FileStatusTreeOptions oldValue, FileStatusTreeOptions newValue)
     {
         OnPropertyChanged(nameof(IsFlatList));
+        OnPropertyChanged(nameof(IsByPath));
+        OnPropertyChanged(nameof(IsByExtension));
+        OnPropertyChanged(nameof(IsByStatus));
         if (oldValue is not null && oldValue.SortType != newValue.SortType)
         {
             SortTypeChanged?.Invoke(this, EventArgs.Empty);

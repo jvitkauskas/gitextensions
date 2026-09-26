@@ -52,7 +52,8 @@
       </DropDownButton.Flyout>
     </DropDownButton>
     <Label Content="{Binding Strings.Branches.AccessKeyText}" Target="branchFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.BranchesToolTip.Text}" IsVisible="{Binding ItemVisibility[BranchFilter]}" />
-    <ComboBox Name="branchFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding BranchFilter}" ItemsSource="{Binding BranchItems}" IsVisible="{Binding ItemVisibility[BranchFilter]}" />
+    <!-- 110 wide: WinForms has 100, with a smaller arrow; the toolbar then fits one row on a wide window. -->
+    <ComboBox Name="branchFilterBox" Classes="filter" Width="110" IsEditable="True" Text="{Binding BranchFilter}" ItemsSource="{Binding BranchItems}" IsVisible="{Binding ItemVisibility[BranchFilter]}" />
     <DropDownButton Name="branchTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.BranchType.Text}" IsVisible="{Binding ItemVisibility[BranchFilter]}">
       <Image Source="avares://GitUI.Avalonia/Assets/EditFilter.png" Width="16" Height="16" />
       <DropDownButton.Flyout>
@@ -63,9 +64,9 @@
         </MenuFlyout>
       </DropDownButton.Flyout>
     </DropDownButton>
-    <Separator Width="1" Margin="4,2" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" IsVisible="{Binding ShowSeparator}" />
+    <Separator Classes="toolbar" IsVisible="{Binding ShowSeparator}" />
     <Label Content="{Binding Strings.Filter.AccessKeyText}" Target="revisionFilterBox" VerticalAlignment="Center" ToolTip.Tip="{Binding Strings.FilterToolTip.Text}" IsVisible="{Binding ItemVisibility[TextFilter]}" />
-    <ComboBox Name="revisionFilterBox" Classes="filter" Width="150" IsEditable="True" Text="{Binding RevisionFilter}" ItemsSource="{Binding RevisionFilterItems}" IsVisible="{Binding ItemVisibility[TextFilter]}" />
+    <ComboBox Name="revisionFilterBox" Classes="filter" Width="110" IsEditable="True" Text="{Binding RevisionFilter}" ItemsSource="{Binding RevisionFilterItems}" IsVisible="{Binding ItemVisibility[TextFilter]}" />
     <DropDownButton Name="filterTypeButton" Classes="toolbar" ToolTip.Tip="{Binding Strings.FilterType.Text}" IsVisible="{Binding ItemVisibility[TextFilter]}">
       <Image Source="avares://GitUI.Avalonia/Assets/EditFilter.png" Width="16" Height="16" />
       <DropDownButton.Flyout>

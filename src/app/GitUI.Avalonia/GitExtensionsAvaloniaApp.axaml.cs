@@ -89,10 +89,23 @@ public partial class GitExtensionsAvaloniaApp : Application
             Resources["EditorFontSize"] = options.EditorFontSize;
         }
 
+        if (!string.IsNullOrWhiteSpace(options.CommitFontFamily))
+        {
+            Resources["CommitFontFamily"] = new FontFamily(options.CommitFontFamily);
+        }
+
+        if (options.CommitFontSize > 0)
+        {
+            Resources["CommitFontSize"] = options.CommitFontSize;
+        }
+
         if (options.FontSize > 0)
         {
             // Fluent sizes most controls from this resource.
             Resources["ControlContentThemeFontSize"] = options.FontSize;
+
+            // As RevisionDataGridView.UpdateRowHeight: the height of a line of the font and 9 pixels.
+            Resources["RevisionGridRowHeight"] = GetRevisionGridRowHeight(options.FontSize);
         }
 
         if (options.Colors is { } colors)
@@ -100,6 +113,9 @@ public partial class GitExtensionsAvaloniaApp : Application
             ApplyColors(variant, colors);
         }
     }
+
+    /// <summary>The height of the rows of the revision grid for the font size (a line of about 1.25 times it, and 9 pixels).</summary>
+    internal static double GetRevisionGridRowHeight(double fontSize) => Math.Ceiling(fontSize * 1.25) + 9;
 
     private void ApplyColors(ThemeVariant variant, IReadOnlyDictionary<string, uint> colors)
     {
