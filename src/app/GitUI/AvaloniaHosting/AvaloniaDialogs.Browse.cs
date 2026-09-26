@@ -645,6 +645,14 @@ internal static partial class AvaloniaDialogs
             RepositoryChanged?.Invoke(this, EventArgs.Empty);
         });
 
+        public ObjectId? ResolveCommit(string commitOrRef, bool isRef)
+            => !isRef
+                ? Module.TryResolvePartialCommitId(commitOrRef, out ObjectId commitId) ? commitId : null
+                : new CommitDataManager(() => Module).GetCommitData(commitOrRef)?.ObjectId;
+
+        public void ShowRevisionFiltered(ObjectId objectId)
+            => AvaloniaUi.RunInHostContext(() => MessageBoxes.RevisionFilteredInGrid(Owner, objectId));
+
         // As RebaseToolStripMenuItemClick.
         private void Rebase(IWin32Window owner, IReadOnlyList<GitRevision> revisions)
         {

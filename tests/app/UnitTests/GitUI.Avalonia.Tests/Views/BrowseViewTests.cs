@@ -49,6 +49,31 @@ public sealed class BrowseViewTests : HeadlessTest
     });
 
     [Test]
+    public Task The_commit_hashes_of_the_commit_info_are_links_that_select_their_commit() => OnUiThreadAsync(() =>
+    {
+        (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
+        RevisionGridRow target = viewModel.Grid.Rows[3];
+        host.ResolvedCommits["a1a1a1a1"] = target.ObjectId;
+        viewModel.Grid.SetSelectedRows([viewModel.Grid.Rows[2]]);
+        Dispatcher.UIThread.RunJobs();
+
+        viewModel.CommitInfo.Header.Single(line => line.Label == "Parent:").ValueXhtml.Should().Contain("gitext://gotocommit/", "the hashes are links in the main window");
+        viewModel.CommitInfo.OnLinkClicked("gitext://gotocommit/a1a1a1a1");
+        Dispatcher.UIThread.RunJobs();
+
+        viewModel.Grid.SelectedRow!.ObjectId.Should().Be(target.ObjectId);
+
+        // The containing branches and tags are links too.
+        RevisionGridRow branchTarget = viewModel.Grid.Rows[1];
+        host.ResolvedCommits["master"] = branchTarget.ObjectId;
+        viewModel.CommitInfo.ShowBranchesAsLinks.Should().BeTrue();
+        viewModel.CommitInfo.OnLinkClicked("gitext://gotobranch/master");
+        Dispatcher.UIThread.RunJobs();
+        viewModel.Grid.SelectedRow!.ObjectId.Should().Be(branchTarget.ObjectId);
+        window.Close();
+    });
+
+    [Test]
     public Task A_double_click_on_a_revision_views_it_as_the_WinForms_grid() => OnUiThreadAsync(() =>
     {
         (BrowseWindow window, BrowseViewModel viewModel, FakeBrowseHost host) = Show();
@@ -1028,6 +1053,11 @@ public sealed class BrowseViewTests : HeadlessTest
 
     internal sealed class FakeBrowseHost : IBrowseHost, IBrowseFileTreeHost, IBrowseGpgHost, IBrowseConsoleHost, IBrowsePluginsHost, IBrowseToolbarHost, IBrowseStatusHost, IBrowseScriptsHost, IBrowseOutputHistoryHost, IBrowseBuildReportHost, IBrowseLayoutHost, IBrowseToolbarItemsHost, IBrowseBlameHost
     {
+        /// <summary>The commits of the links of the commit info (<see cref="IBrowseHost.ResolveCommit"/>).</summary>
+        public Dictionary<string, ObjectId> ResolvedCommits { get; } = [];
+
+        public ObjectId? ResolveCommit(string commitOrRef, bool isRef) => ResolvedCommits.TryGetValue(commitOrRef, out ObjectId objectId) ? objectId : null;
+
         public GitPullAction DefaultPullAction { get; set; }
 
         /// <summary>The host of the blames of the diff and file tree tabs.</summary>

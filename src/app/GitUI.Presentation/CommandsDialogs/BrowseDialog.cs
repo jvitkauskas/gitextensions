@@ -483,6 +483,17 @@ public interface IBrowseHost
 
     /// <summary>Raised when the repository changed (<c>RepoChangedNotifier</c>, <c>PostRepositoryChanged</c>), e.g. by a dialog.</summary>
     event EventHandler? RepositoryChanged;
+
+    /// <summary>
+    ///  The commit of a link of the commit info: a (partial) hash, or with <paramref name="isRef"/> a branch or a tag
+    ///  (<c>TryResolvePartialCommitId</c>, <c>CommitDataManager.GetCommitData</c>).
+    /// </summary>
+    ObjectId? ResolveCommit(string commitOrRef, bool isRef) => null;
+
+    /// <summary>As <c>MessageBoxes.RevisionFilteredInGrid</c>: the commit of a link is not shown by the grid (e.g. a filter).</summary>
+    void ShowRevisionFiltered(ObjectId objectId)
+    {
+    }
 }
 
 /// <summary>The tabs below the grid (<c>CommitInfoTabControl</c>).</summary>
@@ -522,7 +533,12 @@ public sealed partial class BrowseViewModel : DialogViewModel
         _host = host;
         Dashboard = dashboard;
         Grid = grid;
-        CommitInfo = new CommitInfoViewModel(commitInfoHost);
+
+        // As RevisionInfo.ShowBranchesAsLinks = true: the containing branches and tags go to their commit.
+        CommitInfo = new CommitInfoViewModel(commitInfoHost) { ShowBranchesAsLinks = true };
+
+        // As RevisionInfo_CommandClicked: the hashes of the parents and children, the branches and tags are links.
+        CommitInfo.CommandClicked += (_, e) => OnCommitInfoCommand(e.Command, e.Data);
         Files = new FileStatusListViewModel(fileStatusListStrings, fileStatusTreeOptions) { HasFileSettings = true, HasShowDiffForAllParents = true, HasRefreshButton = true, CanAutoRefresh = true };
         Viewer = new FileViewerViewModel(fileViewerHost);
 
@@ -702,11 +718,34 @@ public sealed partial class BrowseViewModel : DialogViewModel
         _host.Run(command, new BrowseSelection(Grid.GetSelectedRevisionsLatestSelectedFirst(), Grid.GetSelectedRevisions(descending: true)));
     }
 
+    /// <summary>As <c>FormBrowse.RevisionInfo_CommandClicked</c>: a link of the commit info selects its commit in the grid.</summary>
+    private void OnCommitInfoCommand(string command, string? data)
+    {
+        switch (command)
+        {
+            case "navigatebackward":
+                Grid.NavigateBackward();
+                return;
+            case "navigateforward":
+                Grid.NavigateForward();
+                return;
+            case "gotocommit" or "gotobranch" or "gototag" when data is not null:
+                if (_host.ResolveCommit(data, isRef: command != "gotocommit") is { IsZero: false } objectId && !Grid.SelectRevision(objectId))
+                {
+                    _host.ShowRevisionFiltered(objectId);
+                }
+
+                return;
+        }
+    }
+
     // As FormBrowse.RevisionGrid_SelectionChanged and FillCommitInfo / RevisionDiffControl.DisplayDiffTab.
     private void ShowSelectedRevisions()
     {
         IReadOnlyList<GitRevision> selected = Grid.GetSelectedRevisionsLatestSelectedFirst();
-        CommitInfo.SetRevision(selected.Count == 0 ? null : selected[0]);
+
+        // As SetRevisionWithChildren: the children of the grid are shown after the dates.
+        CommitInfo.SetRevision(selected.Count == 0 ? null : selected[0], selected.Count == 0 ? null : Grid.GetChildren(selected[0].ObjectId));
         _ = ShowDiffsAsync(selected);
         UpdateFileTree(revisionChanged: true);
         UpdateGpgInfo(revisionChanged: true);

@@ -24,9 +24,14 @@
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
           <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#FFFFE1" />
+          <!-- SystemColors.Window and Control; replaced by the Git Extensions theme, see ApplyColors. -->
+          <SolidColorBrush x:Key="WindowBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ControlBrush" Color="#F0F0F0" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#3D3B24" />
+          <SolidColorBrush x:Key="WindowBrush" Color="#202020" />
+          <SolidColorBrush x:Key="ControlBrush" Color="#2B2B2B" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>

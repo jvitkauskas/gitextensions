@@ -4,7 +4,8 @@
              xmlns:vm="using:GitUI.Presentation.UserControls"
              x:Class="GitUI.Avalonia.Controls.CommitInfoView"
              x:DataType="vm:CommitInfoViewModel">
-  <ScrollViewer HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasRevision}" Background="Transparent">
+  <!-- As CommitInfo: the header and the related refs on SystemColors.Window, the message band on Control. -->
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding HasRevision}" Background="{DynamicResource WindowBrush}">
     <ScrollViewer.ContextMenu>
       <!-- Equivalent of commitInfoContextMenuStrip. -->
       <ContextMenu Name="menu">
@@ -25,9 +26,9 @@
         <MenuItem Name="addNotesItem" />
       </ContextMenu>
     </ScrollViewer.ContextMenu>
-    <StackPanel Spacing="8" Margin="6">
+    <StackPanel Spacing="8" Margin="0,6">
       <!-- Equivalent of CommitInfoHeader: the avatar, and the labels aligned as the tab stops of the RichTextBox. -->
-      <Grid ColumnDefinitions="Auto,*">
+      <Grid ColumnDefinitions="Auto,*" Margin="6,0">
         <Image Name="avatar" Margin="0,0,8,0" VerticalAlignment="Top" IsVisible="{Binding ShowAvatar}"
                Width="{Binding AvatarSize}" Height="{Binding AvatarSize}">
           <!-- The menu of AvatarControl. -->
@@ -60,11 +61,11 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </Grid>
-      <!-- Equivalent of pnlCommitMessage: the message on a slightly darker background. -->
-      <Border Name="messagePanel" Padding="6" CornerRadius="2" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+      <!-- Equivalent of pnlCommitMessage: the message on a band of the whole width, darker than the rest. -->
+      <Border Name="messagePanel" Padding="6" Background="{DynamicResource ControlBrush}">
         <c:XhtmlTextBlock Name="message" Xhtml="{Binding Message}" />
       </Border>
-      <c:XhtmlTextBlock Name="revisionInfo" Xhtml="{Binding RevisionInfo}" />
+      <c:XhtmlTextBlock Name="revisionInfo" Xhtml="{Binding RevisionInfo}" Margin="6,0" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

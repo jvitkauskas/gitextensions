@@ -137,6 +137,17 @@ public partial class GitExtensionsAvaloniaApp : Application
             fluentTheme.Palettes[variant] = palette;
         }
 
+        // SystemColors.Window and Control of the theme, for the views that use them as WinForms did (e.g. the commit info).
+        if (TryGetColor(ThemeColors.Window, out Color window))
+        {
+            Resources["WindowBrush"] = new SolidColorBrush(window);
+        }
+
+        if (TryGetColor(ThemeColors.Control, out Color control))
+        {
+            Resources["ControlBrush"] = new SolidColorBrush(control);
+        }
+
         if (TryGetColor(ThemeColors.HotTrack, out Color link))
         {
             Resources["SystemControlHyperlinkTextBrush"] = new SolidColorBrush(link);
